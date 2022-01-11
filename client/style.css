@@ -1,0 +1,12 @@
+img {
+  display: none;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+canvas {
+  background-image: url("assets/paper3.jpg");
+}
