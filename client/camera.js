@@ -44,8 +44,7 @@ class Camera {
     for (let y = Math.max(yStart, 1); y < Math.min(yEnd, size); y++) {
       for (let x = xStart; x < xEnd; x++) {
         const tile = world.getTile(x, y);
-        if (false) {
-
+        if (x === Math.round((wmX / 19.8) + 18.3) && y === Math.round(((wmY + size) / 25) + (17 + (mod(x, 2) / -2)))) {
         } else if (tile) {
           ctx.drawImage(
             textures[tile],
