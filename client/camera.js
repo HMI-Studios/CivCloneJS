@@ -12,6 +12,7 @@ class Camera {
       desert: document.getElementById('tile_desert'),
       mountain: document.getElementById('tile_mountain'),
       empty: document.getElementById('border_overlay'),
+      selector: document.getElementById('selector'),
     };
   }
 
@@ -43,9 +44,9 @@ class Camera {
     this.clear();
     for (let y = Math.max(yStart, 1); y < Math.min(yEnd, size); y++) {
       for (let x = xStart; x < xEnd; x++) {
+
         const tile = world.getTile(x, y);
-        if (x === Math.round((wmX / 19.8) + 18.3) && y === Math.round(((wmY + size) / 25) + (17 + (mod(x, 2) / -2)))) {
-        } else if (tile) {
+        if (tile) {
           ctx.drawImage(
             textures[tile],
             (-camX + ((x - (size / 2)) * 19.8)) * zoom,
@@ -54,6 +55,17 @@ class Camera {
             25 * zoom
           );
         }
+
+        if (x === Math.round((wmX / 19.8) + 18.3) && y === Math.round(((wmY + size) / 25) + (17 + (mod(x, 2) / -2)))) {
+          ctx.drawImage(
+            textures['selector'],
+            (-camX + ((x - (size / 2)) * 19.8)) * zoom,
+            (-camY + (((y - (size / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
+            28 * zoom,
+            25 * zoom
+          );
+        }
+
       }
     }
   }
