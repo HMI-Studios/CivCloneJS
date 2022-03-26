@@ -83,9 +83,18 @@ const mod = (a, b) => {
   }
 };
 
-world = new World();
+const GAME_ID = 0;
+const SERVER_IP = '192.168.4.29:8080';
+const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
+localStorage.setItem('username', PLAYER_NAME);
+
 camera = new Camera();
-world.loadMap()
+player = new Player(PLAYER_NAME);
+world = new World();
+world.setup(SERVER_IP)
   .then(() => {
-    setInterval(() => camera.render(world), 1000/60);
-  });
+    world.setPlayer(player);
+  })
+  // .then(() => {
+  //   setInterval(() => camera.render(world), 1000/60);
+  // });
