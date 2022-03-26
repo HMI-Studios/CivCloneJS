@@ -5,6 +5,10 @@ class World {
     this.height;
     this.width;
     this.socket;
+    this.on = {
+      update: {},
+      error: {},
+    };
   }
 
   getTile(x, y) {
@@ -15,14 +19,22 @@ class World {
     this.socket.send(JSON.stringify(data));
   }
 
-  handleData(data) {
-    console.table(data);
+  handleResponse(data) {
+    if (data.update) {
+      for (let i = 0; i < data.update.length; i++) {
+        let name = data.update[i][0];
+        let args = data.update[i][1];
+        if (this.on.update[name]) {
+          this.on.update[name](...args);
+        }
+      }
+    }
   }
 
   setup(serverIP) {
     return new Promise((resolve, reject) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
-      this.socket.addEventListener('message', function (event) {
+      this.socket.addEventListener('message', (event) => {
         let data;
         try {
           data = JSON.parse(event.data);
@@ -30,24 +42,16 @@ class World {
           console.error('Bad JSON recieved from server');
           return;
         }
-        handleData(data);
+        this.handleResponse(data);
       });
-      this.socket.addEventListener('open', function (event) {
+      this.socket.addEventListener('open', (event) => {
         resolve();
       });
     });
   }
 
-  setPlayer(player) {
-    return new Promise((resolve, reject) => {
-      this.sendJSON({
-
-        func: {
-          setPlayer: [player.name]
-        },
-
-      });
-    });
+  sendActions(actions) {
+    this.sendJSON({ actions });
   }
 
   loadMap() {
