@@ -59,17 +59,27 @@ class Game {
 
 class Map {
   constructor(height, width, terrain) {
-    this.height;
-    this.width;
+    this.height = height;
+    this.width = width;
     this.tiles = new Array(height*width);
     for (let i = 0; i < height*width; i++) {
       this.tiles[i] = new Tile(terrain[i]);
     }
   }
+
+  getCivMap(civ) {
+    return this.tiles.map((tile) => {
+      if (tile.serverData.discoveredBy.includes(civ)) {
+        return tile.clientData;
+      } else {
+        return null;
+      }
+    });
+  }
 };
 
 class Tile {
-  constrctor(type) {
+  constructor(type) {
     this.clientData = {
       type: type,
       improvement: null,
