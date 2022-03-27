@@ -48,7 +48,7 @@ class Camera {
         const tile = world.getTile(x, y);
         if (tile) {
           ctx.drawImage(
-            textures[tile],
+            textures[tile.type],
             (-camX + ((x - (width / 2)) * 19.8)) * zoom,
             (-camY + (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
             28 * zoom,
