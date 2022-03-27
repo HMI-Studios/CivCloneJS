@@ -44,7 +44,7 @@ const games = {
       'ocean',
       'plains',
     ]),
-    2
+    1
   ),
 };
 
@@ -101,6 +101,8 @@ const methods = {
               ['beginGame', [[game.map.width, game.map.height]]],
             ],
           });
+
+          game.updateCivTileVisibility(0);
 
           game.sendToCiv(0, {
             update: [

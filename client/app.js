@@ -83,8 +83,9 @@ const mod = (a, b) => {
   }
 };
 
-const SERVER_IP = '192.168.5.47:8080';
+// const SERVER_IP = '192.168.5.47:8080';
 // const SERVER_IP = '192.168.4.29:8080';
+const SERVER_IP = 'localhost:8080';
 const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
 localStorage.setItem('username', PLAYER_NAME);
 
@@ -108,7 +109,7 @@ world.setup(SERVER_IP)
       }
 
       const gameID = prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
-      
+
       if (gameID !== null) {
         world.sendActions([
           ['joinGame', [gameID]],
