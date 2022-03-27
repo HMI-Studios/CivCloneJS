@@ -106,17 +106,24 @@ world.setup(SERVER_IP)
       for (let gameID in gameList) {
         gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
       }
+
       const gameID = prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
+      
       if (gameID !== null) {
         world.sendActions([
           ['joinGame', [gameID]],
         ]);
-        ui.readyBtn(() => {
+
+        ui.showReadyBtn((isReady) => {
           world.sendActions([
-            ['ready', [true]],
+            ['ready', [isReady]],
           ]);
         });
       }
+    };
+
+    world.on.update.beginGame = (gameList) => {
+      ui.hideReadyBtn();
     };
 
     setInterval(() => camera.render(world), 1000/60);

@@ -6,16 +6,26 @@ class Player {
 
 class UI {
   constructor() {
-
+    this.readyBtn = document.createElement('button');
   }
 
-  readyBtn(callback) {
-    const btn = document.createElement('button');
-    btn.innerHTML = 'Ready';
-    btn.className = 'readyBtn';
-    btn.onclick = () => {
-      callback();
+  showReadyBtn(callback) {
+    let btnState = false;
+    this.readyBtn.innerHTML = 'Ready';
+    this.readyBtn.className = 'readyBtn';
+    this.readyBtn.onclick = () => {
+      btnState = !btnState;
+      if (btnState) {
+        this.readyBtn.innerHTML = 'Waiting';
+      } else {
+        this.readyBtn.innerHTML = 'Ready';
+      }
+      callback(btnState);
     };
-    document.getElementById('UI').appendChild(btn);
+    document.getElementById('UI').appendChild(this.readyBtn);
+  }
+
+  hideReadyBtn() {
+    this.readyBtn.remove();
   }
 }

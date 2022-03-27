@@ -1,7 +1,7 @@
 class World {
   constructor() {
     this.tiles = [];
-    this.size = 0; // REMOVE
+    // this.size = 0; // REMOVE
     this.height;
     this.width;
     this.socket;
@@ -12,7 +12,7 @@ class World {
   }
 
   getTile(x, y) {
-    return this.tiles[(y * this.size) + mod(x, this.size)] || null;
+    return this.tiles[(y * this.width) + mod(x, this.size)] || null;
   }
 
   sendJSON(data) {
@@ -20,6 +20,7 @@ class World {
   }
 
   handleResponse(data) {
+    console.log(JSON.stringify(data));
     if (data.update) {
       for (let i = 0; i < data.update.length; i++) {
         let name = data.update[i][0];
@@ -54,13 +55,13 @@ class World {
     this.sendJSON({ actions });
   }
 
-  loadMap() {
-    return axios.get(`/map`)
-      .then(({ data }) => {
-        this.tiles = data.map;
-        this.size = Math.floor(Math.sqrt(this.tiles.length)); // REMOVE
-        this.height = data.height;
-        this.width = data.width;
-      });
-  }
+  // loadMap() {
+  //   return axios.get(`/map`)
+  //     .then(({ data }) => {
+  //       this.tiles = data.map;
+  //       this.size = Math.floor(Math.sqrt(this.tiles.length)); // REMOVE
+  //       this.height = data.height;
+  //       this.width = data.width;
+  //     });
+  // }
 }
