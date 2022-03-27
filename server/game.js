@@ -83,12 +83,25 @@ class Tile {
     this.clientData = {
       type: type,
       improvement: null,
+      unit: null,
     };
 
     this.serverData = {
       discoveredBy: [],
     };
   }
+};
+
+class Unit {
+  constructor(type, civ) {
+    this.type = type;
+    this.hp = 100;
+    this.civ = civ;
+  }
+};
+
+class Civilization {
+  this.units = [];
 };
 
 class Player {
@@ -101,5 +114,5 @@ class Player {
 };
 
 module.exports = {
-  Game, Map, Tile, Player,
+  Game, Map, Tile, Unit, Player,
 };
