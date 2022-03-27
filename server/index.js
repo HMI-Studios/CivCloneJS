@@ -56,16 +56,24 @@ const sendTo = (ws, msg) => {
 
 const methods = {
   setPlayer: (ws, username) => {
-    connections[ws].username = username;
+    ws.connData.username = username;
+    console.log(ws.connData);
   },
 
   joinGame: (ws, gameID) => {
-    let game = games[gameID];
+    const game = games[gameID];
+    const username = ws.connData.username;
 
-    connections[ws].gameID = gameID;
+    const civID = game.newPlayerCivID();
 
-    let username = connections[ws].username;
-    game.players[username] = new Player(game.newPlayerCivID(), ws);
+    if (civID !== null) {
+      ws.connData.gameID = gameID;
+      game.players[username] = new Player(civID, ws);
+    } else {
+      sendTo(ws, { error: [
+        ['kicked', ['Game Full']]
+      ] });
+    }
   },
 
   getGames: (ws) => {
@@ -82,25 +90,29 @@ const methods = {
   },
 
   ready: (ws, state) => {
-    let username = connections[ws].username;
-    let gameID = connections[ws].gameID;
+    let username = ws.connData.username;
+    let gameID = ws.connData.gameID;
     let game = games[gameID];
 
-    game.players[username].ready = state;
+    console.log(username, gameID, game);
 
-    if (game.players.length == game.civs.length) {
-      if (Object.values(game.players).every(player => player.ready)) {
-        game.sendToAll({
-          update: [
-            ['beginGame', []]
-          ],
-        });
+    if (game && game.players[username]) {
+      game.players[username].ready = state;
 
-        game.sendToCiv(0, {
-          update: [
-            ['beginTurn', []]
-          ],
-        });
+      if (game.players.length == game.civs.length) {
+        if (Object.values(game.players).every(player => player.ready)) {
+          game.sendToAll({
+            update: [
+              ['beginGame', []]
+            ],
+          });
+
+          game.sendToCiv(0, {
+            update: [
+              ['beginTurn', []]
+            ],
+          });
+        }
       }
     }
   },
@@ -108,7 +120,7 @@ const methods = {
 
 wss.on('connection', (ws, req) => {
 
-  connections[ws] = {
+  ws.connData = {
     ip: req.socket.remoteAddress,
     username: null,
     gameID: null,
@@ -120,7 +132,7 @@ wss.on('connection', (ws, req) => {
     try {
       data = JSON.parse(message);
     } catch (err) {
-      console.error('Bad JSON recieved from %s', connections[ws].ip);
+      console.error('Bad JSON recieved from %s', ws.connData.ip);
       ws.send(JSON.stringify({error: ['bad JSON']}));
       return;
     }

@@ -11,16 +11,22 @@ class Game {
   }
 
   newPlayerCivID() {
-    let freeCivs = {};
+    const freeCivs = {};
     for (let i = 0; i < this.playerCount; i++) {
       freeCivs[i] = true;
     }
 
     for (let player in this.players) {
-      delete freeCivs[player.civ];
+      delete freeCivs[this.players[player].civ];
     }
 
-    return Math.min(...Object.keys(freeCivs));
+    const freeIDs = Object.keys(freeCivs);
+
+    if (freeIDs.length > 0) {
+      return Math.min(...freeIDs);
+    } else {
+      return null;
+    }
   }
 
   sendToAll(msg) {
