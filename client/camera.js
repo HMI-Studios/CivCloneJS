@@ -14,6 +14,15 @@ class Camera {
       empty: document.getElementById('border_overlay'),
       selector: document.getElementById('selector'),
     };
+    this.interval;
+  }
+
+  start(world, FPS) {
+    this.interval = setInterval(() => this.render(world), FPS);
+  }
+
+  stop() {
+    clearInterval(this.interval);
   }
 
   clear() {

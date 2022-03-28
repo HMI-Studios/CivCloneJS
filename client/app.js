@@ -123,5 +123,5 @@ world.setup(SERVER_IP)
       }
     };
 
-    setInterval(() => camera.render(world), 1000/60);
+    camera.start(world, 1000/60);
   });
