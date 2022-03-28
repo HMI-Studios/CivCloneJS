@@ -3,7 +3,7 @@ const resize = () => {
   const ctx = canvas.getContext('2d');
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-  ctx.setTransform(1, 0, 0, -1, canvas.width / 2, canvas.height / 2);
+  ctx.setTransform(1, 0, 0, 1, canvas.width / 2, canvas.height / 2);
   ctx.webkitImageSmoothingEnabled = false;
   ctx.mozImageSmoothingEnabled = false;
   ctx.imageSmoothingEnabled = false;
@@ -108,7 +108,7 @@ world.setup(SERVER_IP, camera, ui)
         gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
       }
 
-      const gameID = prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
+      const gameID = '0';//prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
 
       if (gameID !== null) {
         world.sendActions([
