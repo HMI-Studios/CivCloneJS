@@ -68,8 +68,8 @@ class Camera {
         if (x === Math.round((wmX / 19.8) + 18.3) && y === Math.round(((wmY + height) / 25) + (17 + (mod(x, 2) / -2)))) {
           ctx.drawImage(
             textures['selector'],
-            (-camX + ((x - (size / 2)) * 19.8)) * zoom,
-            (-camY + (((y - (size / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
+            (-camX + ((x - (width / 2)) * 19.8)) * zoom,
+            (-camY + (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
             28 * zoom,
             25 * zoom
           );
