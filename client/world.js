@@ -12,7 +12,7 @@ class World {
   }
 
   getTile(x, y) {
-    return this.tiles[(y * this.width) + mod(x, this.size)] || null;
+    return this.tiles[(y * this.width) + mod(x, this.width)] || null;
   }
 
   sendJSON(data) {
@@ -32,11 +32,12 @@ class World {
     }
   }
 
-  setup(serverIP) {
+  setup(serverIP, camera, ui) {
 
     this.on.update.beginGame = ([width, height]) => {
       ui.hideReadyBtn();
       [this.width, this.height] = [width, height];
+      camera.start(world, 1000/60);
     };
 
     this.on.update.setMap = (map) => {

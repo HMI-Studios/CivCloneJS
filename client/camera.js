@@ -51,7 +51,7 @@ class Camera {
     const xEnd = (Math.round((((camX * zoom) + (10 * width * zoom)) + scx2) / (19.8 * zoom)) + 1);
 
     this.clear();
-    for (let y = Math.max(yStart, 1); y < Math.min(yEnd, height); y++) {
+    for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
       for (let x = xStart; x < xEnd; x++) {
 
         const tile = world.getTile(x, y);
@@ -65,7 +65,7 @@ class Camera {
           );
         }
 
-        if (x === Math.round((wmX / 19.8) + 18.3) && y === Math.round(((wmY + size) / 25) + (17 + (mod(x, 2) / -2)))) {
+        if (x === Math.round((wmX / 19.8) + 18.3) && y === Math.round(((wmY + height) / 25) + (17 + (mod(x, 2) / -2)))) {
           ctx.drawImage(
             textures['selector'],
             (-camX + ((x - (size / 2)) * 19.8)) * zoom,
