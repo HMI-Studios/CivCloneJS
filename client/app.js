@@ -123,9 +123,5 @@ world.setup(SERVER_IP)
       }
     };
 
-    world.on.update.beginGame = (gameList) => {
-      ui.hideReadyBtn();
-    };
-
     setInterval(() => camera.render(world), 1000/60);
   });

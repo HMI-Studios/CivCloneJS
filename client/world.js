@@ -20,11 +20,11 @@ class World {
   }
 
   handleResponse(data) {
-    console.log(JSON.stringify(data));
     if (data.update) {
       for (let i = 0; i < data.update.length; i++) {
         let name = data.update[i][0];
         let args = data.update[i][1];
+        console.log(name);
         if (this.on.update[name]) {
           this.on.update[name](...args);
         }
@@ -33,6 +33,17 @@ class World {
   }
 
   setup(serverIP) {
+
+    this.on.update.beginGame = ([width, height]) => {
+      ui.hideReadyBtn();
+      [this.width, this.height] = [width, height];
+    };
+
+    this.on.update.setMap = (map) => {
+      console.log(map);
+      this.tiles = map;
+    };
+
     return new Promise((resolve, reject) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
