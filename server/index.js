@@ -38,13 +38,8 @@ const wss = new WebSocketServer({ server });
 
 const games = {
   0: new Game(
-    new Map(2, 2, [
-      'plains',
-      'ocean',
-      'ocean',
-      'plains',
-    ]),
-    1
+    new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') )).map),
+    2
   ),
 };
 
@@ -102,12 +97,19 @@ const methods = {
             ],
           });
 
-          game.updateCivTileVisibility(0);
+          // console.log(game)
+
+          game.forEachCiv((civ) => {
+            game.sendToCiv(civ, {
+              update: [
+                ['setMap', [game.map.getCivMap(civ)]],
+              ],
+            });
+          });
 
           game.sendToCiv(0, {
             update: [
               ['beginTurn', []],
-              ['setMap', [game.map.getCivMap(0)]],
             ],
           });
         }

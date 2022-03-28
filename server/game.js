@@ -1,25 +1,24 @@
+const mod = (a, b) => {
+  if (a >= 0) {
+    return a % b;
+  } else {
+    return ((a % b) + b) % b;
+  }
+};
+
 class Game {
   constructor(map, playerCount) {
     this.map = map;
     this.civs = {};
     for (let i = 0; i < playerCount; i++) {
       this.civs[i] = new Civilization();
-      this.civs[i].units = Array(i+1) // FIXME
-      this.civs[i].units[i] = new Unit('settler', i /*civ*/, i /*x*/, i /*y*/); // FIXME
+
+      this.civs[i].units = [] // FIXME
+      this.civs[i].units.push(new Unit('settler', i /*civ*/, (i+1)*1 /*x*/, (i+1)*1 /*y*/)); // FIXME
+      this.civs[i].units.push(new Unit('settler', i /*civ*/, (i+1)*3 /*x*/, (i+1)*4 /*y*/)); // FIXME
+
+      this.updateCivTileVisibility(i);
     }
-
-    // so, ig, find all units (ignore tiles for now), find all tiles in range (just tile the Unit is on for now)
-    // and mark those as vissible, and then generate the PlayerMap, and then send that??
-    // so
-    // visibleTiles = new Array(height*width).fill(false);
-    // for (unit in this.civs[civ].units) {
-    //   visibleTiles[game.pos(unit)] = true; // .pos() just returns x*W+y, because that looks cryptic
-    // }
-    // :thumbsup: ?
-
-
-    // Need to move getCivMap to Game then (because needs more variables only in Game)
-    // yeah that sounds right
 
     this.players = {};
     this.playerCount = playerCount;
@@ -34,7 +33,9 @@ class Game {
       tile.setVisibility(civ, false);
     }
     for (let unit of this.civs[civ].units) {
-      this.map.setTileVisibility(civ, this.map.pos(unit.x, unit.y), true);
+      for (let tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
+        tile.setVisibility(civ, true);
+      }
     }
   }
 
@@ -67,10 +68,10 @@ class Game {
         player.connection.send(JSON.stringify(msg));
       }
     }
-  };
+  }
 
   sendToCiv(civ, msg) {
-    let player = Object.values(this.players).find(val => val.civ === civ);
+    let player = Object.values(this.players).find(player => player.civ === civ);
 
     if (!player) {
       console.error("Error: Could not find player for Civilization #" + civ);
@@ -82,7 +83,13 @@ class Game {
     } else {
        player.connection.send(JSON.stringify(msg));
     }
-  };
+  }
+
+  forEachCiv(callback) {
+    for (let civ = 0; civ < this.playerCount; civ++) {
+      callback(civ);
+    }
+  }
 };
 
 class Map {
@@ -99,6 +106,30 @@ class Map {
     return y*this.width+x;
   }
 
+  getNeighbors(x, y, r, tileList=[], isTop=true) {
+    if (r > 0 && this.tiles[this.pos(x, y)]) {
+      tileList.push(this.tiles[this.pos(x, y)]);
+      if (mod(x, 2) === 1) {
+        this.getNeighbors(x, y+1, r-1, tileList, false);
+        this.getNeighbors(x+1, y+1, r-1, tileList, false);
+        this.getNeighbors(x+1, y, r-1, tileList, false);
+        this.getNeighbors(x, y-1, r-1, tileList, false);
+        this.getNeighbors(x-1, y, r-1, tileList, false);
+        this.getNeighbors(x-1, y+1, r-1, tileList, false);
+      } else {
+        this.getNeighbors(x, y+1, r-1, tileList, false);
+        this.getNeighbors(x+1, y, r-1, tileList, false);
+        this.getNeighbors(x+1, y-1, r-1, tileList, false);
+        this.getNeighbors(x, y-1, r-1, tileList, false);
+        this.getNeighbors(x-1, y-1, r-1, tileList, false);
+        this.getNeighbors(x-1, y, r-1, tileList, false);
+      }
+    }
+    if (isTop) {
+      return tileList;
+    }
+  }
+
   getCivMap(civ) {
     return this.tiles.map((tile) => {
       if (tile.discoveredBy.includes(civ)) {
@@ -113,8 +144,8 @@ class Map {
     });
   }
 
-  setTileVisibility(civ, pos, visible) {
-    this.tiles[pos].setVisibility(civ, visible);
+  setTileVisibility(civ, x, y, visible) {
+    this.tiles[this.pos(x, y)].setVisibility(civ, visible);
   }
 };
 
@@ -138,6 +169,7 @@ class Tile {
     return {
       ...this.getDiscoveredData(),
       unit: this.unit,
+      visible: true,
     }
   }
 
