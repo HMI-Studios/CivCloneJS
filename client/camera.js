@@ -21,6 +21,7 @@ class Camera {
       },
     };
     this.interval;
+    this.mouseDownTime = 0;
   }
 
   start(world, FPS) {
@@ -50,6 +51,13 @@ class Camera {
       this.canvas.width / 2,
       this.canvas.height / 2
     ];
+
+    if (mouseDown) {
+      this.mouseDownTime++;
+    } else {
+      this.mouseDownTime = 0;
+    }
+
     const yStart = (Math.round(((camY * zoom) - ((12.5 * height * zoom) + scy2)) / (25 * zoom)) + (height - 2));
     const yEnd = (Math.round(((camY * zoom) - ((12.5 * height * zoom) + scy1)) / (25 * zoom)) + (height + 3));
 
@@ -86,17 +94,22 @@ class Camera {
               (88 * 0.2) * zoom
             );
           }
+
+          if (x === selectedX && y === selectedY) {
+            ctx.drawImage(
+              textures['selector'],
+              (-camX + ((x - (width / 2)) * 19.8)) * zoom,
+              (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
+              28 * zoom,
+              25 * zoom
+            );
+
+            if (tile.unit && this.mouseDownTime === 1) {
+              console.log(tile.unit);
+            }
+          }
         }
 
-        if (x === selectedX && y === selectedY) {
-          ctx.drawImage(
-            textures['selector'],
-            (-camX + ((x - (width / 2)) * 19.8)) * zoom,
-            (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
-            28 * zoom,
-            25 * zoom
-          );
-        }
 
       }
     }

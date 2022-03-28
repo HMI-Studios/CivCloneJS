@@ -14,7 +14,7 @@ class Game {
       this.civs[i] = new Civilization();
 
       this.addUnit(new Unit('settler', i), (i+1)*1, (i+1)*1);
-      this.addUnit(new Unit('settler', i), (i+1)*3, (i+1)*4); // REMOVE THESE
+      this.addUnit(new Unit('scout', i), (i+1)*3, (i+1)*4); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
     }
@@ -27,12 +27,22 @@ class Game {
     };
   }
 
+  beginTurnForCiv(civ) {
+    this.civs[civ].newTurn();
+    this.sendToCiv(civ, {
+      update: [
+        ['setMap', [this.map.getCivMap(civ)]],
+        ['beginTurn', []],
+      ],
+    });
+  }
+
   updateCivTileVisibility(civ) {
     for (let tile of this.map.tiles) {
       tile.setVisibility(civ, false);
     }
     for (let unit of this.civs[civ].units) {
-      for (let tile of this.map.getNeighbors(unit.x, unit.y, 1)) {
+      for (let tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
         tile.setVisibility(civ, true);
       }
     }
@@ -185,9 +195,10 @@ class Tile {
   }
 
   getVisibleData() {
+    const unitData = !this.unit ? null : this.unit.getData();
     return {
       ...this.getDiscoveredData(),
-      unit: this.unit,
+      unit: unitData,
       visible: true,
     }
   }
@@ -208,19 +219,44 @@ class Tile {
   }
 };
 
+const unitMovementTable = {
+  'settler': 3,
+  'scout': 5,
+};
+
 class Unit {
   constructor(type, civ) {
     this.type = type;
     this.hp = 100;
+    this.movement = 0;
     this.civ = civ;
     this.x = null;
     this.y = null;
+  }
+
+  getData() {
+    return {
+      type: this.type,
+      hp: this.hp,
+      movement: this.movement,
+      civ: this.civ,
+    };
+  }
+
+  newTurn() {
+    this.movement = unitMovementTable[this.type];
   }
 };
 
 class Civilization {
   constructor() {
     this.units = [];
+  }
+
+  newTurn() {
+    for (let unit of this.units) {
+      unit.newTurn();
+    }
   }
 
   addUnit(unit) {

@@ -87,11 +87,7 @@ const methods = {
             });
           });
 
-          game.sendToCiv(0, {
-            update: [
-              ['beginTurn', []],
-            ],
-          });
+          game.beginTurnForCiv(0);
         }
       }
     }
