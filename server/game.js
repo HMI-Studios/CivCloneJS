@@ -13,9 +13,8 @@ class Game {
     for (let i = 0; i < playerCount; i++) {
       this.civs[i] = new Civilization();
 
-      this.civs[i].units = [] // FIXME
-      this.civs[i].units.push(new Unit('settler', i /*civ*/, (i+1)*1 /*x*/, (i+1)*1 /*y*/)); // FIXME
-      this.civs[i].units.push(new Unit('settler', i /*civ*/, (i+1)*3 /*x*/, (i+1)*4 /*y*/)); // FIXME
+      this.addUnit(new Unit('settler', i), (i+1)*1, (i+1)*1);
+      this.addUnit(new Unit('settler', i), (i+1)*3, (i+1)*4); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
     }
@@ -33,10 +32,20 @@ class Game {
       tile.setVisibility(civ, false);
     }
     for (let unit of this.civs[civ].units) {
-      for (let tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
+      for (let tile of this.map.getNeighbors(unit.x, unit.y, 1)) {
         tile.setVisibility(civ, true);
       }
     }
+  }
+
+  addUnit(unit, x, y) {
+    this.civs[unit.civ].addUnit(unit);
+    this.map.moveUnitTo(unit, x, y);
+  }
+
+  removeUnit(unit) {
+    this.civs[unit.civ].removeUnit(unit);
+    this.map.moveUnitTo(unit, null, null);
   }
 
   newPlayerCivID() {
@@ -130,6 +139,16 @@ class Map {
     }
   }
 
+  moveUnitTo(unit, x, y) {
+    if (unit.x !== null && unit.y !== null) {
+      this.tiles[this.pos(unit.x, unit.y)].setUnit(null);
+    }
+    [unit.x, unit.y] = [x, y];
+    if (x !== null && y !== null) {
+      this.tiles[this.pos(x, y)].setUnit(unit);
+    }
+  }
+
   getCivMap(civ) {
     return this.tiles.map((tile) => {
       if (tile.discoveredBy.includes(civ)) {
@@ -173,6 +192,10 @@ class Tile {
     }
   }
 
+  setUnit(unit) {
+    this.unit = unit;
+  }
+
   setVisibility(civ, visible) {
     const vIndex = this.visibleTo.indexOf(civ);
     const dIndex = this.discoveredBy.indexOf(civ);
@@ -186,18 +209,29 @@ class Tile {
 };
 
 class Unit {
-  constructor(type, civ, x, y) {
+  constructor(type, civ) {
     this.type = type;
     this.hp = 100;
     this.civ = civ;
-    this.x = x;
-    this.y = y;
+    this.x = null;
+    this.y = null;
   }
 };
 
 class Civilization {
   constructor() {
     this.units = [];
+  }
+
+  addUnit(unit) {
+    this.units.push(unit);
+  }
+
+  removeUnit(unit) {
+    const unitIndex = this.units.indexOf(unit);
+    if (unitIndex > -1) {
+      this.units.splice(unitIndex, 1);
+    }
   }
 };
 

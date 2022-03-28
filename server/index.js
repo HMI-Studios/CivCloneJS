@@ -8,38 +8,18 @@ const port = 8080;
 const path = require('path');
 app.use('/', express.static(path.join(__dirname, '../client')));
 
-// TODO
-// app.use('/map', express.static(path.join(__dirname, 'data/map.json')));
-
-// app.get('/map/:gameID', (req, res) => {
-//   const { gameID } = req.params;
-//   fs.readFile(path.join(__dirname, `saves/${gameID}.json`), (err, data) => {
-//     if (err) {
-//       if (err.code === 'ENOENT') {
-//         console.error('File not found!');
-//         res.status(404);
-//         res.end("No such game ID");
-//       } else {
-//         throw err;
-//       }
-//     } else {
-//       res.end(data.toString());
-//     }
-//   });
-// });
-
-const { Game, Map, Tile, Player } = require('./game.js');
-
 const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
+
+const { Game, Map, Tile, Player } = require('./game.js');
 
 const wss = new WebSocketServer({ server });
 
 const games = {
   0: new Game(
     new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') )).map),
-    2
+    1
   ),
 };
 
