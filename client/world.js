@@ -30,20 +30,74 @@ class World {
         }
       }
     }
+    if (data.error) {
+      for (let i = 0; i < data.error.length; i++) {
+        let name = data.error[i][0];
+        let args = data.error[i][1];
+        console.error(name);
+        if (this.on.error[name]) {
+          this.on.error[name](...args);
+        }
+      }
+    }
   }
 
   setup(serverIP, camera, ui) {
 
-    this.on.update.beginGame = ([width, height]) => {
+    const readyFn = (isReady) => {
+      this.sendActions([
+        ['ready', [isReady]],
+      ]);
+    };
+
+    const civPickerFn = (color) => {
+      this.sendActions([
+        ['setColor', [color]],
+      ]);
+    };
+
+    this.on.update.gameList = (gameList) => {
+      let gameTitles = [];
+      let defaultGame = Object.keys(gameList)[0];
+      for (let gameID in gameList) {
+        gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
+      }
+
+      const gameID = '0';//prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
+
+      if (gameID !== null) {
+        this.sendActions([
+          ['joinGame', [gameID]],
+        ]);
+
+        ui.showReadyBtn(readyFn);
+        ui.showCivPicker(civPickerFn);
+      }
+    };
+
+    this.on.update.beginGame = ([width, height], playerCount) => {
       ui.hideReadyBtn();
+      ui.hideCivPicker();
       [this.width, this.height] = [width, height];
-      camera.start(world, 1000/60);
+      camera.start(this, 1000/60);
     };
 
     this.on.update.setMap = (map) => {
       console.log(map);
       this.tiles = map;
     };
+
+    this.on.update.colorPool = (colors) => {
+      console.log(colors);
+      ui.colorPool = colors;
+      ui.showCivPicker(civPickerFn);
+    };
+
+    this.on.error.notReady = (reason) => {
+      console.error('Error:', reason);
+      ui.hideReadyBtn();
+      ui.showReadyBtn(readyFn);
+    }
 
     return new Promise((resolve, reject) => {
       this.socket = new WebSocket(`ws://${serverIP}`);

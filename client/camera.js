@@ -41,9 +41,43 @@ class Camera {
     );
   }
 
+  renderUnit(unit, x, y) {
+    const { zoom, x: camX, y: camY, textures, ctx } = this;
+    const { width, height } = world;
+
+    const UNIT_WIDTH = (74 * 0.2);
+    const UNIT_HEIGHT = (88 * 0.2);
+    const UNIT_RECT_HEIGHT = (51 * 0.2);
+
+    ctx.fillStyle = '#555';
+
+    ctx.beginPath();
+    ctx.rect(
+      (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
+      (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
+      UNIT_WIDTH * zoom,
+      UNIT_RECT_HEIGHT * zoom
+    );
+    ctx.arc(
+      (-camX + ((x - (width / 2)) * 19.8) + 6.5 + (UNIT_WIDTH / 2)) * zoom,
+      (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5 + UNIT_RECT_HEIGHT) * zoom,
+      (UNIT_WIDTH / 2) * zoom,
+      0, Math.PI
+    );
+    ctx.fill();
+
+    ctx.drawImage(
+      textures.unit[unit.type],
+      (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
+      (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
+      UNIT_WIDTH * zoom,
+      UNIT_HEIGHT * zoom
+    );
+  }
+
   render(world) {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
-    const { tiles, width, height } = world;
+    const { width, height } = world;
     const [ wmX, wmY ] = [ camX + (mouseX / zoom), camY + (mouseY / zoom) ];
     const [ scx1, scy1, scx2, scy2 ] = [
       -this.canvas.width / 2,
@@ -86,13 +120,7 @@ class Camera {
           );
 
           if (tile.unit) {
-            ctx.drawImage(
-              textures.unit[tile.unit.type],
-              (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
-              (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
-              (74 * 0.2) * zoom,
-              (88 * 0.2) * zoom
-            );
+            this.renderUnit(tile.unit, x, y);
           }
 
           if (x === selectedX && y === selectedY) {
