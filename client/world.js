@@ -9,6 +9,7 @@ class World {
       update: {},
       error: {},
     };
+    this.civs = {};
   }
 
   getTile(x, y) {
@@ -92,6 +93,12 @@ class World {
       ui.colorPool = colors;
       ui.showCivPicker(civPickerFn);
     };
+
+    this.on.update.civData = (civs) => {
+      this.civs = civs;
+    };
+
+
 
     this.on.error.notReady = (reason) => {
       console.error('Error:', reason);

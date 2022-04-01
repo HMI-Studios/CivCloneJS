@@ -43,13 +43,13 @@ class Camera {
 
   renderUnit(unit, x, y) {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
-    const { width, height } = world;
+    const { width, height, civs } = world;
 
     const UNIT_WIDTH = (74 * 0.2);
     const UNIT_HEIGHT = (88 * 0.2);
     const UNIT_RECT_HEIGHT = (51 * 0.2);
 
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = civs[unit.civID].color;
 
     ctx.beginPath();
     ctx.rect(
