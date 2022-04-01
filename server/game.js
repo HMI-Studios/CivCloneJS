@@ -68,6 +68,15 @@ class Game {
     }
   }
 
+  getAllCivsData() {
+    const data = {};
+    for (let civID in this.civs) {
+      const civ = this.civs[civID];
+      data[civID] = civ.getData();
+    }
+    return data;
+  }
+
   beginTurnForCiv(civID) {
     this.civs[civID].newTurn();
     this.sendToCiv(civID, {
@@ -293,6 +302,12 @@ class Civilization {
   constructor() {
     this.units = [];
     this.color = null;
+  }
+
+  getData() {
+    return {
+      color: this.color
+    }
   }
 
   newTurn() {

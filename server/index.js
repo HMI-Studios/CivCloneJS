@@ -117,6 +117,7 @@ const methods = {
             game.sendToAll({
               update: [
                 ['beginGame', [ [game.map.width, game.map.height], game.playerCount ]],
+                ['civData', [ game.getAllCivsData() ]],
               ],
             });
 
