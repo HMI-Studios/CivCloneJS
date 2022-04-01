@@ -44,6 +44,7 @@ const methods = {
 
       sendTo(ws, {
         update: [
+          ['civID', [ civID ]],
           ['colorPool', [ game.getColorPool() ]],
         ],
       });

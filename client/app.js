@@ -93,7 +93,7 @@ camera = new Camera();
 player = new Player(PLAYER_NAME);
 ui = new UI();
 world = new World();
-world.setup(SERVER_IP, camera, ui)
+world.setup(SERVER_IP, camera, ui, player)
   .then(() => {
     world.sendActions([
       ['getGames', []],

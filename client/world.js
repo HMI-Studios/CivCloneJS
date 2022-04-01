@@ -43,7 +43,7 @@ class World {
     }
   }
 
-  setup(serverIP, camera, ui) {
+  setup(serverIP, camera, ui, player) {
 
     const readyFn = (isReady) => {
       this.sendActions([
@@ -96,6 +96,10 @@ class World {
 
     this.on.update.civData = (civs) => {
       this.civs = civs;
+    };
+
+    this.on.update.civID = (civID) => {
+      player.civID = civID;
     };
 
 
