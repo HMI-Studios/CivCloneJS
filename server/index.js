@@ -19,7 +19,7 @@ const wss = new WebSocketServer({ server });
 const games = {
   0: new Game(
     new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') )).map),
-    1
+    2
   ),
 };
 
@@ -41,9 +41,15 @@ const methods = {
     if (civID !== null) {
       ws.connData.gameID = gameID;
       game.players[username] = new Player(civID, ws);
+
+      sendTo(ws, {
+        update: [
+          ['colorPool', [ game.getColorPool() ]],
+        ],
+      });
     } else {
       sendTo(ws, { error: [
-        ['kicked', ['Game Full']]
+        ['kicked', ['Game full']],
       ] });
     }
   },
@@ -56,9 +62,34 @@ const methods = {
 
     sendTo(ws, {
       update: [
-        ['gameList', [gameList]]
+        ['gameList', [gameList]],
       ],
     });
+  },
+
+  setColor: (ws, color) => {
+    const username = ws.connData.username;
+    const gameID = ws.connData.gameID;
+    const game = games[gameID];
+    if (game) {
+      const player = game.getPlayer(username);
+
+      if (player) {
+        if (game.setCivColor(player.civID, color)) {
+          game.sendToAll({
+            update: [
+              ['colorPool', [ game.getColorPool() ]],
+            ],
+          });
+        } else {
+          sendTo(ws, {
+            error: [
+              ['colorTaken', ['That color is no longer available']],
+            ],
+          });
+        }
+      }
+    }
   },
 
   ready: (ws, state) => {
@@ -66,28 +97,41 @@ const methods = {
     const gameID = ws.connData.gameID;
     const game = games[gameID];
 
-    if (game && game.players[username]) {
-      game.players[username].ready = state;
+    if (game) {
+      const player = game.getPlayer(username);
 
-      if (Object.keys(game.players).length === game.playerCount) {
-        if (Object.values(game.players).every(player => player.ready)) {
-          game.sendToAll({
-            update: [
-              ['beginGame', [[game.map.width, game.map.height]]],
-            ],
-          });
+      if (player) {
+        const civ = game.getCiv(player.civID);
 
-          // console.log(game)
+        if (!civ.color) {
+          sendTo(ws, { error: [
+            ['notReady', ['Please select civ color']],
+          ] });
+          return;
+        }
 
-          game.forEachCiv((civ) => {
-            game.sendToCiv(civ, {
+        player.ready = state;
+
+        if (Object.keys(game.players).length === game.playerCount) {
+          if (Object.values(game.players).every(player => player.ready)) {
+            game.sendToAll({
               update: [
-                ['setMap', [game.map.getCivMap(civ)]],
+                ['beginGame', [ [game.map.width, game.map.height], game.playerCount ]],
               ],
             });
-          });
 
-          game.beginTurnForCiv(0);
+            // console.log(game)
+
+            game.forEachCiv((civID) => {
+              game.sendToCiv(civID, {
+                update: [
+                  ['setMap', [game.map.getCivMap(civID)]],
+                ],
+              });
+            });
+
+            game.beginTurnForCiv(0);
+          }
         }
       }
     }
