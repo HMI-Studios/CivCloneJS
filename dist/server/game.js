@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = exports.Civilization = exports.Unit = exports.Game = void 0;
-// const { Map, Tile } = require('./map.js');
 const map_1 = require("./map");
 class Game {
     constructor(map, playerCount) {
@@ -9,8 +8,8 @@ class Game {
         this.civs = {};
         for (let i = 0; i < playerCount; i++) {
             this.civs[i] = new Civilization();
-            this.addUnit(new Unit('settler', i), (i + 1) * 1, (i + 1) * 1); // REMOVE THESE
-            this.addUnit(new Unit('scout', i), (i + 1) * 3, (i + 1) * 4); // REMOVE THESE
+            this.addUnit(new Unit('settler', i), { x: (i + 1) * 1, y: (i + 1) * 1 }); // REMOVE THESE
+            this.addUnit(new Unit('scout', i), { x: (i + 1) * 3, y: (i + 1) * 4 }); // REMOVE THESE
             this.updateCivTileVisibility(i);
         }
         this.players = {};
@@ -78,18 +77,18 @@ class Game {
             tile.clearVisibility(civID);
         }
         for (const unit of this.civs[civID].units) {
-            for (const tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
+            for (const tile of this.map.getNeighbors(unit.coords, 3)) {
                 tile.setVisibility(civID, true);
             }
         }
     }
-    addUnit(unit, x, y) {
+    addUnit(unit, coords) {
         this.civs[unit.civID].addUnit(unit);
-        this.map.moveUnitTo(unit, x, y);
+        this.map.moveUnitTo(unit, coords);
     }
     removeUnit(unit) {
         this.civs[unit.civID].removeUnit(unit);
-        this.map.moveUnitTo(unit, null, null);
+        this.map.moveUnitTo(unit, { x: null, y: null });
     }
     newPlayerCivID() {
         const freeCivs = {};
@@ -131,11 +130,11 @@ class Game {
             player.connection.send(JSON.stringify(msg));
         }
     }
-    sendTileUpdate(tile) {
+    sendTileUpdate(coords, tile) {
         for (let civID = 0; civID < this.playerCount; civID++) {
             this.sendToCiv(civID, {
                 update: [
-                    ['tileUpdate', [this.map.getCivTile(civID, tile)]],
+                    ['tileUpdate', [coords, this.map.getCivTile(civID, tile)]],
                 ],
             });
         }
@@ -151,14 +150,21 @@ const unitMovementTable = {
     'settler': 3,
     'scout': 5,
 };
+const unitMovementClassTable = {
+    'settler': 0,
+    'scout': 0,
+};
 class Unit {
     constructor(type, civID) {
         this.type = type;
         this.hp = 100;
         this.movement = 0;
+        this.movementClass = unitMovementClassTable[type];
         this.civID = civID;
-        this.x = null;
-        this.y = null;
+        this.coords = {
+            x: null,
+            y: null,
+        };
     }
     getData() {
         return {
@@ -167,6 +173,9 @@ class Unit {
             movement: this.movement,
             civID: this.civID,
         };
+    }
+    getMovementClass() {
+        return this.movementClass;
     }
     newTurn() {
         this.movement = unitMovementTable[this.type];

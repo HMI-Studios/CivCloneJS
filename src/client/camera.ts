@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Camera {
   x: number;
   y: number;
@@ -113,8 +114,8 @@ class Camera {
     const selectedX = Math.round((wmX / 19.8) + 18.3);
     const selectedY = Math.round(((wmY + height) / 25) + (18 + (mod(selectedX, 2) / -2)));
 
-    const TILE_SIZE = [28, 25];
-    const UNIT_SCALE = [74, 88];
+    // const TILE_SIZE = [28, 25];
+    // const UNIT_SCALE = [74, 88];
 
     this.clear();
     for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {

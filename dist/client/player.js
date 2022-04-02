@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
     constructor() {
         this.elements = {
@@ -7,7 +8,7 @@ class UI {
         };
         this.colorPool = [];
     }
-    createElement(type, className = null, id = null) {
+    createElement(type, className = null) {
         const element = document.createElement(type);
         if (className) {
             element.className = className;

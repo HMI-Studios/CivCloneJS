@@ -1,6 +1,10 @@
-// const { Map, Tile } = require('./map.js');
 import { Map, Tile } from './map';
 import * as WebSocket from 'ws';
+
+export interface Coords {
+  x: number;
+  y: number;
+}
 
 export class Game {
   map: Map;
@@ -15,8 +19,8 @@ export class Game {
     for (let i = 0; i < playerCount; i++) {
       this.civs[i] = new Civilization();
 
-      this.addUnit(new Unit('settler', i), (i+1)*1, (i+1)*1); // REMOVE THESE
-      this.addUnit(new Unit('scout', i), (i+1)*3, (i+1)*4); // REMOVE THESE
+      this.addUnit(new Unit('settler', i), { x: (i+1)*1, y: (i+1)*1 }); // REMOVE THESE
+      this.addUnit(new Unit('scout', i), { x: (i+1)*3, y: (i+1)*4 }); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
     }
@@ -99,20 +103,20 @@ export class Game {
       tile.clearVisibility(civID);
     }
     for (const unit of this.civs[civID].units) {
-      for (const tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
+      for (const tile of this.map.getNeighbors(unit.coords, 3)) {
         tile.setVisibility(civID, true);
       }
     }
   }
 
-  addUnit(unit: Unit, x: number, y: number): void {
+  addUnit(unit: Unit, coords: Coords): void {
     this.civs[unit.civID].addUnit(unit);
-    this.map.moveUnitTo(unit, x, y);
+    this.map.moveUnitTo(unit, coords);
   }
 
   removeUnit(unit: Unit): void {
     this.civs[unit.civID].removeUnit(unit);
-    this.map.moveUnitTo(unit, null, null);
+    this.map.moveUnitTo(unit, { x: null, y: null });
   }
 
   newPlayerCivID(): number | null {
@@ -161,11 +165,11 @@ export class Game {
     }
   }
 
-  sendTileUpdate(tile: Tile): void {
+  sendTileUpdate(coords: Coords, tile: Tile): void {
     for (let civID = 0; civID < this.playerCount; civID++) {
       this.sendToCiv(civID, {
         update: [
-          ['tileUpdate', [ this.map.getCivTile(civID, tile) ]],
+          ['tileUpdate', [ coords, this.map.getCivTile(civID, tile) ]],
         ],
       });
     }
@@ -178,12 +182,17 @@ export class Game {
   }
 }
 
-const unitMovementTable = {
+const unitMovementTable: { [unit: string]: number } = {
   'settler': 3,
   'scout': 5,
 };
 
-interface UnitData {
+const unitMovementClassTable: { [unit: string]: number } = {
+  'settler': 0,
+  'scout': 0,
+};
+
+export interface UnitData {
   type: string,
   hp: number,
   movement: number,
@@ -194,17 +203,20 @@ export class Unit {
   type: string;
   hp: number;
   movement: number;
+  movementClass: number;
   civID: number;
-  x: number;
-  y: number;
+  coords: Coords;
 
   constructor(type: string, civID: number) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
+    this.movementClass = unitMovementClassTable[type];
     this.civID = civID;
-    this.x = null;
-    this.y = null;
+    this.coords = {
+      x: null,
+      y: null,
+    };
   }
 
   getData(): UnitData {
@@ -215,13 +227,17 @@ export class Unit {
       civID: this.civID,
     };
   }
+  
+  getMovementClass(): number {
+    return this.movementClass;
+  }
 
   newTurn() {
     this.movement = unitMovementTable[this.type];
   }
 }
 
-interface CivilizationData {
+export interface CivilizationData {
   color: string
 }
 

@@ -10,7 +10,7 @@ class Map {
             this.tiles[i] = new Tile(terrain[i]);
         }
     }
-    pos(x, y) {
+    pos({ x, y }) {
         return y * this.width + x;
     }
     mod(a, b) {
@@ -21,40 +21,40 @@ class Map {
             return ((a % b) + b) % b;
         }
     }
-    getTile(x, y) {
-        return this.tiles[this.pos(x, y)];
+    getTile(coords) {
+        return this.tiles[this.pos(coords)];
     }
-    getNeighbors(x, y, r, tileList = [], isTop = true) {
-        if (r > 0 && this.tiles[this.pos(x, y)]) {
-            tileList.push(this.tiles[this.pos(x, y)]);
+    getNeighbors({ x, y }, r, tileList = [], isTop = true) {
+        if (r > 0 && this.tiles[this.pos({ x, y })]) {
+            tileList.push(this.tiles[this.pos({ x, y })]);
             if (this.mod(x, 2) === 1) {
-                this.getNeighbors(x, y + 1, r - 1, tileList, false);
-                this.getNeighbors(x + 1, y + 1, r - 1, tileList, false);
-                this.getNeighbors(x + 1, y, r - 1, tileList, false);
-                this.getNeighbors(x, y - 1, r - 1, tileList, false);
-                this.getNeighbors(x - 1, y, r - 1, tileList, false);
-                this.getNeighbors(x - 1, y + 1, r - 1, tileList, false);
+                this.getNeighbors({ x: x, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x + 1, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x + 1, y: y }, r - 1, tileList, false);
+                this.getNeighbors({ x: x, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x - 1, y: y }, r - 1, tileList, false);
+                this.getNeighbors({ x: x - 1, y: y + 1 }, r - 1, tileList, false);
             }
             else {
-                this.getNeighbors(x, y + 1, r - 1, tileList, false);
-                this.getNeighbors(x + 1, y, r - 1, tileList, false);
-                this.getNeighbors(x + 1, y - 1, r - 1, tileList, false);
-                this.getNeighbors(x, y - 1, r - 1, tileList, false);
-                this.getNeighbors(x - 1, y - 1, r - 1, tileList, false);
-                this.getNeighbors(x - 1, y, r - 1, tileList, false);
+                this.getNeighbors({ x: x, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x + 1, y: y }, r - 1, tileList, false);
+                this.getNeighbors({ x: x + 1, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x - 1, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighbors({ x: x - 1, y: y }, r - 1, tileList, false);
             }
         }
         if (isTop) {
             return tileList;
         }
     }
-    moveUnitTo(unit, x, y) {
-        if (unit.x !== null && unit.y !== null) {
-            this.tiles[this.pos(unit.x, unit.y)].setUnit(null);
+    moveUnitTo(unit, coords) {
+        if (unit.coords.x !== null && unit.coords.y !== null) {
+            this.tiles[this.pos(unit.coords)].setUnit(null);
         }
-        [unit.x, unit.y] = [x, y];
-        if (x !== null && y !== null) {
-            this.tiles[this.pos(x, y)].setUnit(unit);
+        unit.coords = coords;
+        if (coords.x !== null && coords.y !== null) {
+            this.tiles[this.pos(coords)].setUnit(unit);
         }
     }
     getCivTile(civID, tile) {
@@ -75,8 +75,8 @@ class Map {
             return this.getCivTile(civID, tile);
         });
     }
-    setTileVisibility(civID, x, y, visible) {
-        this.tiles[this.pos(x, y)].setVisibility(civID, visible);
+    setTileVisibility(civID, coords, visible) {
+        this.tiles[this.pos(coords)].setVisibility(civID, visible);
     }
 }
 exports.Map = Map;
@@ -107,6 +107,10 @@ class Tile {
     getVisibleData() {
         const unitData = !this.unit ? null : this.unit.getData();
         return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: unitData, visible: true });
+    }
+    getMovementCost(unit) {
+        const mode = unit.getMovementClass();
+        return mode > -1 ? this.movementCost[mode] || Infinity : 1;
     }
     setUnit(unit) {
         this.unit = unit;

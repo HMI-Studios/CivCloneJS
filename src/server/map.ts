@@ -1,11 +1,11 @@
-import { Unit } from './game';
+import { Unit, UnitData, Coords } from './game';
 
 export class Map {
   height: number;
   width: number;
   tiles: Tile[];
 
-  constructor(height, width, terrain) {
+  constructor(height: number, width: number, terrain: string[]) {
     this.height = height;
     this.width = width;
     this.tiles = new Array(height*width);
@@ -14,7 +14,7 @@ export class Map {
     }
   }
 
-  pos(x: number, y: number): number {
+  pos({ x, y }: Coords): number {
     return y*this.width+x;
   }
 
@@ -26,27 +26,27 @@ export class Map {
     }
   } 
 
-  getTile(x: number, y: number): Tile {
-    return this.tiles[this.pos(x, y)];
+  getTile(coords: Coords): Tile {
+    return this.tiles[this.pos(coords)];
   }
 
-  getNeighbors(x, y, r, tileList=[], isTop=true) {
-    if (r > 0 && this.tiles[this.pos(x, y)]) {
-      tileList.push(this.tiles[this.pos(x, y)]);
+  getNeighbors({ x, y }: Coords, r: number, tileList: Tile[] = [], isTop = true) {
+    if (r > 0 && this.tiles[this.pos({x, y})]) {
+      tileList.push(this.tiles[this.pos({x, y})]);
       if (this.mod(x, 2) === 1) {
-        this.getNeighbors(x, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y, r-1, tileList, false);
-        this.getNeighbors(x, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y, r-1, tileList, false);
-        this.getNeighbors(x-1, y+1, r-1, tileList, false);
+        this.getNeighbors({ x: x,   y: y+1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x+1, y: y+1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x+1, y: y   }, r-1, tileList, false);
+        this.getNeighbors({ x: x,   y: y-1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x-1, y: y   }, r-1, tileList, false);
+        this.getNeighbors({ x: x-1, y: y+1 }, r-1, tileList, false);
       } else {
-        this.getNeighbors(x, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y, r-1, tileList, false);
-        this.getNeighbors(x+1, y-1, r-1, tileList, false);
-        this.getNeighbors(x, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y, r-1, tileList, false);
+        this.getNeighbors({ x: x,   y: y+1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x+1, y: y   }, r-1, tileList, false);
+        this.getNeighbors({ x: x+1, y: y-1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x,   y: y-1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x-1, y: y-1 }, r-1, tileList, false);
+        this.getNeighbors({ x: x-1, y: y   }, r-1, tileList, false);
       }
     }
     if (isTop) {
@@ -54,17 +54,17 @@ export class Map {
     }
   }
 
-  moveUnitTo(unit: Unit, x: number, y: number) {
-    if (unit.x !== null && unit.y !== null) {
-      this.tiles[this.pos(unit.x, unit.y)].setUnit(null);
+  moveUnitTo(unit: Unit, coords: Coords): void {
+    if (unit.coords.x !== null && unit.coords.y !== null) {
+      this.tiles[this.pos(unit.coords)].setUnit(null);
     }
-    [unit.x, unit.y] = [x, y];
-    if (x !== null && y !== null) {
-      this.tiles[this.pos(x, y)].setUnit(unit);
+    unit.coords = coords;
+    if (coords.x !== null && coords.y !== null) {
+      this.tiles[this.pos(coords)].setUnit(unit);
     }
   }
 
-  getCivTile(civID: number, tile: Tile) {
+  getCivTile(civID: number, tile: Tile): TileData | null {
     if (tile.discoveredBy[civID]) {
       if (tile.visibleTo[civID]) {
         return tile.getVisibleData();
@@ -82,8 +82,8 @@ export class Map {
     });
   }
 
-  setTileVisibility(civID: number, x: number, y: number, visible: boolean) {
-    this.tiles[this.pos(x, y)].setVisibility(civID, visible);
+  setTileVisibility(civID: number, coords: Coords, visible: boolean) {
+    this.tiles[this.pos(coords)].setVisibility(civID, visible);
   }
 }
 
@@ -96,6 +96,14 @@ const tileMovementCostTable: { [type: string]: [number, number] } = {
   'mountain': [0, 0],
 };
 
+export interface TileData {
+  type: string;
+  improvement: any;
+  movementCost: [number, number];
+  unit?: UnitData;
+  visible?: boolean;
+}
+
 export class Tile {
   type: string;
   improvement: any;
@@ -104,7 +112,7 @@ export class Tile {
   visibleTo: { [civID: number]: number };
   movementCost: [number, number];
 
-  constructor(type) {
+  constructor(type: string) {
     this.type = type;
     this.improvement = null;
     this.unit = null;
@@ -113,7 +121,7 @@ export class Tile {
     this.movementCost = tileMovementCostTable[type];
   }
 
-  getDiscoveredData() {
+  getDiscoveredData(): TileData {
     return {
       type: this.type,
       improvement: this.improvement,
@@ -121,7 +129,7 @@ export class Tile {
     };
   }
 
-  getVisibleData() {
+  getVisibleData(): TileData {
     const unitData = !this.unit ? null : this.unit.getData();
     return {
       ...this.getDiscoveredData(),
@@ -130,11 +138,16 @@ export class Tile {
     }
   }
 
-  setUnit(unit: Unit) {
+  getMovementCost(unit: Unit): number {
+    const mode = unit.getMovementClass();
+    return mode > -1 ? this.movementCost[mode] || Infinity : 1;
+  }
+
+  setUnit(unit: Unit): void {
     this.unit = unit;
   }
 
-  setVisibility(civID: number, visible: boolean) {
+  setVisibility(civID: number, visible: boolean): void {
     if (visible) {
       this.visibleTo[civID]++;
     } else {
@@ -146,7 +159,7 @@ export class Tile {
     }
   }
 
-  clearVisibility(civID: number) {
+  clearVisibility(civID: number): void {
     this.visibleTo[civID] = 0;
   }
 }

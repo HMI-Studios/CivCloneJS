@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
   elements: { [key: string]: HTMLElement };
   colorPool: string[];
@@ -10,7 +11,7 @@ class UI {
     this.colorPool = [];
   }
 
-  createElement(type: string, className=null, id=null): HTMLElement {
+  createElement(type: string, className=null): HTMLElement {
     const element = document.createElement(type);
     if (className) {
       element.className = className;
@@ -18,7 +19,7 @@ class UI {
     return element;
   }
 
-  createCivItem (civName, color) {
+  createCivItem (civName: string, color: string): HTMLElement {
     const civItem = this.createElement('li', 'civItem');
     civItem.style.backgroundColor = color;
     const nameText = this.createElement('span');
@@ -27,7 +28,7 @@ class UI {
     return civItem;
   }
 
-  showCivPicker(callback) {
+  showCivPicker(callback: (color: string) => void) {
     this.elements.civPicker.innerHTML = '';
     for (let i = 0; i < this.colorPool.length; i++) {
       const color = this.colorPool[i];
@@ -47,7 +48,7 @@ class UI {
     this.elements.centerModal.remove();
   }
 
-  showReadyBtn(callback) {
+  showReadyBtn(callback: (isReady: boolean) => void) {
     let btnState = false;
     this.elements.readyBtn.innerHTML = 'Ready';
     this.elements.readyBtn.onclick = () => {

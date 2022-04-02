@@ -36,6 +36,14 @@ interface GameMetadata {
   gameName: string;
 }
 
+interface Coords {
+  x: number;
+  y: number;
+}
+
+type CoordTuple = [number, number];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
   tiles: Tile[];
   height: number;
@@ -125,6 +133,26 @@ class World {
     return paths;
   }
 
+  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }): void {
+    console.log(srcPos, dstPos, pathMap);
+    let curPos: CoordTuple = dstPos;
+    const path: Coords[] = [];
+    const [ x, y ] = curPos;
+    path.push({ x, y });
+    while (this.pos(...srcPos) !== this.pos(...curPos)) {
+      curPos = pathMap[this.pos(...curPos)];
+      const [ x, y ] = curPos;
+      path.push({ x, y });
+    }
+    path.reverse();
+    
+    const actions: [ string, Coords[] ][] = [];
+    for (let i = 0; i < path.length - 1; i++) {
+      actions.push(['moveUnit', [ path[i], path[i+1] ]])
+    }
+    this.sendActions(actions);
+  }
+
   sendJSON(data: EventMsg): void {
     this.socket.send(JSON.stringify(data));
   }
@@ -135,6 +163,7 @@ class World {
         const name = data.update[i][0];
         const args = data.update[i][1];
         console.log(name); // DEBUG
+        console.log(args); // DEBUG
         if (this.on.update[name]) {
           this.on.update[name](...args);
         }
@@ -145,6 +174,7 @@ class World {
         const name = data.error[i][0];
         const args = data.error[i][1];
         console.error(name); // DEBUG
+        console.error(args); // DEBUG
         if (this.on.error[name]) {
           this.on.error[name](...args);
         }
@@ -168,7 +198,7 @@ class World {
 
     this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
       const gameTitles = [];
-      const defaultGame = Object.keys(gameList)[0];
+      // const defaultGame = Object.keys(gameList)[0];
       for (const gameID in gameList) {
         gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
       }
@@ -197,6 +227,10 @@ class World {
       this.tiles = map;
     };
 
+    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile) => {
+      this.tiles[this.pos(x, y)] = tile;
+    };
+
     this.on.update.colorPool = (colors: string[]): void => {
       console.log(colors);
       ui.colorPool = colors;
@@ -219,7 +253,7 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
-    return new Promise((resolve: () => void, reject: () => void) => {
+    return new Promise((resolve: () => void/* reject: () => void*/) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
         let data;
@@ -231,7 +265,7 @@ class World {
         }
         this.handleResponse(data);
       });
-      this.socket.addEventListener('open', (event: Event) => {
+      this.socket.addEventListener('open', (/*event: Event*/) => {
         resolve();
       });
     });

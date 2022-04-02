@@ -13,37 +13,43 @@ const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-import { Game, Player } from './game';
+import { Game, Player, Coords } from './game';
 import { Map } from './map';
 
 const wss = new WebSocket.Server({ server });
 
-const games = {
+const games: { [gameID: number] : Game } = {
   0: new Game(
     new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     1
   ),
 };
 
-const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }): void => {
+const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }) => {
   ws.send(JSON.stringify(msg));
 }
 
-const connections = [];
-const connData = [];
+interface ConnectionData {
+  ws: WebSocket,
+  ip: string,
+  username: string | null,
+  gameID: number | null,
+}
 
-const getConnData = (ws: WebSocket): any => {
+const connections: WebSocket[] = [];
+const connData: ConnectionData[] = [];
+
+const getConnData = (ws: WebSocket): ConnectionData => {
   const connIndex = connections.indexOf(ws);
   return connData[connIndex];
 };
 
 const methods = {
-  setPlayer: (ws: WebSocket, username: string): void => {
+  setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
   },
 
-  joinGame: (ws: WebSocket
-    , gameID: number) => {
+  joinGame: (ws: WebSocket, gameID: number) => {
     const game = games[gameID];
     const username = getConnData(ws).username;
 
@@ -80,8 +86,7 @@ const methods = {
   },
 
   setColor: (ws: WebSocket, color: string) => {
-    const username = getConnData(ws).username;
-    const gameID = getConnData(ws).gameID;
+    const { username, gameID } = getConnData(ws);
     const game = games[gameID];
 
     if (game) {
@@ -106,8 +111,7 @@ const methods = {
   },
 
   ready: (ws: WebSocket, state: boolean) => {
-    const username = getConnData(ws).username;
-    const gameID = getConnData(ws).gameID;
+    const { username, gameID } = getConnData(ws);
     const game = games[gameID];
 
     if (game) {
@@ -134,9 +138,7 @@ const methods = {
               ],
             });
 
-            // console.log(game)
-
-            game.forEachCiv((civID) => {
+            game.forEachCiv((civID: number) => {
               game.sendToCiv(civID, {
                 update: [
                   ['setMap', [game.map.getCivMap(civID)]],
@@ -151,25 +153,27 @@ const methods = {
     }
   },
 
-  moveUnit: (ws: WebSocket, srcX: number, srcY: number, dstX: number, dstY: number) => {
-    const gameID = getConnData(ws).gameID;
+  moveUnit: (ws: WebSocket, srcCoords: Coords, dstCoords: Coords) => {
+    const { username, gameID } = getConnData(ws);
     const game = games[gameID];
+    const civID = game.players[username].civID;
 
     if (game) {
       const map = game.map;
 
-      const src = map.getTile(srcX, srcY);
-      const dst = map.getTile(dstX, dstY);
+      const src = map.getTile(srcCoords);
+      const dst = map.getTile(dstCoords);
 
       const unit = src.unit;
 
-      if (unit && dst.unit == null && unit.movement >= src.movementCost) {
-        map.moveUnitTo(unit, dstX, dstY);
-        unit.movement -= src.movementCost;
+      if (unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit)) {
+        unit.movement -= dst.getMovementCost(unit);
+        map.moveUnitTo(unit, dstCoords);
+        
+        game.sendTileUpdate(srcCoords, src);
+        game.sendTileUpdate(dstCoords, dst);
       }
 
-      game.sendTileUpdate(src);
-      game.sendTileUpdate(dst);
     }
   },
 };
@@ -200,7 +204,7 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     if (data.actions) {
       for (let i = 0; i < data.actions.length; i++) {
         const action = data.actions[i][0];
-         const args = data.actions[i][1];
+        const args = data.actions[i][1];
 
         methods[action](ws, ...args);
       }

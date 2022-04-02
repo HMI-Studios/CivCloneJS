@@ -40,7 +40,7 @@ const game_1 = require("./game");
 const map_1 = require("./map");
 const wss = new WebSocket.Server({ server });
 const games = {
-    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 1),
+    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 2),
 };
 const sendTo = (ws, msg) => {
     ws.send(JSON.stringify(msg));
@@ -87,8 +87,7 @@ const methods = {
         });
     },
     setColor: (ws, color) => {
-        const username = getConnData(ws).username;
-        const gameID = getConnData(ws).gameID;
+        const { username, gameID } = getConnData(ws);
         const game = games[gameID];
         if (game) {
             const player = game.getPlayer(username);
@@ -111,8 +110,7 @@ const methods = {
         }
     },
     ready: (ws, state) => {
-        const username = getConnData(ws).username;
-        const gameID = getConnData(ws).gameID;
+        const { username, gameID } = getConnData(ws);
         const game = games[gameID];
         if (game) {
             const player = game.getPlayer(username);
@@ -133,7 +131,6 @@ const methods = {
                                 ['civData', [game.getAllCivsData()]],
                             ],
                         });
-                        // console.log(game)
                         game.forEachCiv((civID) => {
                             game.sendToCiv(civID, {
                                 update: [
@@ -147,20 +144,21 @@ const methods = {
             }
         }
     },
-    moveUnit: (ws, srcX, srcY, dstX, dstY) => {
-        const gameID = getConnData(ws).gameID;
+    moveUnit: (ws, srcCoords, dstCoords) => {
+        const { username, gameID } = getConnData(ws);
         const game = games[gameID];
+        const civID = game.players[username].civID;
         if (game) {
             const map = game.map;
-            const src = map.getTile(srcX, srcY);
-            const dst = map.getTile(dstX, dstY);
+            const src = map.getTile(srcCoords);
+            const dst = map.getTile(dstCoords);
             const unit = src.unit;
-            if (unit && dst.unit == null && unit.movement >= src.movementCost) {
-                map.moveUnitTo(unit, dstX, dstY);
-                unit.movement -= src.movementCost;
+            if (unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit)) {
+                unit.movement -= dst.getMovementCost(unit);
+                map.moveUnitTo(unit, dstCoords);
+                game.sendTileUpdate(srcCoords, src);
+                game.sendTileUpdate(dstCoords, dst);
             }
-            game.sendTileUpdate(src);
-            game.sendTileUpdate(dst);
         }
     },
 };
