@@ -1,0 +1,83 @@
+body {
+  background-color: whitesmoke;
+}
+
+#root {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  font-size: 30px;
+  margin-left: 20px;
+}
+
+h3 {
+  font-size: 22px;
+  margin: 20px 80px 0;
+}
+
+p {
+  margin: 0 80px;
+}
+
+.code {
+  font-size: 16px;
+  border-radius: 6px;
+  margin: 0 80px;
+}
+
+
+
+
+#root {
+    transition: margin-left .5s;
+}
+
+.sidebar {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #282c34;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+  }
+  
+  .sidebar a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: lightgray;
+    display: block;
+    transition: 0.3s;
+  }
+  
+  .sidebar a:hover {
+    color: #f1f1f1;
+  }
+  
+  .sidebar .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+  
+  .openbtn {
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #282c34;
+    color: lightgray;
+    padding: 10px 15px;
+    border: none;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 8px; /* Position the navbar at the top of the page */
+  }
+  
+  .openbtn:hover {
+    background-color: #444;
+  }
