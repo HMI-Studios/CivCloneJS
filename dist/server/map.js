@@ -11,7 +11,7 @@ class Map {
         }
     }
     pos({ x, y }) {
-        return y * this.width + x;
+        return (y * this.width) + this.mod(x, this.width);
     }
     mod(a, b) {
         if (a >= 0) {
@@ -24,29 +24,32 @@ class Map {
     getTile(coords) {
         return this.tiles[this.pos(coords)];
     }
-    getNeighbors({ x, y }, r, tileList = [], isTop = true) {
+    getNeighborsCoords({ x, y }, r, tileList = [], isTop = true) {
         if (r > 0 && this.tiles[this.pos({ x, y })]) {
-            tileList.push(this.tiles[this.pos({ x, y })]);
+            tileList.push({ x, y });
             if (this.mod(x, 2) === 1) {
-                this.getNeighbors({ x: x, y: y + 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x + 1, y: y + 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x + 1, y: y }, r - 1, tileList, false);
-                this.getNeighbors({ x: x, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x - 1, y: y }, r - 1, tileList, false);
-                this.getNeighbors({ x: x - 1, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x + 1, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x + 1, y: y }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x - 1, y: y }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x - 1, y: y + 1 }, r - 1, tileList, false);
             }
             else {
-                this.getNeighbors({ x: x, y: y + 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x + 1, y: y }, r - 1, tileList, false);
-                this.getNeighbors({ x: x + 1, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x - 1, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighbors({ x: x - 1, y: y }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x, y: y + 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x + 1, y: y }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x + 1, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x - 1, y: y - 1 }, r - 1, tileList, false);
+                this.getNeighborsCoords({ x: x - 1, y: y }, r - 1, tileList, false);
             }
         }
         if (isTop) {
             return tileList;
         }
+    }
+    getVisibleTilesCoords(unit) {
+        return this.getNeighborsCoords(unit.coords, 3);
     }
     moveUnitTo(unit, coords) {
         if (unit.coords.x !== null && unit.coords.y !== null) {

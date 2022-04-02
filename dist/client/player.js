@@ -4,7 +4,8 @@ class UI {
         this.elements = {
             readyBtn: this.createElement('button', 'readyBtn'),
             centerModal: this.createElement('div', 'centerModal'),
-            civPicker: this.createElement('ul', 'civList')
+            civPicker: this.createElement('ul', 'civList'),
+            mainActionBtn: this.createElement('button', 'mainActionBtn'),
         };
         this.colorPool = [];
     }
@@ -22,6 +23,14 @@ class UI {
         nameText.innerHTML = civName;
         civItem.appendChild(nameText);
         return civItem;
+    }
+    showGameUI(world) {
+        this.elements.mainActionBtn.onclick = () => {
+            world.sendActions([
+                ['endTurn', []]
+            ]);
+        };
+        document.getElementById('UI').appendChild(this.elements.mainActionBtn);
     }
     showCivPicker(callback) {
         this.elements.civPicker.innerHTML = '';

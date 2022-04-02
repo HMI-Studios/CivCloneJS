@@ -33,6 +33,7 @@ const app = (0, express_1.default)();
 const port = 8080;
 const path_1 = __importDefault(require("path"));
 app.use('/', express_1.default.static(path_1.default.join(__dirname, '../client')));
+app.use('/docs', express_1.default.static(path_1.default.join(__dirname, '../docs')));
 const server = app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
 });
@@ -40,7 +41,7 @@ const game_1 = require("./game");
 const map_1 = require("./map");
 const wss = new WebSocket.Server({ server });
 const games = {
-    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 2),
+    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 1),
 };
 const sendTo = (ws, msg) => {
     ws.send(JSON.stringify(msg));
@@ -131,7 +132,7 @@ const methods = {
                                 ['civData', [game.getAllCivsData()]],
                             ],
                         });
-                        game.forEachCiv((civID) => {
+                        game.forEachCivID((civID) => {
                             game.sendToCiv(civID, {
                                 update: [
                                     ['setMap', [game.map.getCivMap(civID)]],
@@ -158,7 +159,37 @@ const methods = {
                 map.moveUnitTo(unit, dstCoords);
                 game.sendTileUpdate(srcCoords, src);
                 game.sendTileUpdate(dstCoords, dst);
+                const visible = game.map.getVisibleTilesCoords(unit);
+                for (const coords of visible) {
+                    const tile = game.map.getTile(coords);
+                    tile.setVisibility(civID, true);
+                    game.sendTileUpdate(coords, tile);
+                }
             }
+        }
+    },
+    endTurn: (ws) => {
+        const { username, gameID } = getConnData(ws);
+        const game = games[gameID];
+        const civID = game.players[username].civID;
+        const civ = game.civs[civID];
+        if (civ.turnActive) {
+            civ.endTurn();
+        }
+        let active = false;
+        for (let civID = 0; civID < game.playerCount; civID++) {
+            if (game.civs[civID].turnActive) {
+                active = true;
+                break;
+            }
+        }
+        if (!active) {
+            // Run AIs
+            game.forEachPlayer((player) => {
+                if (!player.isAI) {
+                    game.beginTurnForCiv(player.civID);
+                }
+            });
         }
     },
 };

@@ -142,6 +142,7 @@ class World {
         this.on.update.beginGame = ([width, height]) => {
             ui.hideReadyBtn();
             ui.hideCivPicker();
+            ui.showGameUI(this);
             [this.width, this.height] = [width, height];
             camera.start(this, 1000 / 60);
         };

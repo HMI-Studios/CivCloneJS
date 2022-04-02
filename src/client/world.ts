@@ -68,7 +68,7 @@ class World {
     };
   }
 
-  pos (x: number, y: number): number {
+  pos(x: number, y: number): number {
     return (y * this.width) + mod(x, this.width)
   }
 
@@ -218,6 +218,7 @@ class World {
     this.on.update.beginGame = ([width, height]: [number, number]): void => {
       ui.hideReadyBtn();
       ui.hideCivPicker();
+      ui.showGameUI(this);
       [this.width, this.height] = [width, height];
       camera.start(this, 1000/60);
     };

@@ -97,13 +97,15 @@ export class Game {
       ],
     });
   }
+  
 
   updateCivTileVisibility(civID: number): void {
     for (const tile of this.map.tiles) {
       tile.clearVisibility(civID);
     }
     for (const unit of this.civs[civID].units) {
-      for (const tile of this.map.getNeighbors(unit.coords, 3)) {
+      for (const coords of this.map.getVisibleTilesCoords(unit)) {
+        const tile = this.map.getTile(coords);
         tile.setVisibility(civID, true);
       }
     }
@@ -166,18 +168,24 @@ export class Game {
   }
 
   sendTileUpdate(coords: Coords, tile: Tile): void {
-    for (let civID = 0; civID < this.playerCount; civID++) {
+    this.forEachCivID((civID) => {
       this.sendToCiv(civID, {
         update: [
           ['tileUpdate', [ coords, this.map.getCivTile(civID, tile) ]],
         ],
       });
+    });
+  }
+
+  forEachCivID(callback: (civID: number) => void): void {
+    for (let civID = 0; civID < this.playerCount; civID++) {
+      callback(civID);
     }
   }
 
-  forEachCiv(callback: (civID: number) => void): void {
-    for (let civID = 0; civID < this.playerCount; civID++) {
-      callback(civID);
+  forEachPlayer(callback: (player: Player) => void): void {
+    for (const playerName in this.players) {
+      callback(this.players[playerName]);
     }
   }
 }
@@ -244,10 +252,12 @@ export interface CivilizationData {
 export class Civilization {
   units: Unit[];
   color: string;
+  turnActive: boolean;
 
   constructor() {
     this.units = [];
     this.color = null;
+    this.turnActive = false;
   }
 
   getData(): CivilizationData {
@@ -257,9 +267,15 @@ export class Civilization {
   }
 
   newTurn() {
+    this.turnActive = true;
+
     for (const unit of this.units) {
       unit.newTurn();
     }
+  }
+
+  endTurn() {
+    this.turnActive = false;
   }
 
   addUnit(unit: Unit): void {

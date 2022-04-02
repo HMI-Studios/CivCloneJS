@@ -89,6 +89,8 @@ class Camera {
                             console.log(x, y);
                             if (world.pos(x, y) in this.highlightedTiles) {
                                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
+                                this.highlightedTiles = {};
+                                this.selectedUnitPos = null;
                             }
                             else {
                                 this.highlightedTiles = {};

@@ -8,6 +8,7 @@ const port = 8080;
 
 import path from 'path';
 app.use('/', express.static(path.join(__dirname, '../client')));
+app.use('/docs', express.static(path.join(__dirname, '../docs')));
 
 const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
@@ -138,7 +139,7 @@ const methods = {
               ],
             });
 
-            game.forEachCiv((civID: number) => {
+            game.forEachCivID((civID: number) => {
               game.sendToCiv(civID, {
                 update: [
                   ['setMap', [game.map.getCivMap(civID)]],
@@ -169,11 +170,48 @@ const methods = {
       if (unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit)) {
         unit.movement -= dst.getMovementCost(unit);
         map.moveUnitTo(unit, dstCoords);
-        
+
         game.sendTileUpdate(srcCoords, src);
         game.sendTileUpdate(dstCoords, dst);
+
+        const visible = game.map.getVisibleTilesCoords(unit);
+        for (const coords of visible) {
+          const tile = game.map.getTile(coords);
+
+          tile.setVisibility(civID, true);
+          game.sendTileUpdate(coords, tile);
+        }
       }
 
+    }
+  },
+
+  endTurn: (ws: WebSocket) => {
+    const { username, gameID } = getConnData(ws);
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+    const civ = game.civs[civID];
+
+    if (civ.turnActive) {
+      civ.endTurn();
+    }
+
+    let active = false;
+    for (let civID = 0; civID < game.playerCount; civID++) {
+      if (game.civs[civID].turnActive) {
+        active = true;
+        break;
+      }
+    }
+
+    if (!active) {
+      // Run AIs
+
+      game.forEachPlayer((player: Player) => {
+        if (!player.isAI) {
+          game.beginTurnForCiv(player.civID);
+        }
+      });
     }
   },
 };

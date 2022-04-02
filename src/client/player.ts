@@ -6,7 +6,8 @@ class UI {
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),
       centerModal: this.createElement('div', 'centerModal'),
-      civPicker: this.createElement('ul', 'civList')
+      civPicker: this.createElement('ul', 'civList'),
+      mainActionBtn: this.createElement('button', 'mainActionBtn'),
     };
     this.colorPool = [];
   }
@@ -19,7 +20,7 @@ class UI {
     return element;
   }
 
-  createCivItem (civName: string, color: string): HTMLElement {
+  createCivItem(civName: string, color: string): HTMLElement {
     const civItem = this.createElement('li', 'civItem');
     civItem.style.backgroundColor = color;
     const nameText = this.createElement('span');
@@ -28,7 +29,18 @@ class UI {
     return civItem;
   }
 
-  showCivPicker(callback: (color: string) => void) {
+  showGameUI(world: World): void {
+
+    this.elements.mainActionBtn.onclick = () => {
+      world.sendActions([
+        ['endTurn', []]
+      ]);
+    };
+
+    document.getElementById('UI').appendChild(this.elements.mainActionBtn);
+  }
+
+  showCivPicker(callback: (color: string) => void): void {
     this.elements.civPicker.innerHTML = '';
     for (let i = 0; i < this.colorPool.length; i++) {
       const color = this.colorPool[i];
@@ -43,12 +55,12 @@ class UI {
     document.getElementById('UI').appendChild(this.elements.centerModal);
   }
 
-  hideCivPicker() {
+  hideCivPicker(): void {
     this.elements.civPicker.remove();
     this.elements.centerModal.remove();
   }
 
-  showReadyBtn(callback: (isReady: boolean) => void) {
+  showReadyBtn(callback: (isReady: boolean) => void): void {
     let btnState = false;
     this.elements.readyBtn.innerHTML = 'Ready';
     this.elements.readyBtn.onclick = () => {
@@ -63,7 +75,7 @@ class UI {
     document.getElementById('UI').appendChild(this.elements.readyBtn);
   }
 
-  hideReadyBtn() {
+  hideReadyBtn(): void {
     this.elements.readyBtn.remove();
   }
 }
