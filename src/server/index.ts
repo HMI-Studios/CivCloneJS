@@ -1,46 +1,56 @@
-const fs = require('fs');
-const { WebSocketServer } = require('ws');
+import * as fs from 'fs';
+import { IncomingMessage } from 'http';
+import * as WebSocket from 'ws';
 
-const express = require('express');
+import express from 'express';
 const app = express();
 const port = 8080;
 
-const path = require('path');
+import path from 'path';
 app.use('/', express.static(path.join(__dirname, '../client')));
 
 const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-const { Game, Player } = require('./game.js');
-const { Map } = require('./map.js');
+import { Game, Player } from './game';
+import { Map } from './map';
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocket.Server({ server });
 
 const games = {
   0: new Game(
-    new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') )).map),
+    new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     1
   ),
 };
 
-const sendTo = (ws, msg) => {
+const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }): void => {
   ws.send(JSON.stringify(msg));
 }
 
+const connections = [];
+const connData = [];
+
+const getConnData = (ws: WebSocket): any => {
+  const connIndex = connections.indexOf(ws);
+  return connData[connIndex];
+};
+
 const methods = {
-  setPlayer: (ws, username) => {
-    ws.connData.username = username;
+  setPlayer: (ws: WebSocket, username: string): void => {
+    getConnData(ws).username = username;
   },
 
-  joinGame: (ws, gameID) => {
+  joinGame: (ws: WebSocket
+    , gameID: number) => {
     const game = games[gameID];
-    const username = ws.connData.username;
+    const username = getConnData(ws).username;
 
     const civID = game.newPlayerCivID();
 
     if (civID !== null) {
-      ws.connData.gameID = gameID;
+      getConnData(ws).gameID = gameID;
       game.players[username] = new Player(civID, ws);
 
       sendTo(ws, {
@@ -56,9 +66,9 @@ const methods = {
     }
   },
 
-  getGames: (ws) => {
+  getGames: (ws: WebSocket) => {
     const gameList = {};
-    for (let gameID in games) {
+    for (const gameID in games) {
       gameList[gameID] = games[gameID].metaData;
     }
 
@@ -69,9 +79,9 @@ const methods = {
     });
   },
 
-  setColor: (ws, color) => {
-    const username = ws.connData.username;
-    const gameID = ws.connData.gameID;
+  setColor: (ws: WebSocket, color: string) => {
+    const username = getConnData(ws).username;
+    const gameID = getConnData(ws).gameID;
     const game = games[gameID];
 
     if (game) {
@@ -95,9 +105,9 @@ const methods = {
     }
   },
 
-  ready: (ws, state) => {
-    const username = ws.connData.username;
-    const gameID = ws.connData.gameID;
+  ready: (ws: WebSocket, state: boolean) => {
+    const username = getConnData(ws).username;
+    const gameID = getConnData(ws).gameID;
     const game = games[gameID];
 
     if (game) {
@@ -116,7 +126,7 @@ const methods = {
         player.ready = state;
 
         if (Object.keys(game.players).length === game.playerCount) {
-          if (Object.values(game.players).every(player => player.ready)) {
+          if (Object.values(game.players).every((player: Player) => player.ready)) {
             game.sendToAll({
               update: [
                 ['beginGame', [ [game.map.width, game.map.height], game.playerCount ]],
@@ -141,8 +151,8 @@ const methods = {
     }
   },
 
-  moveUnit: (ws, srcX, srcY, dstX, dstY) => {
-    const gameID = ws.connData.gameID;
+  moveUnit: (ws: WebSocket, srcX: number, srcY: number, dstX: number, dstY: number) => {
+    const gameID = getConnData(ws).gameID;
     const game = games[gameID];
 
     if (game) {
@@ -164,21 +174,23 @@ const methods = {
   },
 };
 
-wss.on('connection', (ws, req) => {
+wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
 
-  ws.connData = {
+  connections.push(ws);
+  connData.push({
+    ws: ws,
     ip: req.socket.remoteAddress,
     username: null,
     gameID: null,
-  };
+  });
 
-  ws.on('message', (message) => {
+  ws.on('message', (message: string) => {
     let data;
 
     try {
       data = JSON.parse(message);
     } catch (err) {
-      console.error('Bad JSON recieved from %s', ws.connData.ip);
+      console.error('Bad JSON recieved from %s', getConnData(ws).ip);
       ws.send(JSON.stringify({error: ['bad JSON']}));
       return;
     }

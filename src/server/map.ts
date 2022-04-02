@@ -1,12 +1,10 @@
-const mod = (a, b) => {
-  if (a >= 0) {
-    return a % b;
-  } else {
-    return ((a % b) + b) % b;
-  }
-};
+import { Unit } from './game';
 
-class Map {
+export class Map {
+  height: number;
+  width: number;
+  tiles: Tile[];
+
   constructor(height, width, terrain) {
     this.height = height;
     this.width = width;
@@ -16,20 +14,26 @@ class Map {
     }
   }
 
-  // pos(Number, Number) => Number;
-  pos(x, y) {
+  pos(x: number, y: number): number {
     return y*this.width+x;
   }
 
-  // getTile(Number, Number) => Tile
-  getTile(x, y) {
+  mod(a: number, b: number): number {
+    if (a >= 0) {
+      return a % b;
+    } else {
+      return ((a % b) + b) % b;
+    }
+  } 
+
+  getTile(x: number, y: number): Tile {
     return this.tiles[this.pos(x, y)];
   }
 
   getNeighbors(x, y, r, tileList=[], isTop=true) {
     if (r > 0 && this.tiles[this.pos(x, y)]) {
       tileList.push(this.tiles[this.pos(x, y)]);
-      if (mod(x, 2) === 1) {
+      if (this.mod(x, 2) === 1) {
         this.getNeighbors(x, y+1, r-1, tileList, false);
         this.getNeighbors(x+1, y+1, r-1, tileList, false);
         this.getNeighbors(x+1, y, r-1, tileList, false);
@@ -50,7 +54,7 @@ class Map {
     }
   }
 
-  moveUnitTo(unit, x, y) {
+  moveUnitTo(unit: Unit, x: number, y: number) {
     if (unit.x !== null && unit.y !== null) {
       this.tiles[this.pos(unit.x, unit.y)].setUnit(null);
     }
@@ -60,7 +64,7 @@ class Map {
     }
   }
 
-  getCivTile(civID, tile) {
+  getCivTile(civID: number, tile: Tile) {
     if (tile.discoveredBy[civID]) {
       if (tile.visibleTo[civID]) {
         return tile.getVisibleData();
@@ -72,18 +76,18 @@ class Map {
     }
   }
 
-  getCivMap(civID) {
+  getCivMap(civID: number) {
     return this.tiles.map((tile) => {
       return this.getCivTile(civID, tile);
     });
   }
 
-  setTileVisibility(civID, x, y, visible) {
+  setTileVisibility(civID: number, x: number, y: number, visible: boolean) {
     this.tiles[this.pos(x, y)].setVisibility(civID, visible);
   }
-};
+}
 
-const tileMovementCostTable = {
+const tileMovementCostTable: { [type: string]: [number, number] } = {
   // tile name: [land mp, water mp] (0 = impassable)
   'plains': [1, 0],
   'desert': [1, 0],
@@ -92,7 +96,14 @@ const tileMovementCostTable = {
   'mountain': [0, 0],
 };
 
-class Tile {
+export class Tile {
+  type: string;
+  improvement: any;
+  unit: Unit;
+  discoveredBy: { [civID: number]: boolean };
+  visibleTo: { [civID: number]: number };
+  movementCost: [number, number];
+
   constructor(type) {
     this.type = type;
     this.improvement = null;
@@ -119,13 +130,11 @@ class Tile {
     }
   }
 
-  // setUnit(Unit);
-  setUnit(unit) {
+  setUnit(unit: Unit) {
     this.unit = unit;
   }
 
-  // setVisibility(Number, Boolean);
-  setVisibility(civID, visible) {
+  setVisibility(civID: number, visible: boolean) {
     if (visible) {
       this.visibleTo[civID]++;
     } else {
@@ -137,12 +146,7 @@ class Tile {
     }
   }
 
-  // clearVisibility(Number);
-  clearVisibility(civID) {
+  clearVisibility(civID: number) {
     this.visibleTo[civID] = 0;
   }
-};
-
-module.exports = {
-  Map, Tile,
-};
+}

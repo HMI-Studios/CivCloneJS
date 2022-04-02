@@ -1,7 +1,51 @@
+interface Civ {
+  color: string;
+}
+
+interface Player {
+  name: string;
+  civID: number;
+}
+
+interface WorldEventHandler {
+  [key: string]: (...args: unknown[]) => void;
+}
+
+interface EventMsg {
+  actions?: [string, unknown[]][];
+  update?: [string, unknown[]][];
+  error?: [string, unknown[]][];
+}
+
+interface Unit {
+  type: string;
+  hp: number;
+  movement: number;
+  civID: number;
+}
+
+interface Tile {
+  type: string;
+  improvement: any;
+  movementCost: [number, number];
+  unit: Unit;
+  visible: boolean;
+}
+
+interface GameMetadata {
+  gameName: string;
+}
+
 class World {
-  constructor() {
+  tiles: Tile[];
+  height: number;
+  width: number;
+  socket: WebSocket;
+  on: { update: WorldEventHandler, error: WorldEventHandler };
+  civs: { [key: string]: Civ };
+  player: Player;
+  constructor(playerName: string) {
     this.tiles = [];
-    // this.size = 0; // REMOVE
     this.height;
     this.width;
     this.socket;
@@ -10,14 +54,22 @@ class World {
       error: {},
     };
     this.civs = {};
+    this.player = {
+      name: playerName,
+      civID: null,
+    };
   }
 
-  getTile(x, y) {
-    return this.tiles[(y * this.width) + mod(x, this.width)] || null;
+  pos (x: number, y: number): number {
+    return (y * this.width) + mod(x, this.width)
   }
 
-  getNeighbors(x, y) {
-    let tiles;
+  getTile(x: number, y: number): Tile {
+    return this.tiles[this.pos(x, y)] || null;
+  }
+
+  getNeighbors(x: number, y: number): [number, number][] {
+    let tiles: [number, number][];
 
     if (mod(x, 2) === 1) {
       tiles = [
@@ -43,25 +95,27 @@ class World {
   }
 
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-  getTilesInRange(srcX, srcY, range, mode=0) {
+  getTilesInRange(srcX: number, srcY: number, range: number, mode = 0): { [key: string]: [number, number] } {
+    // BFS to find all tiles within `range` steps
+
     const queue = [];
     queue.push([srcX, srcY]);
 
     const dst = {};
-    dst[[srcX, srcY]] = 0;
+    dst[this.pos(srcX, srcY)] = 0;
 
     const paths = {};
 
     while (queue.length) {
       const [atX, atY] = queue.shift();
 
-      for (let [adjX, adjY] of this.getNeighbors(atX, atY)) {
-        if (!([adjX, adjY] in dst)) {
+      for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
+        if (!(this.pos(adjX, adjY) in dst)) {
           const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
-          dst[[adjX, adjY]] = dst[[atX, atY]] + movementCost;
+          dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
 
-          if (dst[[adjX, adjY]] <= range) {
-            paths[[adjX, adjY]] = [atX, atY];
+          if (dst[this.pos(adjX, adjY)] <= range) {
+            paths[this.pos(adjX, adjY)] = [atX, atY];
             queue.push([adjX, adjY]);
           }
         }
@@ -71,16 +125,16 @@ class World {
     return paths;
   }
 
-  sendJSON(data) {
+  sendJSON(data: EventMsg): void {
     this.socket.send(JSON.stringify(data));
   }
 
-  handleResponse(data) {
+  handleResponse(data: EventMsg): void {
     if (data.update) {
       for (let i = 0; i < data.update.length; i++) {
-        let name = data.update[i][0];
-        let args = data.update[i][1];
-        console.log(name);
+        const name = data.update[i][0];
+        const args = data.update[i][1];
+        console.log(name); // DEBUG
         if (this.on.update[name]) {
           this.on.update[name](...args);
         }
@@ -88,9 +142,9 @@ class World {
     }
     if (data.error) {
       for (let i = 0; i < data.error.length; i++) {
-        let name = data.error[i][0];
-        let args = data.error[i][1];
-        console.error(name);
+        const name = data.error[i][0];
+        const args = data.error[i][1];
+        console.error(name); // DEBUG
         if (this.on.error[name]) {
           this.on.error[name](...args);
         }
@@ -98,24 +152,24 @@ class World {
     }
   }
 
-  setup(serverIP, camera, ui, player) {
+  setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
 
-    const readyFn = (isReady) => {
+    const readyFn = (isReady: boolean): void => {
       this.sendActions([
         ['ready', [isReady]],
       ]);
     };
 
-    const civPickerFn = (color) => {
+    const civPickerFn = (color: string): void => {
       this.sendActions([
         ['setColor', [color]],
       ]);
     };
 
-    this.on.update.gameList = (gameList) => {
-      let gameTitles = [];
-      let defaultGame = Object.keys(gameList)[0];
-      for (let gameID in gameList) {
+    this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
+      const gameTitles = [];
+      const defaultGame = Object.keys(gameList)[0];
+      for (const gameID in gameList) {
         gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
       }
 
@@ -131,30 +185,30 @@ class World {
       }
     };
 
-    this.on.update.beginGame = ([width, height], playerCount) => {
+    this.on.update.beginGame = ([width, height]: [number, number]): void => {
       ui.hideReadyBtn();
       ui.hideCivPicker();
       [this.width, this.height] = [width, height];
       camera.start(this, 1000/60);
     };
 
-    this.on.update.setMap = (map) => {
+    this.on.update.setMap = (map: Tile[]): void => {
       console.log(map);
       this.tiles = map;
     };
 
-    this.on.update.colorPool = (colors) => {
+    this.on.update.colorPool = (colors: string[]): void => {
       console.log(colors);
       ui.colorPool = colors;
       ui.showCivPicker(civPickerFn);
     };
 
-    this.on.update.civData = (civs) => {
+    this.on.update.civData = (civs: { [key: string]: Civ }) => {
       this.civs = civs;
     };
 
-    this.on.update.civID = (civID) => {
-      player.civID = civID;
+    this.on.update.civID = (civID: number) => {
+      this.player.civID = civID;
     };
 
 
@@ -165,7 +219,7 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve: () => void, reject: () => void) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
         let data;
@@ -177,13 +231,13 @@ class World {
         }
         this.handleResponse(data);
       });
-      this.socket.addEventListener('open', (event) => {
+      this.socket.addEventListener('open', (event: Event) => {
         resolve();
       });
     });
   }
 
-  sendActions(actions) {
+  sendActions(actions: [string, unknown[]][]): void {
     this.sendJSON({ actions });
   }
 
