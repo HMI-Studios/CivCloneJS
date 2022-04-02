@@ -1,7 +1,13 @@
 class World {
-  constructor() {
+  tiles: any[];
+  height: number;
+  width: number;
+  socket: WebSocket;
+  on: { update: any, error: any };
+  civs: {};
+  player: { name: string, civID: number };
+  constructor(playerName: string) {
     this.tiles = [];
-    // this.size = 0; // REMOVE
     this.height;
     this.width;
     this.socket;
@@ -10,14 +16,22 @@ class World {
       error: {},
     };
     this.civs = {};
+    this.player = {
+      name: playerName,
+      civID: null,
+    };
   }
 
-  getTile(x, y) {
-    return this.tiles[(y * this.width) + mod(x, this.width)] || null;
+  pos (x: number, y: number): number {
+    return (y * this.width) + mod(x, this.width)
   }
 
-  getNeighbors(x, y) {
-    let tiles;
+  getTile(x: number, y: number): any {
+    return this.tiles[this.pos(x, y)] || null;
+  }
+
+  getNeighbors(x: number, y: number): [number, number][] {
+    let tiles: [number, number][];
 
     if (mod(x, 2) === 1) {
       tiles = [
@@ -43,12 +57,12 @@ class World {
   }
 
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-  getTilesInRange(srcX, srcY, range, mode=0) {
+  getTilesInRange(srcX: number, srcY: number, range: number, mode: number=0): any {
     const queue = [];
     queue.push([srcX, srcY]);
 
     const dst = {};
-    dst[[srcX, srcY]] = 0;
+    dst[this.pos(srcX, srcY)] = 0;
 
     const paths = {};
 
@@ -56,12 +70,12 @@ class World {
       const [atX, atY] = queue.shift();
 
       for (let [adjX, adjY] of this.getNeighbors(atX, atY)) {
-        if (!([adjX, adjY] in dst)) {
+        if (!(this.pos(adjX, adjY) in dst)) {
           const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
-          dst[[adjX, adjY]] = dst[[atX, atY]] + movementCost;
+          dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
 
-          if (dst[[adjX, adjY]] <= range) {
-            paths[[adjX, adjY]] = [atX, atY];
+          if (dst[this.pos(adjX, adjY)] <= range) {
+            paths[this.pos(adjX, adjY)] = [atX, atY];
             queue.push([adjX, adjY]);
           }
         }
@@ -71,11 +85,11 @@ class World {
     return paths;
   }
 
-  sendJSON(data) {
+  sendJSON(data: any) {
     this.socket.send(JSON.stringify(data));
   }
 
-  handleResponse(data) {
+  handleResponse(data: { update?: any, error?: any }) {
     if (data.update) {
       for (let i = 0; i < data.update.length; i++) {
         let name = data.update[i][0];
@@ -98,21 +112,21 @@ class World {
     }
   }
 
-  setup(serverIP, camera, ui, player) {
+  setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
 
-    const readyFn = (isReady) => {
+    const readyFn = (isReady: boolean): void => {
       this.sendActions([
         ['ready', [isReady]],
       ]);
     };
 
-    const civPickerFn = (color) => {
+    const civPickerFn = (color: string): void => {
       this.sendActions([
         ['setColor', [color]],
       ]);
     };
 
-    this.on.update.gameList = (gameList) => {
+    this.on.update.gameList = (gameList: { [key: string]: any }): void => {
       let gameTitles = [];
       let defaultGame = Object.keys(gameList)[0];
       for (let gameID in gameList) {
@@ -131,19 +145,19 @@ class World {
       }
     };
 
-    this.on.update.beginGame = ([width, height], playerCount) => {
+    this.on.update.beginGame = ([width, height]: [number, number]): void => {
       ui.hideReadyBtn();
       ui.hideCivPicker();
       [this.width, this.height] = [width, height];
       camera.start(this, 1000/60);
     };
 
-    this.on.update.setMap = (map) => {
+    this.on.update.setMap = (map: any[]): void => {
       console.log(map);
       this.tiles = map;
     };
 
-    this.on.update.colorPool = (colors) => {
+    this.on.update.colorPool = (colors: any[]): void => {
       console.log(colors);
       ui.colorPool = colors;
       ui.showCivPicker(civPickerFn);
@@ -154,7 +168,7 @@ class World {
     };
 
     this.on.update.civID = (civID) => {
-      player.civID = civID;
+      this.player.civID = civID;
     };
 
 

@@ -1,11 +1,13 @@
+let camera: Camera;
+let world: World;
+let ui: UI;
+
 const resize = () => {
-  const canvas = document.getElementById('canvas');
+  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
   ctx.setTransform(1, 0, 0, 1, canvas.width / 2, canvas.height / 2);
-  ctx.webkitImageSmoothingEnabled = false;
-  ctx.mozImageSmoothingEnabled = false;
   ctx.imageSmoothingEnabled = false;
   camera.render(world);
 }
@@ -15,7 +17,7 @@ window.onload = () => {
 };
 window.onresize = resize;
 document.getElementById('UI').onwheel = (evt) => {
-  const canvas = document.getElementById('canvas');
+  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   if (evt.deltaY > 0) {
     const { zoom, x: camX, y: camY } = camera;
     const { tiles, height } = world;
@@ -43,15 +45,16 @@ let oldY = 0;
 let clickX = 0;
 let clickY = 0;
 let mouseDown = false;
-const getMousePos = ( canvas, evt ) => {
+const getMousePos = ( canvas: HTMLCanvasElement, evt: MouseEvent ): { x: number, y: number } => {
   const rect = canvas.getBoundingClientRect();
   const pos = {
         x: Math.floor( ( evt.clientX - rect.left ) / ( rect.right - rect.left ) * canvas.width ),
         y: Math.floor( ( evt.clientY - rect.top ) / ( rect.bottom - rect.top ) * canvas.height )
     };
   return pos;
-}
-document.getElementById('UI').onmousemove = (evt) => {
+};
+document.getElementById('UI').onmousemove = (evt: MouseEvent) => {
+  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	const mousePos = getMousePos(canvas, evt);
 	mouseX = mousePos.x - Math.round(canvas.width/2);
 	mouseY = canvas.height - (mousePos.y + Math.round(canvas.height/2));
@@ -63,12 +66,14 @@ document.getElementById('UI').onmousemove = (evt) => {
 	}
 };
 document.getElementById('UI').onmousedown = function(evt) {
+  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	const mousePos = getMousePos(canvas, evt);
 	clickX = mousePos.x - Math.round(canvas.width/2);
 	clickY = canvas.height - (mousePos.y + Math.round(canvas.height/2));
 	mouseDown = true;
 }
 document.getElementById('UI').onmouseup = function(evt) {
+  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	const mousePos = getMousePos(canvas, evt);
 	mouseDown = false;
 	oldX = camera.x;
@@ -90,13 +95,12 @@ const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
 localStorage.setItem('username', PLAYER_NAME);
 
 camera = new Camera();
-player = new Player(PLAYER_NAME);
 ui = new UI();
-world = new World();
-world.setup(SERVER_IP, camera, ui, player)
+world = new World(PLAYER_NAME);
+world.setup(SERVER_IP, camera, ui)
   .then(() => {
     world.sendActions([
       ['getGames', []],
-      ['setPlayer', [player.name]],
+      ['setPlayer', [world.player.name]],
     ]);
   });

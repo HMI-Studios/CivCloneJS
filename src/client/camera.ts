@@ -1,10 +1,20 @@
 class Camera {
+  x: number;
+  y: number;
+  zoom: number;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  textures: { tile: { [key: string]: any }, selector: any, unit: { [key: string]: any } };
+  interval?: any;
+  mouseDownTime: number;
+  selectedUnitPos: [number, number];
+  highlightedTiles: { [key: string]: any };
   constructor() {
     this.x = 0;
     this.y = 0;
     this.zoom = 1;
-    this.canvas = document.getElementById('canvas');
-    this.ctx = canvas.getContext('2d');
+    this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    this.ctx = this.canvas.getContext('2d');
     this.textures = {
       tile: {
         plains: document.getElementById('tile_plains'),
@@ -26,7 +36,7 @@ class Camera {
     this.highlightedTiles = {};
   }
 
-  start(world, FPS) {
+  start(world: World, FPS: number) {
     this.interval = setInterval(() => this.render(world), FPS);
   }
 
@@ -43,7 +53,7 @@ class Camera {
     );
   }
 
-  renderUnit(unit, x, y) {
+  renderUnit(world, unit, x, y) {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height, civs } = world;
 
@@ -122,10 +132,10 @@ class Camera {
           );
 
           if (tile.unit) {
-            this.renderUnit(tile.unit, x, y);
+            this.renderUnit(world, tile.unit, x, y);
           }
 
-          if (`${x},${y}` in this.highlightedTiles) {
+          if (world.pos(x, y) in this.highlightedTiles) {
             ctx.drawImage(
               textures['selector'],
               (-camX + ((x - (width / 2)) * 19.8)) * zoom,
@@ -139,7 +149,7 @@ class Camera {
 
             if (this.mouseDownTime === 1) {
               console.log(x, y);
-              if (`${x},${y}` in this.highlightedTiles) {
+              if (world.pos(x, y) in this.highlightedTiles) {
                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
               } else {
                 this.highlightedTiles = {};

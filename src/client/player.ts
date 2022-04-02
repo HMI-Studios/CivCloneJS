@@ -1,11 +1,6 @@
-class Player {
-  constructor(name) {
-    this.name = name;
-    this.civID = null;
-  }
-}
-
 class UI {
+  elements: { [key: string]: HTMLElement };
+  colorPool: any[];
   constructor() {
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),

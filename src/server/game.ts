@@ -1,7 +1,15 @@
-const { Map, Tile } = require('./map.js');
+// const { Map, Tile } = require('./map.js');
+import { Map, Tile } from './map';
+import * as WebSocket from 'ws';
 
-class Game {
-  constructor(map, playerCount) {
+export class Game {
+  map: Map;
+  civs: { [civID: string]: Civilization };
+  players: { [playerName: string]: Player };
+  playerCount: number;
+  colorPool: { [key: string]: boolean };
+  metaData: { gameName: string };
+  constructor(map: Map, playerCount: number) {
     this.map = map;
     this.civs = {};
     for (let i = 0; i < playerCount; i++) {
@@ -31,11 +39,11 @@ class Game {
     };
   }
 
-  getPlayer(username) {
+  getPlayer(username: string) {
     return this.players[username];
   }
 
-  getCiv(civID) {
+  getCiv(civID: number) {
     return this.civs[civID];
   }
 
@@ -49,7 +57,7 @@ class Game {
     return colorList;
   }
 
-  setCivColor(civID, color) {
+  setCivColor(civID: number, color: string) {
     if (this.colorPool[color]) {
       if (this.civs[civID].color) {
         this.colorPool[this.civs[civID].color] = true;
@@ -71,7 +79,7 @@ class Game {
     return data;
   }
 
-  beginTurnForCiv(civID) {
+  beginTurnForCiv(civID: number) {
     this.civs[civID].newTurn();
     this.sendToCiv(civID, {
       update: [
@@ -81,7 +89,7 @@ class Game {
     });
   }
 
-  updateCivTileVisibility(civID) {
+  updateCivTileVisibility(civID: number) {
     for (let tile of this.map.tiles) {
       tile.clearVisibility(civID);
     }
@@ -92,12 +100,12 @@ class Game {
     }
   }
 
-  addUnit(unit, x, y) {
+  addUnit(unit: Unit, x: number, y: number) {
     this.civs[unit.civID].addUnit(unit);
     this.map.moveUnitTo(unit, x, y);
   }
 
-  removeUnit(unit) {
+  removeUnit(unit: Unit) {
     this.civs[unit.civID].removeUnit(unit);
     this.map.moveUnitTo(unit, null, null);
   }
@@ -113,7 +121,7 @@ class Game {
       delete freeCivs[this.players[player].civID];
     }
 
-    const freeIDs = Object.keys(freeCivs);
+    const freeIDs = Object.keys(freeCivs).map(Number);
 
     if (freeIDs.length > 0) {
       return Math.min(...freeIDs);
@@ -122,7 +130,7 @@ class Game {
     }
   }
 
-  sendToAll(msg) {
+  sendToAll(msg: object) {
     for (let playerName in this.players) {
       let player = this.players[playerName];
 
@@ -134,8 +142,7 @@ class Game {
     }
   }
 
-  // sendToCiv(Number, Object);
-  sendToCiv(civID, msg) {
+  sendToCiv(civID: number, msg: object) {
     let player = Object.values(this.players).find(player => player.civID === civID);
 
     if (!player) {
@@ -150,8 +157,7 @@ class Game {
     }
   }
 
-  // sendTileUpdate(Number);
-  sendTileUpdate(tile) {
+  sendTileUpdate(tile: Tile) {
     for (let civID = 0; civID < this.playerCount; civID++) {
       this.sendToCiv(civID, {
         update: [
@@ -161,7 +167,7 @@ class Game {
     }
   }
 
-  forEachCiv(callback) {
+  forEachCiv(callback: (civID: number) => any) {
     for (let civID = 0; civID < this.playerCount; civID++) {
       callback(civID);
     }
@@ -173,8 +179,15 @@ const unitMovementTable = {
   'scout': 5,
 };
 
-class Unit {
-  constructor(type, civID) {
+export class Unit {
+  type: string;
+  hp: number;
+  movement: number;
+  civID: number;
+  x: number;
+  y: number;
+
+  constructor(type: string, civID: number) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -197,7 +210,10 @@ class Unit {
   }
 };
 
-class Civilization {
+export class Civilization {
+  units: Unit[];
+  color: string;
+
   constructor() {
     this.units = [];
     this.color = null;
@@ -215,11 +231,11 @@ class Civilization {
     }
   }
 
-  addUnit(unit) {
+  addUnit(unit: Unit) {
     this.units.push(unit);
   }
 
-  removeUnit(unit) {
+  removeUnit(unit: Unit) {
     const unitIndex = this.units.indexOf(unit);
     if (unitIndex > -1) {
       this.units.splice(unitIndex, 1);
@@ -227,8 +243,13 @@ class Civilization {
   }
 };
 
-class Player {
-  constructor(civID, connection) {
+export class Player {
+  civID: number;
+  ready: boolean;
+  isAI: boolean;
+  connection: WebSocket;
+
+  constructor(civID: number, connection: WebSocket) {
     this.civID = civID;
     this.ready = false;
     this.isAI = !connection;
