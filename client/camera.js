@@ -22,6 +22,8 @@ class Camera {
     };
     this.interval;
     this.mouseDownTime = 0;
+    this.selectedUnitPos = null;
+    this.highlightedTiles = {};
   }
 
   start(world, FPS) {
@@ -123,7 +125,28 @@ class Camera {
             this.renderUnit(tile.unit, x, y);
           }
 
+          if (`${x},${y}` in this.highlightedTiles) {
+            ctx.drawImage(
+              textures['selector'],
+              (-camX + ((x - (width / 2)) * 19.8)) * zoom,
+              (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
+              28 * zoom,
+              25 * zoom
+            );
+          }
+
           if (x === selectedX && y === selectedY) {
+
+            if (this.mouseDownTime === 1) {
+              console.log(x, y);
+              if (`${x},${y}` in this.highlightedTiles) {
+                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
+              } else {
+                this.highlightedTiles = {};
+                this.selectedUnitPos = null;
+              }
+            }
+
             ctx.drawImage(
               textures['selector'],
               (-camX + ((x - (width / 2)) * 19.8)) * zoom,
@@ -134,6 +157,8 @@ class Camera {
 
             if (tile.unit && this.mouseDownTime === 1) {
               console.log(tile.unit);
+              this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
+              this.selectedUnitPos = [x, y];
             }
           }
         }

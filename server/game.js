@@ -1,10 +1,4 @@
-const mod = (a, b) => {
-  if (a >= 0) {
-    return a % b;
-  } else {
-    return ((a % b) + b) % b;
-  }
-};
+const { Map, Tile } = require('./map.js');
 
 class Game {
   constructor(map, playerCount) {
@@ -89,7 +83,7 @@ class Game {
 
   updateCivTileVisibility(civID) {
     for (let tile of this.map.tiles) {
-      tile.setVisibility(civID, false);
+      tile.clearVisibility(civID);
     }
     for (let unit of this.civs[civID].units) {
       for (let tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
@@ -108,6 +102,7 @@ class Game {
     this.map.moveUnitTo(unit, null, null);
   }
 
+  // newPlayerCivID() => Number || null;
   newPlayerCivID() {
     const freeCivs = {};
     for (let i = 0; i < this.playerCount; i++) {
@@ -139,6 +134,7 @@ class Game {
     }
   }
 
+  // sendToCiv(Number, Object);
   sendToCiv(civID, msg) {
     let player = Object.values(this.players).find(player => player.civID === civID);
 
@@ -154,117 +150,20 @@ class Game {
     }
   }
 
+  // sendTileUpdate(Number);
+  sendTileUpdate(tile) {
+    for (let civID = 0; civID < this.playerCount; civID++) {
+      this.sendToCiv(civID, {
+        update: [
+          ['tileUpdate', [ this.map.getCivTile(civID, tile) ]],
+        ],
+      });
+    }
+  }
+
   forEachCiv(callback) {
     for (let civID = 0; civID < this.playerCount; civID++) {
       callback(civID);
-    }
-  }
-};
-
-class Map {
-  constructor(height, width, terrain) {
-    this.height = height;
-    this.width = width;
-    this.tiles = new Array(height*width);
-    for (let i = 0; i < height*width; i++) {
-      this.tiles[i] = new Tile(terrain[i]);
-    }
-  }
-
-  pos(x, y) {
-    return y*this.width+x;
-  }
-
-  getNeighbors(x, y, r, tileList=[], isTop=true) {
-    if (r > 0 && this.tiles[this.pos(x, y)]) {
-      tileList.push(this.tiles[this.pos(x, y)]);
-      if (mod(x, 2) === 1) {
-        this.getNeighbors(x, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y, r-1, tileList, false);
-        this.getNeighbors(x, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y, r-1, tileList, false);
-        this.getNeighbors(x-1, y+1, r-1, tileList, false);
-      } else {
-        this.getNeighbors(x, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y, r-1, tileList, false);
-        this.getNeighbors(x+1, y-1, r-1, tileList, false);
-        this.getNeighbors(x, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y, r-1, tileList, false);
-      }
-    }
-    if (isTop) {
-      return tileList;
-    }
-  }
-
-  moveUnitTo(unit, x, y) {
-    if (unit.x !== null && unit.y !== null) {
-      this.tiles[this.pos(unit.x, unit.y)].setUnit(null);
-    }
-    [unit.x, unit.y] = [x, y];
-    if (x !== null && y !== null) {
-      this.tiles[this.pos(x, y)].setUnit(unit);
-    }
-  }
-
-  getCivMap(civID) {
-    return this.tiles.map((tile) => {
-      if (tile.discoveredBy.includes(civID)) {
-        if (tile.visibleTo.includes(civID)) {
-          return tile.getVisibleData();
-        } else {
-          return tile.getDiscoveredData();
-        }
-      } else {
-        return null;
-      }
-    });
-  }
-
-  setTileVisibility(civID, x, y, visible) {
-    this.tiles[this.pos(x, y)].setVisibility(civID, visible);
-  }
-};
-
-class Tile {
-  constructor(type) {
-    this.type = type;
-    this.improvement = null;
-    this.unit = null;
-    this.discoveredBy = [];
-    this.visibleTo = [];
-  }
-
-  getDiscoveredData() {
-    return {
-      type: this.type,
-      improvement: this.improvement,
-    };
-  }
-
-  getVisibleData() {
-    const unitData = !this.unit ? null : this.unit.getData();
-    return {
-      ...this.getDiscoveredData(),
-      unit: unitData,
-      visible: true,
-    }
-  }
-
-  setUnit(unit) {
-    this.unit = unit;
-  }
-
-  setVisibility(civID, visible) {
-    const vIndex = this.visibleTo.indexOf(civID);
-    const dIndex = this.discoveredBy.indexOf(civID);
-    if (visible) {
-      if (vIndex === -1) this.visibleTo.push(civID);
-      if (dIndex === -1) this.discoveredBy.push(civID);
-    } else {
-      if (vIndex > -1) this.visibleTo.splice(vIndex, 1);
     }
   }
 };

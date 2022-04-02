@@ -12,14 +12,15 @@ const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-const { Game, Map, Tile, Player } = require('./game.js');
+const { Game, Player } = require('./game.js');
+const { Map } = require('./map.js');
 
 const wss = new WebSocketServer({ server });
 
 const games = {
   0: new Game(
     new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') )).map),
-    2
+    1
   ),
 };
 
@@ -72,6 +73,7 @@ const methods = {
     const username = ws.connData.username;
     const gameID = ws.connData.gameID;
     const game = games[gameID];
+
     if (game) {
       const player = game.getPlayer(username);
 
@@ -136,6 +138,28 @@ const methods = {
           }
         }
       }
+    }
+  },
+
+  moveUnit: (ws, srcX, srcY, dstX, dstY) => {
+    const gameID = ws.connData.gameID;
+    const game = games[gameID];
+
+    if (game) {
+      const map = game.map;
+
+      const src = map.getTile(srcX, srcY);
+      const dst = map.getTile(dstX, dstY);
+
+      const unit = src.unit;
+
+      if (unit && dst.unit == null && unit.movement >= src.movementCost) {
+        map.moveUnitTo(unit, dstX, dstY);
+        unit.movement -= src.movementCost;
+      }
+
+      game.sendTileUpdate(src);
+      game.sendTileUpdate(dst);
     }
   },
 };

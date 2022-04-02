@@ -16,6 +16,61 @@ class World {
     return this.tiles[(y * this.width) + mod(x, this.width)] || null;
   }
 
+  getNeighbors(x, y) {
+    let tiles;
+
+    if (mod(x, 2) === 1) {
+      tiles = [
+        [x, y+1],
+        [x+1, y+1],
+        [x+1, y],
+        [x, y-1],
+        [x-1, y],
+        [x-1, y+1],
+      ];
+    } else {
+      tiles = [
+        [x, y+1],
+        [x+1, y],
+        [x+1, y-1],
+        [x, y-1],
+        [x-1, y-1],
+        [x-1, y],
+      ];
+    }
+
+    return tiles.filter(([x, y]) => !!this.getTile(x, y));
+  }
+
+  // mode: 0 = land unit, 1 = sea unit; -1 = air unit
+  getTilesInRange(srcX, srcY, range, mode=0) {
+    const queue = [];
+    queue.push([srcX, srcY]);
+
+    const dst = {};
+    dst[[srcX, srcY]] = 0;
+
+    const paths = {};
+
+    while (queue.length) {
+      const [atX, atY] = queue.shift();
+
+      for (let [adjX, adjY] of this.getNeighbors(atX, atY)) {
+        if (!([adjX, adjY] in dst)) {
+          const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
+          dst[[adjX, adjY]] = dst[[atX, atY]] + movementCost;
+
+          if (dst[[adjX, adjY]] <= range) {
+            paths[[adjX, adjY]] = [atX, atY];
+            queue.push([adjX, adjY]);
+          }
+        }
+      }
+    }
+
+    return paths;
+  }
+
   sendJSON(data) {
     this.socket.send(JSON.stringify(data));
   }
