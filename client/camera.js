@@ -22,6 +22,8 @@ class Camera {
     };
     this.interval;
     this.mouseDownTime = 0;
+    this.selectedUnitPos = null;
+    this.highlightedTiles = {};
   }
 
   start(world, FPS) {
@@ -41,9 +43,43 @@ class Camera {
     );
   }
 
+  renderUnit(unit, x, y) {
+    const { zoom, x: camX, y: camY, textures, ctx } = this;
+    const { width, height, civs } = world;
+
+    const UNIT_WIDTH = (74 * 0.2);
+    const UNIT_HEIGHT = (88 * 0.2);
+    const UNIT_RECT_HEIGHT = (51 * 0.2);
+
+    ctx.fillStyle = civs[unit.civID].color;
+
+    ctx.beginPath();
+    ctx.rect(
+      (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
+      (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
+      UNIT_WIDTH * zoom,
+      UNIT_RECT_HEIGHT * zoom
+    );
+    ctx.arc(
+      (-camX + ((x - (width / 2)) * 19.8) + 6.5 + (UNIT_WIDTH / 2)) * zoom,
+      (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5 + UNIT_RECT_HEIGHT) * zoom,
+      (UNIT_WIDTH / 2) * zoom,
+      0, Math.PI
+    );
+    ctx.fill();
+
+    ctx.drawImage(
+      textures.unit[unit.type],
+      (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
+      (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
+      UNIT_WIDTH * zoom,
+      UNIT_HEIGHT * zoom
+    );
+  }
+
   render(world) {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
-    const { tiles, width, height } = world;
+    const { width, height } = world;
     const [ wmX, wmY ] = [ camX + (mouseX / zoom), camY + (mouseY / zoom) ];
     const [ scx1, scy1, scx2, scy2 ] = [
       -this.canvas.width / 2,
@@ -86,16 +122,31 @@ class Camera {
           );
 
           if (tile.unit) {
+            this.renderUnit(tile.unit, x, y);
+          }
+
+          if (`${x},${y}` in this.highlightedTiles) {
             ctx.drawImage(
-              textures.unit[tile.unit.type],
-              (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
-              (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
-              (74 * 0.2) * zoom,
-              (88 * 0.2) * zoom
+              textures['selector'],
+              (-camX + ((x - (width / 2)) * 19.8)) * zoom,
+              (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
+              28 * zoom,
+              25 * zoom
             );
           }
 
           if (x === selectedX && y === selectedY) {
+
+            if (this.mouseDownTime === 1) {
+              console.log(x, y);
+              if (`${x},${y}` in this.highlightedTiles) {
+                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
+              } else {
+                this.highlightedTiles = {};
+                this.selectedUnitPos = null;
+              }
+            }
+
             ctx.drawImage(
               textures['selector'],
               (-camX + ((x - (width / 2)) * 19.8)) * zoom,
@@ -106,6 +157,8 @@ class Camera {
 
             if (tile.unit && this.mouseDownTime === 1) {
               console.log(tile.unit);
+              this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
+              this.selectedUnitPos = [x, y];
             }
           }
         }

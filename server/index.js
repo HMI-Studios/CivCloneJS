@@ -12,7 +12,8 @@ const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-const { Game, Map, Tile, Player } = require('./game.js');
+const { Game, Player } = require('./game.js');
+const { Map } = require('./map.js');
 
 const wss = new WebSocketServer({ server });
 
@@ -41,9 +42,16 @@ const methods = {
     if (civID !== null) {
       ws.connData.gameID = gameID;
       game.players[username] = new Player(civID, ws);
+
+      sendTo(ws, {
+        update: [
+          ['civID', [ civID ]],
+          ['colorPool', [ game.getColorPool() ]],
+        ],
+      });
     } else {
       sendTo(ws, { error: [
-        ['kicked', ['Game Full']]
+        ['kicked', ['Game full']],
       ] });
     }
   },
@@ -56,9 +64,35 @@ const methods = {
 
     sendTo(ws, {
       update: [
-        ['gameList', [gameList]]
+        ['gameList', [gameList]],
       ],
     });
+  },
+
+  setColor: (ws, color) => {
+    const username = ws.connData.username;
+    const gameID = ws.connData.gameID;
+    const game = games[gameID];
+
+    if (game) {
+      const player = game.getPlayer(username);
+
+      if (player) {
+        if (game.setCivColor(player.civID, color)) {
+          game.sendToAll({
+            update: [
+              ['colorPool', [ game.getColorPool() ]],
+            ],
+          });
+        } else {
+          sendTo(ws, {
+            error: [
+              ['colorTaken', ['That color is no longer available']],
+            ],
+          });
+        }
+      }
+    }
   },
 
   ready: (ws, state) => {
@@ -66,30 +100,66 @@ const methods = {
     const gameID = ws.connData.gameID;
     const game = games[gameID];
 
-    if (game && game.players[username]) {
-      game.players[username].ready = state;
+    if (game) {
+      const player = game.getPlayer(username);
 
-      if (Object.keys(game.players).length === game.playerCount) {
-        if (Object.values(game.players).every(player => player.ready)) {
-          game.sendToAll({
-            update: [
-              ['beginGame', [[game.map.width, game.map.height]]],
-            ],
-          });
+      if (player) {
+        const civ = game.getCiv(player.civID);
 
-          // console.log(game)
+        if (!civ.color) {
+          sendTo(ws, { error: [
+            ['notReady', ['Please select civ color']],
+          ] });
+          return;
+        }
 
-          game.forEachCiv((civ) => {
-            game.sendToCiv(civ, {
+        player.ready = state;
+
+        if (Object.keys(game.players).length === game.playerCount) {
+          if (Object.values(game.players).every(player => player.ready)) {
+            game.sendToAll({
               update: [
-                ['setMap', [game.map.getCivMap(civ)]],
+                ['beginGame', [ [game.map.width, game.map.height], game.playerCount ]],
+                ['civData', [ game.getAllCivsData() ]],
               ],
             });
-          });
 
-          game.beginTurnForCiv(0);
+            // console.log(game)
+
+            game.forEachCiv((civID) => {
+              game.sendToCiv(civID, {
+                update: [
+                  ['setMap', [game.map.getCivMap(civID)]],
+                ],
+              });
+            });
+
+            game.beginTurnForCiv(0);
+          }
         }
       }
+    }
+  },
+
+  moveUnit: (ws, srcX, srcY, dstX, dstY) => {
+    const gameID = ws.connData.gameID;
+    const game = games[gameID];
+
+    if (game) {
+      const map = game.map;
+
+      const src = map.getTile(srcX, srcY);
+      const dst = map.getTile(dstX, dstY);
+
+      const unit = src.unit;
+
+      if (unit && dst.unit == null && unit.movement >= src.movementCost) {
+        map.moveUnitTo(unit, dstX, dstY);
+        unit.movement -= src.movementCost;
+      }
+
+      game.sendTileUpdate(src);
+      game.sendTileUpdate(dst);
     }
   },
 };

@@ -1,10 +1,4 @@
-const mod = (a, b) => {
-  if (a >= 0) {
-    return a % b;
-  } else {
-    return ((a % b) + b) % b;
-  }
-};
+const { Map, Tile } = require('./map.js');
 
 class Game {
   constructor(map, playerCount) {
@@ -22,42 +16,93 @@ class Game {
     this.players = {};
     this.playerCount = playerCount;
 
+    const colorList = [
+      '#820000', // RICH RED
+      '#0a2ead', // BLUE
+      '#03a300', // GREEN
+      '#03a300', // SAND YELLOW
+      '#560e8a', // ROYAL PURPLE
+      '#bd7400', // ORANGE
+    ].slice(0, Math.max(this.playerCount, 6));
+    this.colorPool = colorList.reduce((obj, color) => ({...obj, [color]: true}), {});
+
     this.metaData = {
       gameName: "New Game",
     };
   }
 
-  beginTurnForCiv(civ) {
-    this.civs[civ].newTurn();
-    this.sendToCiv(civ, {
+  getPlayer(username) {
+    return this.players[username];
+  }
+
+  getCiv(civID) {
+    return this.civs[civID];
+  }
+
+  getColorPool() {
+    const colorList = [];
+    for (let color in this.colorPool) {
+      if (this.colorPool[color]) {
+        colorList.push(color);
+      }
+    }
+    return colorList;
+  }
+
+  setCivColor(civID, color) {
+    if (this.colorPool[color]) {
+      if (this.civs[civID].color) {
+        this.colorPool[this.civs[civID].color] = true;
+      }
+      this.civs[civID].color = color;
+      this.colorPool[color] = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  getAllCivsData() {
+    const data = {};
+    for (let civID in this.civs) {
+      const civ = this.civs[civID];
+      data[civID] = civ.getData();
+    }
+    return data;
+  }
+
+  beginTurnForCiv(civID) {
+    this.civs[civID].newTurn();
+    this.sendToCiv(civID, {
       update: [
-        ['setMap', [this.map.getCivMap(civ)]],
+        ['setMap', [this.map.getCivMap(civID)]],
         ['beginTurn', []],
       ],
     });
   }
 
-  updateCivTileVisibility(civ) {
+  updateCivTileVisibility(civID) {
     for (let tile of this.map.tiles) {
-      tile.setVisibility(civ, false);
+      tile.clearVisibility(civID);
     }
-    for (let unit of this.civs[civ].units) {
+    for (let unit of this.civs[civID].units) {
       for (let tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
-        tile.setVisibility(civ, true);
+        tile.setVisibility(civID, true);
       }
     }
   }
 
   addUnit(unit, x, y) {
-    this.civs[unit.civ].addUnit(unit);
+    this.civs[unit.civID].addUnit(unit);
     this.map.moveUnitTo(unit, x, y);
   }
 
   removeUnit(unit) {
-    this.civs[unit.civ].removeUnit(unit);
+    this.civs[unit.civID].removeUnit(unit);
     this.map.moveUnitTo(unit, null, null);
   }
 
+  // newPlayerCivID() => Number || null;
   newPlayerCivID() {
     const freeCivs = {};
     for (let i = 0; i < this.playerCount; i++) {
@@ -65,7 +110,7 @@ class Game {
     }
 
     for (let player in this.players) {
-      delete freeCivs[this.players[player].civ];
+      delete freeCivs[this.players[player].civID];
     }
 
     const freeIDs = Object.keys(freeCivs);
@@ -89,11 +134,12 @@ class Game {
     }
   }
 
-  sendToCiv(civ, msg) {
-    let player = Object.values(this.players).find(player => player.civ === civ);
+  // sendToCiv(Number, Object);
+  sendToCiv(civID, msg) {
+    let player = Object.values(this.players).find(player => player.civID === civID);
 
     if (!player) {
-      console.error("Error: Could not find player for Civilization #" + civ);
+      console.error("Error: Could not find player for Civilization #" + civID);
       return;
     }
 
@@ -104,117 +150,20 @@ class Game {
     }
   }
 
+  // sendTileUpdate(Number);
+  sendTileUpdate(tile) {
+    for (let civID = 0; civID < this.playerCount; civID++) {
+      this.sendToCiv(civID, {
+        update: [
+          ['tileUpdate', [ this.map.getCivTile(civID, tile) ]],
+        ],
+      });
+    }
+  }
+
   forEachCiv(callback) {
-    for (let civ = 0; civ < this.playerCount; civ++) {
-      callback(civ);
-    }
-  }
-};
-
-class Map {
-  constructor(height, width, terrain) {
-    this.height = height;
-    this.width = width;
-    this.tiles = new Array(height*width);
-    for (let i = 0; i < height*width; i++) {
-      this.tiles[i] = new Tile(terrain[i]);
-    }
-  }
-
-  pos(x, y) {
-    return y*this.width+x;
-  }
-
-  getNeighbors(x, y, r, tileList=[], isTop=true) {
-    if (r > 0 && this.tiles[this.pos(x, y)]) {
-      tileList.push(this.tiles[this.pos(x, y)]);
-      if (mod(x, 2) === 1) {
-        this.getNeighbors(x, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y, r-1, tileList, false);
-        this.getNeighbors(x, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y, r-1, tileList, false);
-        this.getNeighbors(x-1, y+1, r-1, tileList, false);
-      } else {
-        this.getNeighbors(x, y+1, r-1, tileList, false);
-        this.getNeighbors(x+1, y, r-1, tileList, false);
-        this.getNeighbors(x+1, y-1, r-1, tileList, false);
-        this.getNeighbors(x, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y-1, r-1, tileList, false);
-        this.getNeighbors(x-1, y, r-1, tileList, false);
-      }
-    }
-    if (isTop) {
-      return tileList;
-    }
-  }
-
-  moveUnitTo(unit, x, y) {
-    if (unit.x !== null && unit.y !== null) {
-      this.tiles[this.pos(unit.x, unit.y)].setUnit(null);
-    }
-    [unit.x, unit.y] = [x, y];
-    if (x !== null && y !== null) {
-      this.tiles[this.pos(x, y)].setUnit(unit);
-    }
-  }
-
-  getCivMap(civ) {
-    return this.tiles.map((tile) => {
-      if (tile.discoveredBy.includes(civ)) {
-        if (tile.visibleTo.includes(civ)) {
-          return tile.getVisibleData();
-        } else {
-          return tile.getDiscoveredData();
-        }
-      } else {
-        return null;
-      }
-    });
-  }
-
-  setTileVisibility(civ, x, y, visible) {
-    this.tiles[this.pos(x, y)].setVisibility(civ, visible);
-  }
-};
-
-class Tile {
-  constructor(type) {
-    this.type = type;
-    this.improvement = null;
-    this.unit = null;
-    this.discoveredBy = [];
-    this.visibleTo = [];
-  }
-
-  getDiscoveredData() {
-    return {
-      type: this.type,
-      improvement: this.improvement,
-    };
-  }
-
-  getVisibleData() {
-    const unitData = !this.unit ? null : this.unit.getData();
-    return {
-      ...this.getDiscoveredData(),
-      unit: unitData,
-      visible: true,
-    }
-  }
-
-  setUnit(unit) {
-    this.unit = unit;
-  }
-
-  setVisibility(civ, visible) {
-    const vIndex = this.visibleTo.indexOf(civ);
-    const dIndex = this.discoveredBy.indexOf(civ);
-    if (visible) {
-      if (vIndex === -1) this.visibleTo.push(civ);
-      if (dIndex === -1) this.discoveredBy.push(civ);
-    } else {
-      if (vIndex > -1) this.visibleTo.splice(vIndex, 1);
+    for (let civID = 0; civID < this.playerCount; civID++) {
+      callback(civID);
     }
   }
 };
@@ -225,11 +174,11 @@ const unitMovementTable = {
 };
 
 class Unit {
-  constructor(type, civ) {
+  constructor(type, civID) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
-    this.civ = civ;
+    this.civID = civID;
     this.x = null;
     this.y = null;
   }
@@ -239,7 +188,7 @@ class Unit {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
-      civ: this.civ,
+      civID: this.civID,
     };
   }
 
@@ -251,6 +200,13 @@ class Unit {
 class Civilization {
   constructor() {
     this.units = [];
+    this.color = null;
+  }
+
+  getData() {
+    return {
+      color: this.color
+    }
   }
 
   newTurn() {
@@ -272,8 +228,8 @@ class Civilization {
 };
 
 class Player {
-  constructor(civ, connection) {
-    this.civ = civ;
+  constructor(civID, connection) {
+    this.civID = civID;
     this.ready = false;
     this.isAI = !connection;
     this.connection = connection;
