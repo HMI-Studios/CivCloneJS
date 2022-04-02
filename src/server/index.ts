@@ -1,22 +1,18 @@
-// const fs = require('fs');
 import * as fs from 'fs';
 import { IncomingMessage } from 'http';
-// const { WebSocketServer } = require('ws');
 import * as WebSocket from 'ws';
 
-const express = require('express');
+import express from 'express';
 const app = express();
 const port = 8080;
 
-const path = require('path');
+import path from 'path';
 app.use('/', express.static(path.join(__dirname, '../client')));
 
 const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-// const { Game, Player } = require('./game.js');
-// const { Map } = require('./map.js');
 import { Game, Player } from './game';
 import { Map } from './map';
 
@@ -29,7 +25,7 @@ const games = {
   ),
 };
 
-const sendTo = (ws: WebSocket, msg: any): void => {
+const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }): void => {
   ws.send(JSON.stringify(msg));
 }
 
@@ -70,9 +66,9 @@ const methods = {
     }
   },
 
-  getGames: (ws) => {
+  getGames: (ws: WebSocket) => {
     const gameList = {};
-    for (let gameID in games) {
+    for (const gameID in games) {
       gameList[gameID] = games[gameID].metaData;
     }
 
@@ -83,7 +79,7 @@ const methods = {
     });
   },
 
-  setColor: (ws, color: string) => {
+  setColor: (ws: WebSocket, color: string) => {
     const username = getConnData(ws).username;
     const gameID = getConnData(ws).gameID;
     const game = games[gameID];
@@ -109,7 +105,7 @@ const methods = {
     }
   },
 
-  ready: (ws, state: boolean) => {
+  ready: (ws: WebSocket, state: boolean) => {
     const username = getConnData(ws).username;
     const gameID = getConnData(ws).gameID;
     const game = games[gameID];
@@ -155,7 +151,7 @@ const methods = {
     }
   },
 
-  moveUnit: (ws, srcX: number, srcY: number, dstX: number, dstY: number) => {
+  moveUnit: (ws: WebSocket, srcX: number, srcY: number, dstX: number, dstY: number) => {
     const gameID = getConnData(ws).gameID;
     const game = games[gameID];
 

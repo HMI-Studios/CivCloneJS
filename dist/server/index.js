@@ -22,26 +22,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-// const fs = require('fs');
 const fs = __importStar(require("fs"));
-// const { WebSocketServer } = require('ws');
 const WebSocket = __importStar(require("ws"));
-const express = require('express');
-const app = express();
+const express_1 = __importDefault(require("express"));
+const app = (0, express_1.default)();
 const port = 8080;
-const path = require('path');
-app.use('/', express.static(path.join(__dirname, '../client')));
+const path_1 = __importDefault(require("path"));
+app.use('/', express_1.default.static(path_1.default.join(__dirname, '../client')));
 const server = app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
 });
-// const { Game, Player } = require('./game.js');
-// const { Map } = require('./map.js');
 const game_1 = require("./game");
 const map_1 = require("./map");
 const wss = new WebSocket.Server({ server });
 const games = {
-    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path.join(__dirname, 'saves/0.json')).toString()).map), 1),
+    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 1),
 };
 const sendTo = (ws, msg) => {
     ws.send(JSON.stringify(msg));
@@ -78,7 +77,7 @@ const methods = {
     },
     getGames: (ws) => {
         const gameList = {};
-        for (let gameID in games) {
+        for (const gameID in games) {
             gameList[gameID] = games[gameID].metaData;
         }
         sendTo(ws, {

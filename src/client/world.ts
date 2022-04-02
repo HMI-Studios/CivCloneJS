@@ -1,11 +1,49 @@
+interface Civ {
+  color: string;
+}
+
+interface Player {
+  name: string;
+  civID: number;
+}
+
+interface WorldEventHandler {
+  [key: string]: (...args: unknown[]) => void;
+}
+
+interface EventMsg {
+  actions?: [string, unknown[]][];
+  update?: [string, unknown[]][];
+  error?: [string, unknown[]][];
+}
+
+interface Unit {
+  type: string;
+  hp: number;
+  movement: number;
+  civID: number;
+}
+
+interface Tile {
+  type: string;
+  improvement: any;
+  movementCost: [number, number];
+  unit: Unit;
+  visible: boolean;
+}
+
+interface GameMetadata {
+  gameName: string;
+}
+
 class World {
-  tiles: any[];
+  tiles: Tile[];
   height: number;
   width: number;
   socket: WebSocket;
-  on: { update: any, error: any };
-  civs: {};
-  player: { name: string, civID: number };
+  on: { update: WorldEventHandler, error: WorldEventHandler };
+  civs: { [key: string]: Civ };
+  player: Player;
   constructor(playerName: string) {
     this.tiles = [];
     this.height;
@@ -26,7 +64,7 @@ class World {
     return (y * this.width) + mod(x, this.width)
   }
 
-  getTile(x: number, y: number): any {
+  getTile(x: number, y: number): Tile {
     return this.tiles[this.pos(x, y)] || null;
   }
 
@@ -57,7 +95,9 @@ class World {
   }
 
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-  getTilesInRange(srcX: number, srcY: number, range: number, mode: number=0): any {
+  getTilesInRange(srcX: number, srcY: number, range: number, mode = 0): { [key: string]: [number, number] } {
+    // BFS to find all tiles within `range` steps
+
     const queue = [];
     queue.push([srcX, srcY]);
 
@@ -69,7 +109,7 @@ class World {
     while (queue.length) {
       const [atX, atY] = queue.shift();
 
-      for (let [adjX, adjY] of this.getNeighbors(atX, atY)) {
+      for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
         if (!(this.pos(adjX, adjY) in dst)) {
           const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
           dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
@@ -85,16 +125,16 @@ class World {
     return paths;
   }
 
-  sendJSON(data: any) {
+  sendJSON(data: EventMsg): void {
     this.socket.send(JSON.stringify(data));
   }
 
-  handleResponse(data: { update?: any, error?: any }) {
+  handleResponse(data: EventMsg): void {
     if (data.update) {
       for (let i = 0; i < data.update.length; i++) {
-        let name = data.update[i][0];
-        let args = data.update[i][1];
-        console.log(name);
+        const name = data.update[i][0];
+        const args = data.update[i][1];
+        console.log(name); // DEBUG
         if (this.on.update[name]) {
           this.on.update[name](...args);
         }
@@ -102,9 +142,9 @@ class World {
     }
     if (data.error) {
       for (let i = 0; i < data.error.length; i++) {
-        let name = data.error[i][0];
-        let args = data.error[i][1];
-        console.error(name);
+        const name = data.error[i][0];
+        const args = data.error[i][1];
+        console.error(name); // DEBUG
         if (this.on.error[name]) {
           this.on.error[name](...args);
         }
@@ -126,10 +166,10 @@ class World {
       ]);
     };
 
-    this.on.update.gameList = (gameList: { [key: string]: any }): void => {
-      let gameTitles = [];
-      let defaultGame = Object.keys(gameList)[0];
-      for (let gameID in gameList) {
+    this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
+      const gameTitles = [];
+      const defaultGame = Object.keys(gameList)[0];
+      for (const gameID in gameList) {
         gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
       }
 
@@ -152,22 +192,22 @@ class World {
       camera.start(this, 1000/60);
     };
 
-    this.on.update.setMap = (map: any[]): void => {
+    this.on.update.setMap = (map: Tile[]): void => {
       console.log(map);
       this.tiles = map;
     };
 
-    this.on.update.colorPool = (colors: any[]): void => {
+    this.on.update.colorPool = (colors: string[]): void => {
       console.log(colors);
       ui.colorPool = colors;
       ui.showCivPicker(civPickerFn);
     };
 
-    this.on.update.civData = (civs) => {
+    this.on.update.civData = (civs: { [key: string]: Civ }) => {
       this.civs = civs;
     };
 
-    this.on.update.civID = (civID) => {
+    this.on.update.civID = (civID: number) => {
       this.player.civID = civID;
     };
 
@@ -179,7 +219,7 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve: () => void, reject: () => void) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
         let data;
@@ -191,13 +231,13 @@ class World {
         }
         this.handleResponse(data);
       });
-      this.socket.addEventListener('open', (event) => {
+      this.socket.addEventListener('open', (event: Event) => {
         resolve();
       });
     });
   }
 
-  sendActions(actions) {
+  sendActions(actions: [string, unknown[]][]): void {
     this.sendJSON({ actions });
   }
 

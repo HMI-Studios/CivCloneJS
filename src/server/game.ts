@@ -4,10 +4,10 @@ import * as WebSocket from 'ws';
 
 export class Game {
   map: Map;
-  civs: { [civID: string]: Civilization };
+  civs: { [civID: number]: Civilization };
   players: { [playerName: string]: Player };
   playerCount: number;
-  colorPool: { [key: string]: boolean };
+  colorPool: { [color: string]: boolean };
   metaData: { gameName: string };
   constructor(map: Map, playerCount: number) {
     this.map = map;
@@ -15,7 +15,7 @@ export class Game {
     for (let i = 0; i < playerCount; i++) {
       this.civs[i] = new Civilization();
 
-      this.addUnit(new Unit('settler', i), (i+1)*1, (i+1)*1);
+      this.addUnit(new Unit('settler', i), (i+1)*1, (i+1)*1); // REMOVE THESE
       this.addUnit(new Unit('scout', i), (i+1)*3, (i+1)*4); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
@@ -24,7 +24,7 @@ export class Game {
     this.players = {};
     this.playerCount = playerCount;
 
-    const colorList = [
+    const colorList: string[] = [
       '#820000', // RICH RED
       '#0a2ead', // BLUE
       '#03a300', // GREEN
@@ -32,32 +32,35 @@ export class Game {
       '#560e8a', // ROYAL PURPLE
       '#bd7400', // ORANGE
     ].slice(0, Math.max(this.playerCount, 6));
-    this.colorPool = colorList.reduce((obj, color) => ({...obj, [color]: true}), {});
+
+    this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
 
     this.metaData = {
       gameName: "New Game",
     };
   }
 
-  getPlayer(username: string) {
+  getPlayer(username: string): Player {
     return this.players[username];
   }
 
-  getCiv(civID: number) {
+  getCiv(civID: number): Civilization {
     return this.civs[civID];
   }
 
-  getColorPool() {
+  getColorPool(): string[] {
     const colorList = [];
-    for (let color in this.colorPool) {
+
+    for (const color in this.colorPool) {
       if (this.colorPool[color]) {
         colorList.push(color);
       }
     }
+
     return colorList;
   }
 
-  setCivColor(civID: number, color: string) {
+  setCivColor(civID: number, color: string): boolean {
     if (this.colorPool[color]) {
       if (this.civs[civID].color) {
         this.colorPool[this.civs[civID].color] = true;
@@ -70,16 +73,18 @@ export class Game {
     }
   }
 
-  getAllCivsData() {
+  getAllCivsData(): { [civID: number]: CivilizationData } {
     const data = {};
-    for (let civID in this.civs) {
+
+    for (const civID in this.civs) {
       const civ = this.civs[civID];
       data[civID] = civ.getData();
     }
+
     return data;
   }
 
-  beginTurnForCiv(civID: number) {
+  beginTurnForCiv(civID: number): void {
     this.civs[civID].newTurn();
     this.sendToCiv(civID, {
       update: [
@@ -89,35 +94,34 @@ export class Game {
     });
   }
 
-  updateCivTileVisibility(civID: number) {
-    for (let tile of this.map.tiles) {
+  updateCivTileVisibility(civID: number): void {
+    for (const tile of this.map.tiles) {
       tile.clearVisibility(civID);
     }
-    for (let unit of this.civs[civID].units) {
-      for (let tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
+    for (const unit of this.civs[civID].units) {
+      for (const tile of this.map.getNeighbors(unit.x, unit.y, 3)) {
         tile.setVisibility(civID, true);
       }
     }
   }
 
-  addUnit(unit: Unit, x: number, y: number) {
+  addUnit(unit: Unit, x: number, y: number): void {
     this.civs[unit.civID].addUnit(unit);
     this.map.moveUnitTo(unit, x, y);
   }
 
-  removeUnit(unit: Unit) {
+  removeUnit(unit: Unit): void {
     this.civs[unit.civID].removeUnit(unit);
     this.map.moveUnitTo(unit, null, null);
   }
 
-  // newPlayerCivID() => Number || null;
-  newPlayerCivID() {
+  newPlayerCivID(): number | null {
     const freeCivs = {};
     for (let i = 0; i < this.playerCount; i++) {
       freeCivs[i] = true;
     }
 
-    for (let player in this.players) {
+    for (const player in this.players) {
       delete freeCivs[this.players[player].civID];
     }
 
@@ -130,20 +134,20 @@ export class Game {
     }
   }
 
-  sendToAll(msg: object) {
-    for (let playerName in this.players) {
-      let player = this.players[playerName];
+  sendToAll(msg: object): void {
+    for (const playerName in this.players) {
+      const player = this.players[playerName];
 
       if (player.isAI) {
-
+        return;
       } else {
         player.connection.send(JSON.stringify(msg));
       }
     }
   }
 
-  sendToCiv(civID: number, msg: object) {
-    let player = Object.values(this.players).find(player => player.civID === civID);
+  sendToCiv(civID: number, msg: object): void {
+    const player = Object.values(this.players).find(player => player.civID === civID);
 
     if (!player) {
       console.error("Error: Could not find player for Civilization #" + civID);
@@ -151,13 +155,13 @@ export class Game {
     }
 
     if (player.isAI) {
-
+      return;
     } else {
        player.connection.send(JSON.stringify(msg));
     }
   }
 
-  sendTileUpdate(tile: Tile) {
+  sendTileUpdate(tile: Tile): void {
     for (let civID = 0; civID < this.playerCount; civID++) {
       this.sendToCiv(civID, {
         update: [
@@ -167,17 +171,24 @@ export class Game {
     }
   }
 
-  forEachCiv(callback: (civID: number) => any) {
+  forEachCiv(callback: (civID: number) => void): void {
     for (let civID = 0; civID < this.playerCount; civID++) {
       callback(civID);
     }
   }
-};
+}
 
 const unitMovementTable = {
   'settler': 3,
   'scout': 5,
 };
+
+interface UnitData {
+  type: string,
+  hp: number,
+  movement: number,
+  civID: number,
+}
 
 export class Unit {
   type: string;
@@ -196,7 +207,7 @@ export class Unit {
     this.y = null;
   }
 
-  getData() {
+  getData(): UnitData {
     return {
       type: this.type,
       hp: this.hp,
@@ -208,7 +219,11 @@ export class Unit {
   newTurn() {
     this.movement = unitMovementTable[this.type];
   }
-};
+}
+
+interface CivilizationData {
+  color: string
+}
 
 export class Civilization {
   units: Unit[];
@@ -219,29 +234,29 @@ export class Civilization {
     this.color = null;
   }
 
-  getData() {
+  getData(): CivilizationData {
     return {
       color: this.color
     }
   }
 
   newTurn() {
-    for (let unit of this.units) {
+    for (const unit of this.units) {
       unit.newTurn();
     }
   }
 
-  addUnit(unit: Unit) {
+  addUnit(unit: Unit): void {
     this.units.push(unit);
   }
 
-  removeUnit(unit: Unit) {
+  removeUnit(unit: Unit): void {
     const unitIndex = this.units.indexOf(unit);
     if (unitIndex > -1) {
       this.units.splice(unitIndex, 1);
     }
   }
-};
+}
 
 export class Player {
   civID: number;
@@ -255,7 +270,7 @@ export class Player {
     this.isAI = !connection;
     this.connection = connection;
   }
-};
+}
 
 module.exports = {
   Game, Map, Tile, Unit, Civilization, Player,

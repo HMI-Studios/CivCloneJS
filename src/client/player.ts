@@ -1,6 +1,6 @@
 class UI {
   elements: { [key: string]: HTMLElement };
-  colorPool: any[];
+  colorPool: string[];
   constructor() {
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),
@@ -10,7 +10,7 @@ class UI {
     this.colorPool = [];
   }
 
-  createElement(type, className=null, id=null) {
+  createElement(type: string, className=null, id=null): HTMLElement {
     const element = document.createElement(type);
     if (className) {
       element.className = className;

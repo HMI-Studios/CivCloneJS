@@ -46,6 +46,7 @@ class World {
     }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
     getTilesInRange(srcX, srcY, range, mode = 0) {
+        // BFS to find all tiles within `range` steps
         const queue = [];
         queue.push([srcX, srcY]);
         const dst = {};
@@ -53,7 +54,7 @@ class World {
         const paths = {};
         while (queue.length) {
             const [atX, atY] = queue.shift();
-            for (let [adjX, adjY] of this.getNeighbors(atX, atY)) {
+            for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
                 if (!(this.pos(adjX, adjY) in dst)) {
                     const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
                     dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
@@ -72,9 +73,9 @@ class World {
     handleResponse(data) {
         if (data.update) {
             for (let i = 0; i < data.update.length; i++) {
-                let name = data.update[i][0];
-                let args = data.update[i][1];
-                console.log(name);
+                const name = data.update[i][0];
+                const args = data.update[i][1];
+                console.log(name); // DEBUG
                 if (this.on.update[name]) {
                     this.on.update[name](...args);
                 }
@@ -82,9 +83,9 @@ class World {
         }
         if (data.error) {
             for (let i = 0; i < data.error.length; i++) {
-                let name = data.error[i][0];
-                let args = data.error[i][1];
-                console.error(name);
+                const name = data.error[i][0];
+                const args = data.error[i][1];
+                console.error(name); // DEBUG
                 if (this.on.error[name]) {
                     this.on.error[name](...args);
                 }
@@ -103,9 +104,9 @@ class World {
             ]);
         };
         this.on.update.gameList = (gameList) => {
-            let gameTitles = [];
-            let defaultGame = Object.keys(gameList)[0];
-            for (let gameID in gameList) {
+            const gameTitles = [];
+            const defaultGame = Object.keys(gameList)[0];
+            for (const gameID in gameList) {
                 gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`);
             }
             const gameID = '0'; //prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);

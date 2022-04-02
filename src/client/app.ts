@@ -1,7 +1,3 @@
-let camera: Camera;
-let world: World;
-let ui: UI;
-
 const resize = () => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
@@ -18,22 +14,22 @@ window.onload = () => {
 window.onresize = resize;
 document.getElementById('UI').onwheel = (evt) => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+  let { zoom } = camera;
   if (evt.deltaY > 0) {
-    const { zoom, x: camX, y: camY } = camera;
-    const { tiles, height } = world;
+    const { height } = world;
     const [ scx1, scy1, scx2, scy2 ] = [
       -canvas.width / 2,
       -canvas.height / 2,
       canvas.width / 2,
       canvas.height / 2
     ];
-    const yStart = (Math.round((-((12.5 * world.height * zoom) + scy2)) / (25 * zoom)) + (world.height - 2));
+    const yStart = (Math.round((-((12.5 * height * zoom) + scy2)) / (25 * zoom)) + (height - 2));
     if (yStart > 1) {
-      camera.zoom *= 0.9;
+      zoom *= 0.9;
     }
   } else {
-    if (camera.zoom < 10) {
-      camera.zoom *= 1.1;
+    if (zoom < 10) {
+      zoom *= 1.1;
     }
   }
 };
@@ -94,9 +90,9 @@ const SERVER_IP = '192.168.4.29:8080';
 const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
 localStorage.setItem('username', PLAYER_NAME);
 
-camera = new Camera();
-ui = new UI();
-world = new World(PLAYER_NAME);
+const camera = new Camera();
+const ui = new UI();
+const world = new World(PLAYER_NAME);
 world.setup(SERVER_IP, camera, ui)
   .then(() => {
     world.sendActions([

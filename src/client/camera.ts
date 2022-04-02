@@ -4,11 +4,11 @@ class Camera {
   zoom: number;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  textures: { tile: { [key: string]: any }, selector: any, unit: { [key: string]: any } };
-  interval?: any;
+  textures: { tile: { [key: string]: HTMLElement }, selector: HTMLElement, unit: { [key: string]: HTMLElement } };
+  interval?: NodeJS.Timer;
   mouseDownTime: number;
   selectedUnitPos: [number, number];
-  highlightedTiles: { [key: string]: any };
+  highlightedTiles: { [key: string]: [number, number] };
   constructor() {
     this.x = 0;
     this.y = 0;
@@ -79,7 +79,7 @@ class Camera {
     ctx.fill();
 
     ctx.drawImage(
-      textures.unit[unit.type],
+      textures.unit[unit.type] as CanvasImageSource,
       (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom,
       (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom,
       UNIT_WIDTH * zoom,
@@ -124,7 +124,7 @@ class Camera {
         if (tile) {
 
           ctx.drawImage(
-            textures.tile[tile.type],
+            textures.tile[tile.type] as CanvasImageSource,
             (-camX + ((x - (width / 2)) * 19.8)) * zoom,
             (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
             28 * zoom,
@@ -137,7 +137,7 @@ class Camera {
 
           if (world.pos(x, y) in this.highlightedTiles) {
             ctx.drawImage(
-              textures['selector'],
+              textures['selector'] as CanvasImageSource,
               (-camX + ((x - (width / 2)) * 19.8)) * zoom,
               (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
               28 * zoom,
@@ -158,7 +158,7 @@ class Camera {
             }
 
             ctx.drawImage(
-              textures['selector'],
+              textures['selector'] as CanvasImageSource,
               (-camX + ((x - (width / 2)) * 19.8)) * zoom,
               (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom,
               28 * zoom,

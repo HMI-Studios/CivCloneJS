@@ -3,14 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = exports.Map = void 0;
 class Map {
     constructor(height, width, terrain) {
-        this.mod = (a, b) => {
-            if (a >= 0) {
-                return a % b;
-            }
-            else {
-                return ((a % b) + b) % b;
-            }
-        };
         this.height = height;
         this.width = width;
         this.tiles = new Array(height * width);
@@ -20,6 +12,14 @@ class Map {
     }
     pos(x, y) {
         return y * this.width + x;
+    }
+    mod(a, b) {
+        if (a >= 0) {
+            return a % b;
+        }
+        else {
+            return ((a % b) + b) % b;
+        }
     }
     getTile(x, y) {
         return this.tiles[this.pos(x, y)];
@@ -80,7 +80,6 @@ class Map {
     }
 }
 exports.Map = Map;
-;
 const tileMovementCostTable = {
     // tile name: [land mp, water mp] (0 = impassable)
     'plains': [1, 0],
@@ -128,8 +127,4 @@ class Tile {
     }
 }
 exports.Tile = Tile;
-;
-// module.exports = {
-//   Map, Tile,
-// };
 //# sourceMappingURL=map.js.map

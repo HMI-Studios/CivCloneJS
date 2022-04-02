@@ -18,7 +18,7 @@ export class Map {
     return y*this.width+x;
   }
 
-  mod = (a, b) => {
+  mod(a: number, b: number): number {
     if (a >= 0) {
       return a % b;
     } else {
@@ -85,9 +85,9 @@ export class Map {
   setTileVisibility(civID: number, x: number, y: number, visible: boolean) {
     this.tiles[this.pos(x, y)].setVisibility(civID, visible);
   }
-};
+}
 
-const tileMovementCostTable = {
+const tileMovementCostTable: { [type: string]: [number, number] } = {
   // tile name: [land mp, water mp] (0 = impassable)
   'plains': [1, 0],
   'desert': [1, 0],
@@ -100,8 +100,8 @@ export class Tile {
   type: string;
   improvement: any;
   unit: Unit;
-  discoveredBy: object;
-  visibleTo: object;
+  discoveredBy: { [civID: number]: boolean };
+  visibleTo: { [civID: number]: number };
   movementCost: [number, number];
 
   constructor(type) {
@@ -149,8 +149,4 @@ export class Tile {
   clearVisibility(civID: number) {
     this.visibleTo[civID] = 0;
   }
-};
-
-// module.exports = {
-//   Map, Tile,
-// };
+}
