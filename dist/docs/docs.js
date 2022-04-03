@@ -31,18 +31,29 @@ function expandMenu(menuID) {
 
 const events = {
   actions: {
-    setPlayer: [ ['username: string'], '' ],
-    joinGame: [ ['gameID: number'], '' ],
-    getGames: [ [], '' ],
-    setColor: [ ['color: string'], '' ],
-    ready: [ ['state: boolean'], 'Triggers `gameList` update.' ],
-    moveUnit: [ ['srcCoords: Coords', 'dstCoords: Coords'], '' ],
+    setPlayer: [ ['username: string'], 'Sets the username for the current connection.' ],
+    joinGame: [ ['gameID: number'], 'Tries to add the current connection to the game with ID `gameID`. Responds with `civID` and `colorPool` updates if successful; with `kicked` error if unsuccessful.' ],
+    getGames: [ [], 'Responds with a `gameList` update.' ],
+    setColor: [ ['color: string'], 'Sets the color of the civilization controlled by the current connection to `color`. Responds with `colorPool` update if successful; with `colorTaken` error if unsuccessful.' ],
+    ready: [ ['state: boolean'], '' ],
+    moveUnit: [ ['src: Coords', 'path: Coords[]'], 'Moves unit at `src` along `path`. Returns early if a move is invalid.' ],
     endTurn: [ [], '' ],
   },
   update: {
+    civID: [ [ 'civID: number' ], '' ],
+    colorPool: [ [ 'colors: string[]' ], '' ],
     gameList: [ [ 'gameIDs: number[]' ], '' ],
+    beginGame: [ [ '[width: number, height: number]', 'playerCount: number' ], '' ],
+    civData: [ [ 'civData: { [civID: number]: CivilizationData }' ], '' ],
+    setMap: [ [ 'tiles: (TileData | null)[]' ], '' ],
+    beginTurn: [ [], '' ],
+    tileUpdate: [ [ 'coords: Coords', 'tile: TileData | null' ], '' ],
   },
-  error: {},
+  error: {
+    kicked: [ [ 'reason: string' ], '' ],
+    colorTaken: [ [ 'reason: string' ], '' ],
+    notReady: [ [ 'reason: string' ], '' ],
+  },
 };
 
 const sidebar = document.getElementById('sidebar');

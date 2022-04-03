@@ -49,7 +49,7 @@ p {
 }
 
 .sidebar {
-  height: 100%;
+  height: calc(100% - 60px); /* subtract the padding from the height */
   width: 0;
   position: fixed;
   z-index: 1;
@@ -141,7 +141,7 @@ p {
   transition: max-height 0.5s;
 }
 
-@media only screen and (max-width: 800px) {
+@media (max-device-width: 800px) {
   .code {
     margin-right: 10px;
   }
