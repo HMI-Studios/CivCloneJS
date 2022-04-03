@@ -1,4 +1,4 @@
-import { Coords } from './game';
+import { Coords } from './world';
 import { Unit } from './unit';
 import { Tile, TileData } from './tile';
 
