@@ -8,14 +8,11 @@
     <script>hljs.highlightAll();</script>
   </head>
   <body>
-    <div id="mySidebar" class="sidebar">
-      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
-      <a href="#actions">actions</a>
-      <a href="#update">update</a>
-      <a href="#error">error</a>
+    <div id="sidebar" class="sidebar">
+      <a href="javascript:void(0)" class="close-btn" onclick="closeNav()">×</a>
     </div>
 
-    <button class="openbtn" onclick="openNav()">☰</button>
+    <button id="open-btn" onclick="openNav()">☰</button>
 
     <div id="root"></div>
     <script src="docs.js"></script>
