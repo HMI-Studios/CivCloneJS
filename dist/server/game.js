@@ -1,15 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Player = exports.Civilization = exports.Unit = exports.Game = void 0;
-const map_1 = require("./map");
+exports.Game = void 0;
+const unit_1 = require("./unit");
+const civilization_1 = require("./civilization");
 class Game {
     constructor(map, playerCount) {
         this.map = map;
         this.civs = {};
         for (let i = 0; i < playerCount; i++) {
-            this.civs[i] = new Civilization();
-            this.addUnit(new Unit('settler', i), { x: (i + 1) * 1, y: (i + 1) * 1 }); // REMOVE THESE
-            this.addUnit(new Unit('scout', i), { x: (i + 1) * 3, y: (i + 1) * 4 }); // REMOVE THESE
+            this.civs[i] = new civilization_1.Civilization();
+            this.addUnit(new unit_1.Unit('settler', i), { x: (i + 1) * 1, y: (i + 1) * 1 }); // REMOVE THESE
+            this.addUnit(new unit_1.Unit('scout', i), { x: (i + 1) * 3, y: (i + 1) * 4 }); // REMOVE THESE
             this.updateCivTileVisibility(i);
         }
         this.players = {};
@@ -65,6 +66,7 @@ class Game {
     }
     beginTurnForCiv(civID) {
         this.civs[civID].newTurn();
+        this.updateCivTileVisibility(civID);
         this.sendToCiv(civID, {
             update: [
                 ['setMap', [this.map.getCivMap(civID)]],
@@ -152,83 +154,4 @@ class Game {
     }
 }
 exports.Game = Game;
-const unitMovementTable = {
-    'settler': 3,
-    'scout': 5,
-};
-const unitMovementClassTable = {
-    'settler': 0,
-    'scout': 0,
-};
-class Unit {
-    constructor(type, civID) {
-        this.type = type;
-        this.hp = 100;
-        this.movement = 0;
-        this.movementClass = unitMovementClassTable[type];
-        this.civID = civID;
-        this.coords = {
-            x: null,
-            y: null,
-        };
-    }
-    getData() {
-        return {
-            type: this.type,
-            hp: this.hp,
-            movement: this.movement,
-            civID: this.civID,
-        };
-    }
-    getMovementClass() {
-        return this.movementClass;
-    }
-    newTurn() {
-        this.movement = unitMovementTable[this.type];
-    }
-}
-exports.Unit = Unit;
-class Civilization {
-    constructor() {
-        this.units = [];
-        this.color = null;
-        this.turnActive = false;
-    }
-    getData() {
-        return {
-            color: this.color
-        };
-    }
-    newTurn() {
-        this.turnActive = true;
-        for (const unit of this.units) {
-            unit.newTurn();
-        }
-    }
-    endTurn() {
-        this.turnActive = false;
-    }
-    addUnit(unit) {
-        this.units.push(unit);
-    }
-    removeUnit(unit) {
-        const unitIndex = this.units.indexOf(unit);
-        if (unitIndex > -1) {
-            this.units.splice(unitIndex, 1);
-        }
-    }
-}
-exports.Civilization = Civilization;
-class Player {
-    constructor(civID, connection) {
-        this.civID = civID;
-        this.ready = false;
-        this.isAI = !connection;
-        this.connection = connection;
-    }
-}
-exports.Player = Player;
-module.exports = {
-    Game, Map: map_1.Map, Tile: map_1.Tile, Unit, Civilization, Player,
-};
 //# sourceMappingURL=game.js.map
