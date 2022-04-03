@@ -32,7 +32,7 @@ canvas {
 	grid-column: 4 / 7;
 	grid-row: 2 / 5;
 	background-color: gray;
-	border-radius: 20px;
+	border-radius: 10px;
 }
 
 .civList {
