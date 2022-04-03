@@ -8,6 +8,8 @@ class UI {
             mainActionBtn: this.createElement('button', 'mainActionBtn'),
         };
         this.colorPool = [];
+        this.turnActive = false;
+        this.mainBtnAction = null;
     }
     createElement(type, className = null) {
         const element = document.createElement(type);
@@ -24,11 +26,19 @@ class UI {
         civItem.appendChild(nameText);
         return civItem;
     }
+    setTurnState(state) {
+        this.turnActive = state;
+        if (state) {
+            this.mainBtnAction = ['endTurn', []];
+        }
+    }
     showGameUI(world) {
         this.elements.mainActionBtn.onclick = () => {
-            world.sendActions([
-                ['endTurn', []]
-            ]);
+            if (this.mainBtnAction) {
+                world.sendActions([
+                    this.mainBtnAction
+                ]);
+            }
         };
         document.getElementById('UI').appendChild(this.elements.mainActionBtn);
     }

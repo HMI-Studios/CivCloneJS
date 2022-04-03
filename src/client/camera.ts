@@ -10,6 +10,7 @@ class Camera {
   mouseDownTime: number;
   selectedUnitPos: [number, number];
   highlightedTiles: { [key: string]: [number, number] };
+
   constructor() {
     this.x = 0;
     this.y = 0;
@@ -37,15 +38,15 @@ class Camera {
     this.highlightedTiles = {};
   }
 
-  start(world: World, FPS: number) {
+  start(world: World, FPS: number): void {
     this.interval = setInterval(() => this.render(world), FPS);
   }
 
-  stop() {
+  stop(): void {
     clearInterval(this.interval);
   }
 
-  clear() {
+  clear(): void {
     this.ctx.clearRect(
       -this.canvas.width / 2,
       -this.canvas.height / 2,
@@ -54,7 +55,7 @@ class Camera {
     );
   }
 
-  renderUnit(world, unit, x, y) {
+  renderUnit(world: World, unit: Unit, x: number, y: number): void {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height, civs } = world;
 
@@ -124,6 +125,8 @@ class Camera {
         const tile = world.getTile(x, y);
         if (tile) {
 
+          if (!tile.visible) ctx.globalAlpha = 0.5;
+
           ctx.drawImage(
             textures.tile[tile.type] as CanvasImageSource,
             (-camX + ((x - (width / 2)) * 19.8)) * zoom,
@@ -131,6 +134,8 @@ class Camera {
             28 * zoom,
             25 * zoom
           );
+
+          ctx.globalAlpha = 1;
 
           if (tile.unit) {
             this.renderUnit(world, tile.unit, x, y);

@@ -2,15 +2,6 @@ body {
   background-color: whitesmoke;
 }
 
-#root {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-h2 {
-  font-size: 30px;
-  margin-left: 20px;
-}
-
 h3 {
   font-size: 22px;
   margin: 20px 80px 0;
@@ -20,64 +11,154 @@ p {
   margin: 0 80px;
 }
 
+#root {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header {
+  font-size: 30px;
+  margin-left: 30px;
+  transition: margin-left 0.5s;
+}
+
 .code {
   font-size: 16px;
   border-radius: 6px;
   margin: 0 80px;
+  transition: margin-right 0.5s;
 }
 
+.sidebar.sidebar-open {
+  width: 220px;
+}
 
+#root.sidebar-open {
+  margin-left: 180px;
+}
 
+#root.sidebar-open .header {
+  margin-left: 50px;
+}
+
+#root.sidebar-open .code {
+  margin-right: 30px;
+}
 
 #root {
-    transition: margin-left .5s;
+  transition: margin-left 0.5s;
 }
 
 .sidebar {
-    height: 100%;
-    width: 0;
-    position: fixed;
-    z-index: 1;
-    top: 0;
-    left: 0;
-    background-color: #282c34;
-    overflow-x: hidden;
-    transition: 0.5s;
-    padding-top: 60px;
+  height: calc(100% - 60px); /* subtract the padding from the height */
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #282c34;
+  overflow-x: hidden;
+  transition: width 0.5s;
+  padding-top: 60px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  display: block;
+  color: lightgray;
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+#open-btn {
+  font-size: 32px;
+  line-height: 22px;
+  box-sizing: content-box;
+  cursor: pointer;
+  background-color: #282c34;
+  color: lightgray;
+  padding: 2px 6px 9px;
+  border: none;
+  border-radius: 5px;
+  position: fixed;
+  top: 3px;
+  left: 3px;
+}
+
+#open-btn:hover {
+  background-color: #444;
+}
+
+.sidebar-btn {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: lightgray;
+  display: block;
+}
+
+.sidebar-btn:hover {
+  color: #f1f1f1;
+}
+
+.submenu-btn {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  margin-left: 10px;
+  color: lightgray;
+  display: block;
+}
+
+.submenu-btn:hover {
+  color: #f1f1f1;
+}
+
+.expand-btn {
+  font-size: 30px;
+  line-height: 48px;
+  box-sizing: content-box;
+  cursor: pointer;
+  background-color: #282c34;
+  color: lightgray;
+  border: none;
+  border-radius: 5px;
+}
+
+.sidebar-div {
+  overflow: hidden;
+  display: flex;
+  height: max-content;
+  clear: both;
+}
+
+.submenu {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.5s;
+}
+
+@media (max-device-width: 800px) {
+  .code {
+    margin-right: 10px;
   }
-  
-  .sidebar a {
-    padding: 8px 8px 8px 32px;
-    text-decoration: none;
-    font-size: 25px;
-    color: lightgray;
-    display: block;
-    transition: 0.3s;
+
+  .sidebar.sidebar-open {
+    width: 100%;
   }
-  
-  .sidebar a:hover {
-    color: #f1f1f1;
+
+  #root.sidebar-open {
+    margin-left: 0px;
   }
-  
-  .sidebar .closebtn {
-    position: absolute;
-    top: 0;
-    right: 25px;
-    font-size: 36px;
-    margin-left: 50px;
+
+  #root.sidebar-open .header {
+    margin-left: 30px;
   }
-  
-  .openbtn {
-    font-size: 20px;
-    cursor: pointer;
-    background-color: #282c34;
-    color: lightgray;
-    padding: 10px 15px;
-    border: none;
-    position: fixed; /* Set the navbar to fixed position */
-    top: 8px; /* Position the navbar at the top of the page */
+
+  #root.sidebar-open .code {
+    margin-right: 10px;
   }
-  
-  .openbtn:hover {
-    background-color: #444;
-  }
+}

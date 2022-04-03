@@ -77,7 +77,10 @@ class Camera {
             for (let x = xStart; x < xEnd; x++) {
                 const tile = world.getTile(x, y);
                 if (tile) {
+                    if (!tile.visible)
+                        ctx.globalAlpha = 0.5;
                     ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * 19.8)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom, 28 * zoom, 25 * zoom);
+                    ctx.globalAlpha = 1;
                     if (tile.unit) {
                         this.renderUnit(world, tile.unit, x, y);
                     }

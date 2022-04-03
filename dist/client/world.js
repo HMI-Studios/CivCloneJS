@@ -72,19 +72,23 @@ class World {
         console.log(srcPos, dstPos, pathMap);
         let curPos = dstPos;
         const path = [];
-        const [x, y] = curPos;
-        path.push({ x, y });
+        // const [ x, y ] = curPos;
+        // path.push({ x, y });
         while (this.pos(...srcPos) !== this.pos(...curPos)) {
-            curPos = pathMap[this.pos(...curPos)];
             const [x, y] = curPos;
             path.push({ x, y });
+            curPos = pathMap[this.pos(...curPos)];
         }
         path.reverse();
-        const actions = [];
-        for (let i = 0; i < path.length - 1; i++) {
-            actions.push(['moveUnit', [path[i], path[i + 1]]]);
-        }
-        this.sendActions(actions);
+        const [x, y] = srcPos;
+        this.sendActions([
+            ['moveUnit', [{ x, y }, path]]
+        ]);
+        // const actions: [ string, Coords[] ][] = [];
+        // for (let i = 0; i < path.length - 1; i++) {
+        //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
+        // }
+        // this.sendActions(actions);
     }
     sendJSON(data) {
         this.socket.send(JSON.stringify(data));
@@ -146,15 +150,16 @@ class World {
             [this.width, this.height] = [width, height];
             camera.start(this, 1000 / 60);
         };
+        this.on.update.beginTurn = () => {
+            ui.setTurnState(true);
+        };
         this.on.update.setMap = (map) => {
-            console.log(map);
             this.tiles = map;
         };
         this.on.update.tileUpdate = ({ x, y }, tile) => {
             this.tiles[this.pos(x, y)] = tile;
         };
         this.on.update.colorPool = (colors) => {
-            console.log(colors);
             ui.colorPool = colors;
             ui.showCivPicker(civPickerFn);
         };

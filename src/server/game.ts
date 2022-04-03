@@ -1,9 +1,18 @@
-import { Map, Tile } from './map';
-import * as WebSocket from 'ws';
+import { Map } from './map';
+import { Unit } from './unit';
+import { Tile } from './tile';
+import { Player } from './player';
+import { Civilization, CivilizationData } from './civilization';
 
 export interface Coords {
   x: number;
   y: number;
+}
+
+export interface EventMsg {
+  actions?: [string, unknown[]][];
+  update?: [string, unknown[]][];
+  error?: [string, unknown[]][];
 }
 
 export class Game {
@@ -90,6 +99,7 @@ export class Game {
 
   beginTurnForCiv(civID: number): void {
     this.civs[civID].newTurn();
+    this.updateCivTileVisibility(civID);
     this.sendToCiv(civID, {
       update: [
         ['setMap', [this.map.getCivMap(civID)]],
@@ -140,7 +150,7 @@ export class Game {
     }
   }
 
-  sendToAll(msg: object): void {
+  sendToAll(msg: EventMsg): void {
     for (const playerName in this.players) {
       const player = this.players[playerName];
 
@@ -152,7 +162,7 @@ export class Game {
     }
   }
 
-  sendToCiv(civID: number, msg: object): void {
+  sendToCiv(civID: number, msg: EventMsg): void {
     const player = Object.values(this.players).find(player => player.civID === civID);
 
     if (!player) {
@@ -189,121 +199,3 @@ export class Game {
     }
   }
 }
-
-const unitMovementTable: { [unit: string]: number } = {
-  'settler': 3,
-  'scout': 5,
-};
-
-const unitMovementClassTable: { [unit: string]: number } = {
-  'settler': 0,
-  'scout': 0,
-};
-
-export interface UnitData {
-  type: string,
-  hp: number,
-  movement: number,
-  civID: number,
-}
-
-export class Unit {
-  type: string;
-  hp: number;
-  movement: number;
-  movementClass: number;
-  civID: number;
-  coords: Coords;
-
-  constructor(type: string, civID: number) {
-    this.type = type;
-    this.hp = 100;
-    this.movement = 0;
-    this.movementClass = unitMovementClassTable[type];
-    this.civID = civID;
-    this.coords = {
-      x: null,
-      y: null,
-    };
-  }
-
-  getData(): UnitData {
-    return {
-      type: this.type,
-      hp: this.hp,
-      movement: this.movement,
-      civID: this.civID,
-    };
-  }
-  
-  getMovementClass(): number {
-    return this.movementClass;
-  }
-
-  newTurn() {
-    this.movement = unitMovementTable[this.type];
-  }
-}
-
-export interface CivilizationData {
-  color: string
-}
-
-export class Civilization {
-  units: Unit[];
-  color: string;
-  turnActive: boolean;
-
-  constructor() {
-    this.units = [];
-    this.color = null;
-    this.turnActive = false;
-  }
-
-  getData(): CivilizationData {
-    return {
-      color: this.color
-    }
-  }
-
-  newTurn() {
-    this.turnActive = true;
-
-    for (const unit of this.units) {
-      unit.newTurn();
-    }
-  }
-
-  endTurn() {
-    this.turnActive = false;
-  }
-
-  addUnit(unit: Unit): void {
-    this.units.push(unit);
-  }
-
-  removeUnit(unit: Unit): void {
-    const unitIndex = this.units.indexOf(unit);
-    if (unitIndex > -1) {
-      this.units.splice(unitIndex, 1);
-    }
-  }
-}
-
-export class Player {
-  civID: number;
-  ready: boolean;
-  isAI: boolean;
-  connection: WebSocket;
-
-  constructor(civID: number, connection: WebSocket) {
-    this.civID = civID;
-    this.ready = false;
-    this.isAI = !connection;
-    this.connection = connection;
-  }
-}
-
-module.exports = {
-  Game, Map, Tile, Unit, Civilization, Player,
-};

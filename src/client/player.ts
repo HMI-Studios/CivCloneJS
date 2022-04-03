@@ -1,7 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
+
   elements: { [key: string]: HTMLElement };
   colorPool: string[];
+  turnActive: boolean;
+  mainBtnAction: [string, unknown[]]
+
   constructor() {
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),
@@ -10,6 +14,8 @@ class UI {
       mainActionBtn: this.createElement('button', 'mainActionBtn'),
     };
     this.colorPool = [];
+    this.turnActive = false;
+    this.mainBtnAction = null;
   }
 
   createElement(type: string, className=null): HTMLElement {
@@ -29,12 +35,21 @@ class UI {
     return civItem;
   }
 
+  setTurnState(state: boolean) {
+    this.turnActive = state;
+    if (state) {
+      this.mainBtnAction = ['endTurn', []];
+    }
+  }
+
   showGameUI(world: World): void {
 
     this.elements.mainActionBtn.onclick = () => {
-      world.sendActions([
-        ['endTurn', []]
-      ]);
+      if (this.mainBtnAction) {
+        world.sendActions([
+          this.mainBtnAction
+        ]);
+      }
     };
 
     document.getElementById('UI').appendChild(this.elements.mainActionBtn);
