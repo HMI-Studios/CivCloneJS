@@ -77,8 +77,8 @@ const mod = (a, b) => {
     }
 };
 // const SERVER_IP = '192.168.5.47:8080';
-const SERVER_IP = '192.168.4.29:8080';
-// const SERVER_IP = 'localhost:8080';
+// const SERVER_IP = '192.168.4.29:8080';
+const SERVER_IP = 'localhost:8080';
 const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
 localStorage.setItem('username', PLAYER_NAME);
 const camera = new Camera();

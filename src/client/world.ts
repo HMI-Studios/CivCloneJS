@@ -118,8 +118,14 @@ class World {
       const [atX, atY] = queue.shift();
 
       for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
+
         if (!(this.pos(adjX, adjY) in dst)) {
-          const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
+          const tile = this.getTile(adjX, adjY);
+
+          // can't walk through tile with unit
+          if (tile.unit) continue;
+
+          const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
           dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
 
           if (dst[this.pos(adjX, adjY)] <= range) {
