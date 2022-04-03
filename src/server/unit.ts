@@ -1,4 +1,4 @@
-import { Coords } from './game';
+import { Coords } from './world';
 
 const unitMovementTable: { [unit: string]: number } = {
   'settler': 3,

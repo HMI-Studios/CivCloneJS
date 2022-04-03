@@ -59,7 +59,7 @@ exports.methods = {
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
-                    ['colorPool', [game.getColorPool()]],
+                    ['colorPool', [game.world.getColorPool()]],
                 ],
             });
         }
@@ -72,7 +72,7 @@ exports.methods = {
     getGames: (ws) => {
         const gameList = {};
         for (const gameID in exports.games) {
-            gameList[gameID] = exports.games[gameID].metaData;
+            gameList[gameID] = exports.games[gameID].world.metaData;
         }
         sendTo(ws, {
             update: [
@@ -86,10 +86,10 @@ exports.methods = {
         if (game) {
             const player = game.getPlayer(username);
             if (player) {
-                if (game.setCivColor(player.civID, color)) {
+                if (game.world.setCivColor(player.civID, color)) {
                     game.sendToAll({
                         update: [
-                            ['colorPool', [game.getColorPool()]],
+                            ['colorPool', [game.world.getColorPool()]],
                         ],
                     });
                 }
@@ -109,7 +109,7 @@ exports.methods = {
         if (game) {
             const player = game.getPlayer(username);
             if (player) {
-                const civ = game.getCiv(player.civID);
+                const civ = game.world.getCiv(player.civID);
                 if (!civ.color) {
                     sendTo(ws, { error: [
                             ['notReady', ['Please select civ color']],
@@ -121,14 +121,14 @@ exports.methods = {
                     if (Object.values(game.players).every((player) => player.ready)) {
                         game.sendToAll({
                             update: [
-                                ['beginGame', [[game.map.width, game.map.height], game.playerCount]],
-                                ['civData', [game.getAllCivsData()]],
+                                ['beginGame', [[game.world.map.width, game.world.map.height], game.playerCount]],
+                                ['civData', [game.world.getAllCivsData()]],
                             ],
                         });
                         game.forEachCivID((civID) => {
                             game.sendToCiv(civID, {
                                 update: [
-                                    ['setMap', [game.map.getCivMap(civID)]],
+                                    ['setMap', [game.world.map.getCivMap(civID)]],
                                 ],
                             });
                         });
@@ -144,7 +144,7 @@ exports.methods = {
         const civID = game.players[username].civID;
         console.log(srcCoords, path);
         if (game) {
-            const map = game.map;
+            const map = game.world.map;
             let src = map.getTile(srcCoords);
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
@@ -153,9 +153,9 @@ exports.methods = {
                     return;
                 }
                 // mark tiles currently visible by unit as unseen
-                const srcVisible = game.map.getVisibleTilesCoords(unit);
+                const srcVisible = map.getVisibleTilesCoords(unit);
                 for (const coords of srcVisible) {
-                    const tile = game.map.getTile(coords);
+                    const tile = map.getTile(coords);
                     tile.setVisibility(civID, false);
                     game.sendTileUpdate(coords, tile);
                 }
@@ -164,9 +164,9 @@ exports.methods = {
                 game.sendTileUpdate(srcCoords, src);
                 game.sendTileUpdate(dstCoords, dst);
                 // mark tiles now visible by unit as seen
-                const newVisible = game.map.getVisibleTilesCoords(unit);
+                const newVisible = map.getVisibleTilesCoords(unit);
                 for (const coords of newVisible) {
-                    const tile = game.map.getTile(coords);
+                    const tile = map.getTile(coords);
                     tile.setVisibility(civID, true);
                     game.sendTileUpdate(coords, tile);
                 }
@@ -180,13 +180,13 @@ exports.methods = {
         const { username, gameID } = (0, exports.getConnData)(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        const civ = game.civs[civID];
+        const civ = game.world.civs[civID];
         if (civ.turnActive) {
             civ.endTurn();
         }
         let active = false;
         for (let civID = 0; civID < game.playerCount; civID++) {
-            if (game.civs[civID].turnActive) {
+            if (game.world.civs[civID].turnActive) {
                 active = true;
                 break;
             }
@@ -204,7 +204,7 @@ exports.methods = {
         const { username, gameID } = (0, exports.getConnData)(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        const civ = game.civs[civID];
+        const civ = game.world.civs[civID];
         if (!civ.turnActive) {
             return;
         }
@@ -213,7 +213,7 @@ exports.methods = {
         // see if all players are finished...
         let finished = true;
         for (let civID = 0; civID < game.playerCount; civID++) {
-            const civ = game.civs[civID];
+            const civ = game.world.civs[civID];
             if (civ.turnActive && !civ.turnFinished) {
                 finished = false;
                 break;
@@ -223,7 +223,7 @@ exports.methods = {
         if (finished) {
             // end all players' turns
             game.forEachPlayer((player) => {
-                game.civs[player.civID].endTurn();
+                game.world.civs[player.civID].endTurn();
             });
             // Run AIs
             // begin all players' turns
