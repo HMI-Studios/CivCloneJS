@@ -137,20 +137,24 @@ class World {
     console.log(srcPos, dstPos, pathMap);
     let curPos: CoordTuple = dstPos;
     const path: Coords[] = [];
-    const [ x, y ] = curPos;
-    path.push({ x, y });
+    // const [ x, y ] = curPos;
+    // path.push({ x, y });
     while (this.pos(...srcPos) !== this.pos(...curPos)) {
-      curPos = pathMap[this.pos(...curPos)];
       const [ x, y ] = curPos;
       path.push({ x, y });
+      curPos = pathMap[this.pos(...curPos)];
     }
     path.reverse();
-    
-    const actions: [ string, Coords[] ][] = [];
-    for (let i = 0; i < path.length - 1; i++) {
-      actions.push(['moveUnit', [ path[i], path[i+1] ]])
-    }
-    this.sendActions(actions);
+    const [ x, y ] = srcPos;
+    this.sendActions([
+      ['moveUnit', [ { x, y }, path ]]
+    ]);
+
+    // const actions: [ string, Coords[] ][] = [];
+    // for (let i = 0; i < path.length - 1; i++) {
+    //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
+    // }
+    // this.sendActions(actions);
   }
 
   sendJSON(data: EventMsg): void {
@@ -223,8 +227,11 @@ class World {
       camera.start(this, 1000/60);
     };
 
+    this.on.update.beginTurn = (): void => {
+      ui.setTurnState(true);
+    };
+
     this.on.update.setMap = (map: Tile[]): void => {
-      console.log(map);
       this.tiles = map;
     };
 
@@ -233,7 +240,6 @@ class World {
     };
 
     this.on.update.colorPool = (colors: string[]): void => {
-      console.log(colors);
       ui.colorPool = colors;
       ui.showCivPicker(civPickerFn);
     };
@@ -275,14 +281,4 @@ class World {
   sendActions(actions: [string, unknown[]][]): void {
     this.sendJSON({ actions });
   }
-
-  // loadMap() {
-  //   return axios.get(`/map`)
-  //     .then(({ data }) => {
-  //       this.tiles = data.map;
-  //       this.size = Math.floor(Math.sqrt(this.tiles.length)); // REMOVE
-  //       this.height = data.height;
-  //       this.width = data.width;
-  //     });
-  // }
 }
