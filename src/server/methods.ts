@@ -190,6 +190,8 @@ export const methods = {
     }
   },
 
+  // Depricated
+  // TODO: replace with turnFinished
   endTurn: (ws: WebSocket) => {
     const { username, gameID } = getConnData(ws);
     const game = games[gameID];
@@ -211,6 +213,47 @@ export const methods = {
     if (!active) {
       // Run AIs
 
+      game.forEachPlayer((player: Player) => {
+        if (!player.isAI) {
+          game.beginTurnForCiv(player.civID);
+        }
+      });
+    }
+  },
+
+  turnFinished: (ws: WebSocket, state: boolean) => {
+    const { username, gameID } = getConnData(ws);
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+    const civ = game.civs[civID];
+
+    if (!civ.turnActive) {
+      return;
+    }
+
+    // mark civ as finished/unfinished
+    civ.turnFinished = state;
+
+    // see if all players are finished...
+    let finished = true;
+    for (let civID = 0; civID < game.playerCount; civID++) {
+      const civ = game.civs[civID];
+      if (civ.turnActive && !civ.turnFinished) {
+        finished = false;
+        break;
+      }
+    }
+
+    // if so:
+    if (finished) {
+      // end all players' turns
+      game.forEachPlayer((player: Player) => {
+        game.civs[player.civID].endTurn();
+      });
+
+      // Run AIs
+
+      // begin all players' turns
       game.forEachPlayer((player: Player) => {
         if (!player.isAI) {
           game.beginTurnForCiv(player.civID);

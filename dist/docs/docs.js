@@ -29,17 +29,25 @@ function expandMenu(menuID) {
   }
 }
 
+function sortObj(obj) {
+  return Object.keys(obj).sort().reduce((result, key) => {
+    result[key] = obj[key];
+    return result;
+  }, {});
+}
+
 const events = {
-  actions: {
+  actions: sortObj({
     setPlayer: [ ['username: string'], 'Sets the username for the current connection.' ],
     joinGame: [ ['gameID: number'], 'Tries to add the current connection to the game with ID `gameID`. Responds with `civID` and `colorPool` updates if successful; with `kicked` error if unsuccessful.' ],
     getGames: [ [], 'Responds with a `gameList` update.' ],
     setColor: [ ['color: string'], 'Sets the color of the civilization controlled by the current connection to `color`. Responds with `colorPool` update if successful; with `colorTaken` error if unsuccessful.' ],
     ready: [ ['state: boolean'], '' ],
     moveUnit: [ ['src: Coords', 'path: Coords[]'], 'Moves unit at `src` along `path`. Returns early if a move is invalid.' ],
-    endTurn: [ [], '' ],
-  },
-  update: {
+    endTurn: [ [], 'DEPRECATED: Use `turnFinished` action instead.' ],
+    turnFinished: [ ['state: boolean'], 'Flags an active player as "finished"; "unfinished" if state = false. When all active players are finished, their turns are ended.' ],
+  }),
+  update: sortObj({
     civID: [ [ 'civID: number' ], '' ],
     colorPool: [ [ 'colors: string[]' ], '' ],
     gameList: [ [ 'gameIDs: number[]' ], '' ],
@@ -48,12 +56,12 @@ const events = {
     setMap: [ [ 'tiles: (TileData | null)[]' ], '' ],
     beginTurn: [ [], '' ],
     tileUpdate: [ [ 'coords: Coords', 'tile: TileData | null' ], '' ],
-  },
-  error: {
+  }),
+  error: sortObj({
     kicked: [ [ 'reason: string' ], '' ],
     colorTaken: [ [ 'reason: string' ], '' ],
     notReady: [ [ 'reason: string' ], '' ],
-  },
+  }),
 };
 
 const sidebar = document.getElementById('sidebar');
@@ -119,14 +127,14 @@ for (const headTitle in events) {
 
     const eventElement = document.createElement('code');
     eventElement.className = 'code language-ts';
-
-    const eventText = document.createElement('p');
-    eventText.innerText = eventData[1]//.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     eventElement.innerHTML = `{
   ${headTitle}: [
     [${eventName}, [${eventData[0].join(', ')}]]
   ]
 }`;
+
+    const eventText = document.createElement('p');
+    eventText.innerText = eventData[1]//.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     
     eventAnchor.appendChild(eventHead);
     groupDiv.appendChild(eventAnchor);
