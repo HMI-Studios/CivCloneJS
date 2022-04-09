@@ -13,7 +13,7 @@ class WorldGenerator {
         this.height = height;
     }
     pos(x, y) {
-        return (y * this.height) + x;
+        return (y * this.width) + x;
     }
     getTile(x, y) {
         return this.tiles[this.pos(x, y)];
