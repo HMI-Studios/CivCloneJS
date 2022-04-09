@@ -71,7 +71,8 @@ class Map {
             }
         }
         else {
-            return null;
+            // return null;
+            return tile.getDiscoveredData();
         }
     }
     getCivMap(civID) {

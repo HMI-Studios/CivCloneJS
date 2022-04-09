@@ -1,44 +1,19 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.methods = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
-const fs = __importStar(require("fs"));
-const path_1 = __importDefault(require("path"));
 const player_1 = require("./player");
 const map_1 = require("./map");
 const game_1 = require("./game");
+const worldGenerator_1 = require("./worldGenerator");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
     ws.send(JSON.stringify(msg));
 };
 exports.games = {
-    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 1),
+    0: new game_1.Game(
+    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    new map_1.Map(38, 38, new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 1),
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
@@ -174,31 +149,18 @@ exports.methods = {
             }
         }
     },
-    // Depricated
+    // Deprecated
     // TODO: replace with turnFinished
     endTurn: (ws) => {
         const { username, gameID } = (0, exports.getConnData)(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        const civ = game.world.civs[civID];
-        if (civ.turnActive) {
-            civ.endTurn();
-        }
-        let active = false;
-        for (let civID = 0; civID < game.playerCount; civID++) {
-            if (game.world.civs[civID].turnActive) {
-                active = true;
-                break;
-            }
-        }
-        if (!active) {
-            // Run AIs
-            game.forEachPlayer((player) => {
-                if (!player.isAI) {
-                    game.beginTurnForCiv(player.civID);
-                }
-            });
-        }
+        game.sendToCiv(civID, {
+            error: [
+                ['deprecatedAction', ['endTurn is deprecated; use turnFinished instead.']],
+            ],
+        });
+        return;
     },
     turnFinished: (ws, state) => {
         const { username, gameID } = (0, exports.getConnData)(ws);
@@ -206,6 +168,11 @@ exports.methods = {
         const civID = game.players[username].civID;
         const civ = game.world.civs[civID];
         if (!civ.turnActive) {
+            game.sendToCiv(civID, {
+                error: [
+                    ['turnExpired', []],
+                ],
+            });
             return;
         }
         // mark civ as finished/unfinished
@@ -223,7 +190,9 @@ exports.methods = {
         if (finished) {
             // end all players' turns
             game.forEachPlayer((player) => {
-                game.world.civs[player.civID].endTurn();
+                if (!player.isAI) {
+                    game.endTurnForCiv(player.civID);
+                }
             });
             // Run AIs
             // begin all players' turns

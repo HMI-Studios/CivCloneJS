@@ -5,6 +5,7 @@ import { Player } from './player';
 import { Map } from './map';
 import { World } from './world';
 import { Game } from './game';
+import { WorldGenerator } from './worldGenerator';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -22,7 +23,8 @@ const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }) => {
 
 export const games: { [gameID: number] : Game } = {
   0: new Game(
-    new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    new Map(38, 38, new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
     1
   ),
 };
@@ -157,9 +159,9 @@ export const methods = {
         const dst = map.getTile(dstCoords);
 
         const unit = src.unit;
-  
+
         if (!(unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit))) {
-          return;          
+          return;
         }
 
         // mark tiles currently visible by unit as unseen
@@ -191,35 +193,20 @@ export const methods = {
     }
   },
 
-  // Depricated
+  // Deprecated
   // TODO: replace with turnFinished
   endTurn: (ws: WebSocket) => {
     const { username, gameID } = getConnData(ws);
     const game = games[gameID];
     const civID = game.players[username].civID;
-    const civ = game.world.civs[civID];
 
-    if (civ.turnActive) {
-      civ.endTurn();
-    }
+    game.sendToCiv(civID, {
+      error: [
+        ['deprecatedAction', ['endTurn is deprecated; use turnFinished instead.']],
+      ],
+    });
 
-    let active = false;
-    for (let civID = 0; civID < game.playerCount; civID++) {
-      if (game.world.civs[civID].turnActive) {
-        active = true;
-        break;
-      }
-    }
-
-    if (!active) {
-      // Run AIs
-
-      game.forEachPlayer((player: Player) => {
-        if (!player.isAI) {
-          game.beginTurnForCiv(player.civID);
-        }
-      });
-    }
+    return;
   },
 
   turnFinished: (ws: WebSocket, state: boolean) => {
@@ -229,6 +216,12 @@ export const methods = {
     const civ = game.world.civs[civID];
 
     if (!civ.turnActive) {
+      game.sendToCiv(civID, {
+        error: [
+          ['turnExpired', []],
+        ],
+      });
+
       return;
     }
 
@@ -249,7 +242,9 @@ export const methods = {
     if (finished) {
       // end all players' turns
       game.forEachPlayer((player: Player) => {
-        game.world.civs[player.civID].endTurn();
+        if (!player.isAI) {
+          game.endTurnForCiv(player.civID);
+        }
       });
 
       // Run AIs

@@ -26,7 +26,7 @@ export class Map {
     } else {
       return ((a % b) + b) % b;
     }
-  } 
+  }
 
   getTile(coords: Coords): Tile {
     return this.tiles[this.pos(coords)];

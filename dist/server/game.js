@@ -18,6 +18,14 @@ class Game {
             ],
         });
     }
+    endTurnForCiv(civID) {
+        this.world.civs[civID].endTurn();
+        this.sendToCiv(civID, {
+            update: [
+                ['endTurn', []],
+            ],
+        });
+    }
     sendTileUpdate(coords, tile) {
         this.forEachCivID((civID) => {
             this.sendToCiv(civID, {
