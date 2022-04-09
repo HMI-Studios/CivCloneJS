@@ -10,26 +10,19 @@ const tileMovementCostTable = {
     'mountain': [0, 0],
 };
 class Tile {
-    constructor(type, baseYield) {
-        this.movementCost = tileMovementCostTable[type];
+    constructor(type) {
         this.type = type;
-        this.unit = null;
         this.improvement = null;
+        this.unit = null;
         this.discoveredBy = {};
         this.visibleTo = {};
-    }
-    getTileYield() {
-        if (this.improvement !== null) {
-            // TODO: 
-        }
-        return this.baseYield;
+        this.movementCost = tileMovementCostTable[type];
     }
     getDiscoveredData() {
         return {
             type: this.type,
-            movementCost: this.movementCost,
             improvement: this.improvement,
-            yield: this.getTileYield(),
+            movementCost: this.movementCost,
         };
     }
     getVisibleData() {

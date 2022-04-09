@@ -8,7 +8,7 @@ class Map {
         this.width = width;
         this.tiles = new Array(height * width);
         for (let i = 0; i < height * width; i++) {
-            this.tiles[i] = new tile_1.Tile(terrain[i], { food: 1, production: 1 });
+            this.tiles[i] = new tile_1.Tile(terrain[i]);
         }
     }
     pos({ x, y }) {
@@ -71,7 +71,8 @@ class Map {
             }
         }
         else {
-            return null;
+            // return null;
+            return tile.getDiscoveredData();
         }
     }
     getCivMap(civID) {
