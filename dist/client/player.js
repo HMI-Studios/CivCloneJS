@@ -5,11 +5,15 @@ class UI {
             readyBtn: this.createElement('button', 'readyBtn'),
             centerModal: this.createElement('div', 'centerModal'),
             civPicker: this.createElement('ul', 'civList'),
-            mainActionBtn: this.createElement('button', 'mainActionBtn'),
         };
         this.colorPool = [];
         this.turnActive = false;
-        this.mainBtnAction = null;
+        this.buttons = {
+            mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
+                text: 'MainBtn',
+                action: null,
+            }),
+        };
     }
     createElement(type, className = null) {
         const element = document.createElement(type);
@@ -29,18 +33,25 @@ class UI {
     setTurnState(state) {
         this.turnActive = state;
         if (state) {
-            this.mainBtnAction = ['endTurn', []];
+            this.buttons.mainBtn.setAction(['turnFinished', [true]]);
+            this.buttons.mainBtn.setText('Finish');
+        }
+        else {
+            this.buttons.mainBtn.setText('Waiting...');
         }
     }
     showGameUI(world) {
-        this.elements.mainActionBtn.onclick = () => {
-            if (this.mainBtnAction) {
-                world.sendActions([
-                    this.mainBtnAction
-                ]);
-            }
-        };
-        document.getElementById('UI').appendChild(this.elements.mainActionBtn);
+        for (const buttonID in this.buttons) {
+            const button = this.buttons[buttonID];
+            button.bind((state) => {
+                if (state.action) {
+                    world.sendActions([
+                        state.action,
+                    ]);
+                }
+            });
+            document.getElementById('UI').appendChild(button.element);
+        }
     }
     showCivPicker(callback) {
         this.elements.civPicker.innerHTML = '';
@@ -61,14 +72,14 @@ class UI {
     }
     showReadyBtn(callback) {
         let btnState = false;
-        this.elements.readyBtn.innerHTML = 'Ready';
+        this.elements.readyBtn.innerText = 'Ready';
         this.elements.readyBtn.onclick = () => {
             btnState = !btnState;
             if (btnState) {
-                this.elements.readyBtn.innerHTML = 'Waiting';
+                this.elements.readyBtn.innerText = 'Waiting';
             }
             else {
-                this.elements.readyBtn.innerHTML = 'Ready';
+                this.elements.readyBtn.innerText = 'Ready';
             }
             callback(btnState);
         };
