@@ -8,7 +8,7 @@ function openNav() {
     collection[i].classList.add('sidebar-open');
   }
 }
-  
+
 function closeNav() {
   document.getElementById('sidebar').classList.remove('sidebar-open');
   document.getElementById('root').classList.remove('sidebar-open');
@@ -50,17 +50,19 @@ const events = {
   update: sortObj({
     civID: [ [ 'civID: number' ], '' ],
     colorPool: [ [ 'colors: string[]' ], '' ],
-    gameList: [ [ 'gameIDs: number[]' ], '' ],
-    beginGame: [ [ '[width: number, height: number]', 'playerCount: number' ], '' ],
+    gameList: [ [ 'gameIDs: number[]' ], 'List of all available games.' ],
+    beginGame: [ [ '[width: number, height: number]', 'playerCount: number' ], '`width` and `height` of map; `playerCount` of game.' ],
     civData: [ [ 'civData: { [civID: number]: CivilizationData }' ], '' ],
     setMap: [ [ 'tiles: (TileData | null)[]' ], '' ],
     beginTurn: [ [], '' ],
     tileUpdate: [ [ 'coords: Coords', 'tile: TileData | null' ], '' ],
+    endTurn: [ [], 'Sent to all active players when the turn ends.' ],
   }),
   error: sortObj({
     kicked: [ [ 'reason: string' ], '' ],
     colorTaken: [ [ 'reason: string' ], '' ],
     notReady: [ [ 'reason: string' ], '' ],
+    turnExpired: [ [], 'Returned if an action is sent out-of-turn.' ],
   }),
 };
 
@@ -121,7 +123,7 @@ for (const headTitle in events) {
 
     const eventAnchor = document.createElement('a');
     eventAnchor.name = headTitle + ":" + eventName;
- 
+
     const eventHead = document.createElement('h3');
     eventHead.innerText = eventName;
 
@@ -135,7 +137,7 @@ for (const headTitle in events) {
 
     const eventText = document.createElement('p');
     eventText.innerText = eventData[1]//.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    
+
     eventAnchor.appendChild(eventHead);
     groupDiv.appendChild(eventAnchor);
     groupDiv.appendChild(eventText);
