@@ -11,34 +11,55 @@ const tileMovementCostTable: { [type: string]: [number, number] } = {
 
 export interface TileData {
   type: string;
-  improvement: any;
   movementCost: [number, number];
+  yield: Yield;
   unit?: UnitData;
+  improvement?: any;
   visible?: boolean;
 }
 
+export interface Yield {
+  food: number;
+  production: number;
+}
+
 export class Tile {
+  movementCost: [number, number];
   type: string;
-  improvement: any;
+
   unit: Unit;
+  improvement: any;
+
   discoveredBy: { [civID: number]: boolean };
   visibleTo: { [civID: number]: number };
-  movementCost: [number, number];
 
-  constructor(type: string) {
+  private baseYield: Yield;
+
+  constructor(type: string, baseYield: Yield) {
+    this.movementCost = tileMovementCostTable[type];
     this.type = type;
-    this.improvement = null;
+
     this.unit = null;
+    this.improvement = null;
+
     this.discoveredBy = {};
     this.visibleTo = {};
-    this.movementCost = tileMovementCostTable[type];
+  }
+
+  getTileYield(): Yield {
+    if (this.improvement !== null) {
+      // TODO: 
+    }
+
+    return this.baseYield;
   }
 
   getDiscoveredData(): TileData {
     return {
       type: this.type,
-      improvement: this.improvement,
       movementCost: this.movementCost,
+      improvement: this.improvement,
+      yield: this.getTileYield(),
     };
   }
 
