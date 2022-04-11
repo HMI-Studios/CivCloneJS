@@ -3,12 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
 const tile_1 = require("./tile");
 class Map {
-    constructor(height, width, terrain) {
+    constructor(height, width, terrain, heightMap) {
         this.height = height;
         this.width = width;
         this.tiles = new Array(height * width);
         for (let i = 0; i < height * width; i++) {
-            this.tiles[i] = new tile_1.Tile(terrain[i], { food: 1, production: 1 });
+            this.tiles[i] = new tile_1.Tile(terrain[i], heightMap[i], { food: 1, production: 1 });
         }
     }
     pos({ x, y }) {
