@@ -48,7 +48,7 @@ export class Tile {
 
   private baseYield: Yield;
 
-  constructor(type: string, baseYield: Yield) {
+  constructor(type: string, tileHeight: number, baseYield: Yield) {
     this.movementCost = tileMovementCostTable[type];
     this.type = type;
 

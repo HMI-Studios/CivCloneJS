@@ -24,7 +24,7 @@ class Yield {
 }
 exports.Yield = Yield;
 class Tile {
-    constructor(type, baseYield) {
+    constructor(type, tileHeight, baseYield) {
         this.movementCost = tileMovementCostTable[type];
         this.type = type;
         this.unit = null;

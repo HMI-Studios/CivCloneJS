@@ -7,12 +7,12 @@ export class Map {
   width: number;
   tiles: Tile[];
 
-  constructor(height: number, width: number, terrain: string[]) {
+  constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
     this.height = height;
     this.width = width;
     this.tiles = new Array(height*width);
     for (let i = 0; i < height*width; i++) {
-      this.tiles[i] = new Tile(terrain[i], new Yield({ food: 1, production: 1 }));
+      this.tiles[i] = new Tile(terrain[i], heightMap[i], new Yield({ food: 1, production: 1 }));
     }
   }
 
