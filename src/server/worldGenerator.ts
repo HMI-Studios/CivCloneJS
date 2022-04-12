@@ -4,6 +4,7 @@ export class WorldGenerator {
 
   private random: Random;
   private tiles: string[];
+  private heightMap: number[];
   private riverCoords: [number, number][];
   private mtCoords: [number, number][];
   private genPoints: string[];
@@ -14,6 +15,7 @@ export class WorldGenerator {
   constructor(seed: number, width: number, height: number) {
     this.random = new Random(seed);
     this.tiles = [];
+    this.heightMap = [];
     this.riverCoords = [];
     this.mtCoords = [];
     this.genPoints = [];
@@ -33,9 +35,9 @@ export class WorldGenerator {
     this.tiles[this.pos(x, y)] = tile;
   }
 
-  generate(continentSizeMin: number, continentSizeMax: number, continents: number): string[] {
+  generate(continentSizeMin: number, continentSizeMax: number, continents: number): [string[], number[]] {
     const { width, height, random } = this;
-    this.tiles = this.generateOcean();
+    this.generateOcean();
 
     this.riverCoords = [];
 
@@ -45,18 +47,19 @@ export class WorldGenerator {
       this.generateLandmass(x, y, random.randInt(width * continentSizeMin, width * continentSizeMax), 'plains', continents, width);
     }
 
-    return this.tiles;
+    return [this.tiles, this.heightMap];
   }
 
-  private generateOcean(): string[] {
+  private generateOcean(): void {
     const { width, height } = this;
-    const tiles = [];
+    this.tiles = [];
+    this.heightMap = [];
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        tiles.push('ocean');
+        this.tiles.push('ocean');
+        this.heightMap.push(0);
       }
     }
-    return tiles;
   }
 
   private generateLandmass(x: number, y: number, radius: number, biomeTile: string, continents: number, mapWidth: number): void {
@@ -65,15 +68,15 @@ export class WorldGenerator {
     this.genPoints = [];
     this.mtCoords = [[x, y]];
     this.generateLandStep(x, y, radius, biomeTile, 'mountain');
-    // HEIGHT MAP
+    this.generateHeightMap(...this.mtCoords[0], Math.round(radius * 1.5), 10);
     const mtCoord = this.mtCoords.shift();
     if (random.randInt(3) === 0) {
       this.riverCoords.push(mtCoord);
     }
     const l = this.mtCoords.length;
     while (this.mtCoords.length > 0) {
-      // HEIGHT MAP
       const mtCoord = this.mtCoords.shift();
+      this.generateHeightMap(...mtCoord, radius * 3, 2);
       if (random.randInt(3) === 0) {
         this.riverCoords.push(mtCoord);
       }
@@ -82,40 +85,55 @@ export class WorldGenerator {
 
   private generateLandStep(x: number, y: number, radius: number, biomeTile: string, borderTile: string): void {
     const { width, height, random } = this;
-    if (y > 0 && y < width) {
+    if (y >= 0 && y < width) {
       if (!(this.genPoints.includes(`${x}/${y}`))) {
         if (this.getTile(x, y) === biomeTile) {
           this.setTile(x, y, borderTile);
           this.mtCoords.push([x % width, y % height]);
           this.genPoints.push(`${x}/${y}`);
-          if (!(this.genPoints.includes(`${x + 1}/${y}`)) && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && this.getTile(x + 1, y) !== biomeTile) {
             this.generateLandStep(x + 1, y, Math.floor(radius / 3), biomeTile, borderTile);
           }
-          if (!(this.genPoints.includes(`${x}/${y + 1}`)) && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && this.getTile(x, y + 1) !== biomeTile) {
             this.generateLandStep(x, y + 1, Math.floor(radius / 3), biomeTile, borderTile);
           }
-          if (!(this.genPoints.includes(`${x}/${y - 1}`)) && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && this.getTile(x, y - 1) !== biomeTile) {
             this.generateLandStep(x, y - 1, Math.floor(radius / 3), biomeTile, borderTile);
           }
-          if (!(this.genPoints.includes(`${x - 1}/${y}`)) && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && this.getTile(x - 1, y) !== biomeTile) {
             this.generateLandStep(x - 1, y, Math.floor(radius / 3), biomeTile, borderTile);
           }
         } else {
           this.setTile(x, y, biomeTile);
           this.genPoints.push(`${x}/${y}`);
           this.tc++;
-          if (this.getTile(x + 1, y) !== biomeTile && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && !(this.genPoints.includes(`${x + 1}/${y}`))) {
             this.generateLandStep(x + 1, y, radius - 1, biomeTile, borderTile);
           }
-          if (this.getTile(x, y + 1) !== biomeTile && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && !(this.genPoints.includes(`${x}/${y + 1}`))) {
             this.generateLandStep(x, y + 1, radius - 1, biomeTile, borderTile);
           }
-          if (this.getTile(x, y - 1) !== biomeTile && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && !(this.genPoints.includes(`${x}/${y - 1}`))) {
             this.generateLandStep(x, y - 1, radius - 1, biomeTile, borderTile);
           }
-          if (this.getTile(x - 1, y) !== biomeTile && random.randInt(radius) > 0) {
+          if (random.randInt(radius) > 0 && !(this.genPoints.includes(`${x - 1}/${y}`))) {
             this.generateLandStep(x - 1, y, radius - 1, biomeTile, borderTile);
           }
+        }
+      }
+    }
+  }
+
+  private generateHeightMap(x: number, y: number, h: number, d: number): void {
+    const { random } = this;
+    if (y > 0 && y < this.height) {
+      if (this.heightMap[this.pos(x, y)] < h) {
+        this.heightMap[this.pos(x, y)] = h;
+        if (h > 0) {
+          this.generateHeightMap(x + 1, y, h - (random.randInt( Math.ceil(h / d) ) + 1), d);
+          this.generateHeightMap(x, y + 1, h - (random.randInt( Math.ceil(h / d) ) + 1), d);
+          this.generateHeightMap(x - 1, y, h - (random.randInt( Math.ceil(h / d) ) + 1), d);
+          this.generateHeightMap(x, y - 1, h - (random.randInt( Math.ceil(h / d) ) + 1), d);
         }
       }
     }

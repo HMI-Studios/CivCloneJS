@@ -10,7 +10,7 @@ const tileMovementCostTable = {
     'mountain': [0, 0],
 };
 class Tile {
-    constructor(type, baseYield) {
+    constructor(type, tileHeight, baseYield) {
         this.movementCost = tileMovementCostTable[type];
         this.type = type;
         this.unit = null;
@@ -20,7 +20,7 @@ class Tile {
     }
     getTileYield() {
         if (this.improvement !== null) {
-            // TODO: 
+            // TODO:
         }
         return this.baseYield;
     }
