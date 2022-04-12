@@ -1,4 +1,5 @@
 import { Unit, UnitData } from './unit';
+import { Improvement, ImprovementData } from './improvement';
 
 const tileMovementCostTable: { [type: string]: [number, number] } = {
   // tile name: [land mp, water mp] (0 = impassable)
@@ -14,13 +15,25 @@ export interface TileData {
   movementCost: [number, number];
   yield: Yield;
   unit?: UnitData;
-  improvement?: any;
+  improvement?: ImprovementData;
   visible?: boolean;
 }
 
-export interface Yield {
+export class Yield {
   food: number;
   production: number;
+
+  constructor(params: { food?: number, production?: number }) {
+    this.food = params.food ?? 0;
+    this.production = params.production ?? 0;
+  }
+
+  add(other: Yield): Yield {
+    return new Yield({
+      food: this.food + other.food,
+      production: this.production + other.production,
+    });
+  }
 }
 
 export class Tile {
@@ -28,7 +41,7 @@ export class Tile {
   type: string;
 
   unit: Unit;
-  improvement: any;
+  improvement: Improvement;
 
   discoveredBy: { [civID: number]: boolean };
   visibleTo: { [civID: number]: number };
@@ -48,17 +61,18 @@ export class Tile {
 
   getTileYield(): Yield {
     if (this.improvement !== null) {
-      // TODO: 
+      return this.baseYield.add(this.improvement.yield);
+    } else {
+      return this.baseYield;
     }
-
-    return this.baseYield;
   }
 
   getDiscoveredData(): TileData {
+    const improvementData = !this.improvement ? null : this.improvement.getData();
     return {
       type: this.type,
       movementCost: this.movementCost,
-      improvement: this.improvement,
+      improvement: improvementData,
       yield: this.getTileYield(),
     };
   }

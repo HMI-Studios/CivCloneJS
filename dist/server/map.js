@@ -8,7 +8,7 @@ class Map {
         this.width = width;
         this.tiles = new Array(height * width);
         for (let i = 0; i < height * width; i++) {
-            this.tiles[i] = new tile_1.Tile(terrain[i], { food: 1, production: 1 });
+            this.tiles[i] = new tile_1.Tile(terrain[i], new tile_1.Yield({ food: 1, production: 1 }));
         }
     }
     pos({ x, y }) {

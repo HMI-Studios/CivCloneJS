@@ -1,6 +1,6 @@
 import { Coords } from './world';
 import { Unit } from './unit';
-import { Tile, TileData } from './tile';
+import { Tile, TileData, Yield } from './tile';
 
 export class Map {
   height: number;
@@ -12,7 +12,7 @@ export class Map {
     this.width = width;
     this.tiles = new Array(height*width);
     for (let i = 0; i < height*width; i++) {
-      this.tiles[i] = new Tile(terrain[i], { food: 1, production: 1 });
+      this.tiles[i] = new Tile(terrain[i], new Yield({ food: 1, production: 1 }));
     }
   }
 

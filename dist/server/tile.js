@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Tile = void 0;
+exports.Tile = exports.Yield = void 0;
 const tileMovementCostTable = {
     // tile name: [land mp, water mp] (0 = impassable)
     'plains': [1, 0],
@@ -9,6 +9,20 @@ const tileMovementCostTable = {
     'river': [3, 1],
     'mountain': [0, 0],
 };
+class Yield {
+    constructor(params) {
+        var _a, _b;
+        this.food = (_a = params.food) !== null && _a !== void 0 ? _a : 0;
+        this.production = (_b = params.production) !== null && _b !== void 0 ? _b : 0;
+    }
+    add(other) {
+        return new Yield({
+            food: this.food + other.food,
+            production: this.production + other.production,
+        });
+    }
+}
+exports.Yield = Yield;
 class Tile {
     constructor(type, baseYield) {
         this.movementCost = tileMovementCostTable[type];
@@ -20,15 +34,18 @@ class Tile {
     }
     getTileYield() {
         if (this.improvement !== null) {
-            // TODO: 
+            return this.baseYield.add(this.improvement.yield);
         }
-        return this.baseYield;
+        else {
+            return this.baseYield;
+        }
     }
     getDiscoveredData() {
+        const improvementData = !this.improvement ? null : this.improvement.getData();
         return {
             type: this.type,
             movementCost: this.movementCost,
-            improvement: this.improvement,
+            improvement: improvementData,
             yield: this.getTileYield(),
         };
     }
