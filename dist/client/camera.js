@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Camera {
     constructor() {
         this.x = 0;
@@ -69,14 +70,17 @@ class Camera {
         const xEnd = (Math.round((((camX * zoom) + (10 * width * zoom)) + scx2) / (19.8 * zoom)) + 1);
         const selectedX = Math.round((wmX / 19.8) + 18.3);
         const selectedY = Math.round(((wmY + height) / 25) + (18 + (mod(selectedX, 2) / -2)));
-        const TILE_SIZE = [28, 25];
-        const UNIT_SCALE = [74, 88];
+        // const TILE_SIZE = [28, 25];
+        // const UNIT_SCALE = [74, 88];
         this.clear();
         for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
             for (let x = xStart; x < xEnd; x++) {
                 const tile = world.getTile(x, y);
                 if (tile) {
+                    if (!tile.visible)
+                        ctx.globalAlpha = 0.5;
                     ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * 19.8)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom, 28 * zoom, 25 * zoom);
+                    ctx.globalAlpha = 1;
                     if (tile.unit) {
                         this.renderUnit(world, tile.unit, x, y);
                     }
@@ -88,6 +92,8 @@ class Camera {
                             console.log(x, y);
                             if (world.pos(x, y) in this.highlightedTiles) {
                                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
+                                this.highlightedTiles = {};
+                                this.selectedUnitPos = null;
                             }
                             else {
                                 this.highlightedTiles = {};

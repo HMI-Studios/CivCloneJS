@@ -26,147 +26,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __importStar(require("fs"));
 const WebSocket = __importStar(require("ws"));
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 const port = 8080;
 const path_1 = __importDefault(require("path"));
 app.use('/', express_1.default.static(path_1.default.join(__dirname, '../client')));
+app.use('/docs', express_1.default.static(path_1.default.join(__dirname, '../docs')));
 const server = app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
 });
-const game_1 = require("./game");
-const map_1 = require("./map");
 const wss = new WebSocket.Server({ server });
-const games = {
-    0: new game_1.Game(new map_1.Map(38, 38, JSON.parse(fs.readFileSync(path_1.default.join(__dirname, 'saves/0.json')).toString()).map), 1),
-};
-const sendTo = (ws, msg) => {
-    ws.send(JSON.stringify(msg));
-};
-const connections = [];
-const connData = [];
-const getConnData = (ws) => {
-    const connIndex = connections.indexOf(ws);
-    return connData[connIndex];
-};
-const methods = {
-    setPlayer: (ws, username) => {
-        getConnData(ws).username = username;
-    },
-    joinGame: (ws, gameID) => {
-        const game = games[gameID];
-        const username = getConnData(ws).username;
-        const civID = game.newPlayerCivID();
-        if (civID !== null) {
-            getConnData(ws).gameID = gameID;
-            game.players[username] = new game_1.Player(civID, ws);
-            sendTo(ws, {
-                update: [
-                    ['civID', [civID]],
-                    ['colorPool', [game.getColorPool()]],
-                ],
-            });
-        }
-        else {
-            sendTo(ws, { error: [
-                    ['kicked', ['Game full']],
-                ] });
-        }
-    },
-    getGames: (ws) => {
-        const gameList = {};
-        for (const gameID in games) {
-            gameList[gameID] = games[gameID].metaData;
-        }
-        sendTo(ws, {
-            update: [
-                ['gameList', [gameList]],
-            ],
-        });
-    },
-    setColor: (ws, color) => {
-        const username = getConnData(ws).username;
-        const gameID = getConnData(ws).gameID;
-        const game = games[gameID];
-        if (game) {
-            const player = game.getPlayer(username);
-            if (player) {
-                if (game.setCivColor(player.civID, color)) {
-                    game.sendToAll({
-                        update: [
-                            ['colorPool', [game.getColorPool()]],
-                        ],
-                    });
-                }
-                else {
-                    sendTo(ws, {
-                        error: [
-                            ['colorTaken', ['That color is no longer available']],
-                        ],
-                    });
-                }
-            }
-        }
-    },
-    ready: (ws, state) => {
-        const username = getConnData(ws).username;
-        const gameID = getConnData(ws).gameID;
-        const game = games[gameID];
-        if (game) {
-            const player = game.getPlayer(username);
-            if (player) {
-                const civ = game.getCiv(player.civID);
-                if (!civ.color) {
-                    sendTo(ws, { error: [
-                            ['notReady', ['Please select civ color']],
-                        ] });
-                    return;
-                }
-                player.ready = state;
-                if (Object.keys(game.players).length === game.playerCount) {
-                    if (Object.values(game.players).every((player) => player.ready)) {
-                        game.sendToAll({
-                            update: [
-                                ['beginGame', [[game.map.width, game.map.height], game.playerCount]],
-                                ['civData', [game.getAllCivsData()]],
-                            ],
-                        });
-                        // console.log(game)
-                        game.forEachCiv((civID) => {
-                            game.sendToCiv(civID, {
-                                update: [
-                                    ['setMap', [game.map.getCivMap(civID)]],
-                                ],
-                            });
-                        });
-                        game.beginTurnForCiv(0);
-                    }
-                }
-            }
-        }
-    },
-    moveUnit: (ws, srcX, srcY, dstX, dstY) => {
-        const gameID = getConnData(ws).gameID;
-        const game = games[gameID];
-        if (game) {
-            const map = game.map;
-            const src = map.getTile(srcX, srcY);
-            const dst = map.getTile(dstX, dstY);
-            const unit = src.unit;
-            if (unit && dst.unit == null && unit.movement >= src.movementCost) {
-                map.moveUnitTo(unit, dstX, dstY);
-                unit.movement -= src.movementCost;
-            }
-            game.sendTileUpdate(src);
-            game.sendTileUpdate(dst);
-        }
-    },
-};
+const methods_1 = require("./methods");
 wss.on('connection', (ws, req) => {
-    connections.push(ws);
-    connData.push({
+    methods_1.connections.push(ws);
+    methods_1.connData.push({
         ws: ws,
         ip: req.socket.remoteAddress,
         username: null,
@@ -178,7 +52,7 @@ wss.on('connection', (ws, req) => {
             data = JSON.parse(message);
         }
         catch (err) {
-            console.error('Bad JSON recieved from %s', getConnData(ws).ip);
+            console.error('Bad JSON recieved from %s', (0, methods_1.getConnData)(ws).ip);
             ws.send(JSON.stringify({ error: ['bad JSON'] }));
             return;
         }
@@ -187,7 +61,7 @@ wss.on('connection', (ws, req) => {
             for (let i = 0; i < data.actions.length; i++) {
                 const action = data.actions[i][0];
                 const args = data.actions[i][1];
-                methods[action](ws, ...args);
+                methods_1.methods[action](ws, ...args);
             }
         }
     });

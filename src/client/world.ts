@@ -36,6 +36,14 @@ interface GameMetadata {
   gameName: string;
 }
 
+interface Coords {
+  x: number;
+  y: number;
+}
+
+type CoordTuple = [number, number];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
   tiles: Tile[];
   height: number;
@@ -60,7 +68,7 @@ class World {
     };
   }
 
-  pos (x: number, y: number): number {
+  pos(x: number, y: number): number {
     return (y * this.width) + mod(x, this.width)
   }
 
@@ -110,8 +118,14 @@ class World {
       const [atX, atY] = queue.shift();
 
       for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
+
         if (!(this.pos(adjX, adjY) in dst)) {
-          const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
+          const tile = this.getTile(adjX, adjY);
+
+          // can't walk through tile with unit
+          if (tile.unit) continue;
+
+          const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
           dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
 
           if (dst[this.pos(adjX, adjY)] <= range) {
@@ -125,6 +139,30 @@ class World {
     return paths;
   }
 
+  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }): void {
+    console.log(srcPos, dstPos, pathMap);
+    let curPos: CoordTuple = dstPos;
+    const path: Coords[] = [];
+    // const [ x, y ] = curPos;
+    // path.push({ x, y });
+    while (this.pos(...srcPos) !== this.pos(...curPos)) {
+      const [ x, y ] = curPos;
+      path.push({ x, y });
+      curPos = pathMap[this.pos(...curPos)];
+    }
+    path.reverse();
+    const [ x, y ] = srcPos;
+    this.sendActions([
+      ['moveUnit', [ { x, y }, path ]]
+    ]);
+
+    // const actions: [ string, Coords[] ][] = [];
+    // for (let i = 0; i < path.length - 1; i++) {
+    //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
+    // }
+    // this.sendActions(actions);
+  }
+
   sendJSON(data: EventMsg): void {
     this.socket.send(JSON.stringify(data));
   }
@@ -135,6 +173,7 @@ class World {
         const name = data.update[i][0];
         const args = data.update[i][1];
         console.log(name); // DEBUG
+        console.log(args); // DEBUG
         if (this.on.update[name]) {
           this.on.update[name](...args);
         }
@@ -145,6 +184,7 @@ class World {
         const name = data.error[i][0];
         const args = data.error[i][1];
         console.error(name); // DEBUG
+        console.error(args); // DEBUG
         if (this.on.error[name]) {
           this.on.error[name](...args);
         }
@@ -168,7 +208,7 @@ class World {
 
     this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
       const gameTitles = [];
-      const defaultGame = Object.keys(gameList)[0];
+      // const defaultGame = Object.keys(gameList)[0];
       for (const gameID in gameList) {
         gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
       }
@@ -188,17 +228,24 @@ class World {
     this.on.update.beginGame = ([width, height]: [number, number]): void => {
       ui.hideReadyBtn();
       ui.hideCivPicker();
+      ui.showGameUI(this);
       [this.width, this.height] = [width, height];
       camera.start(this, 1000/60);
     };
 
+    this.on.update.beginTurn = (): void => {
+      ui.setTurnState(true);
+    };
+
     this.on.update.setMap = (map: Tile[]): void => {
-      console.log(map);
       this.tiles = map;
     };
 
+    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile) => {
+      this.tiles[this.pos(x, y)] = tile;
+    };
+
     this.on.update.colorPool = (colors: string[]): void => {
-      console.log(colors);
       ui.colorPool = colors;
       ui.showCivPicker(civPickerFn);
     };
@@ -219,7 +266,7 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
-    return new Promise((resolve: () => void, reject: () => void) => {
+    return new Promise((resolve: () => void/* reject: () => void*/) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
         let data;
@@ -231,7 +278,7 @@ class World {
         }
         this.handleResponse(data);
       });
-      this.socket.addEventListener('open', (event: Event) => {
+      this.socket.addEventListener('open', (/*event: Event*/) => {
         resolve();
       });
     });
@@ -240,14 +287,4 @@ class World {
   sendActions(actions: [string, unknown[]][]): void {
     this.sendJSON({ actions });
   }
-
-  // loadMap() {
-  //   return axios.get(`/map`)
-  //     .then(({ data }) => {
-  //       this.tiles = data.map;
-  //       this.size = Math.floor(Math.sqrt(this.tiles.length)); // REMOVE
-  //       this.height = data.height;
-  //       this.width = data.width;
-  //     });
-  // }
 }

@@ -13,23 +13,18 @@ window.onload = () => {
 window.onresize = resize;
 document.getElementById('UI').onwheel = (evt) => {
     const canvas = document.getElementById('canvas');
-    let { zoom } = camera;
+    const { zoom } = camera;
     if (evt.deltaY > 0) {
         const { height } = world;
-        const [scx1, scy1, scx2, scy2] = [
-            -canvas.width / 2,
-            -canvas.height / 2,
-            canvas.width / 2,
-            canvas.height / 2
-        ];
+        const scy2 = canvas.height / 2;
         const yStart = (Math.round((-((12.5 * height * zoom) + scy2)) / (25 * zoom)) + (height - 2));
         if (yStart > 1) {
-            zoom *= 0.9;
+            camera.zoom *= 0.9;
         }
     }
     else {
         if (zoom < 10) {
-            zoom *= 1.1;
+            camera.zoom *= 1.1;
         }
     }
 };
@@ -67,13 +62,12 @@ document.getElementById('UI').onmousedown = function (evt) {
     clickY = canvas.height - (mousePos.y + Math.round(canvas.height / 2));
     mouseDown = true;
 };
-document.getElementById('UI').onmouseup = function (evt) {
-    const canvas = document.getElementById('canvas');
-    const mousePos = getMousePos(canvas, evt);
+document.getElementById('UI').onmouseup = function () {
     mouseDown = false;
     oldX = camera.x;
     oldY = camera.y;
 };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mod = (a, b) => {
     if (a >= 0) {
         return a % b;
@@ -83,8 +77,8 @@ const mod = (a, b) => {
     }
 };
 // const SERVER_IP = '192.168.5.47:8080';
-const SERVER_IP = '192.168.4.29:8080';
-// const SERVER_IP = 'localhost:8080';
+// const SERVER_IP = '192.168.4.29:8080';
+const SERVER_IP = 'localhost:8080';
 const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
 localStorage.setItem('username', PLAYER_NAME);
 const camera = new Camera();

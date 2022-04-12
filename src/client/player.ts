@@ -1,16 +1,29 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
+
   elements: { [key: string]: HTMLElement };
   colorPool: string[];
+  turnActive: boolean;
+  buttons: { [key: string]: Button };
+
   constructor() {
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),
       centerModal: this.createElement('div', 'centerModal'),
-      civPicker: this.createElement('ul', 'civList')
+      civPicker: this.createElement('ul', 'civList'),
     };
     this.colorPool = [];
+    this.turnActive = false;
+
+    this.buttons = {
+      mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
+        text: 'MainBtn',
+        action: null,
+      }),
+    };
   }
 
-  createElement(type: string, className=null, id=null): HTMLElement {
+  createElement(type: string, className=null): HTMLElement {
     const element = document.createElement(type);
     if (className) {
       element.className = className;
@@ -18,7 +31,7 @@ class UI {
     return element;
   }
 
-  createCivItem (civName, color) {
+  createCivItem(civName: string, color: string): HTMLElement {
     const civItem = this.createElement('li', 'civItem');
     civItem.style.backgroundColor = color;
     const nameText = this.createElement('span');
@@ -27,7 +40,34 @@ class UI {
     return civItem;
   }
 
-  showCivPicker(callback) {
+  setTurnState(state: boolean) {
+    this.turnActive = state;
+
+    if (state) {
+      this.buttons.mainBtn.setAction(['turnFinished', [true]]);
+      this.buttons.mainBtn.setText('Finish');
+    } else {
+      this.buttons.mainBtn.setText('Waiting...');
+    }
+  }
+
+  showGameUI(world: World): void {
+
+    for (const buttonID in this.buttons) {
+      const button = this.buttons[buttonID];
+      button.bind((state: ButtonState) => {
+        if (state.action) {
+          world.sendActions([
+            state.action,
+          ]);
+        }
+      });
+
+      document.getElementById('UI').appendChild(button.element);
+    }
+  }
+
+  showCivPicker(callback: (color: string) => void): void {
     this.elements.civPicker.innerHTML = '';
     for (let i = 0; i < this.colorPool.length; i++) {
       const color = this.colorPool[i];
@@ -42,27 +82,30 @@ class UI {
     document.getElementById('UI').appendChild(this.elements.centerModal);
   }
 
-  hideCivPicker() {
+  hideCivPicker(): void {
     this.elements.civPicker.remove();
     this.elements.centerModal.remove();
   }
 
-  showReadyBtn(callback) {
+  showReadyBtn(callback: (isReady: boolean) => void): void {
     let btnState = false;
-    this.elements.readyBtn.innerHTML = 'Ready';
+    this.elements.readyBtn.innerText = 'Ready';
+
     this.elements.readyBtn.onclick = () => {
       btnState = !btnState;
       if (btnState) {
-        this.elements.readyBtn.innerHTML = 'Waiting';
+        this.elements.readyBtn.innerText = 'Waiting';
       } else {
-        this.elements.readyBtn.innerHTML = 'Ready';
+        this.elements.readyBtn.innerText = 'Ready';
       }
+
       callback(btnState);
     };
+
     document.getElementById('UI').appendChild(this.elements.readyBtn);
   }
 
-  hideReadyBtn() {
+  hideReadyBtn(): void {
     this.elements.readyBtn.remove();
   }
 }

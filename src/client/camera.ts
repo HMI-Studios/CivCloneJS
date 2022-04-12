@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Camera {
   x: number;
   y: number;
@@ -9,6 +10,7 @@ class Camera {
   mouseDownTime: number;
   selectedUnitPos: [number, number];
   highlightedTiles: { [key: string]: [number, number] };
+
   constructor() {
     this.x = 0;
     this.y = 0;
@@ -36,15 +38,15 @@ class Camera {
     this.highlightedTiles = {};
   }
 
-  start(world: World, FPS: number) {
+  start(world: World, FPS: number): void {
     this.interval = setInterval(() => this.render(world), FPS);
   }
 
-  stop() {
+  stop(): void {
     clearInterval(this.interval);
   }
 
-  clear() {
+  clear(): void {
     this.ctx.clearRect(
       -this.canvas.width / 2,
       -this.canvas.height / 2,
@@ -53,7 +55,7 @@ class Camera {
     );
   }
 
-  renderUnit(world, unit, x, y) {
+  renderUnit(world: World, unit: Unit, x: number, y: number): void {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height, civs } = world;
 
@@ -113,8 +115,8 @@ class Camera {
     const selectedX = Math.round((wmX / 19.8) + 18.3);
     const selectedY = Math.round(((wmY + height) / 25) + (18 + (mod(selectedX, 2) / -2)));
 
-    const TILE_SIZE = [28, 25];
-    const UNIT_SCALE = [74, 88];
+    // const TILE_SIZE = [28, 25];
+    // const UNIT_SCALE = [74, 88];
 
     this.clear();
     for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
@@ -123,6 +125,8 @@ class Camera {
         const tile = world.getTile(x, y);
         if (tile) {
 
+          if (!tile.visible) ctx.globalAlpha = 0.5;
+
           ctx.drawImage(
             textures.tile[tile.type] as CanvasImageSource,
             (-camX + ((x - (width / 2)) * 19.8)) * zoom,
@@ -130,6 +134,8 @@ class Camera {
             28 * zoom,
             25 * zoom
           );
+
+          ctx.globalAlpha = 1;
 
           if (tile.unit) {
             this.renderUnit(world, tile.unit, x, y);
@@ -151,6 +157,9 @@ class Camera {
               console.log(x, y);
               if (world.pos(x, y) in this.highlightedTiles) {
                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
+
+                this.highlightedTiles = {};
+                this.selectedUnitPos = null;
               } else {
                 this.highlightedTiles = {};
                 this.selectedUnitPos = null;

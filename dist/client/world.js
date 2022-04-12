@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
     constructor(playerName) {
         this.tiles = [];
@@ -56,7 +57,11 @@ class World {
             const [atX, atY] = queue.shift();
             for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
                 if (!(this.pos(adjX, adjY) in dst)) {
-                    const movementCost = mode > -1 ? this.getTile(adjX, adjY).movementCost[mode] || Infinity : 1;
+                    const tile = this.getTile(adjX, adjY);
+                    // can't walk through tile with unit
+                    if (tile.unit)
+                        continue;
+                    const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
                     dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
                     if (dst[this.pos(adjX, adjY)] <= range) {
                         paths[this.pos(adjX, adjY)] = [atX, atY];
@@ -67,6 +72,28 @@ class World {
         }
         return paths;
     }
+    moveUnit(srcPos, dstPos, pathMap) {
+        console.log(srcPos, dstPos, pathMap);
+        let curPos = dstPos;
+        const path = [];
+        // const [ x, y ] = curPos;
+        // path.push({ x, y });
+        while (this.pos(...srcPos) !== this.pos(...curPos)) {
+            const [x, y] = curPos;
+            path.push({ x, y });
+            curPos = pathMap[this.pos(...curPos)];
+        }
+        path.reverse();
+        const [x, y] = srcPos;
+        this.sendActions([
+            ['moveUnit', [{ x, y }, path]]
+        ]);
+        // const actions: [ string, Coords[] ][] = [];
+        // for (let i = 0; i < path.length - 1; i++) {
+        //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
+        // }
+        // this.sendActions(actions);
+    }
     sendJSON(data) {
         this.socket.send(JSON.stringify(data));
     }
@@ -76,6 +103,7 @@ class World {
                 const name = data.update[i][0];
                 const args = data.update[i][1];
                 console.log(name); // DEBUG
+                console.log(args); // DEBUG
                 if (this.on.update[name]) {
                     this.on.update[name](...args);
                 }
@@ -86,6 +114,7 @@ class World {
                 const name = data.error[i][0];
                 const args = data.error[i][1];
                 console.error(name); // DEBUG
+                console.error(args); // DEBUG
                 if (this.on.error[name]) {
                     this.on.error[name](...args);
                 }
@@ -105,7 +134,7 @@ class World {
         };
         this.on.update.gameList = (gameList) => {
             const gameTitles = [];
-            const defaultGame = Object.keys(gameList)[0];
+            // const defaultGame = Object.keys(gameList)[0];
             for (const gameID in gameList) {
                 gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`);
             }
@@ -121,15 +150,20 @@ class World {
         this.on.update.beginGame = ([width, height]) => {
             ui.hideReadyBtn();
             ui.hideCivPicker();
+            ui.showGameUI(this);
             [this.width, this.height] = [width, height];
             camera.start(this, 1000 / 60);
         };
+        this.on.update.beginTurn = () => {
+            ui.setTurnState(true);
+        };
         this.on.update.setMap = (map) => {
-            console.log(map);
             this.tiles = map;
         };
+        this.on.update.tileUpdate = ({ x, y }, tile) => {
+            this.tiles[this.pos(x, y)] = tile;
+        };
         this.on.update.colorPool = (colors) => {
-            console.log(colors);
             ui.colorPool = colors;
             ui.showCivPicker(civPickerFn);
         };
@@ -144,7 +178,7 @@ class World {
             ui.hideReadyBtn();
             ui.showReadyBtn(readyFn);
         };
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve /* reject: () => void*/) => {
             this.socket = new WebSocket(`ws://${serverIP}`);
             this.socket.addEventListener('message', (event) => {
                 let data;
@@ -157,7 +191,7 @@ class World {
                 }
                 this.handleResponse(data);
             });
-            this.socket.addEventListener('open', (event) => {
+            this.socket.addEventListener('open', ( /*event: Event*/) => {
                 resolve();
             });
         });
