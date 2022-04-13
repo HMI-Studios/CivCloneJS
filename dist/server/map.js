@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
+const city_1 = require("./city");
 const tile_1 = require("./tile");
 class Map {
     constructor(height, width, terrain, heightMap) {
@@ -25,8 +26,8 @@ class Map {
     getTile(coords) {
         return this.tiles[this.pos(coords)];
     }
-    getNeighborsCoords({ x, y }, r, tileList = [], isTop = true) {
-        if (r > 0 && this.tiles[this.pos({ x, y })]) {
+    getNeighborsCoords({ x, y }, r = 1, tileList = [], isTop = true) {
+        if (r > 0 && this.getTile({ x, y })) {
             tileList.push({ x, y });
             if (this.mod(x, 2) === 1) {
                 this.getNeighborsCoords({ x: x, y: y + 1 }, r - 1, tileList, false);
@@ -54,12 +55,23 @@ class Map {
     }
     moveUnitTo(unit, coords) {
         if (unit.coords.x !== null && unit.coords.y !== null) {
-            this.tiles[this.pos(unit.coords)].setUnit(null);
+            this.getTile(unit.coords).setUnit(null);
         }
         unit.coords = coords;
         if (coords.x !== null && coords.y !== null) {
-            this.tiles[this.pos(coords)].setUnit(unit);
+            this.getTile(coords).setUnit(unit);
         }
+    }
+    settleCityAt(coords, name, civID) {
+        let city = new city_1.City(coords, name, civID);
+        this.cities.push(city);
+        return city;
+    }
+    setTileOwner(coords, owner) {
+        var _a;
+        (_a = this.getTile(coords).owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
+        this.getTile(coords).owner = owner;
+        owner.addTile(coords);
     }
     getCivTile(civID, tile) {
         if (tile.discoveredBy[civID]) {
@@ -80,7 +92,7 @@ class Map {
         });
     }
     setTileVisibility(civID, coords, visible) {
-        this.tiles[this.pos(coords)].setVisibility(civID, visible);
+        this.getTile(coords).setVisibility(civID, visible);
     }
 }
 exports.Map = Map;

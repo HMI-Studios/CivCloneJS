@@ -1,0 +1,36 @@
+export interface CityData {
+  name: string;
+  civID: number;
+}
+
+export class City {
+  center: Coords;
+  name: string;
+  civID: number;
+
+  private tiles: Set<Coords>;
+
+  constructor(center: Coords, name: string, civID: number) {
+    this.center = center;
+    this.name = name;
+    this.civID = civID;
+
+    this.tiles = new Set();
+    this.tiles.add(center);
+  }
+
+  getData(): CityData {
+    return {
+      name: this.name,
+      civID: this.civID,
+    };
+  }
+
+  addTile(coords: Coords) {
+    this.tiles.add(coords);
+  }
+
+  removeTile(coords: Coords) {
+    this.tiles.delete(coords);
+  }
+}

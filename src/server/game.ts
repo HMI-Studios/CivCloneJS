@@ -1,5 +1,6 @@
 import { World, Coords } from './world';
 import { Player } from './player';
+import { City } from './city';
 import { Tile } from './tile';
 import { Map } from './map';
 
@@ -39,6 +40,18 @@ export class Game {
         ['endTurn', []],
       ],
     });
+  }
+
+  settleCityAt(coords: Coords, name: string, civID: number) {
+    let city: City = this.world.map.settleCityAt(coords, name, civID);
+
+    for (const neighbor of this.world.map.getNeighborsCoords(coords)) {
+      this.world.map.setTileOwner(neighbor, city);
+
+      this.sendTileUpdate(neighbor, this.world.map.getTile(neighbor));
+    }
+
+    this.sendTileUpdate(coords, this.world.map.getTile(coords));
   }
 
   sendTileUpdate(coords: Coords, tile: Tile): void {

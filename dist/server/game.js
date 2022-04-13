@@ -26,6 +26,14 @@ class Game {
             ],
         });
     }
+    settleCityAt(coords, name, civID) {
+        let city = this.world.map.settleCityAt(coords, name, civID);
+        for (const neighbor of this.world.map.getNeighborsCoords(coords)) {
+            this.world.map.setTileOwner(neighbor, city);
+            this.sendTileUpdate(neighbor, this.world.map.getTile(neighbor));
+        }
+        this.sendTileUpdate(coords, this.world.map.getTile(coords));
+    }
     sendTileUpdate(coords, tile) {
         this.forEachCivID((civID) => {
             this.sendToCiv(civID, {
