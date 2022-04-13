@@ -46,6 +46,7 @@ const events = {
     moveUnit: [ ['src: Coords', 'path: Coords[]'], 'Moves unit at `src` along `path`. Returns early if a move is invalid.' ],
     endTurn: [ [], 'DEPRECATED: Use `turnFinished` action instead.' ],
     turnFinished: [ ['state: boolean'], 'Flags an active player as "finished"; "unfinished" if state = false. When all active players are finished, their turns are ended.' ],
+    settleCity: [ ['coords: Coords, name: string'], 'Settles a city at `coords` with the name `name`.' ],
   }),
   update: sortObj({
     civID: [ [ 'civID: number' ], '' ],

@@ -27,7 +27,7 @@ exports.methods = {
     joinGame: (ws, gameID) => {
         const game = exports.games[gameID];
         const username = (0, exports.getConnData)(ws).username;
-        const civID = game.newPlayerCivID();
+        const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID();
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
             game.players[username] = new player_1.Player(civID, ws);
@@ -201,6 +201,19 @@ exports.methods = {
                     game.beginTurnForCiv(player.civID);
                 }
             });
+        }
+    },
+    settleCity: (ws, coords, name) => {
+        var _a;
+        const { username, gameID } = (0, exports.getConnData)(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
+                game.settleCityAt(coords, name, civID);
+            }
         }
     },
 };
