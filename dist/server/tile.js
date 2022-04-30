@@ -29,6 +29,7 @@ class Tile {
         this.type = type;
         this.unit = null;
         this.improvement = null;
+        this.owner = null;
         this.discoveredBy = {};
         this.visibleTo = {};
     }
@@ -41,17 +42,18 @@ class Tile {
         }
     }
     getDiscoveredData() {
-        const improvementData = !this.improvement ? null : this.improvement.getData();
+        var _a, _b;
         return {
             type: this.type,
             movementCost: this.movementCost,
-            improvement: improvementData,
+            improvement: (_a = this.improvement) === null || _a === void 0 ? void 0 : _a.getData(),
+            owner: (_b = this.owner) === null || _b === void 0 ? void 0 : _b.getData(),
             yield: this.getTileYield(),
         };
     }
     getVisibleData() {
-        const unitData = !this.unit ? null : this.unit.getData();
-        return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: unitData, visible: true });
+        var _a;
+        return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(), visible: true });
     }
     getMovementCost(unit) {
         const mode = unit.getMovementClass();

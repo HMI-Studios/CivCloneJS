@@ -1,11 +1,13 @@
 import { Coords } from './world';
 import { Unit } from './unit';
+import { City } from './city';
 import { Tile, TileData, Yield } from './tile';
 
 export class Map {
   height: number;
   width: number;
   tiles: Tile[];
+  cities: City[];
 
   constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
     this.height = height;
@@ -32,8 +34,8 @@ export class Map {
     return this.tiles[this.pos(coords)];
   }
 
-  getNeighborsCoords({ x, y }: Coords, r: number, tileList: Coords[] = [], isTop = true): Coords[] {
-    if (r > 0 && this.tiles[this.pos({x, y})]) {
+  getNeighborsCoords({ x, y }: Coords, r: number = 1, tileList: Coords[] = [], isTop = true): Coords[] {
+    if (r > 0 && this.getTile({x, y})) {
       tileList.push({x, y});
       if (this.mod(x, 2) === 1) {
         this.getNeighborsCoords({ x: x,   y: y+1 }, r-1, tileList, false);
@@ -62,12 +64,25 @@ export class Map {
 
   moveUnitTo(unit: Unit, coords: Coords): void {
     if (unit.coords.x !== null && unit.coords.y !== null) {
-      this.tiles[this.pos(unit.coords)].setUnit(null);
+      this.getTile(unit.coords).setUnit(null);
     }
     unit.coords = coords;
     if (coords.x !== null && coords.y !== null) {
-      this.tiles[this.pos(coords)].setUnit(unit);
+      this.getTile(coords).setUnit(unit);
     }
+  }
+
+  settleCityAt(coords: Coords, name: string, civID: number): City {
+    let city = new City(coords, name, civID);
+    this.cities.push(city);
+
+    return city;
+  }
+
+  setTileOwner(coords: Coords, owner: City): void {
+    this.getTile(coords).owner?.removeTile(coords);
+    this.getTile(coords).owner = owner;
+    owner.addTile(coords);
   }
 
   getCivTile(civID: number, tile: Tile): TileData | null {
@@ -89,6 +104,6 @@ export class Map {
   }
 
   setTileVisibility(civID: number, coords: Coords, visible: boolean) {
-    this.tiles[this.pos(coords)].setVisibility(civID, visible);
+    this.getTile(coords).setVisibility(civID, visible);
   }
 }

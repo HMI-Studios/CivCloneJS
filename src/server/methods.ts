@@ -43,7 +43,7 @@ export const methods = {
     const game = games[gameID];
     const username = getConnData(ws).username;
 
-    const civID = game.newPlayerCivID();
+    const civID = game?.newPlayerCivID();
 
     if (civID !== null) {
       getConnData(ws).gameID = gameID;
@@ -255,6 +255,21 @@ export const methods = {
           game.beginTurnForCiv(player.civID);
         }
       });
+    }
+  },
+
+  settleCity: (ws: WebSocket, coords: Coords, name: string) => {
+    const { username, gameID } = getConnData(ws);
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const unit = map.getTile(coords)?.unit
+      if (unit?.type === 'settler' && unit?.civID === civID) {
+        game.settleCityAt(coords, name, civID);
+      }
     }
   },
 };

@@ -1,5 +1,6 @@
 import { Unit, UnitData } from './unit';
 import { Improvement, ImprovementData } from './improvement';
+import { City, CityData } from './city';
 
 const tileMovementCostTable: { [type: string]: [number, number] } = {
   // tile name: [land mp, water mp] (0 = impassable)
@@ -16,6 +17,7 @@ export interface TileData {
   yield: Yield;
   unit?: UnitData;
   improvement?: ImprovementData;
+  owner?: CityData;
   visible?: boolean;
 }
 
@@ -42,6 +44,7 @@ export class Tile {
 
   unit: Unit;
   improvement: Improvement;
+  owner: City;
 
   discoveredBy: { [civID: number]: boolean };
   visibleTo: { [civID: number]: number };
@@ -54,6 +57,7 @@ export class Tile {
 
     this.unit = null;
     this.improvement = null;
+    this.owner = null;
 
     this.discoveredBy = {};
     this.visibleTo = {};
@@ -68,20 +72,19 @@ export class Tile {
   }
 
   getDiscoveredData(): TileData {
-    const improvementData = !this.improvement ? null : this.improvement.getData();
     return {
       type: this.type,
       movementCost: this.movementCost,
-      improvement: improvementData,
+      improvement: this.improvement?.getData(),
+      owner: this.owner?.getData(),
       yield: this.getTileYield(),
     };
   }
 
   getVisibleData(): TileData {
-    const unitData = !this.unit ? null : this.unit.getData();
     return {
       ...this.getDiscoveredData(),
-      unit: unitData,
+      unit: this.unit?.getData(),
       visible: true,
     }
   }
