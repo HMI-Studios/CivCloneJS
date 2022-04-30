@@ -58,9 +58,6 @@ class World {
             for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
                 if (!(this.pos(adjX, adjY) in dst)) {
                     const tile = this.getTile(adjX, adjY);
-                    // can't walk through tile with unit
-                    if (tile.unit)
-                        continue;
                     const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
                     dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
                     if (dst[this.pos(adjX, adjY)] <= range) {
@@ -72,7 +69,7 @@ class World {
         }
         return paths;
     }
-    moveUnit(srcPos, dstPos, pathMap) {
+    moveUnit(srcPos, dstPos, pathMap, attack) {
         console.log(srcPos, dstPos, pathMap);
         let curPos = dstPos;
         const path = [];
@@ -86,13 +83,8 @@ class World {
         path.reverse();
         const [x, y] = srcPos;
         this.sendActions([
-            ['moveUnit', [{ x, y }, path]]
+            ['moveUnit', [{ x, y }, path, attack]]
         ]);
-        // const actions: [ string, Coords[] ][] = [];
-        // for (let i = 0; i < path.length - 1; i++) {
-        //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
-        // }
-        // this.sendActions(actions);
     }
     sendJSON(data) {
         this.socket.send(JSON.stringify(data));
