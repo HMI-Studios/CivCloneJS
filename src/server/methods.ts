@@ -143,12 +143,12 @@ export const methods = {
     }
   },
 
-  moveUnit: (ws: WebSocket, srcCoords: Coords, path: Coords[]) => {
+  moveUnit: (ws: WebSocket, srcCoords: Coords, path: Coords[], attack: boolean) => {
     const { username, gameID } = getConnData(ws);
     const game = games[gameID];
     const civID = game.players[username].civID;
 
-    console.log(srcCoords, path);
+    console.log(srcCoords, path, attack);
 
     if (game) {
       const map = game.world.map;
@@ -160,8 +160,12 @@ export const methods = {
 
         const unit = src.unit;
 
-        if (!(unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit))) {
+        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit)) ) {
           return;
+        }
+
+        if (dst.unit) {
+          break;
         }
 
         // mark tiles currently visible by unit as unseen
@@ -189,6 +193,16 @@ export const methods = {
         }
 
         src = dst;
+      }
+
+      if (attack) {
+        const unit = src.unit;
+        const target = map.getTile(path[path.length - 1]).unit;
+        if (target && unit.isAdjacentTo(target.coords)) {
+          unit.meleeAttack(target);
+          unit.movement = 0;
+          game.sendTileUpdate(unit.coords, src);
+        }
       }
     }
   },

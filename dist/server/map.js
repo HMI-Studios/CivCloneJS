@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
 const city_1 = require("./city");
 const tile_1 = require("./tile");
+const utils_1 = require("./utils");
 class Map {
     constructor(height, width, terrain, heightMap) {
         this.height = height;
@@ -13,15 +14,7 @@ class Map {
         }
     }
     pos({ x, y }) {
-        return (y * this.width) + this.mod(x, this.width);
-    }
-    mod(a, b) {
-        if (a >= 0) {
-            return a % b;
-        }
-        else {
-            return ((a % b) + b) % b;
-        }
+        return (y * this.width) + (0, utils_1.mod)(x, this.width);
     }
     getTile(coords) {
         return this.tiles[this.pos(coords)];
@@ -29,21 +22,8 @@ class Map {
     getNeighborsCoords({ x, y }, r = 1, tileList = [], isTop = true) {
         if (r > 0 && this.getTile({ x, y })) {
             tileList.push({ x, y });
-            if (this.mod(x, 2) === 1) {
-                this.getNeighborsCoords({ x: x, y: y + 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x + 1, y: y + 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x + 1, y: y }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x - 1, y: y }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x - 1, y: y + 1 }, r - 1, tileList, false);
-            }
-            else {
-                this.getNeighborsCoords({ x: x, y: y + 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x + 1, y: y }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x + 1, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x - 1, y: y - 1 }, r - 1, tileList, false);
-                this.getNeighborsCoords({ x: x - 1, y: y }, r - 1, tileList, false);
+            for (const coord of (0, utils_1.getAdjacentCoords)({ x, y })) {
+                this.getNeighborsCoords(coord, r - 1, tileList, false);
             }
         }
         if (isTop) {
@@ -61,11 +41,6 @@ class Map {
         if (coords.x !== null && coords.y !== null) {
             this.getTile(coords).setUnit(unit);
         }
-    }
-    settleCityAt(coords, name, civID) {
-        let city = new city_1.City(coords, name, civID);
-        this.cities.push(city);
-        return city;
     }
     setTileOwner(coords, owner) {
         var _a;
@@ -93,6 +68,11 @@ class Map {
     }
     setTileVisibility(civID, coords, visible) {
         this.getTile(coords).setVisibility(civID, visible);
+    }
+    settleCityAt(coords, name, civID) {
+        let city = new city_1.City(coords, name, civID);
+        this.cities.push(city);
+        return city;
     }
 }
 exports.Map = Map;

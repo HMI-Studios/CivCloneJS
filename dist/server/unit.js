@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Unit = void 0;
+const utils_1 = require("./utils");
 const unitMovementTable = {
     'settler': 3,
     'scout': 5,
@@ -32,8 +33,19 @@ class Unit {
     getMovementClass() {
         return this.movementClass;
     }
+    hurt(hp) {
+        // TODO
+        this.hp -= hp;
+    }
     newTurn() {
         this.movement = unitMovementTable[this.type];
+    }
+    meleeAttack(target) {
+        // TODO
+        target.hurt(10);
+    }
+    isAdjacentTo(dst) {
+        return dst && (0, utils_1.getAdjacentCoords)(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
     }
 }
 exports.Unit = Unit;

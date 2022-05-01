@@ -113,19 +113,22 @@ exports.methods = {
             }
         }
     },
-    moveUnit: (ws, srcCoords, path) => {
+    moveUnit: (ws, srcCoords, path, attack) => {
         const { username, gameID } = (0, exports.getConnData)(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, path);
+        console.log(srcCoords, path, attack);
         if (game) {
             const map = game.world.map;
             let src = map.getTile(srcCoords);
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
                 const unit = src.unit;
-                if (!(unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit))) {
+                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit))) {
                     return;
+                }
+                if (dst.unit) {
+                    break;
                 }
                 // mark tiles currently visible by unit as unseen
                 const srcVisible = map.getVisibleTilesCoords(unit);
@@ -146,6 +149,15 @@ exports.methods = {
                     game.sendTileUpdate(coords, tile);
                 }
                 src = dst;
+            }
+            if (attack) {
+                const unit = src.unit;
+                const target = map.getTile(path[path.length - 1]).unit;
+                if (target && unit.isAdjacentTo(target.coords)) {
+                    unit.meleeAttack(target);
+                    unit.movement = 0;
+                    game.sendTileUpdate(unit.coords, src);
+                }
             }
         }
     },

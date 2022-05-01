@@ -1,3 +1,4 @@
+import { getAdjacentCoords } from './utils';
 import { Coords } from './world';
 
 const unitMovementTable: { [unit: string]: number } = {
@@ -50,7 +51,21 @@ export class Unit {
     return this.movementClass;
   }
 
+  hurt(hp: number): void {
+    // TODO
+    this.hp -= hp;
+  }
+
   newTurn() {
     this.movement = unitMovementTable[this.type];
+  }
+
+  meleeAttack(target: Unit): void {
+    // TODO
+    target.hurt(10);
+  }
+
+  isAdjacentTo(dst?: Coords): boolean {
+    return dst && getAdjacentCoords(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
   }
 }
