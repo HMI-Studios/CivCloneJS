@@ -168,19 +168,19 @@ class World {
                 ]);
             };
             this.on.update.gameList = (gameList) => {
-                const gameTitles = [];
-                // const defaultGame = Object.keys(gameList)[0];
-                for (const gameID in gameList) {
-                    gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`);
-                }
-                const gameID = '0'; //prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
-                if (gameID !== null) {
-                    this.sendActions([
-                        ['joinGame', [gameID]],
-                    ]);
-                    ui.showReadyBtn(readyFn);
-                    ui.showCivPicker(civPickerFn);
-                }
+                ui.hideMainMenu();
+                ui.showGameList(gameList, {
+                    joinGame: (gameID) => {
+                        if (gameID !== null) {
+                            this.sendActions([
+                                ['joinGame', [gameID]],
+                            ]);
+                            ui.hideGameList();
+                            ui.showReadyBtn(readyFn);
+                            ui.showCivPicker(civPickerFn);
+                        }
+                    },
+                });
             };
             this.on.update.beginGame = ([width, height]) => {
                 ui.hideReadyBtn();

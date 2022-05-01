@@ -6,6 +6,7 @@ class UI {
             centerModal: this.createElement('div', 'centerModal'),
             civPicker: this.createElement('ul', 'civList'),
             mainMenu: this.createElement('div', 'mainMenu'),
+            gameList: this.createElement('div', 'gameList'),
         };
         this.colorPool = [];
         this.turnActive = false;
@@ -116,6 +117,24 @@ class UI {
     }
     hideMainMenu() {
         this.elements.mainMenu.remove();
+        this.elements.centerModal.remove();
+    }
+    showGameList(gameList, callbacks) {
+        this.elements.gameList.innerHTML = '';
+        const titleHeading = this.createElement('h1');
+        titleHeading.innerText = 'Active Games';
+        this.elements.gameList.appendChild(titleHeading);
+        for (const gameID in gameList) {
+            const gameBtn = this.createElement('button');
+            gameBtn.innerText = gameList[gameID].gameName;
+            gameBtn.onclick = () => callbacks.joinGame(gameID);
+            this.elements.gameList.appendChild(gameBtn);
+        }
+        this.elements.centerModal.appendChild(this.elements.gameList);
+        document.getElementById('UI').appendChild(this.elements.centerModal);
+    }
+    hideGameList() {
+        this.elements.gameList.remove();
         this.elements.centerModal.remove();
     }
 }
