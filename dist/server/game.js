@@ -27,9 +27,10 @@ class Game {
         });
     }
     sendUpdates() {
+        const updates = this.world.getUpdates();
         this.forEachCivID((civID) => {
             this.sendToCiv(civID, {
-                update: this.world.getUpdates().map(updateFn => updateFn(civID)),
+                update: updates.map(updateFn => updateFn(civID)), //.filter(update => update),
             });
         });
     }

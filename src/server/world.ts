@@ -16,6 +16,7 @@ export class World {
   civsCount: number;
   colorPool: { [color: string]: boolean };
   metaData: { gameName: string };
+  updates: { (civID: number): Event }[];
 
   constructor(map: Map, civsCount: number) {
     this.map = map;
@@ -46,11 +47,13 @@ export class World {
     this.metaData = {
       gameName: "New Game",
     };
+
+    this.updates = [];
   }
 
   getUpdates(): { (civID: number): Event }[] {
     // TODO: more updates?
-    return this.map.getUpdates();
+    return this.map.getUpdates().concat(this.updates.splice(0));
   }
 
   // colorPool
@@ -119,7 +122,11 @@ export class World {
   // map, civs
   removeUnit(unit: Unit): void {
     this.civs[unit.civID].removeUnit(unit);
+    this.updates.push(() => ['unitKilled', [ unit.coords, unit ]]);
     this.map.moveUnitTo(unit, { x: null, y: null });
+    // TODO: make this more intelligent
+    this.updateCivTileVisibility(unit.civID)
+    this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);
   }
 
   // unit, map, civs

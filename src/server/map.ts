@@ -79,7 +79,7 @@ export class Map {
   }
 
   tileUpdate(coords: Coords) {
-    if (coords.x === null && coords.y === null) return;
+    // if (coords.x === null && coords.y === null) return;
     const tile = this.getTile(coords);
     this.updates.push( (civID: number) => ['tileUpdate', [ coords, this.getCivTile(civID, tile) ]] );
   }
