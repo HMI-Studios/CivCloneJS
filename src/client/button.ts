@@ -10,11 +10,14 @@ class Button {
   constructor(element: HTMLElement, state: ButtonState) {
     this.element = element;
     this.state = state;
+    this.element.innerText = state.text;
   }
 
-  bind(func: ((state: ButtonState) => void)) {
+  bindActionCallback(func: ((action: [string, unknown[]][]) => void)) {
     this.element.onclick = () => {
-      func(this.state);
+      if (this.state.action) {
+        func([this.state.action]);
+      }
     };
   }
 

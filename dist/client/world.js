@@ -8,6 +8,7 @@ class World {
         this.on = {
             update: {},
             error: {},
+            event: {},
         };
         this.civs = {};
         this.player = {
@@ -178,6 +179,12 @@ class World {
             ui.hideReadyBtn();
             ui.showReadyBtn(readyFn);
         };
+        this.on.event.selectUnit = (coords, unit) => {
+            ui.showUnitActionsMenu(this, coords, unit);
+        };
+        this.on.event.deselectUnit = () => {
+            ui.hideUnitActionsMenu();
+        };
         return new Promise((resolve /* reject: () => void*/) => {
             this.socket = new WebSocket(`ws://${serverIP}`);
             this.socket.addEventListener('message', (event) => {
@@ -197,6 +204,7 @@ class World {
         });
     }
     sendActions(actions) {
+        console.log(this);
         this.sendJSON({ actions });
     }
 }

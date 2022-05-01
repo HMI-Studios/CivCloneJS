@@ -2,10 +2,13 @@ class Button {
     constructor(element, state) {
         this.element = element;
         this.state = state;
+        this.element.innerText = state.text;
     }
-    bind(func) {
+    bindActionCallback(func) {
         this.element.onclick = () => {
-            func(this.state);
+            if (this.state.action) {
+                func([this.state.action]);
+            }
         };
     }
     setText(text) {
