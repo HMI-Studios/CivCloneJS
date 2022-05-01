@@ -7,7 +7,7 @@ interface Player {
   civID: number;
 }
 
-interface WorldEventHandler {
+interface WorldEventHandlerMap {
   [key: string]: (...args: unknown[]) => void;
 }
 
@@ -49,10 +49,10 @@ class World {
   height: number;
   width: number;
   socket: WebSocket;
-  on: { update: WorldEventHandler, error: WorldEventHandler };
+  on: { update: WorldEventHandlerMap, error: WorldEventHandlerMap };
   civs: { [key: string]: Civ };
   player: Player;
-  constructor(playerName: string) {
+  constructor() {
     this.tiles = [];
     this.height;
     this.width;
@@ -63,7 +63,7 @@ class World {
     };
     this.civs = {};
     this.player = {
-      name: playerName,
+      name: null,
       civID: null,
     };
   }
@@ -183,7 +183,39 @@ class World {
     }
   }
 
-  setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
+  async login(): Promise<void> {
+    let username = localStorage.getItem('username');
+    if (!username) {
+      const [usr, pass] = await ui.textInputs.loginMenu.prompt(document.getElementById('UI'), false);
+      username = usr;
+      localStorage.setItem('username', username);
+    }
+    this.player.name = username;
+    this.sendActions([
+      ['setPlayer', [this.player.name]],
+    ]);
+  }
+
+  connect(serverIP: string): Promise<void> {
+    return new Promise((resolve: () => void/* reject: () => void*/) => {
+      this.socket = new WebSocket(`ws://${serverIP}`);
+      this.socket.addEventListener('message', (event) => {
+        let data;
+        try {
+          data = JSON.parse(event.data);
+        } catch (err) {
+          console.error('Bad JSON recieved from server');
+          return;
+        }
+        this.handleResponse(data);
+      });
+      this.socket.addEventListener('open', (/*event: Event*/) => {
+        resolve();
+      });
+    });
+  }
+
+  async setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
 
     const readyFn = (isReady: boolean): void => {
       this.sendActions([
@@ -257,22 +289,29 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
-    return new Promise((resolve: () => void/* reject: () => void*/) => {
-      this.socket = new WebSocket(`ws://${serverIP}`);
-      this.socket.addEventListener('message', (event) => {
-        let data;
-        try {
-          data = JSON.parse(event.data);
-        } catch (err) {
-          console.error('Bad JSON recieved from server');
-          return;
-        }
-        this.handleResponse(data);
-      });
-      this.socket.addEventListener('open', (/*event: Event*/) => {
-        resolve();
-      });
-    });
+    await this.connect(serverIP);
+
+    await this.login();
+
+    this.sendActions([
+      ['setPlayer', [world.player.name]],
+    ]);
+
+    const mainMenuFns = {
+      listGames: () => {
+        this.sendActions([
+          ['getGames', []],
+        ]);
+      },
+      logout: async () => {
+        localStorage.setItem('username', '');
+        ui.hideMainMenu();
+        await this.login();
+        ui.showMainMenu(mainMenuFns);
+      },
+    };
+
+    ui.showMainMenu(mainMenuFns);
   }
 
   sendActions(actions: [string, unknown[]][]): void {

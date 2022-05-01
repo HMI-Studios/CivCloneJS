@@ -1,6 +1,15 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
-    constructor(playerName) {
+    constructor() {
         this.tiles = [];
         this.height;
         this.width;
@@ -11,7 +20,7 @@ class World {
         };
         this.civs = {};
         this.player = {
-            name: playerName,
+            name: null,
             civID: null,
         };
     }
@@ -113,63 +122,21 @@ class World {
             }
         }
     }
-    setup(serverIP, camera, ui) {
-        const readyFn = (isReady) => {
-            this.sendActions([
-                ['ready', [isReady]],
-            ]);
-        };
-        const civPickerFn = (color) => {
-            this.sendActions([
-                ['setColor', [color]],
-            ]);
-        };
-        this.on.update.gameList = (gameList) => {
-            const gameTitles = [];
-            // const defaultGame = Object.keys(gameList)[0];
-            for (const gameID in gameList) {
-                gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`);
+    login() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let username = localStorage.getItem('username');
+            if (!username) {
+                const [usr, pass] = yield ui.textInputs.loginMenu.prompt(document.getElementById('UI'), false);
+                username = usr;
+                localStorage.setItem('username', username);
             }
-            const gameID = '0'; //prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
-            if (gameID !== null) {
-                this.sendActions([
-                    ['joinGame', [gameID]],
-                ]);
-                ui.showReadyBtn(readyFn);
-                ui.showCivPicker(civPickerFn);
-            }
-        };
-        this.on.update.beginGame = ([width, height]) => {
-            ui.hideReadyBtn();
-            ui.hideCivPicker();
-            ui.showGameUI(this);
-            [this.width, this.height] = [width, height];
-            camera.start(this, 1000 / 60);
-        };
-        this.on.update.beginTurn = () => {
-            ui.setTurnState(true);
-        };
-        this.on.update.setMap = (map) => {
-            this.tiles = map;
-        };
-        this.on.update.tileUpdate = ({ x, y }, tile) => {
-            this.tiles[this.pos(x, y)] = tile;
-        };
-        this.on.update.colorPool = (colors) => {
-            ui.colorPool = colors;
-            ui.showCivPicker(civPickerFn);
-        };
-        this.on.update.civData = (civs) => {
-            this.civs = civs;
-        };
-        this.on.update.civID = (civID) => {
-            this.player.civID = civID;
-        };
-        this.on.error.notReady = (reason) => {
-            console.error('Error:', reason);
-            ui.hideReadyBtn();
-            ui.showReadyBtn(readyFn);
-        };
+            this.player.name = username;
+            this.sendActions([
+                ['setPlayer', [this.player.name]],
+            ]);
+        });
+    }
+    connect(serverIP) {
         return new Promise((resolve /* reject: () => void*/) => {
             this.socket = new WebSocket(`ws://${serverIP}`);
             this.socket.addEventListener('message', (event) => {
@@ -186,6 +153,85 @@ class World {
             this.socket.addEventListener('open', ( /*event: Event*/) => {
                 resolve();
             });
+        });
+    }
+    setup(serverIP, camera, ui) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const readyFn = (isReady) => {
+                this.sendActions([
+                    ['ready', [isReady]],
+                ]);
+            };
+            const civPickerFn = (color) => {
+                this.sendActions([
+                    ['setColor', [color]],
+                ]);
+            };
+            this.on.update.gameList = (gameList) => {
+                const gameTitles = [];
+                // const defaultGame = Object.keys(gameList)[0];
+                for (const gameID in gameList) {
+                    gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`);
+                }
+                const gameID = '0'; //prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
+                if (gameID !== null) {
+                    this.sendActions([
+                        ['joinGame', [gameID]],
+                    ]);
+                    ui.showReadyBtn(readyFn);
+                    ui.showCivPicker(civPickerFn);
+                }
+            };
+            this.on.update.beginGame = ([width, height]) => {
+                ui.hideReadyBtn();
+                ui.hideCivPicker();
+                ui.showGameUI(this);
+                [this.width, this.height] = [width, height];
+                camera.start(this, 1000 / 60);
+            };
+            this.on.update.beginTurn = () => {
+                ui.setTurnState(true);
+            };
+            this.on.update.setMap = (map) => {
+                this.tiles = map;
+            };
+            this.on.update.tileUpdate = ({ x, y }, tile) => {
+                this.tiles[this.pos(x, y)] = tile;
+            };
+            this.on.update.colorPool = (colors) => {
+                ui.colorPool = colors;
+                ui.showCivPicker(civPickerFn);
+            };
+            this.on.update.civData = (civs) => {
+                this.civs = civs;
+            };
+            this.on.update.civID = (civID) => {
+                this.player.civID = civID;
+            };
+            this.on.error.notReady = (reason) => {
+                console.error('Error:', reason);
+                ui.hideReadyBtn();
+                ui.showReadyBtn(readyFn);
+            };
+            yield this.connect(serverIP);
+            yield this.login();
+            this.sendActions([
+                ['setPlayer', [world.player.name]],
+            ]);
+            const mainMenuFns = {
+                listGames: () => {
+                    this.sendActions([
+                        ['getGames', []],
+                    ]);
+                },
+                logout: () => __awaiter(this, void 0, void 0, function* () {
+                    localStorage.setItem('username', '');
+                    ui.hideMainMenu();
+                    yield this.login();
+                    ui.showMainMenu(mainMenuFns);
+                }),
+            };
+            ui.showMainMenu(mainMenuFns);
         });
     }
     sendActions(actions) {

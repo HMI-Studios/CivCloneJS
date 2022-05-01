@@ -1,3 +1,15 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+let camera;
+let ui;
+let world;
 const resize = () => {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -76,19 +88,14 @@ const mod = (a, b) => {
         return ((a % b) + b) % b;
     }
 };
-// const SERVER_IP = '192.168.5.47:8080';
-// const SERVER_IP = '192.168.4.29:8080';
-const SERVER_IP = 'localhost:8080';
-const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
-localStorage.setItem('username', PLAYER_NAME);
-const camera = new Camera();
-const ui = new UI();
-const world = new World(PLAYER_NAME);
-world.setup(SERVER_IP, camera, ui)
-    .then(() => {
-    world.sendActions([
-        ['getGames', []],
-        ['setPlayer', [world.player.name]],
-    ]);
+const main = () => __awaiter(this, void 0, void 0, function* () {
+    // const SERVER_IP = '192.168.5.47:8080';
+    // const SERVER_IP = '192.168.4.29:8080';
+    const SERVER_IP = 'localhost:8080';
+    camera = new Camera();
+    ui = new UI();
+    world = new World();
+    yield world.setup(SERVER_IP, camera, ui);
 });
+main();
 //# sourceMappingURL=app.js.map

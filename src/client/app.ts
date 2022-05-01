@@ -1,3 +1,7 @@
+let camera;
+let ui;
+let world;
+
 const resize = () => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
@@ -78,19 +82,16 @@ const mod = (a, b) => {
   }
 };
 
-// const SERVER_IP = '192.168.5.47:8080';
-// const SERVER_IP = '192.168.4.29:8080';
-const SERVER_IP = 'localhost:8080';
-const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
-localStorage.setItem('username', PLAYER_NAME);
+const main = async () => {
+  // const SERVER_IP = '192.168.5.47:8080';
+  // const SERVER_IP = '192.168.4.29:8080';
+  const SERVER_IP = 'localhost:8080';
 
-const camera = new Camera();
-const ui = new UI();
-const world = new World(PLAYER_NAME);
-world.setup(SERVER_IP, camera, ui)
-  .then(() => {
-    world.sendActions([
-      ['getGames', []],
-      ['setPlayer', [world.player.name]],
-    ]);
-  });
+  camera = new Camera();
+  ui = new UI();
+  world = new World();
+
+  await world.setup(SERVER_IP, camera, ui);
+}
+
+main();

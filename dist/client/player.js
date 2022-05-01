@@ -5,6 +5,7 @@ class UI {
             readyBtn: this.createElement('button', 'readyBtn'),
             centerModal: this.createElement('div', 'centerModal'),
             civPicker: this.createElement('ul', 'civList'),
+            mainMenu: this.createElement('div', 'mainMenu'),
         };
         this.colorPool = [];
         this.turnActive = false;
@@ -12,6 +13,15 @@ class UI {
             mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
                 text: 'MainBtn',
                 action: null,
+            }),
+        };
+        this.textInputs = {
+            loginMenu: new TextInput({
+                query: 'Please log in:',
+                fields: [
+                    ['Username', 'username here...'],
+                    ['Password', 'password here...'],
+                ]
             }),
         };
     }
@@ -87,6 +97,26 @@ class UI {
     }
     hideReadyBtn() {
         this.elements.readyBtn.remove();
+    }
+    showMainMenu(callbacks) {
+        this.elements.mainMenu.innerHTML = '';
+        const titleHeading = this.createElement('h1');
+        titleHeading.innerText = 'CivCloneJS';
+        this.elements.mainMenu.appendChild(titleHeading);
+        const gameListBtn = this.createElement('button');
+        gameListBtn.innerText = 'List Games';
+        gameListBtn.onclick = () => callbacks.listGames();
+        this.elements.mainMenu.appendChild(gameListBtn);
+        const logoutBtn = this.createElement('button');
+        logoutBtn.innerText = 'Logout';
+        logoutBtn.onclick = () => callbacks.logout();
+        this.elements.mainMenu.appendChild(logoutBtn);
+        this.elements.centerModal.appendChild(this.elements.mainMenu);
+        document.getElementById('UI').appendChild(this.elements.centerModal);
+    }
+    hideMainMenu() {
+        this.elements.mainMenu.remove();
+        this.elements.centerModal.remove();
     }
 }
 //# sourceMappingURL=player.js.map
