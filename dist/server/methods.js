@@ -119,7 +119,8 @@ exports.methods = {
         const civID = game.players[username].civID;
         console.log(srcCoords, path, attack);
         if (game) {
-            const map = game.world.map;
+            const world = game.world;
+            const map = world.map;
             let src = map.getTile(srcCoords);
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
@@ -152,11 +153,12 @@ exports.methods = {
             }
             if (attack) {
                 const unit = src.unit;
-                const target = map.getTile(path[path.length - 1]).unit;
-                if (target && unit.isAdjacentTo(target.coords)) {
-                    unit.meleeAttack(target);
+                const target = map.getTile(path[path.length - 1]);
+                if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
+                    world.meleeCombat(unit, target.unit);
                     unit.movement = 0;
                     game.sendTileUpdate(unit.coords, src);
+                    game.sendTileUpdate(target.unit.coords, target);
                 }
             }
         }

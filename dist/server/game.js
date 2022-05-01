@@ -50,7 +50,7 @@ class Game {
         for (const playerName in this.players) {
             const player = this.players[playerName];
             if (player.isAI) {
-                return;
+                continue;
             }
             else {
                 player.connection.send(JSON.stringify(msg));

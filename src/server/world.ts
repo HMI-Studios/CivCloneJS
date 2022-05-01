@@ -114,4 +114,35 @@ export class World {
     this.civs[unit.civID].removeUnit(unit);
     this.map.moveUnitTo(unit, { x: null, y: null });
   }
+
+  // unit, map, civs
+  meleeCombat(attacker: Unit, defender: Unit): void {
+    const [attackerOffense, attackerDefense, attackerAwareness] = attacker.combatStats;
+    const [defenderOffense, defenderDefense, defenderAwareness] = defender.combatStats;
+    const attackerInitiative = Math.random() * (attackerAwareness * 1.5);
+    const defenderInitiative = Math.random() * (defenderAwareness);
+
+    const DAMAGE_MULTIPLIER = 20;
+
+    if (attackerInitiative > defenderInitiative) {
+
+      const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
+      defender.hurt(attackerDamage);
+
+      const defenderDamage = (defenderOffense * defender.hp) / (attackerDefense * attacker.hp) * DAMAGE_MULTIPLIER;
+      attacker.hurt(defenderDamage);
+
+    } else {
+
+      const defenderDamage = (defenderOffense * defender.hp) / (attackerDefense * attacker.hp) * DAMAGE_MULTIPLIER;
+      attacker.hurt(defenderDamage);
+
+      const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
+      defender.hurt(attackerDamage);
+
+    }
+
+    if (attacker.isDead) this.removeUnit(attacker);
+    if (defender.isDead) this.removeUnit(defender);
+  }
 }

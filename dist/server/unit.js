@@ -10,17 +10,24 @@ const unitMovementClassTable = {
     'settler': 0,
     'scout': 0,
 };
+const unitCombatStatsTable = {
+    // 'unit': [offense, defense, awareness],
+    'settler': [0, 1, 0],
+    'scout': [5, 3, 20],
+};
 class Unit {
     constructor(type, civID) {
         this.type = type;
         this.hp = 100;
         this.movement = 0;
         this.movementClass = unitMovementClassTable[type];
+        this.combatStats = unitCombatStatsTable[type];
         this.civID = civID;
         this.coords = {
             x: null,
             y: null,
         };
+        this.alive = true;
     }
     getData() {
         return {
@@ -33,16 +40,21 @@ class Unit {
     getMovementClass() {
         return this.movementClass;
     }
+    setDead() {
+        this.alive = false;
+    }
+    isDead() {
+        return !this.alive;
+    }
     hurt(hp) {
         // TODO
         this.hp -= hp;
+        if (this.hp <= 0) {
+            this.setDead();
+        }
     }
     newTurn() {
         this.movement = unitMovementTable[this.type];
-    }
-    meleeAttack(target) {
-        // TODO
-        target.hurt(10);
     }
     isAdjacentTo(dst) {
         return dst && (0, utils_1.getAdjacentCoords)(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
