@@ -18,6 +18,7 @@ export class Map {
     for (let i = 0; i < height*width; i++) {
       this.tiles[i] = new Tile(terrain[i], heightMap[i], new Yield({ food: 1, production: 1 }));
     }
+    this.cities = [];
     this.updates = [];
   }
 

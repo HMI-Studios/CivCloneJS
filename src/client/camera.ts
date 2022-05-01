@@ -89,7 +89,7 @@ class Camera {
     );
   }
 
-  render(world) {
+  render(world: World) {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height } = world;
     const [ wmX, wmY ] = [ camX + (mouseX / zoom), camY + (mouseY / zoom) ];
@@ -157,13 +157,12 @@ class Camera {
               console.log(x, y);
               if (world.pos(x, y) in this.highlightedTiles) {
                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
-
-                this.highlightedTiles = {};
-                this.selectedUnitPos = null;
-              } else {
-                this.highlightedTiles = {};
-                this.selectedUnitPos = null;
               }
+
+              this.highlightedTiles = {};
+              this.selectedUnitPos = null;
+
+              world.on.event.deselectUnit();
             }
 
             ctx.drawImage(
@@ -178,11 +177,11 @@ class Camera {
               console.log(tile.unit);
               this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
               this.selectedUnitPos = [x, y];
+
+              world.on.event.selectUnit({x, y}, tile.unit);
             }
           }
         }
-
-
       }
     }
   }
