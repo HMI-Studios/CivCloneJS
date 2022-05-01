@@ -49,7 +49,7 @@ class World {
   height: number;
   width: number;
   socket: WebSocket;
-  on: { update: WorldEventHandler, error: WorldEventHandler };
+  on: { update: WorldEventHandler, error: WorldEventHandler, event: WorldEventHandler };
   civs: { [key: string]: Civ };
   player: Player;
   constructor(playerName: string) {
@@ -60,6 +60,7 @@ class World {
     this.on = {
       update: {},
       error: {},
+      event: {},
     };
     this.civs = {};
     this.player = {
@@ -241,7 +242,7 @@ class World {
       this.tiles = map;
     };
 
-    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile) => {
+    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile): void => {
       this.tiles[this.pos(x, y)] = tile;
     };
 
@@ -254,16 +255,22 @@ class World {
       this.civs = civs;
     };
 
-    this.on.update.civID = (civID: number) => {
+    this.on.update.civID = (civID: number): void => {
       this.player.civID = civID;
     };
 
-
-
-    this.on.error.notReady = (reason) => {
+    this.on.error.notReady = (reason): void => {
       console.error('Error:', reason);
       ui.hideReadyBtn();
       ui.showReadyBtn(readyFn);
+    }
+
+    this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
+      ui.showUnitActionsMenu(this, coords, unit);
+    }
+
+    this.on.event.deselectUnit = (): void => {
+      ui.hideUnitActionsMenu();
     }
 
     return new Promise((resolve: () => void/* reject: () => void*/) => {
@@ -285,6 +292,7 @@ class World {
   }
 
   sendActions(actions: [string, unknown[]][]): void {
+    console.log(this);
     this.sendJSON({ actions });
   }
 }

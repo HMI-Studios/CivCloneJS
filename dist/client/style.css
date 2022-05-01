@@ -53,3 +53,9 @@ canvas {
 	grid-column: 8;
 	grid-row: 6;
 }
+
+.unitActionsMenu {
+	grid-column: 6;
+	grid-row: 6;
+  background-color: red;
+}
