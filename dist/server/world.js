@@ -26,6 +26,11 @@ class World {
         this.metaData = {
             gameName: "New Game",
         };
+        this.updates = [];
+    }
+    getUpdates() {
+        // TODO: more updates?
+        return this.map.getUpdates().concat(this.updates.splice(0));
     }
     // colorPool
     getColorPool() {
@@ -84,7 +89,37 @@ class World {
     // map, civs
     removeUnit(unit) {
         this.civs[unit.civID].removeUnit(unit);
+        this.updates.push(() => ['unitKilled', [unit.coords, unit]]);
         this.map.moveUnitTo(unit, { x: null, y: null });
+        // TODO: make this more intelligent
+        this.updateCivTileVisibility(unit.civID);
+        this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);
+    }
+    // unit, map, civs
+    meleeCombat(attacker, defender) {
+        const [attackerOffense, attackerDefense, attackerAwareness] = attacker.combatStats;
+        const [defenderOffense, defenderDefense, defenderAwareness] = defender.combatStats;
+        const attackerInitiative = Math.random() * (attackerAwareness * 1.5);
+        const defenderInitiative = Math.random() * (defenderAwareness);
+        const DAMAGE_MULTIPLIER = 20;
+        if (attackerInitiative > defenderInitiative) {
+            const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
+            defender.hurt(attackerDamage);
+            const defenderDamage = (defenderOffense * defender.hp) / (attackerDefense * attacker.hp) * DAMAGE_MULTIPLIER;
+            attacker.hurt(defenderDamage);
+        }
+        else {
+            const defenderDamage = (defenderOffense * defender.hp) / (attackerDefense * attacker.hp) * DAMAGE_MULTIPLIER;
+            attacker.hurt(defenderDamage);
+            const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
+            defender.hurt(attackerDamage);
+        }
+        if (attacker.isDead())
+            this.removeUnit(attacker);
+        if (defender.isDead())
+            this.removeUnit(defender);
+        this.map.tileUpdate(attacker.coords);
+        this.map.tileUpdate(defender.coords);
     }
 }
 exports.World = World;

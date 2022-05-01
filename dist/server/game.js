@@ -26,20 +26,11 @@ class Game {
             ],
         });
     }
-    settleCityAt(coords, name, civID) {
-        let city = this.world.map.settleCityAt(coords, name, civID);
-        for (const neighbor of this.world.map.getNeighborsCoords(coords)) {
-            this.world.map.setTileOwner(neighbor, city);
-            this.sendTileUpdate(neighbor, this.world.map.getTile(neighbor));
-        }
-        this.sendTileUpdate(coords, this.world.map.getTile(coords));
-    }
-    sendTileUpdate(coords, tile) {
+    sendUpdates() {
+        const updates = this.world.getUpdates();
         this.forEachCivID((civID) => {
             this.sendToCiv(civID, {
-                update: [
-                    ['tileUpdate', [coords, this.world.map.getCivTile(civID, tile)]],
-                ],
+                update: updates.map(updateFn => updateFn(civID)), //.filter(update => update),
             });
         });
     }
@@ -50,7 +41,7 @@ class Game {
         for (const playerName in this.players) {
             const player = this.players[playerName];
             if (player.isAI) {
-                return;
+                continue;
             }
             else {
                 player.connection.send(JSON.stringify(msg));

@@ -156,7 +156,7 @@ class Camera {
             if (this.mouseDownTime === 1) {
               console.log(x, y);
               if (world.pos(x, y) in this.highlightedTiles) {
-                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
+                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
               }
 
               this.highlightedTiles = {};

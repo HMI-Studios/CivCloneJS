@@ -27,14 +27,14 @@ class Tile {
     constructor(type, tileHeight, baseYield) {
         this.movementCost = tileMovementCostTable[type];
         this.type = type;
-        this.unit = null;
-        this.improvement = null;
-        this.owner = null;
+        this.unit = undefined;
+        this.improvement = undefined;
+        this.owner = undefined;
         this.discoveredBy = {};
         this.visibleTo = {};
     }
     getTileYield() {
-        if (this.improvement !== null) {
+        if (this.improvement) {
             return this.baseYield.add(this.improvement.yield);
         }
         else {

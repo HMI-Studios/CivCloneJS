@@ -13,7 +13,7 @@ const sendTo = (ws, msg) => {
 exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 1),
+    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 2),
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
@@ -113,42 +113,6 @@ exports.methods = {
             }
         }
     },
-    moveUnit: (ws, srcCoords, path) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
-        const game = exports.games[gameID];
-        const civID = game.players[username].civID;
-        console.log(srcCoords, path);
-        if (game) {
-            const map = game.world.map;
-            let src = map.getTile(srcCoords);
-            for (const dstCoords of path) {
-                const dst = map.getTile(dstCoords);
-                const unit = src.unit;
-                if (!(unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit))) {
-                    return;
-                }
-                // mark tiles currently visible by unit as unseen
-                const srcVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of srcVisible) {
-                    const tile = map.getTile(coords);
-                    tile.setVisibility(civID, false);
-                    game.sendTileUpdate(coords, tile);
-                }
-                unit.movement -= dst.getMovementCost(unit);
-                map.moveUnitTo(unit, dstCoords);
-                game.sendTileUpdate(srcCoords, src);
-                game.sendTileUpdate(dstCoords, dst);
-                // mark tiles now visible by unit as seen
-                const newVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of newVisible) {
-                    const tile = map.getTile(coords);
-                    tile.setVisibility(civID, true);
-                    game.sendTileUpdate(coords, tile);
-                }
-                src = dst;
-            }
-        }
-    },
     // Deprecated
     // TODO: replace with turnFinished
     endTurn: (ws) => {
@@ -203,6 +167,50 @@ exports.methods = {
             });
         }
     },
+    moveUnit: (ws, srcCoords, path, attack) => {
+        const { username, gameID } = (0, exports.getConnData)(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        console.log(srcCoords, path, attack);
+        if (game) {
+            const world = game.world;
+            const map = world.map;
+            let src = map.getTile(srcCoords);
+            for (const dstCoords of path) {
+                const dst = map.getTile(dstCoords);
+                const unit = src.unit;
+                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit))) {
+                    game.sendUpdates();
+                    return;
+                }
+                if (dst.unit) {
+                    break;
+                }
+                // mark tiles currently visible by unit as unseen
+                const srcVisible = map.getVisibleTilesCoords(unit);
+                for (const coords of srcVisible) {
+                    map.setTileVisibility(civID, coords, false);
+                }
+                unit.movement -= dst.getMovementCost(unit);
+                map.moveUnitTo(unit, dstCoords);
+                // mark tiles now visible by unit as seen
+                const newVisible = map.getVisibleTilesCoords(unit);
+                for (const coords of newVisible) {
+                    map.setTileVisibility(civID, coords, true);
+                }
+                src = dst;
+            }
+            if (attack) {
+                const unit = src.unit;
+                const target = map.getTile(path[path.length - 1]);
+                if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
+                    world.meleeCombat(unit, target.unit);
+                    unit.movement = 0;
+                }
+            }
+            game.sendUpdates();
+        }
+    },
     settleCity: (ws, coords, name) => {
         var _a;
         const { username, gameID } = (0, exports.getConnData)(ws);
@@ -212,7 +220,7 @@ exports.methods = {
             const map = game.world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
-                game.settleCityAt(coords, name, civID);
+                map.settleCityAt(coords, name, civID);
             }
         }
     },

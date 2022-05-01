@@ -123,9 +123,6 @@ class World {
         if (!(this.pos(adjX, adjY) in dst)) {
           const tile = this.getTile(adjX, adjY);
 
-          // can't walk through tile with unit
-          if (tile.unit) continue;
-
           const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
           dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
 
@@ -140,7 +137,7 @@ class World {
     return paths;
   }
 
-  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }): void {
+  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }, attack: boolean): void { // TODO: phase out CoordTuple type
     console.log(srcPos, dstPos, pathMap);
     let curPos: CoordTuple = dstPos;
     const path: Coords[] = [];
@@ -154,14 +151,8 @@ class World {
     path.reverse();
     const [ x, y ] = srcPos;
     this.sendActions([
-      ['moveUnit', [ { x, y }, path ]]
+      ['moveUnit', [ { x, y }, path, attack ]]
     ]);
-
-    // const actions: [ string, Coords[] ][] = [];
-    // for (let i = 0; i < path.length - 1; i++) {
-    //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
-    // }
-    // this.sendActions(actions);
   }
 
   sendJSON(data: EventMsg): void {
