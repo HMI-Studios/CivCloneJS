@@ -27,6 +27,10 @@ class World {
             gameName: "New Game",
         };
     }
+    getUpdates() {
+        // TODO: more updates?
+        return this.map.getUpdates();
+    }
     // colorPool
     getColorPool() {
         const colorList = [];
@@ -105,10 +109,13 @@ class World {
             const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
             defender.hurt(attackerDamage);
         }
-        if (attacker.isDead)
+        if (attacker.isDead())
             this.removeUnit(attacker);
-        if (defender.isDead)
+        if (defender.isDead())
             this.removeUnit(defender);
+        console.log(attacker, defender);
+        this.map.tileUpdate(attacker.coords);
+        this.map.tileUpdate(defender.coords);
     }
 }
 exports.World = World;

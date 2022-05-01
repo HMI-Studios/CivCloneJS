@@ -1,14 +1,8 @@
 import { World, Coords } from './world';
 import { Player } from './player';
-import { City } from './city';
 import { Tile } from './tile';
 import { Map } from './map';
-
-export interface EventMsg {
-  actions?: [string, unknown[]][];
-  update?: [string, unknown[]][];
-  error?: [string, unknown[]][];
-}
+import { EventMsg } from './utils';
 
 export class Game {
   world: World;
@@ -42,24 +36,10 @@ export class Game {
     });
   }
 
-  settleCityAt(coords: Coords, name: string, civID: number) {
-    let city: City = this.world.map.settleCityAt(coords, name, civID);
-
-    for (const neighbor of this.world.map.getNeighborsCoords(coords)) {
-      this.world.map.setTileOwner(neighbor, city);
-
-      this.sendTileUpdate(neighbor, this.world.map.getTile(neighbor));
-    }
-
-    this.sendTileUpdate(coords, this.world.map.getTile(coords));
-  }
-
-  sendTileUpdate(coords: Coords, tile: Tile): void {
+  sendUpdates(): void {
     this.forEachCivID((civID) => {
       this.sendToCiv(civID, {
-        update: [
-          ['tileUpdate', [ coords, this.world.map.getCivTile(civID, tile) ]],
-        ],
+        update: this.world.getUpdates().map(updateFn => updateFn(civID)),
       });
     });
   }

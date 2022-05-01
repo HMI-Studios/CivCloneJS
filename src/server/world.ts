@@ -1,7 +1,9 @@
 import { Map } from './map';
 import { Unit } from './unit';
 import { Tile } from './tile';
+import { City } from './city';
 import { Civilization, CivilizationData } from './civilization';
+import { Event } from './utils';
 
 export interface Coords {
   x: number;
@@ -44,6 +46,11 @@ export class World {
     this.metaData = {
       gameName: "New Game",
     };
+  }
+
+  getUpdates(): { (civID: number): Event }[] {
+    // TODO: more updates?
+    return this.map.getUpdates();
   }
 
   // colorPool
@@ -142,7 +149,10 @@ export class World {
 
     }
 
-    if (attacker.isDead) this.removeUnit(attacker);
-    if (defender.isDead) this.removeUnit(defender);
+    if (attacker.isDead()) this.removeUnit(attacker);
+    if (defender.isDead()) this.removeUnit(defender);
+    
+    this.map.tileUpdate(attacker.coords);
+    this.map.tileUpdate(defender.coords);
   }
 }

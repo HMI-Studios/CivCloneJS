@@ -16,7 +16,7 @@ const server = app.listen(port, () => {
 const wss = new WebSocket.Server({ server });
 
 import { methods, getConnData, connections, connData, games } from './methods';
-import { EventMsg } from './game';
+import { EventMsg } from './utils';
 
 wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
 

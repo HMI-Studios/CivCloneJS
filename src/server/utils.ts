@@ -1,5 +1,13 @@
 import { Coords } from './world';
 
+export type Event = [string, unknown[]];
+
+export interface EventMsg {
+  actions?: Event[];
+  update?: Event[];
+  error?: Event[];
+}
+
 export const mod = (a: number, b: number): number => {
   if (a >= 0) {
     return a % b;

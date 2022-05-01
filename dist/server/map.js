@@ -12,9 +12,13 @@ class Map {
         for (let i = 0; i < height * width; i++) {
             this.tiles[i] = new tile_1.Tile(terrain[i], heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
         }
+        this.updates = [];
     }
     pos({ x, y }) {
         return (y * this.width) + (0, utils_1.mod)(x, this.width);
+    }
+    getUpdates() {
+        return this.updates.splice(0);
     }
     getTile(coords) {
         return this.tiles[this.pos(coords)];
@@ -32,15 +36,6 @@ class Map {
     }
     getVisibleTilesCoords(unit) {
         return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
-    }
-    moveUnitTo(unit, coords) {
-        if (unit.coords.x !== null && unit.coords.y !== null) {
-            this.getTile(unit.coords).setUnit(null);
-        }
-        unit.coords = coords;
-        if (coords.x !== null && coords.y !== null) {
-            this.getTile(coords).setUnit(unit);
-        }
     }
     setTileOwner(coords, owner) {
         var _a;
@@ -68,11 +63,33 @@ class Map {
     }
     setTileVisibility(civID, coords, visible) {
         this.getTile(coords).setVisibility(civID, visible);
+        this.tileUpdate(coords);
+    }
+    tileUpdate(coords) {
+        if (coords.x === null && coords.y === null)
+            return;
+        const tile = this.getTile(coords);
+        this.updates.push((civID) => ['tileUpdate', [coords, this.getCivTile(civID, tile)]]);
+    }
+    moveUnitTo(unit, coords) {
+        if (unit.coords.x !== null && unit.coords.y !== null) {
+            this.getTile(unit.coords).setUnit(null);
+            this.tileUpdate(unit.coords);
+        }
+        unit.coords = coords;
+        if (coords.x !== null && coords.y !== null) {
+            this.getTile(coords).setUnit(unit);
+            this.tileUpdate(coords);
+        }
     }
     settleCityAt(coords, name, civID) {
-        let city = new city_1.City(coords, name, civID);
+        const city = new city_1.City(coords, name, civID);
         this.cities.push(city);
-        return city;
+        for (const neighbor of this.getNeighborsCoords(coords)) {
+            this.setTileOwner(neighbor, city);
+            this.tileUpdate(neighbor);
+        }
+        this.tileUpdate(coords);
     }
 }
 exports.Map = Map;

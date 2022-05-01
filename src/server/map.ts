@@ -2,13 +2,14 @@ import { Coords } from './world';
 import { Unit } from './unit';
 import { City } from './city';
 import { Tile, TileData, Yield } from './tile';
-import { getAdjacentCoords, mod } from './utils';
+import { getAdjacentCoords, mod, Event } from './utils';
 
 export class Map {
   height: number;
   width: number;
   tiles: Tile[];
-  cities: City[];
+  cities: City[]
+  updates: { (civID: number): Event }[];
 
   constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
     this.height = height;
@@ -17,17 +18,22 @@ export class Map {
     for (let i = 0; i < height*width; i++) {
       this.tiles[i] = new Tile(terrain[i], heightMap[i], new Yield({ food: 1, production: 1 }));
     }
+    this.updates = [];
   }
 
   pos({ x, y }: Coords): number {
     return (y * this.width) + mod(x, this.width)
   }
 
+  getUpdates(): { (civID: number): Event }[] {
+    return this.updates.splice(0);
+  }
+
   getTile(coords: Coords): Tile {
     return this.tiles[this.pos(coords)];
   }
 
-  getNeighborsCoords({ x, y }: Coords, r: number = 1, tileList: Coords[] = [], isTop = true): Coords[] {
+  getNeighborsCoords({ x, y }: Coords, r = 1, tileList: Coords[] = [], isTop = true): Coords[] {
     if (r > 0 && this.getTile({x, y})) {
       tileList.push({x, y});
       for (const coord of getAdjacentCoords({x, y})) {
@@ -41,16 +47,6 @@ export class Map {
 
   getVisibleTilesCoords(unit: Unit): Coords[] {
     return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
-  }
-
-  moveUnitTo(unit: Unit, coords: Coords): void {
-    if (unit.coords.x !== null && unit.coords.y !== null) {
-      this.getTile(unit.coords).setUnit(null);
-    }
-    unit.coords = coords;
-    if (coords.x !== null && coords.y !== null) {
-      this.getTile(coords).setUnit(unit);
-    }
   }
   
   setTileOwner(coords: Coords, owner: City): void {
@@ -79,12 +75,37 @@ export class Map {
   
   setTileVisibility(civID: number, coords: Coords, visible: boolean) {
     this.getTile(coords).setVisibility(civID, visible);
+    this.tileUpdate(coords);
   }
-  
-  settleCityAt(coords: Coords, name: string, civID: number): City {
-    let city = new City(coords, name, civID);
+
+  tileUpdate(coords: Coords) {
+    if (coords.x === null && coords.y === null) return;
+    const tile = this.getTile(coords);
+    this.updates.push( (civID: number) => ['tileUpdate', [ coords, this.getCivTile(civID, tile) ]] );
+  }
+
+  moveUnitTo(unit: Unit, coords: Coords): void {
+    if (unit.coords.x !== null && unit.coords.y !== null) {
+      this.getTile(unit.coords).setUnit(null);
+      this.tileUpdate(unit.coords);
+    }
+    unit.coords = coords;
+    if (coords.x !== null && coords.y !== null) {
+      this.getTile(coords).setUnit(unit);
+      this.tileUpdate(coords);
+    }
+  }
+
+  settleCityAt(coords: Coords, name: string, civID: number) {
+    const city: City = new City(coords, name, civID);
     this.cities.push(city);
 
-    return city;
+    for (const neighbor of this.getNeighborsCoords(coords)) {
+      this.setTileOwner(neighbor, city);
+
+      this.tileUpdate(neighbor);
+    }
+
+    this.tileUpdate(coords);
   }
 }
