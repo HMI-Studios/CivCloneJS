@@ -8,7 +8,7 @@ export class Map {
   height: number;
   width: number;
   tiles: Tile[];
-  cities: City[]
+  cities: City[];
   updates: { (civID: number): Event }[];
 
   constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
