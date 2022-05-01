@@ -33,15 +33,6 @@ class Game {
             });
         });
     }
-    // sendTileUpdate(coords: Coords, tile: Tile): void {
-    //   this.forEachCivID((civID) => {
-    //     this.sendToCiv(civID, {
-    //       update: [
-    //         ['tileUpdate', [ coords, this.world.map.getCivTile(civID, tile) ]],
-    //       ],
-    //     });
-    //   });
-    // }
     getPlayer(username) {
         return this.players[username];
     }

@@ -26,7 +26,7 @@ export interface UnitData {
 
 export class Unit {
   type: string;
-  hp: number;
+  hp: number; // this should never be allowed to be outside the range 0 - 100
   movement: number;
   movementClass: number;
   combatStats: [number, number, number];
@@ -73,6 +73,7 @@ export class Unit {
     // TODO
     this.hp -= hp;
     if (this.hp <= 0) {
+      this.hp = 0;
       this.setDead();
     }
   }

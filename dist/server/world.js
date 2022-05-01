@@ -113,7 +113,6 @@ class World {
             this.removeUnit(attacker);
         if (defender.isDead())
             this.removeUnit(defender);
-        console.log(attacker, defender);
         this.map.tileUpdate(attacker.coords);
         this.map.tileUpdate(defender.coords);
     }
