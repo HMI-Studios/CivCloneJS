@@ -196,7 +196,8 @@ class World {
     ]);
   }
 
-  async connect(serverIP: string): Promise<void> {
+  async connect(): Promise<void> {
+    const serverIP = localStorage.getItem('serverIP');
     return new Promise((resolve: () => void/* reject: () => void*/) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
@@ -214,13 +215,14 @@ class World {
       });
       this.socket.addEventListener('error', async (/*event: Event*/) => {
         const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
-        await this.connect(newIP);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
         resolve();
       });
     });
   }
 
-  async setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
+  async setup(camera: Camera, ui: UI): Promise<void> {
 
     const readyFn = (isReady: boolean): void => {
       this.sendActions([
@@ -243,7 +245,7 @@ class World {
             this.sendActions([
               ['joinGame', [gameID]],
             ]);
-            
+
             ui.hideGameList();
             ui.showReadyBtn(readyFn);
             ui.showCivPicker(civPickerFn);
@@ -293,7 +295,7 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
-    await this.connect(serverIP);
+    await this.connect();
 
     await this.login();
 
@@ -316,7 +318,8 @@ class World {
       changeServer:async () => {
         ui.hideMainMenu();
         const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
-        await this.connect(newIP);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
         ui.showMainMenu(mainMenuFns);
       }
     };

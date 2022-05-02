@@ -136,8 +136,9 @@ class World {
             ]);
         });
     }
-    connect(serverIP) {
+    connect() {
         return __awaiter(this, void 0, void 0, function* () {
+            const serverIP = localStorage.getItem('serverIP');
             return new Promise((resolve /* reject: () => void*/) => {
                 this.socket = new WebSocket(`ws://${serverIP}`);
                 this.socket.addEventListener('message', (event) => {
@@ -156,13 +157,14 @@ class World {
                 });
                 this.socket.addEventListener('error', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
                     const [newIP] = yield ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
-                    yield this.connect(newIP);
+                    localStorage.setItem('serverIP', newIP);
+                    yield this.connect();
                     resolve();
                 }));
             });
         });
     }
-    setup(serverIP, camera, ui) {
+    setup(camera, ui) {
         return __awaiter(this, void 0, void 0, function* () {
             const readyFn = (isReady) => {
                 this.sendActions([
@@ -220,7 +222,7 @@ class World {
                 ui.hideReadyBtn();
                 ui.showReadyBtn(readyFn);
             };
-            yield this.connect(serverIP);
+            yield this.connect();
             yield this.login();
             this.sendActions([
                 ['setPlayer', [world.player.name]],
@@ -240,7 +242,8 @@ class World {
                 changeServer: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
                     const [newIP] = yield ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
-                    yield this.connect(newIP);
+                    localStorage.setItem('serverIP', newIP);
+                    yield this.connect();
                     ui.showMainMenu(mainMenuFns);
                 })
             };

@@ -91,12 +91,12 @@ const mod = (a, b) => {
 const main = () => __awaiter(this, void 0, void 0, function* () {
     // const SERVER_IP = '192.168.5.47:8080';
     // const SERVER_IP = '192.168.4.29:8080';
-    const SERVER_IP = 'hmi.dynu.net:8080';
+    // const SERVER_IP = 'hmi.dynu.net:8080';
     // const SERVER_IP = 'localhost:8080';
     camera = new Camera();
     ui = new UI();
     world = new World();
-    yield world.setup(SERVER_IP, camera, ui);
+    yield world.setup(camera, ui);
 });
 main();
 //# sourceMappingURL=app.js.map
