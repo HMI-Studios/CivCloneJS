@@ -2,12 +2,23 @@
 const unitActionsTable = {
     'settler': ['settleCity'],
     'scout': [],
+    'builder': ['buildFarm'],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
         // TODO: bring up settle-city menu and ask for city name
         const name = 'name';
         return [pos, name];
+    },
+};
+const unitActionsAvailabilityTable = {
+    'settleCity': (world, pos) => {
+        const tile = world.getTile(pos.x, pos.y);
+        return tile.type === 'plains';
+    },
+    'buildFarm': (world, pos) => {
+        const tile = world.getTile(pos.x, pos.y);
+        return tile.type === 'plains';
     },
 };
 class UI {

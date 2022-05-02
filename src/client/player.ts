@@ -3,6 +3,7 @@
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
+  'builder': ['buildFarm'],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords) => unknown[] } = {
@@ -10,6 +11,17 @@ const unitActionsFnTable: { [action: string]: (pos: Coords) => unknown[] } = {
     // TODO: bring up settle-city menu and ask for city name
     const name = 'name';
     return [pos, name];
+  },
+};
+
+const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
+  'settleCity': (world: World, pos: Coords): boolean => {
+    const tile: Tile = world.getTile(pos.x, pos.y);
+    return tile.type === 'plains';
+  },
+  'buildFarm': (world: World, pos: Coords): boolean => {
+    const tile: Tile = world.getTile(pos.x, pos.y);
+    return tile.type === 'plains';
   },
 };
 
@@ -122,6 +134,10 @@ class UI {
 
   showUnitActionsMenu(world: World, pos: Coords, unit: Unit): void {
     for (const action of unitActionsTable[unit.type]) {
+      if (!unitActionsAvailabilityTable[action](world, pos)) {
+        continue;
+      }
+
       const actionBtn = new Button(
         this.createElement('button'),
         { 
