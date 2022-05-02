@@ -5,15 +5,18 @@ const utils_1 = require("./utils");
 const unitMovementTable = {
     'settler': 3,
     'scout': 5,
+    'builder': 3,
 };
 const unitMovementClassTable = {
     'settler': 0,
     'scout': 0,
+    'builder': 0,
 };
 const unitCombatStatsTable = {
     // 'unit': [offense, defense, awareness],
     'settler': [0, 1, 0],
     'scout': [5, 3, 20],
+    'builder': [0, 1, 0],
 };
 class Unit {
     constructor(type, civID) {
