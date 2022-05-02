@@ -24,6 +24,12 @@ class UI {
                     ['Password', 'password here...'],
                 ]
             }),
+            ipSelect: new TextInput({
+                query: 'Enter Server Address:',
+                fields: [
+                    ['Address', ''],
+                ]
+            }),
         };
     }
     createElement(type, className = null) {
@@ -108,6 +114,10 @@ class UI {
         gameListBtn.innerText = 'List Games';
         gameListBtn.onclick = () => callbacks.listGames();
         this.elements.mainMenu.appendChild(gameListBtn);
+        const changeServerBtn = this.createElement('button');
+        changeServerBtn.innerText = 'Switch Server';
+        changeServerBtn.onclick = () => callbacks.changeServer();
+        this.elements.mainMenu.appendChild(changeServerBtn);
         const logoutBtn = this.createElement('button');
         logoutBtn.innerText = 'Logout';
         logoutBtn.onclick = () => callbacks.logout();

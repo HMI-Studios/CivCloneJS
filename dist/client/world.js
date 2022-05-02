@@ -137,21 +137,28 @@ class World {
         });
     }
     connect(serverIP) {
-        return new Promise((resolve /* reject: () => void*/) => {
-            this.socket = new WebSocket(`ws://${serverIP}`);
-            this.socket.addEventListener('message', (event) => {
-                let data;
-                try {
-                    data = JSON.parse(event.data);
-                }
-                catch (err) {
-                    console.error('Bad JSON recieved from server');
-                    return;
-                }
-                this.handleResponse(data);
-            });
-            this.socket.addEventListener('open', ( /*event: Event*/) => {
-                resolve();
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve /* reject: () => void*/) => {
+                this.socket = new WebSocket(`ws://${serverIP}`);
+                this.socket.addEventListener('message', (event) => {
+                    let data;
+                    try {
+                        data = JSON.parse(event.data);
+                    }
+                    catch (err) {
+                        console.error('Bad JSON recieved from server');
+                        return;
+                    }
+                    this.handleResponse(data);
+                });
+                this.socket.addEventListener('open', ( /*event: Event*/) => {
+                    resolve();
+                });
+                this.socket.addEventListener('error', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
+                    const [newIP] = yield ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+                    yield this.connect(newIP);
+                    resolve();
+                }));
             });
         });
     }
@@ -230,6 +237,12 @@ class World {
                     yield this.login();
                     ui.showMainMenu(mainMenuFns);
                 }),
+                changeServer: () => __awaiter(this, void 0, void 0, function* () {
+                    ui.hideMainMenu();
+                    const [newIP] = yield ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+                    yield this.connect(newIP);
+                    ui.showMainMenu(mainMenuFns);
+                })
             };
             ui.showMainMenu(mainMenuFns);
         });

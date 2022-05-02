@@ -196,7 +196,7 @@ class World {
     ]);
   }
 
-  connect(serverIP: string): Promise<void> {
+  async connect(serverIP: string): Promise<void> {
     return new Promise((resolve: () => void/* reject: () => void*/) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
@@ -210,6 +210,11 @@ class World {
         this.handleResponse(data);
       });
       this.socket.addEventListener('open', (/*event: Event*/) => {
+        resolve();
+      });
+      this.socket.addEventListener('error', async (/*event: Event*/) => {
+        const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+        await this.connect(newIP);
         resolve();
       });
     });
@@ -308,6 +313,12 @@ class World {
         await this.login();
         ui.showMainMenu(mainMenuFns);
       },
+      changeServer:async () => {
+        ui.hideMainMenu();
+        const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+        await this.connect(newIP);
+        ui.showMainMenu(mainMenuFns);
+      }
     };
 
     ui.showMainMenu(mainMenuFns);

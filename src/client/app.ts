@@ -85,7 +85,8 @@ const mod = (a, b) => {
 const main = async () => {
   // const SERVER_IP = '192.168.5.47:8080';
   // const SERVER_IP = '192.168.4.29:8080';
-  const SERVER_IP = 'localhost:8080';
+  const SERVER_IP = 'hmi.dynu.net:8080';
+  // const SERVER_IP = 'localhost:8080';
 
   camera = new Camera();
   ui = new UI();
