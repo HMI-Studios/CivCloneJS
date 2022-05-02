@@ -31,6 +31,11 @@ class UI {
                 ]
             }),
         };
+        this.textAlerts = {
+            errorAlert: new TextAlert({
+                message: 'Error',
+            }),
+        };
     }
     createElement(type, className = null) {
         const element = document.createElement(type);

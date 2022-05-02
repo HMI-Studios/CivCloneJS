@@ -6,6 +6,7 @@ class UI {
   turnActive: boolean;
   buttons: { [key: string]: Button };
   textInputs: { [key: string]: TextInput };
+  textAlerts: { [key: string]: TextAlert };
 
   constructor() {
     this.elements = {
@@ -38,6 +39,12 @@ class UI {
         fields: [
           ['Address', ''],
         ]
+      }),
+    };
+
+    this.textAlerts = {
+      errorAlert: new TextAlert({
+        message: 'Error',
       }),
     };
   }
@@ -128,7 +135,7 @@ class UI {
     this.elements.readyBtn.remove();
   }
 
-  showMainMenu(callbacks: { 
+  showMainMenu(callbacks: {
     listGames: () => void,
     logout: () => void,
     changeServer: () => void,
@@ -163,7 +170,7 @@ class UI {
     this.elements.centerModal.remove();
   }
 
-  showGameList(gameList: { [key: string]: GameMetadata }, callbacks: { 
+  showGameList(gameList: { [key: string]: GameMetadata }, callbacks: {
     joinGame: (gameID: string) => void,
   }): void {
     this.elements.gameList.innerHTML = '';
@@ -178,7 +185,7 @@ class UI {
       gameBtn.onclick = () => callbacks.joinGame(gameID);
       this.elements.gameList.appendChild(gameBtn);
     }
-    
+
     this.elements.centerModal.appendChild(this.elements.gameList);
     document.getElementById('UI').appendChild(this.elements.centerModal);
   }

@@ -3,6 +3,7 @@ interface ButtonState {
   action?: [string, unknown[]];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Button {
   element: HTMLElement;
   private state: ButtonState;
@@ -28,23 +29,63 @@ class Button {
   }
 }
 
-class TextInput {
+class TextAlert {
   element: HTMLElement;
-  private abortBtn: HTMLButtonElement;
-  private submitBtn: HTMLButtonElement;
-  private inputFields: HTMLInputElement[];
-  
-  constructor(options: { className?: string, query: string, fields: [string, string?][] }) {
-    const { className, query, fields } = options;
+  protected messageElement: HTMLParagraphElement;
+  protected submitBtn: HTMLButtonElement;
+
+  constructor(options: { className?: string, message: string }) {
+    const { className, message } = options;
     this.element = document.createElement('div');
     this.element.className = 'textInput';
     if (className) {
       this.element.className += ` ${className}`;
     }
 
-    const queryElement = document.createElement('div');
-    queryElement.innerText = query;
-    this.element.appendChild(queryElement);
+    this.messageElement = document.createElement('p');
+    this.messageElement.innerText = message;
+    this.element.appendChild(this.messageElement);
+
+    this.submitBtn = document.createElement('button');
+    this.submitBtn.innerText = 'Submit';
+    this.element.appendChild(this.submitBtn);
+
+  }
+
+  show(root: HTMLElement): void {
+    root.appendChild(this.element);
+  }
+
+  hide(): void {
+    this.element.remove();
+  }
+
+  alert(root: HTMLElement, message?: string): Promise<void> {
+    if (message) {
+      this.messageElement.innerText = message;
+    }
+    return new Promise((resolve: () => void, /* reject: (reason?: unknown) => void */) => {
+      this.submitBtn.onclick = () => {
+        resolve();
+        this.hide();
+      }
+      this.show(root);
+    });
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class TextInput extends TextAlert {
+  element: HTMLElement;
+  private abortBtn: HTMLButtonElement;
+  private inputFields: HTMLInputElement[];
+
+  constructor(options: { className?: string, query: string, fields: [string, string?][] }) {
+    const { className, query, fields } = options;
+    super({ className, message: query });
+
+    // remove submitBtn so it can be readded in the correct position
+    this.submitBtn.remove();
 
     this.inputFields = [];
     for (const [fieldTitle, placeholder] of fields) {
@@ -67,26 +108,19 @@ class TextInput {
     this.abortBtn.innerText = 'Cancel';
     this.element.appendChild(this.abortBtn);
 
-    this.submitBtn = document.createElement('button');
-    this.submitBtn.innerText = 'Submit';
+    // re-add submit button
     this.element.appendChild(this.submitBtn);
   }
 
-  show(root): void {
-    root.appendChild(this.element);
-  }
-
-  hide(): void {
-    this.element.remove();
-  }
-
-  prompt(root, optional): Promise<string[]> {
+  prompt(root: HTMLElement, optional: boolean): Promise<string[]> {
+    // show/hide cancel button (?)
+    this.abortBtn.hidden = !optional;
     // clear inputs
     for (const field of this.inputFields) {
       field.value = '';
     }
     return new Promise((resolve: (value: string[]) => void, reject: (reason?: unknown) => void) => {
-      this.submitBtn.onclick = () => { 
+      this.submitBtn.onclick = () => {
         resolve( this.inputFields.map(field => field.value) );
         this.hide();
       }

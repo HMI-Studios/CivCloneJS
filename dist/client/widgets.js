@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Button {
     constructor(element, state) {
         this.element = element;
@@ -16,17 +17,47 @@ class Button {
         this.state.action = action;
     }
 }
-class TextInput {
+class TextAlert {
     constructor(options) {
-        const { className, query, fields } = options;
+        const { className, message } = options;
         this.element = document.createElement('div');
         this.element.className = 'textInput';
         if (className) {
             this.element.className += ` ${className}`;
         }
-        const queryElement = document.createElement('div');
-        queryElement.innerText = query;
-        this.element.appendChild(queryElement);
+        this.messageElement = document.createElement('p');
+        this.messageElement.innerText = message;
+        this.element.appendChild(this.messageElement);
+        this.submitBtn = document.createElement('button');
+        this.submitBtn.innerText = 'Submit';
+        this.element.appendChild(this.submitBtn);
+    }
+    show(root) {
+        root.appendChild(this.element);
+    }
+    hide() {
+        this.element.remove();
+    }
+    alert(root, message) {
+        if (message) {
+            this.messageElement.innerText = message;
+        }
+        return new Promise((resolve) => {
+            this.submitBtn.onclick = () => {
+                resolve();
+                this.hide();
+            };
+            this.show(root);
+        });
+    }
+}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class TextInput extends TextAlert {
+    constructor(options) {
+        const { className, query, fields } = options;
+        super({ className, message: query });
+        // remove submitBtn so it can be readded in the correct position
+        this.submitBtn.remove();
         this.inputFields = [];
         for (const [fieldTitle, placeholder] of fields) {
             const fieldElement = document.createElement('div');
@@ -43,17 +74,12 @@ class TextInput {
         this.abortBtn = document.createElement('button');
         this.abortBtn.innerText = 'Cancel';
         this.element.appendChild(this.abortBtn);
-        this.submitBtn = document.createElement('button');
-        this.submitBtn.innerText = 'Submit';
+        // re-add submit button
         this.element.appendChild(this.submitBtn);
     }
-    show(root) {
-        root.appendChild(this.element);
-    }
-    hide() {
-        this.element.remove();
-    }
     prompt(root, optional) {
+        // show/hide cancel button (?)
+        this.abortBtn.hidden = !optional;
         // clear inputs
         for (const field of this.inputFields) {
             field.value = '';
