@@ -222,6 +222,14 @@ class World {
                 ui.hideReadyBtn();
                 ui.showReadyBtn(readyFn);
             };
+            this.on.error.kicked = (reason) => __awaiter(this, void 0, void 0, function* () {
+                console.error('Kicked:', reason);
+                ui.hideAll();
+                yield ui.textAlerts.errorAlert.alert(document.getElementById('UI'), `Kicked: ${reason}`);
+                this.sendActions([
+                    ['getGames', []],
+                ]);
+            });
             yield this.connect();
             yield this.login();
             this.sendActions([

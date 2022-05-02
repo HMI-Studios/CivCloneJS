@@ -37,6 +37,22 @@ class UI {
             }),
         };
     }
+    hideAll() {
+        for (const widgetName in this.buttons) {
+            this.buttons[widgetName].hide();
+        }
+        for (const widgetName in this.textInputs) {
+            this.textInputs[widgetName].hide();
+        }
+        for (const widgetName in this.textAlerts) {
+            this.textAlerts[widgetName].hide();
+        }
+        // TODO: generalize this
+        this.hideReadyBtn();
+        this.hideCivPicker();
+        this.hideGameList();
+        this.hideMainMenu();
+    }
     createElement(type, className = null) {
         const element = document.createElement(type);
         if (className) {

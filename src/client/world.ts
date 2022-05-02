@@ -295,6 +295,15 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
+    this.on.error.kicked = async (reason) => {
+      console.error('Kicked:', reason);
+      ui.hideAll();
+      await ui.textAlerts.errorAlert.alert(document.getElementById('UI'), `Kicked: ${reason}`);
+      this.sendActions([
+        ['getGames', []],
+      ]);
+    }
+
     await this.connect();
 
     await this.login();

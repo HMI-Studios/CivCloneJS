@@ -13,6 +13,10 @@ class Button {
     this.state = state;
   }
 
+  hide(): void {
+    this.element.remove();
+  }
+
   bind(func: ((state: ButtonState) => void)) {
     this.element.onclick = () => {
       func(this.state);
@@ -47,7 +51,7 @@ class TextAlert {
     this.element.appendChild(this.messageElement);
 
     this.submitBtn = document.createElement('button');
-    this.submitBtn.innerText = 'Submit';
+    this.submitBtn.innerText = 'Ok';
     this.element.appendChild(this.submitBtn);
 
   }
@@ -84,7 +88,8 @@ class TextInput extends TextAlert {
     const { className, query, fields } = options;
     super({ className, message: query });
 
-    // remove submitBtn so it can be readded in the correct position
+    // remove submitBtn so it can be readded in the correct position + change text to "Submit"
+    this.submitBtn.innerText = 'Submit';
     this.submitBtn.remove();
 
     this.inputFields = [];
