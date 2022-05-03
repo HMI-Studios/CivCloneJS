@@ -12,4 +12,10 @@ export class Player {
     this.isAI = !connection;
     this.connection = connection;
   }
+
+  reset(connection: WebSocket) {
+    this.ready = false;
+    this.isAI = !connection;
+    this.connection = connection;
+  }
 }
