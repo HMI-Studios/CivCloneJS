@@ -25,7 +25,7 @@ export const games: { [gameID: number] : Game } = {
   0: new Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    2
+    1
   ),
 };
 
@@ -272,11 +272,33 @@ export const methods = {
     const civID = game.players[username].civID;
 
     if (game) {
-      const map = game.world.map;
+      const world = game.world;
+      const map = world.map;
 
-      const unit = map.getTile(coords)?.unit
+      const unit = map.getTile(coords)?.unit;
       if (unit?.type === 'settler' && unit?.civID === civID) {
         map.settleCityAt(coords, name, civID);
+
+        world.removeUnit(unit);
+
+        game.sendUpdates();
+      }
+    }
+  },
+
+  buildImprovement: (ws: WebSocket, coords: Coords, type: string) => {
+    const { username, gameID } = getConnData(ws);
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile?.unit;
+
+      if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
+        map.buildImprovementAt(coords, type);
       }
     }
   },

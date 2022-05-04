@@ -6,21 +6,24 @@ const unitActionsTable: { [unit: string]: string[] } = {
   'builder': ['buildFarm'],
 };
 
-const unitActionsFnTable: { [action: string]: (pos: Coords) => unknown[] } = {
-  'settleCity': (pos: Coords): unknown[] => {
+const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[]] } = {
+  'settleCity': (pos: Coords): [string, unknown[]] => {
     // TODO: bring up settle-city menu and ask for city name
     const name = 'name';
-    return [pos, name];
+    return ['settleCity', [pos, name]];
+  },
+  'buildFarm': (pos: Coords): [string, unknown[]] => {
+    return ['buildImprovement', [pos, 'farm']];
   },
 };
 
 const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
   'settleCity': (world: World, pos: Coords): boolean => {
-    const tile: Tile = world.getTile(pos.x, pos.y);
+    const tile = world.getTile(pos.x, pos.y);
     return tile.type === 'plains';
   },
   'buildFarm': (world: World, pos: Coords): boolean => {
-    const tile: Tile = world.getTile(pos.x, pos.y);
+    const tile = world.getTile(pos.x, pos.y);
     return tile.type === 'plains';
   },
 };
@@ -142,7 +145,7 @@ class UI {
         this.createElement('button'),
         { 
           text: action,
-          action: [action, unitActionsFnTable[action](pos)],
+          action: unitActionsFnTable[action](pos),
         }
       );
 

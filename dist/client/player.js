@@ -8,7 +8,10 @@ const unitActionsFnTable = {
     'settleCity': (pos) => {
         // TODO: bring up settle-city menu and ask for city name
         const name = 'name';
-        return [pos, name];
+        return ['settleCity', [pos, name]];
+    },
+    'buildFarm': (pos) => {
+        return ['buildImprovement', [pos, 'farm']];
     },
 };
 const unitActionsAvailabilityTable = {
@@ -108,9 +111,12 @@ class UI {
     }
     showUnitActionsMenu(world, pos, unit) {
         for (const action of unitActionsTable[unit.type]) {
+            if (!unitActionsAvailabilityTable[action](world, pos)) {
+                continue;
+            }
             const actionBtn = new Button(this.createElement('button'), {
                 text: action,
-                action: [action, unitActionsFnTable[action](pos)],
+                action: unitActionsFnTable[action](pos),
             });
             actionBtn.bindActionCallback(world.sendActions.bind(world));
             this.elements.unitActionsMenu.appendChild(actionBtn.element);

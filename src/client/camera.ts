@@ -30,6 +30,7 @@ class Camera {
       unit: {
         settler: document.getElementById('unit_settler'),
         scout: document.getElementById('unit_scout'),
+        builder: document.getElementById('unit_settler'),
       },
     };
     this.interval;

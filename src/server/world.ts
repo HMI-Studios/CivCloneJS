@@ -28,7 +28,7 @@ export class World {
       this.civs[i] = new Civilization();
 
       this.addUnit(new Unit('settler', i), { x: (i+1)*1, y: (i+1)*1 }); // REMOVE THESE
-      this.addUnit(new Unit('scout', i), { x: (i+1)*3, y: (i+1)*4 }); // REMOVE THESE
+      this.addUnit(new Unit('builder', i), { x: (i+1)*3, y: (i+1)*4 }); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
     }

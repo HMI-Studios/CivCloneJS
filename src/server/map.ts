@@ -2,6 +2,7 @@ import { Coords } from './world';
 import { Unit } from './unit';
 import { City } from './city';
 import { Tile, TileData, Yield } from './tile';
+import { Improvement } from './improvement';
 import { getAdjacentCoords, mod, Event } from './utils';
 
 export class Map {
@@ -106,6 +107,12 @@ export class Map {
 
       this.tileUpdate(neighbor);
     }
+
+    this.tileUpdate(coords);
+  }
+
+  buildImprovementAt(coords: Coords, type: string) {
+    this.getTile(coords).improvement = new Improvement(type);
 
     this.tileUpdate(coords);
   }
