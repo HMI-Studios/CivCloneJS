@@ -22,9 +22,42 @@ class Game {
         this.players[username] = player;
         this.metaData = Object.assign(Object.assign({}, this.metaData), { playersConnected: Object.keys(this.players).length });
     }
+    startGame(player) {
+        if (this.hasStarted) {
+            if (player) {
+                this.sendToCiv(player.civID, {
+                    update: [
+                        ['beginGame', [[this.world.map.width, this.world.map.height], this.playerCount]],
+                        ['civData', [this.world.getAllCivsData()]],
+                    ],
+                });
+                this.resumeTurnForCiv(player.civID);
+            }
+        }
+        else {
+            this.hasStarted = true;
+            this.sendToAll({
+                update: [
+                    ['beginGame', [[this.world.map.width, this.world.map.height], this.playerCount]],
+                    ['civData', [this.world.getAllCivsData()]],
+                ],
+            });
+            this.forEachCivID((civID) => {
+                this.sendToCiv(civID, {
+                    update: [
+                        ['setMap', [this.world.map.getCivMap(civID)]],
+                    ],
+                });
+            });
+            this.beginTurnForCiv(0);
+        }
+    }
     beginTurnForCiv(civID) {
         this.world.civs[civID].newTurn();
         this.world.updateCivTileVisibility(civID);
+        this.resumeTurnForCiv(civID);
+    }
+    resumeTurnForCiv(civID) {
         this.sendToCiv(civID, {
             update: [
                 ['setMap', [this.world.map.getCivMap(civID)]],
@@ -90,12 +123,14 @@ class Game {
             callback(this.players[playerName]);
         }
     }
-    newPlayerCivID() {
+    newPlayerCivID(username) {
         const freeCivs = {};
         for (let i = 0; i < this.playerCount; i++) {
             freeCivs[i] = true;
         }
         for (const player in this.players) {
+            if (username === player)
+                return this.players[player].civID;
             delete freeCivs[this.players[player].civID];
         }
         const freeIDs = Object.keys(freeCivs).map(Number);

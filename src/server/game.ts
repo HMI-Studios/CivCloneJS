@@ -15,6 +15,7 @@ export class Game {
   players: { [playerName: string]: Player };
   playerCount: number;
   metaData: MetaData;
+  hasStarted: boolean;
 
   constructor(map: Map, options: { playerCount: number, ownerName?: string, gameName?: string }) {
     const { playerCount, ownerName } = options;
@@ -39,9 +40,46 @@ export class Game {
     this.metaData = { ...this.metaData, playersConnected: Object.keys(this.players).length };
   }
 
+  startGame(player?: Player): void {
+    if (this.hasStarted) {
+      if (player) {
+        this.sendToCiv(player.civID, {
+          update: [
+            ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
+            ['civData', [ this.world.getAllCivsData() ]],
+          ],
+        });
+        this.resumeTurnForCiv(player.civID);
+      }
+    } else {
+      this.hasStarted = true;
+
+      this.sendToAll({
+        update: [
+          ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
+          ['civData', [ this.world.getAllCivsData() ]],
+        ],
+      });
+
+      this.forEachCivID((civID: number) => {
+        this.sendToCiv(civID, {
+          update: [
+            ['setMap', [this.world.map.getCivMap(civID)]],
+          ],
+        });
+      });
+
+      this.beginTurnForCiv(0);
+    }
+  }
+
   beginTurnForCiv(civID: number): void {
     this.world.civs[civID].newTurn();
     this.world.updateCivTileVisibility(civID);
+    this.resumeTurnForCiv(civID);
+  }
+
+  resumeTurnForCiv(civID: number): void {
     this.sendToCiv(civID, {
       update: [
         ['setMap', [this.world.map.getCivMap(civID)]],
@@ -117,13 +155,14 @@ export class Game {
     }
   }
 
-  newPlayerCivID(): number | null {
+  newPlayerCivID(username: string): number | null {
     const freeCivs = {};
     for (let i = 0; i < this.playerCount; i++) {
       freeCivs[i] = true;
     }
 
     for (const player in this.players) {
+      if (username === player) return this.players[player].civID;
       delete freeCivs[this.players[player].civID];
     }
 

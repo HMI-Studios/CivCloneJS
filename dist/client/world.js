@@ -17,6 +17,7 @@ class World {
         this.on = {
             update: {},
             error: {},
+            event: {},
         };
         this.civs = {};
         this.player = {
@@ -243,6 +244,12 @@ class World {
                     ['getGames', []],
                 ]);
             });
+            this.on.event.selectUnit = (coords, unit) => {
+                ui.showUnitActionsMenu(this, coords, unit);
+            };
+            this.on.event.deselectUnit = () => {
+                ui.hideUnitActionsMenu();
+            };
             yield this.connect();
             yield this.login();
             this.sendActions([
@@ -274,6 +281,7 @@ class World {
         });
     }
     sendActions(actions) {
+        console.log(this);
         this.sendJSON({ actions });
     }
 }

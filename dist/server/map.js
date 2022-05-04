@@ -12,6 +12,7 @@ class Map {
         for (let i = 0; i < height * width; i++) {
             this.tiles[i] = new tile_1.Tile(terrain[i], heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
         }
+        this.cities = [];
         this.updates = [];
     }
     pos({ x, y }) {

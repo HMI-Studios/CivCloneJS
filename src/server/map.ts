@@ -8,7 +8,7 @@ export class Map {
   height: number;
   width: number;
   tiles: Tile[];
-  cities: City[]
+  cities: City[];
   updates: { (civID: number): Event }[];
 
   constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
@@ -18,6 +18,7 @@ export class Map {
     for (let i = 0; i < height*width; i++) {
       this.tiles[i] = new Tile(terrain[i], heightMap[i], new Yield({ food: 1, production: 1 }));
     }
+    this.cities = [];
     this.updates = [];
   }
 

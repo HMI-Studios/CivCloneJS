@@ -92,19 +92,17 @@ class Camera {
                             console.log(x, y);
                             if (world.pos(x, y) in this.highlightedTiles) {
                                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
-                                this.highlightedTiles = {};
-                                this.selectedUnitPos = null;
                             }
-                            else {
-                                this.highlightedTiles = {};
-                                this.selectedUnitPos = null;
-                            }
+                            this.highlightedTiles = {};
+                            this.selectedUnitPos = null;
+                            world.on.event.deselectUnit();
                         }
                         ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * 19.8)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom, 28 * zoom, 25 * zoom);
                         if (tile.unit && this.mouseDownTime === 1) {
                             console.log(tile.unit);
                             this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
                             this.selectedUnitPos = [x, y];
+                            world.on.event.selectUnit({ x, y }, tile.unit);
                         }
                     }
                 }

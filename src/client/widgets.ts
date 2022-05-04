@@ -11,15 +11,18 @@ class Button {
   constructor(element: HTMLElement, state: ButtonState) { // TODO: make this take a string instead of an HTMLElement
     this.element = element;
     this.state = state;
+    this.element.innerText = state.text;
   }
 
   hide(): void {
     this.element.remove();
   }
 
-  bind(func: ((state: ButtonState) => void)) {
+  bindActionCallback(func: ((action: [string, unknown[]][]) => void)) {
     this.element.onclick = () => {
-      func(this.state);
+      if (this.state.action) {
+        func([this.state.action]);
+      }
     };
   }
 

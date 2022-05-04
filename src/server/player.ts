@@ -19,4 +19,10 @@ export class Player {
       civID: this.civID
     };
   }
+  
+  reset(connection: WebSocket) {
+    this.ready = false;
+    this.isAI = !connection;
+    this.connection = connection;
+  }
 }

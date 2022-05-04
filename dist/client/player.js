@@ -1,12 +1,25 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const unitActionsTable = {
+    'settler': ['settleCity'],
+    'scout': [],
+};
+const unitActionsFnTable = {
+    'settleCity': (pos) => {
+        // TODO: bring up settle-city menu and ask for city name
+        const name = 'name';
+        return [pos, name];
+    },
+};
 class UI {
     constructor() {
+        this.root = document.getElementById('UI');
         this.elements = {
             readyBtn: this.createElement('button', 'readyBtn'),
             centerModal: this.createElement('div', 'centerModal'),
             civPicker: this.createElement('ul', 'civList'),
             mainMenu: this.createElement('div', 'mainMenu'),
             gameList: this.createElement('div', 'gameList'),
+            unitActionsMenu: this.createElement('div', 'unitActionsMenu'),
         };
         this.leaderPool = [];
         this.takenLeaders = [];
@@ -87,14 +100,8 @@ class UI {
     showGameUI(world) {
         for (const buttonID in this.buttons) {
             const button = this.buttons[buttonID];
-            button.bind((state) => {
-                if (state.action) {
-                    world.sendActions([
-                        state.action,
-                    ]);
-                }
-            });
-            document.getElementById('UI').appendChild(button.element);
+            button.bindActionCallback(world.sendActions.bind(world));
+            this.root.appendChild(button.element);
         }
     }
     showCivPicker(callback, self) {
@@ -123,7 +130,7 @@ class UI {
             }
         }
         this.elements.centerModal.appendChild(this.elements.civPicker);
-        document.getElementById('UI').appendChild(this.elements.centerModal);
+        this.root.appendChild(this.elements.centerModal);
     }
     hideCivPicker() {
         this.elements.civPicker.remove();
@@ -142,7 +149,7 @@ class UI {
             }
             callback(btnState);
         };
-        document.getElementById('UI').appendChild(this.elements.readyBtn);
+        this.root.appendChild(this.elements.readyBtn);
     }
     hideReadyBtn() {
         this.elements.readyBtn.remove();
@@ -189,6 +196,21 @@ class UI {
     hideGameList() {
         this.elements.gameList.remove();
         this.elements.centerModal.remove();
+    }
+    showUnitActionsMenu(world, pos, unit) {
+        for (const action of unitActionsTable[unit.type]) {
+            const actionBtn = new Button(this.createElement('button'), {
+                text: action,
+                action: [action, unitActionsFnTable[action](pos)],
+            });
+            actionBtn.bindActionCallback(world.sendActions.bind(world));
+            this.elements.unitActionsMenu.appendChild(actionBtn.element);
+        }
+        this.root.appendChild(this.elements.unitActionsMenu);
+    }
+    hideUnitActionsMenu() {
+        this.elements.unitActionsMenu.remove();
+        this.elements.unitActionsMenu.innerHTML = '';
     }
 }
 //# sourceMappingURL=player.js.map

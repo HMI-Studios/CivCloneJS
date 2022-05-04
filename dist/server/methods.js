@@ -29,10 +29,15 @@ exports.methods = {
     joinGame: (ws, gameID) => {
         const game = exports.games[gameID];
         const username = (0, exports.getConnData)(ws).username;
-        const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID();
+        const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID(username);
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
-            game.connectPlayer(username, new player_1.Player(civID, ws));
+            if (!game.players[username]) {
+                game.connectPlayer(username, new player_1.Player(civID, ws));
+            }
+            else {
+                game.players[username].reset(ws);
+            }
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
@@ -109,20 +114,7 @@ exports.methods = {
                 player.ready = state;
                 if (Object.keys(game.players).length === game.playerCount) {
                     if (Object.values(game.players).every((player) => player.ready)) {
-                        game.sendToAll({
-                            update: [
-                                ['beginGame', [[game.world.map.width, game.world.map.height], game.playerCount]],
-                                ['civData', [game.world.getAllCivsData()]],
-                            ],
-                        });
-                        game.forEachCivID((civID) => {
-                            game.sendToCiv(civID, {
-                                update: [
-                                    ['setMap', [game.world.map.getCivMap(civID)]],
-                                ],
-                            });
-                        });
-                        game.beginTurnForCiv(0);
+                        game.startGame(player);
                     }
                 }
             }
