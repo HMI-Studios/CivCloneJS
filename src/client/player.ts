@@ -1,3 +1,10 @@
+interface Leader {
+  id: number;
+  color: string;
+  name: string;
+  civID: number;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 const unitActionsTable: { [unit: string]: string[] } = {
@@ -32,9 +39,16 @@ class UI {
 
   root: HTMLElement;
   elements: { [key: string]: HTMLElement };
-  colorPool: string[];
+  leaderPool: Leader[];
+  takenLeaders: Leader[];
+  players: {[playerName: string]: Player};
+  civs: {[civID: string]: Player};
   turnActive: boolean;
   buttons: { [key: string]: Button };
+  textInputs: { [key: string]: TextInput };
+  textAlerts: { [key: string]: TextAlert };
+
+  public view: string;
 
   constructor() {
     this.root = document.getElementById('UI');
@@ -42,10 +56,14 @@ class UI {
       readyBtn: this.createElement('button', 'readyBtn'),
       centerModal: this.createElement('div', 'centerModal'),
       civPicker: this.createElement('ul', 'civList'),
+      mainMenu: this.createElement('div', 'mainMenu'),
+      gameList: this.createElement('div', 'gameList'),
       unitActionsMenu: this.createElement('div', 'unitActionsMenu'),
     };
-
-    this.colorPool = [];
+    this.leaderPool = [];
+    this.takenLeaders = [];
+    this.players = {};
+    this.civs = {};
     this.turnActive = false;
 
     this.buttons = {
@@ -54,6 +72,52 @@ class UI {
         action: null,
       }),
     };
+
+    this.textInputs = {
+      loginMenu: new TextInput({
+        query: 'Please log in:',
+        fields: [
+          ['Username', 'username here...'],
+          ['Password', 'password here...'],
+        ]
+      }),
+      ipSelect: new TextInput({
+        query: 'Enter Server Address:',
+        fields: [
+          ['Address', ''],
+        ]
+      }),
+    };
+
+    this.textAlerts = {
+      errorAlert: new TextAlert({
+        message: 'Error',
+      }),
+    };
+  }
+
+  setView(view: string) {
+    this.view = view;
+  }
+
+  hideAll(): void {
+    for (const widgetName in this.buttons) {
+      this.buttons[widgetName].hide();
+    }
+
+    for (const widgetName in this.textInputs) {
+      this.textInputs[widgetName].hide();
+    }
+
+    for (const widgetName in this.textAlerts) {
+      this.textAlerts[widgetName].hide();
+    }
+
+    // TODO: generalize this
+    this.hideReadyBtn();
+    this.hideCivPicker();
+    this.hideGameList();
+    this.hideMainMenu();
   }
 
   createElement(type: string, className=null): HTMLElement {
@@ -64,11 +128,11 @@ class UI {
     return element;
   }
 
-  createCivItem(civName: string, color: string): HTMLElement {
+  createCivItem(leader: Leader): HTMLElement {
     const civItem = this.createElement('li', 'civItem');
-    civItem.style.backgroundColor = color;
+    civItem.style.backgroundColor = leader.color;
     const nameText = this.createElement('span');
-    nameText.innerHTML = civName;
+    nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - Selected by ${this.civs[leader.civID].name}` : '');
     civItem.appendChild(nameText);
     return civItem;
   }
@@ -93,15 +157,29 @@ class UI {
     }
   }
 
-  showCivPicker(callback: (color: string) => void): void {
+  showCivPicker(callback: (leaderID: number) => void, self: Player): void {
     this.elements.civPicker.innerHTML = '';
-    for (let i = 0; i < this.colorPool.length; i++) {
-      const color = this.colorPool[i];
-      const civItem = this.createCivItem(`Color option #${i}`, color);
+    const selectedLeaderSlot = this.createElement('div', 'selectedLeader');
+    this.elements.civPicker.appendChild(selectedLeaderSlot);
+    for (let i = 0; i < this.leaderPool.length; i++) {
+      const leader = this.leaderPool[i];
+      const civItem = this.createCivItem(leader);
       civItem.onclick = () => {
-        callback(color);
+        callback(leader.id);
       };
       this.elements.civPicker.appendChild(civItem);
+    }
+    for (let i = 0; i < this.takenLeaders.length; i++) {
+      const leader = this.takenLeaders[i];
+      const civItem = this.createCivItem(leader);
+      civItem.onclick = () => {
+        alert('That leader is already selected!')
+      };
+      if (leader.civID === self.civID) {
+        selectedLeaderSlot.appendChild(civItem);
+      } else {
+        this.elements.civPicker.appendChild(civItem);
+      }
     }
 
     this.elements.centerModal.appendChild(this.elements.civPicker);
@@ -135,6 +213,67 @@ class UI {
     this.elements.readyBtn.remove();
   }
 
+  showMainMenu(callbacks: {
+    listGames: () => void,
+    logout: () => void,
+    changeServer: () => void,
+  }): void {
+    this.elements.mainMenu.innerHTML = '';
+
+    const titleHeading = this.createElement('h1');
+    titleHeading.innerText = 'CivCloneJS';
+    this.elements.mainMenu.appendChild(titleHeading);
+
+    const gameListBtn = this.createElement('button');
+    gameListBtn.innerText = 'List Games';
+    gameListBtn.onclick = () => callbacks.listGames();
+    this.elements.mainMenu.appendChild(gameListBtn);
+
+    const changeServerBtn = this.createElement('button');
+    changeServerBtn.innerText = 'Switch Server';
+    changeServerBtn.onclick = () => callbacks.changeServer();
+    this.elements.mainMenu.appendChild(changeServerBtn);
+
+    const logoutBtn = this.createElement('button');
+    logoutBtn.innerText = 'Logout';
+    logoutBtn.onclick = () => callbacks.logout();
+    this.elements.mainMenu.appendChild(logoutBtn);
+
+    this.elements.centerModal.appendChild(this.elements.mainMenu);
+    document.getElementById('UI').appendChild(this.elements.centerModal);
+  }
+
+  hideMainMenu(): void {
+    this.elements.mainMenu.remove();
+    this.elements.centerModal.remove();
+  }
+
+  showGameList(gameList: { [key: string]: GameMetadata }, callbacks: {
+    joinGame: (gameID: string) => void,
+  }): void {
+    this.elements.gameList.innerHTML = '';
+
+    const titleHeading = this.createElement('h1');
+    titleHeading.innerText = 'Active Games';
+    this.elements.gameList.appendChild(titleHeading);
+
+    for (const gameID in gameList) {
+      const { gameName, playersConnected, playerCount } = gameList[gameID];
+      const gameBtn = this.createElement('button');
+      gameBtn.innerText = `${gameName} - ${playersConnected} / ${playerCount} players connected`;
+      gameBtn.onclick = () => callbacks.joinGame(gameID);
+      this.elements.gameList.appendChild(gameBtn);
+    }
+
+    this.elements.centerModal.appendChild(this.elements.gameList);
+    document.getElementById('UI').appendChild(this.elements.centerModal);
+  }
+
+  hideGameList(): void {
+    this.elements.gameList.remove();
+    this.elements.centerModal.remove();
+  }
+  
   showUnitActionsMenu(world: World, pos: Coords, unit: Unit): void {
     for (const action of unitActionsTable[unit.type]) {
       if (!unitActionsAvailabilityTable[action](world, pos)) {

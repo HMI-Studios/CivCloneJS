@@ -8,6 +8,10 @@ export interface EventMsg {
   error?: Event[];
 }
 
+export interface PlayerData {
+  civID: number;
+}
+
 export const mod = (a: number, b: number): number => {
   if (a >= 0) {
     return a % b;

@@ -1,11 +1,9 @@
-import * as fs from 'fs';
-import path from 'path';
 import * as WebSocket from 'ws';
 import { Player } from './player';
 import { Map } from './map';
-import { World } from './world';
 import { Game } from './game';
 import { WorldGenerator } from './worldGenerator';
+import { Leader } from './leader';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -25,7 +23,9 @@ export const games: { [gameID: number] : Game } = {
   0: new Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    1
+    {
+      playerCount: 2,
+    }
   ),
 };
 
@@ -48,7 +48,7 @@ export const methods = {
     if (civID !== null) {
       getConnData(ws).gameID = gameID;
       if (!game.players[username]) {
-        game.players[username] = new Player(civID, ws);
+        game.connectPlayer(username, new Player(civID, ws));
       } else {
         game.players[username].reset(ws);
       }
@@ -56,9 +56,24 @@ export const methods = {
       sendTo(ws, {
         update: [
           ['civID', [ civID ]],
-          ['colorPool', [ game.world.getColorPool() ]],
+          ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
         ],
       });
+
+      const gameList = {};
+      for (const id in games) {
+        gameList[id] = games[id].getMetaData();
+      }
+
+      for (const conn of connData) {
+        if (conn.gameID === null) {
+          sendTo(conn.ws, {
+            update: [
+              ['gameList', [gameList]],
+            ],
+          });
+        }
+      }
     } else {
       sendTo(ws, { error: [
         ['kicked', ['Game full']],
@@ -69,7 +84,7 @@ export const methods = {
   getGames: (ws: WebSocket) => {
     const gameList = {};
     for (const gameID in games) {
-      gameList[gameID] = games[gameID].world.metaData;
+      gameList[gameID] = games[gameID].getMetaData();
     }
 
     sendTo(ws, {
@@ -79,7 +94,7 @@ export const methods = {
     });
   },
 
-  setColor: (ws: WebSocket, color: string) => {
+  setLeader: (ws: WebSocket, leaderID: number) => {
     const { username, gameID } = getConnData(ws);
     const game = games[gameID];
 
@@ -87,16 +102,16 @@ export const methods = {
       const player = game.getPlayer(username);
 
       if (player) {
-        if (game.world.setCivColor(player.civID, color)) {
+        if (game.world.setCivLeader(player.civID, leaderID)) {
           game.sendToAll({
             update: [
-              ['colorPool', [ game.world.getColorPool() ]],
+              ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
             ],
           });
         } else {
           sendTo(ws, {
             error: [
-              ['colorTaken', ['That color is no longer available']],
+              ['leaderTaken', ['That leader is no longer available']],
             ],
           });
         }
@@ -114,9 +129,9 @@ export const methods = {
       if (player) {
         const civ = game.world.getCiv(player.civID);
 
-        if (!civ.color) {
+        if (!civ.leader) {
           sendTo(ws, { error: [
-            ['notReady', ['Please select civ color']],
+            ['notReady', ['Please select leader']],
           ] });
           return;
         }

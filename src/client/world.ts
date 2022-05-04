@@ -7,7 +7,7 @@ interface Player {
   civID: number;
 }
 
-interface WorldEventHandler {
+interface WorldEventHandlerMap {
   [key: string]: (...args: unknown[]) => void;
 }
 
@@ -39,6 +39,8 @@ interface Tile {
 
 interface GameMetadata {
   gameName: string;
+  playerCount: number;
+  playersConnected: number;
 }
 
 interface Coords {
@@ -54,10 +56,10 @@ class World {
   height: number;
   width: number;
   socket: WebSocket;
-  on: { update: WorldEventHandler, error: WorldEventHandler, event: WorldEventHandler };
+  on: { update: WorldEventHandlerMap, error: WorldEventHandlerMap, event: WorldEventHandlerMap };
   civs: { [key: string]: Civ };
   player: Player;
-  constructor(playerName: string) {
+  constructor() {
     this.tiles = [];
     this.height;
     this.width;
@@ -69,7 +71,7 @@ class World {
     };
     this.civs = {};
     this.player = {
-      name: playerName,
+      name: null,
       civID: null,
     };
   }
@@ -189,7 +191,46 @@ class World {
     }
   }
 
-  setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
+  async login(): Promise<void> {
+    let username = localStorage.getItem('username');
+    if (!username) {
+      const [usr, pass] = await ui.textInputs.loginMenu.prompt(document.getElementById('UI'), false);
+      username = usr;
+      localStorage.setItem('username', username);
+    }
+    this.player.name = username;
+    this.sendActions([
+      ['setPlayer', [this.player.name]],
+    ]);
+  }
+
+  async connect(): Promise<void> {
+    const serverIP = localStorage.getItem('serverIP');
+    return new Promise((resolve: () => void/* reject: () => void*/) => {
+      this.socket = new WebSocket(`ws://${serverIP}`);
+      this.socket.addEventListener('message', (event) => {
+        let data;
+        try {
+          data = JSON.parse(event.data);
+        } catch (err) {
+          console.error('Bad JSON recieved from server');
+          return;
+        }
+        this.handleResponse(data);
+      });
+      this.socket.addEventListener('open', (/*event: Event*/) => {
+        resolve();
+      });
+      this.socket.addEventListener('error', async (/*event: Event*/) => {
+        const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
+        resolve();
+      });
+    });
+  }
+
+  async setup(camera: Camera, ui: UI): Promise<void> {
 
     const readyFn = (isReady: boolean): void => {
       this.sendActions([
@@ -197,34 +238,37 @@ class World {
       ]);
     };
 
-    const civPickerFn = (color: string): void => {
+    const civPickerFn = (leaderID: number): void => {
       this.sendActions([
-        ['setColor', [color]],
+        ['setLeader', [leaderID]],
       ]);
     };
 
     this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
-      const gameTitles = [];
-      // const defaultGame = Object.keys(gameList)[0];
-      for (const gameID in gameList) {
-        gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
-      }
+      if (ui.view === 'gameList') {
+        ui.hideAll();
 
-      const gameID = '0';//prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
+        ui.showGameList(gameList, {
+          joinGame: (gameID: string): void => {
+            if (gameID !== null) {
+              this.sendActions([
+                ['joinGame', [gameID]],
+              ]);
 
-      if (gameID !== null) {
-        this.sendActions([
-          ['joinGame', [gameID]],
-        ]);
-
-        ui.showReadyBtn(readyFn);
-        ui.showCivPicker(civPickerFn);
+              ui.hideGameList();
+              ui.setView('civPicker');
+              ui.showReadyBtn(readyFn);
+              ui.showCivPicker(civPickerFn, this.player);
+            }
+          },
+        });
       }
     };
 
     this.on.update.beginGame = ([width, height]: [number, number]): void => {
       ui.hideReadyBtn();
       ui.hideCivPicker();
+      ui.setView('inGame');
       ui.showGameUI(this);
       [this.width, this.height] = [width, height];
       camera.start(this, 1000/60);
@@ -242,9 +286,18 @@ class World {
       this.tiles[this.pos(x, y)] = tile;
     };
 
-    this.on.update.colorPool = (colors: string[]): void => {
-      ui.colorPool = colors;
-      ui.showCivPicker(civPickerFn);
+    this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {
+      ui.leaderPool = leaders;
+      ui.takenLeaders = takenLeaders;
+      ui.players = {};
+      ui.civs = {};
+      for (const playerName in players) {
+        const player = players[playerName];
+        ui.players[playerName] = { ...player, name: playerName };
+        ui.civs[player.civID] = { ...player, name: playerName };
+      }
+      ui.setView('civPicker');
+      ui.showCivPicker(civPickerFn, this.player);
     };
 
     this.on.update.civData = (civs: { [key: string]: Civ }) => {
@@ -261,6 +314,15 @@ class World {
       ui.showReadyBtn(readyFn);
     }
 
+    this.on.error.kicked = async (reason) => {
+      console.error('Kicked:', reason);
+      ui.hideAll();
+      await ui.textAlerts.errorAlert.alert(document.getElementById('UI'), `Kicked: ${reason}`);
+      this.sendActions([
+        ['getGames', []],
+      ]);
+    }
+
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
       ui.showUnitActionsMenu(this, coords, unit);
     }
@@ -269,22 +331,38 @@ class World {
       ui.hideUnitActionsMenu();
     }
 
-    return new Promise((resolve: () => void/* reject: () => void*/) => {
-      this.socket = new WebSocket(`ws://${serverIP}`);
-      this.socket.addEventListener('message', (event) => {
-        let data;
-        try {
-          data = JSON.parse(event.data);
-        } catch (err) {
-          console.error('Bad JSON recieved from server');
-          return;
-        }
-        this.handleResponse(data);
-      });
-      this.socket.addEventListener('open', (/*event: Event*/) => {
-        resolve();
-      });
-    });
+    await this.connect();
+
+    await this.login();
+
+    this.sendActions([
+      ['setPlayer', [world.player.name]],
+    ]);
+
+    const mainMenuFns = {
+      listGames: () => {
+        this.sendActions([
+          ['getGames', []],
+        ]);
+        ui.setView('gameList');
+      },
+      logout: async () => {
+        localStorage.setItem('username', '');
+        ui.hideMainMenu();
+        await this.login();
+        ui.showMainMenu(mainMenuFns);
+      },
+      changeServer:async () => {
+        ui.hideMainMenu();
+        const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
+        ui.showMainMenu(mainMenuFns);
+      }
+    };
+
+    ui.setView('mainMenu');
+    ui.showMainMenu(mainMenuFns);
   }
 
   sendActions(actions: [string, unknown[]][]): void {

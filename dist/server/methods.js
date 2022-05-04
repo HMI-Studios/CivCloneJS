@@ -13,7 +13,9 @@ const sendTo = (ws, msg) => {
 exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 1),
+    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), {
+        playerCount: 2,
+    }),
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
@@ -31,7 +33,7 @@ exports.methods = {
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
             if (!game.players[username]) {
-                game.players[username] = new player_1.Player(civID, ws);
+                game.connectPlayer(username, new player_1.Player(civID, ws));
             }
             else {
                 game.players[username].reset(ws);
@@ -39,9 +41,22 @@ exports.methods = {
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
-                    ['colorPool', [game.world.getColorPool()]],
+                    ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
                 ],
             });
+            const gameList = {};
+            for (const id in exports.games) {
+                gameList[id] = exports.games[id].getMetaData();
+            }
+            for (const conn of exports.connData) {
+                if (conn.gameID === null) {
+                    sendTo(conn.ws, {
+                        update: [
+                            ['gameList', [gameList]],
+                        ],
+                    });
+                }
+            }
         }
         else {
             sendTo(ws, { error: [
@@ -52,7 +67,7 @@ exports.methods = {
     getGames: (ws) => {
         const gameList = {};
         for (const gameID in exports.games) {
-            gameList[gameID] = exports.games[gameID].world.metaData;
+            gameList[gameID] = exports.games[gameID].getMetaData();
         }
         sendTo(ws, {
             update: [
@@ -60,23 +75,23 @@ exports.methods = {
             ],
         });
     },
-    setColor: (ws, color) => {
+    setLeader: (ws, leaderID) => {
         const { username, gameID } = (0, exports.getConnData)(ws);
         const game = exports.games[gameID];
         if (game) {
             const player = game.getPlayer(username);
             if (player) {
-                if (game.world.setCivColor(player.civID, color)) {
+                if (game.world.setCivLeader(player.civID, leaderID)) {
                     game.sendToAll({
                         update: [
-                            ['colorPool', [game.world.getColorPool()]],
+                            ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
                         ],
                     });
                 }
                 else {
                     sendTo(ws, {
                         error: [
-                            ['colorTaken', ['That color is no longer available']],
+                            ['leaderTaken', ['That leader is no longer available']],
                         ],
                     });
                 }
@@ -90,9 +105,9 @@ exports.methods = {
             const player = game.getPlayer(username);
             if (player) {
                 const civ = game.world.getCiv(player.civID);
-                if (!civ.color) {
+                if (!civ.leader) {
                     sendTo(ws, { error: [
-                            ['notReady', ['Please select civ color']],
+                            ['notReady', ['Please select leader']],
                         ] });
                     return;
                 }

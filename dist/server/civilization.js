@@ -4,13 +4,14 @@ exports.Civilization = void 0;
 class Civilization {
     constructor() {
         this.units = [];
-        this.color = null;
         this.turnActive = false;
         this.turnFinished = false;
     }
     getData() {
+        const leaderData = this.leader.getData();
         return {
-            color: this.color
+            color: leaderData.color,
+            leader: leaderData,
         };
     }
     newTurn() {

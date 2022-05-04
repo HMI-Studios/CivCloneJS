@@ -1,9 +1,8 @@
 import { Map } from './map';
 import { Unit } from './unit';
-import { Tile } from './tile';
-import { City } from './city';
 import { Civilization, CivilizationData } from './civilization';
 import { Event } from './utils';
+import { Leader, leaderTemplates } from './leader';
 
 export interface Coords {
   x: number;
@@ -14,15 +13,15 @@ export class World {
   map: Map;
   civs: { [civID: number]: Civilization };
   civsCount: number;
-  colorPool: { [color: string]: boolean };
-  metaData: { gameName: string };
+  leaderPool: { [name: string]: Leader };
   updates: { (civID: number): Event }[];
 
   constructor(map: Map, civsCount: number) {
     this.map = map;
 
-    this.civs = {};
     this.civsCount = civsCount;
+    this.civs = {};
+    this.leaderPool = {};
 
     for (let i = 0; i < this.civsCount; i++) {
       this.civs[i] = new Civilization();
@@ -33,20 +32,14 @@ export class World {
       this.updateCivTileVisibility(i);
     }
 
-    const colorList: string[] = [
-      '#820000', // RICH RED
-      '#0a2ead', // BLUE
-      '#03a300', // GREEN
-      '#03a300', // SAND YELLOW
-      '#560e8a', // ROYAL PURPLE
-      '#bd7400', // ORANGE
-    ].slice(0, Math.max(this.civsCount, 6));
+    for (let i = 0; i < leaderTemplates.length; i++) {
+      this.leaderPool[i] = new Leader(i);
+    }
 
-    this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
 
-    this.metaData = {
-      gameName: "New Game",
-    };
+
+
+    // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
 
     this.updates = [];
   }
@@ -56,27 +49,32 @@ export class World {
     return this.map.getUpdates().concat(this.updates.splice(0));
   }
 
-  // colorPool
-  getColorPool(): string[] {
-    const colorList = [];
+  // leaders
+  getLeaderPool(): [Leader[], Leader[]] {
+    const leaderList = [];
+    const takenLeaderList = [];
 
-    for (const color in this.colorPool) {
-      if (this.colorPool[color]) {
-        colorList.push(color);
+    for (const id in this.leaderPool) {
+      const leader = this.leaderPool[id];
+      if (leader.isTaken()) {
+        takenLeaderList.push(leader.getData());
+      } else {
+        leaderList.push(leader.getData());
       }
     }
 
-    return colorList;
+    return [leaderList, takenLeaderList];
   }
 
-  // colorPool, civs
-  setCivColor(civID: number, color: string): boolean {
-    if (this.colorPool[color]) {
-      if (this.civs[civID].color) {
-        this.colorPool[this.civs[civID].color] = true;
+  // leaders, civs
+  setCivLeader(civID: number, leaderID: number): boolean {
+    const leader = this.leaderPool[leaderID];
+    if (leader && !leader.isTaken()) {
+      if (this.civs[civID].leader) {
+        this.civs[civID].leader.unselect();
       }
-      this.civs[civID].color = color;
-      this.colorPool[color] = false;
+      this.civs[civID].leader = leader;
+      leader.select(civID);
       return true;
     } else {
       return false;
@@ -158,7 +156,7 @@ export class World {
 
     if (attacker.isDead()) this.removeUnit(attacker);
     if (defender.isDead()) this.removeUnit(defender);
-    
+
     this.map.tileUpdate(attacker.coords);
     this.map.tileUpdate(defender.coords);
   }
