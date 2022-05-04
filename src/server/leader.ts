@@ -11,14 +11,14 @@ export interface LeaderData {
   id: number;
   color: string;
   name: string;
-  civID: number;
+  civID: number | null;
 }
 
 export class Leader {
   private id: number;
   private color: string;
   private name: string;
-  private civID: number;
+  private civID: number | null;
 
   constructor(id: number) {
     const { color, name } = leaderTemplates[id];

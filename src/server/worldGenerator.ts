@@ -8,8 +8,8 @@ export class WorldGenerator {
   private riverCoords: [number, number][];
   private mtCoords: [number, number][];
   private genPoints: string[];
-  private width;
-  private height;
+  private width: number;
+  private height: number;
   private tc: number;
 
   constructor(seed: number, width: number, height: number) {
@@ -70,14 +70,15 @@ export class WorldGenerator {
     this.generateLandStep(x, y, radius, biomeTile, 'mountain');
     this.generateHeightMap(...this.mtCoords[0], Math.round(radius * 1.5), 10);
     const mtCoord = this.mtCoords.shift();
-    if (random.randInt(3) === 0) {
+    if (random.randInt(3) === 0 && mtCoord) {
       this.riverCoords.push(mtCoord);
     }
-    const l = this.mtCoords.length;
+    // const l = this.mtCoords.length;
     while (this.mtCoords.length > 0) {
       const mtCoord = this.mtCoords.shift();
+      if (!mtCoord) continue;
       this.generateHeightMap(...mtCoord, radius * 3, 2);
-      if (random.randInt(3) === 0) {
+      if (random.randInt(3) === 0 && mtCoord) {
         this.riverCoords.push(mtCoord);
       }
     }

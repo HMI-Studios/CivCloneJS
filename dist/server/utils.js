@@ -12,21 +12,23 @@ const mod = (a, b) => {
 exports.mod = mod;
 const getAdjacentCoords = ({ x, y }) => {
     const coordArray = [];
-    if ((0, exports.mod)(x, 2) === 1) {
-        coordArray.push({ x: x, y: y + 1 });
-        coordArray.push({ x: x + 1, y: y + 1 });
-        coordArray.push({ x: x + 1, y: y });
-        coordArray.push({ x: x, y: y - 1 });
-        coordArray.push({ x: x - 1, y: y });
-        coordArray.push({ x: x - 1, y: y + 1 });
-    }
-    else {
-        coordArray.push({ x: x + 1, y: y });
-        coordArray.push({ x: x + 1, y: y - 1 });
-        coordArray.push({ x: x, y: y - 1 });
-        coordArray.push({ x: x, y: y + 1 });
-        coordArray.push({ x: x - 1, y: y - 1 });
-        coordArray.push({ x: x - 1, y: y });
+    if (x && y) {
+        if ((0, exports.mod)(x, 2) === 1) {
+            coordArray.push({ x: x, y: y + 1 });
+            coordArray.push({ x: x + 1, y: y + 1 });
+            coordArray.push({ x: x + 1, y: y });
+            coordArray.push({ x: x, y: y - 1 });
+            coordArray.push({ x: x - 1, y: y });
+            coordArray.push({ x: x - 1, y: y + 1 });
+        }
+        else {
+            coordArray.push({ x: x + 1, y: y });
+            coordArray.push({ x: x + 1, y: y - 1 });
+            coordArray.push({ x: x, y: y - 1 });
+            coordArray.push({ x: x, y: y + 1 });
+            coordArray.push({ x: x - 1, y: y - 1 });
+            coordArray.push({ x: x - 1, y: y });
+        }
     }
     return coordArray;
 };

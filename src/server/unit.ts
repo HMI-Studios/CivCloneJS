@@ -37,17 +37,14 @@ export class Unit {
   coords: Coords;
   alive: boolean;
 
-  constructor(type: string, civID: number) {
+  constructor(type: string, civID: number, coords: Coords) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
     this.movementClass = unitMovementClassTable[type];
     this.combatStats = unitCombatStatsTable[type];
     this.civID = civID;
-    this.coords = {
-      x: null,
-      y: null,
-    };
+    this.coords = coords;
     this.alive = true;
   }
 
@@ -86,6 +83,6 @@ export class Unit {
   }
 
   isAdjacentTo(dst?: Coords): boolean {
-    return dst && getAdjacentCoords(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
+    return !!dst && getAdjacentCoords(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
   }
 }

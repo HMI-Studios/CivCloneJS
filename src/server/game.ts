@@ -5,7 +5,7 @@ import { EventMsg, PlayerData } from './utils';
 
 interface MetaData {
   gameName: string,
-  ownerName: string,
+  ownerName?: string,
   playerCount: number,
   playersConnected: number,
 }
@@ -33,9 +33,11 @@ export class Game {
       playerCount,
       playersConnected: Object.keys(this.players).length,
     };
+
+    this.hasStarted = false;
   }
 
-  connectPlayer(username, player) {
+  connectPlayer(username: string, player: Player) {
     this.players[username] = player;
     this.metaData = { ...this.metaData, playersConnected: Object.keys(this.players).length };
   }

@@ -96,7 +96,7 @@ export class Tile {
     return mode > -1 ? this.movementCost[mode] || Infinity : 1;
   }
 
-  setUnit(unit: Unit): void {
+  setUnit(unit?: Unit): void {
     this.unit = unit;
   }
 

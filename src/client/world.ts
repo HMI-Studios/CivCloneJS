@@ -3,8 +3,8 @@ interface Civ {
 }
 
 interface Player {
-  name: string;
-  civID: number;
+  name: string | null;
+  civID: number | null;
 }
 
 interface WorldEventHandlerMap {
@@ -114,7 +114,7 @@ class World {
   getTilesInRange(srcX: number, srcY: number, range: number, mode = 0): { [key: string]: [number, number] } {
     // BFS to find all tiles within `range` steps
 
-    const queue = [];
+    const queue: [number, number][] = [];
     queue.push([srcX, srcY]);
 
     const dst = {};
@@ -123,7 +123,7 @@ class World {
     const paths = {};
 
     while (queue.length) {
-      const [atX, atY] = queue.shift();
+      const [atX, atY] = queue.shift() as [number, number];
 
       for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
 
@@ -194,7 +194,7 @@ class World {
   async login(): Promise<void> {
     let username = localStorage.getItem('username');
     if (!username) {
-      const [usr, pass] = await ui.textInputs.loginMenu.prompt(document.getElementById('UI'), false);
+      const [usr, pass] = await ui.textInputs.loginMenu.prompt(ui.root, false);
       username = usr;
       localStorage.setItem('username', username);
     }
@@ -222,7 +222,7 @@ class World {
         resolve();
       });
       this.socket.addEventListener('error', async (/*event: Event*/) => {
-        const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
         localStorage.setItem('serverIP', newIP);
         await this.connect();
         resolve();
@@ -294,7 +294,7 @@ class World {
       for (const playerName in players) {
         const player = players[playerName];
         ui.players[playerName] = { ...player, name: playerName };
-        ui.civs[player.civID] = { ...player, name: playerName };
+        if (player.civID !== null) ui.civs[player.civID] = { ...player, name: playerName };
       }
       ui.setView('civPicker');
       ui.showCivPicker(civPickerFn, this.player);
@@ -317,7 +317,7 @@ class World {
     this.on.error.kicked = async (reason) => {
       console.error('Kicked:', reason);
       ui.hideAll();
-      await ui.textAlerts.errorAlert.alert(document.getElementById('UI'), `Kicked: ${reason}`);
+      await ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
       this.sendActions([
         ['getGames', []],
       ]);
@@ -354,7 +354,7 @@ class World {
       },
       changeServer:async () => {
         ui.hideMainMenu();
-        const [newIP] = await ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
         localStorage.setItem('serverIP', newIP);
         await this.connect();
         ui.showMainMenu(mainMenuFns);

@@ -105,7 +105,7 @@ class TextInput extends TextAlert {
       fieldElement.appendChild(fieldTitleElement);
 
       const fieldInputElement = document.createElement('input');
-      fieldInputElement.placeholder = placeholder;
+      if (placeholder) fieldInputElement.placeholder = placeholder;
       fieldElement.appendChild(fieldInputElement);
       this.inputFields.push(fieldInputElement);
 
