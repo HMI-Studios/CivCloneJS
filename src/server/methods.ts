@@ -3,6 +3,7 @@ import { Player } from './player';
 import { Map } from './map';
 import { Game } from './game';
 import { WorldGenerator } from './worldGenerator';
+import { Leader } from './leader';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -51,7 +52,7 @@ export const methods = {
       sendTo(ws, {
         update: [
           ['civID', [ civID ]],
-          ['colorPool', [ game.world.getColorPool() ]],
+          ['leaderPool', [ ...game.world.getLeaderPool() ]],
         ],
       });
 
@@ -89,7 +90,7 @@ export const methods = {
     });
   },
 
-  setColor: (ws: WebSocket, color: string) => {
+  setLeader: (ws: WebSocket, leaderID: number) => {
     const { username, gameID } = getConnData(ws);
     const game = games[gameID];
 
@@ -97,16 +98,16 @@ export const methods = {
       const player = game.getPlayer(username);
 
       if (player) {
-        if (game.world.setCivColor(player.civID, color)) {
+        if (game.world.setCivLeader(player.civID, leaderID)) {
           game.sendToAll({
             update: [
-              ['colorPool', [ game.world.getColorPool() ]],
+              ['leaderPool', [ ...game.world.getLeaderPool() ]],
             ],
           });
         } else {
           sendTo(ws, {
             error: [
-              ['colorTaken', ['That color is no longer available']],
+              ['leaderTaken', ['That leader is no longer available']],
             ],
           });
         }
@@ -124,9 +125,9 @@ export const methods = {
       if (player) {
         const civ = game.world.getCiv(player.civID);
 
-        if (!civ.color) {
+        if (!civ.leader) {
           sendTo(ws, { error: [
-            ['notReady', ['Please select civ color']],
+            ['notReady', ['Please select leader']],
           ] });
           return;
         }

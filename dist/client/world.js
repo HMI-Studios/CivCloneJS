@@ -171,9 +171,9 @@ class World {
                     ['ready', [isReady]],
                 ]);
             };
-            const civPickerFn = (color) => {
+            const civPickerFn = (leaderID) => {
                 this.sendActions([
-                    ['setColor', [color]],
+                    ['setLeader', [leaderID]],
                 ]);
             };
             this.on.update.gameList = (gameList) => {
@@ -188,7 +188,7 @@ class World {
                                 ui.hideGameList();
                                 ui.setView('civPicker');
                                 ui.showReadyBtn(readyFn);
-                                ui.showCivPicker(civPickerFn);
+                                ui.showCivPicker(civPickerFn, this.player);
                             }
                         },
                     });
@@ -211,10 +211,11 @@ class World {
             this.on.update.tileUpdate = ({ x, y }, tile) => {
                 this.tiles[this.pos(x, y)] = tile;
             };
-            this.on.update.colorPool = (colors) => {
-                ui.colorPool = colors;
+            this.on.update.leaderPool = (leaders, takenLeaders) => {
+                ui.leaderPool = leaders;
+                ui.takenLeaders = takenLeaders;
                 ui.setView('civPicker');
-                ui.showCivPicker(civPickerFn);
+                ui.showCivPicker(civPickerFn, this.player);
             };
             this.on.update.civData = (civs) => {
                 this.civs = civs;

@@ -8,7 +8,8 @@ class UI {
             mainMenu: this.createElement('div', 'mainMenu'),
             gameList: this.createElement('div', 'gameList'),
         };
-        this.colorPool = [];
+        this.leaderPool = [];
+        this.takenLeaders = [];
         this.turnActive = false;
         this.buttons = {
             mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
@@ -63,11 +64,11 @@ class UI {
         }
         return element;
     }
-    createCivItem(civName, color) {
+    createCivItem(leader) {
         const civItem = this.createElement('li', 'civItem');
-        civItem.style.backgroundColor = color;
+        civItem.style.backgroundColor = leader.color;
         const nameText = this.createElement('span');
-        nameText.innerHTML = civName;
+        nameText.innerHTML = `${leader.name} - Selected by ${leader.civID}`;
         civItem.appendChild(nameText);
         return civItem;
     }
@@ -94,15 +95,30 @@ class UI {
             document.getElementById('UI').appendChild(button.element);
         }
     }
-    showCivPicker(callback) {
+    showCivPicker(callback, self) {
         this.elements.civPicker.innerHTML = '';
-        for (let i = 0; i < this.colorPool.length; i++) {
-            const color = this.colorPool[i];
-            const civItem = this.createCivItem(`Color option #${i}`, color);
+        const selectedLeaderSlot = this.createElement('div', 'selectedLeader');
+        this.elements.civPicker.appendChild(selectedLeaderSlot);
+        for (let i = 0; i < this.leaderPool.length; i++) {
+            const leader = this.leaderPool[i];
+            const civItem = this.createCivItem(leader);
             civItem.onclick = () => {
-                callback(color);
+                callback(leader.id);
             };
             this.elements.civPicker.appendChild(civItem);
+        }
+        for (let i = 0; i < this.takenLeaders.length; i++) {
+            const leader = this.takenLeaders[i];
+            const civItem = this.createCivItem(leader);
+            civItem.onclick = () => {
+                alert('That leader is already selected!');
+            };
+            if (leader.civID === self.civID) {
+                selectedLeaderSlot.appendChild(civItem);
+            }
+            else {
+                this.elements.civPicker.appendChild(civItem);
+            }
         }
         this.elements.centerModal.appendChild(this.elements.civPicker);
         document.getElementById('UI').appendChild(this.elements.centerModal);

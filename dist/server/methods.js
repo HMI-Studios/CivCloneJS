@@ -36,7 +36,7 @@ exports.methods = {
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
-                    ['colorPool', [game.world.getColorPool()]],
+                    ['leaderPool', [...game.world.getLeaderPool()]],
                 ],
             });
             const gameList = {};
@@ -70,23 +70,23 @@ exports.methods = {
             ],
         });
     },
-    setColor: (ws, color) => {
+    setLeader: (ws, leaderID) => {
         const { username, gameID } = (0, exports.getConnData)(ws);
         const game = exports.games[gameID];
         if (game) {
             const player = game.getPlayer(username);
             if (player) {
-                if (game.world.setCivColor(player.civID, color)) {
+                if (game.world.setCivLeader(player.civID, leaderID)) {
                     game.sendToAll({
                         update: [
-                            ['colorPool', [game.world.getColorPool()]],
+                            ['leaderPool', [...game.world.getLeaderPool()]],
                         ],
                     });
                 }
                 else {
                     sendTo(ws, {
                         error: [
-                            ['colorTaken', ['That color is no longer available']],
+                            ['leaderTaken', ['That leader is no longer available']],
                         ],
                     });
                 }
@@ -100,9 +100,9 @@ exports.methods = {
             const player = game.getPlayer(username);
             if (player) {
                 const civ = game.world.getCiv(player.civID);
-                if (!civ.color) {
+                if (!civ.leader) {
                     sendTo(ws, { error: [
-                            ['notReady', ['Please select civ color']],
+                            ['notReady', ['Please select leader']],
                         ] });
                     return;
                 }

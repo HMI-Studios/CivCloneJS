@@ -232,9 +232,9 @@ class World {
       ]);
     };
 
-    const civPickerFn = (color: string): void => {
+    const civPickerFn = (leaderID: number): void => {
       this.sendActions([
-        ['setColor', [color]],
+        ['setLeader', [leaderID]],
       ]);
     };
 
@@ -252,7 +252,7 @@ class World {
               ui.hideGameList();
               ui.setView('civPicker');
               ui.showReadyBtn(readyFn);
-              ui.showCivPicker(civPickerFn);
+              ui.showCivPicker(civPickerFn, this.player);
             }
           },
         });
@@ -280,10 +280,11 @@ class World {
       this.tiles[this.pos(x, y)] = tile;
     };
 
-    this.on.update.colorPool = (colors: string[]): void => {
-      ui.colorPool = colors;
+    this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[]): void => {
+      ui.leaderPool = leaders;
+      ui.takenLeaders = takenLeaders;
       ui.setView('civPicker');
-      ui.showCivPicker(civPickerFn);
+      ui.showCivPicker(civPickerFn, this.player);
     };
 
     this.on.update.civData = (civs: { [key: string]: Civ }) => {

@@ -3,50 +3,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.World = void 0;
 const unit_1 = require("./unit");
 const civilization_1 = require("./civilization");
+const leader_1 = require("./leader");
 class World {
     constructor(map, civsCount) {
         this.map = map;
-        this.civs = {};
         this.civsCount = civsCount;
+        this.civs = {};
+        this.leaderPool = {};
         for (let i = 0; i < this.civsCount; i++) {
             this.civs[i] = new civilization_1.Civilization();
             this.addUnit(new unit_1.Unit('settler', i), { x: (i + 1) * 1, y: (i + 1) * 1 }); // REMOVE THESE
             this.addUnit(new unit_1.Unit('scout', i), { x: (i + 1) * 3, y: (i + 1) * 4 }); // REMOVE THESE
             this.updateCivTileVisibility(i);
         }
-        const colorList = [
-            '#820000',
-            '#0a2ead',
-            '#03a300',
-            '#03a300',
-            '#560e8a',
-            '#bd7400', // ORANGE
-        ].slice(0, Math.max(this.civsCount, 6));
-        this.colorPool = colorList.reduce((obj, color) => (Object.assign(Object.assign({}, obj), { [color]: true })), {});
+        for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
+            this.leaderPool[i] = new leader_1.Leader(i);
+        }
+        // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
         this.updates = [];
     }
     getUpdates() {
         // TODO: more updates?
         return this.map.getUpdates().concat(this.updates.splice(0));
     }
-    // colorPool
-    getColorPool() {
-        const colorList = [];
-        for (const color in this.colorPool) {
-            if (this.colorPool[color]) {
-                colorList.push(color);
+    // leaders
+    getLeaderPool() {
+        const leaderList = [];
+        const takenLeaderList = [];
+        for (const id in this.leaderPool) {
+            const leader = this.leaderPool[id];
+            if (leader.isTaken()) {
+                takenLeaderList.push(leader.getData());
+            }
+            else {
+                leaderList.push(leader.getData());
             }
         }
-        return colorList;
+        return [leaderList, takenLeaderList];
     }
-    // colorPool, civs
-    setCivColor(civID, color) {
-        if (this.colorPool[color]) {
-            if (this.civs[civID].color) {
-                this.colorPool[this.civs[civID].color] = true;
+    // leaders, civs
+    setCivLeader(civID, leaderID) {
+        const leader = this.leaderPool[leaderID];
+        if (leader && !leader.isTaken()) {
+            if (this.civs[civID].leader) {
+                this.civs[civID].leader.unselect();
             }
-            this.civs[civID].color = color;
-            this.colorPool[color] = false;
+            this.civs[civID].leader = leader;
+            leader.select(civID);
             return true;
         }
         else {
