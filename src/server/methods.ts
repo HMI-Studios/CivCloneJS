@@ -43,11 +43,15 @@ export const methods = {
     const game = games[gameID];
     const username = getConnData(ws).username;
 
-    const civID = game?.newPlayerCivID();
+    const civID = game?.newPlayerCivID(username);
 
     if (civID !== null) {
       getConnData(ws).gameID = gameID;
-      game.players[username] = new Player(civID, ws);
+      if (!game.players[username]) {
+        game.players[username] = new Player(civID, ws);
+      } else {
+        game.players[username].reset(ws);
+      }
 
       sendTo(ws, {
         update: [
@@ -121,22 +125,7 @@ export const methods = {
 
         if (Object.keys(game.players).length === game.playerCount) {
           if (Object.values(game.players).every((player: Player) => player.ready)) {
-            game.sendToAll({
-              update: [
-                ['beginGame', [ [game.world.map.width, game.world.map.height], game.playerCount ]],
-                ['civData', [ game.world.getAllCivsData() ]],
-              ],
-            });
-
-            game.forEachCivID((civID: number) => {
-              game.sendToCiv(civID, {
-                update: [
-                  ['setMap', [game.world.map.getCivMap(civID)]],
-                ],
-              });
-            });
-
-            game.beginTurnForCiv(0);
+            game.startGame(player);
           }
         }
       }
