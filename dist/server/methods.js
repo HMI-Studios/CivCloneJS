@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.methods = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
+exports.executeAction = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
 const player_1 = require("./player");
 const map_1 = require("./map");
 const game_1 = require("./game");
@@ -22,13 +22,52 @@ const getConnData = (ws) => {
     return exports.connData[connIndex];
 };
 exports.getConnData = getConnData;
-exports.methods = {
+const getUsername = (ws) => {
+    const connIndex = exports.connections.indexOf(ws);
+    const username = exports.connData[connIndex].username;
+    if (!username) {
+        sendTo(ws, {
+            error: [
+                ['invalidUsername', ['username is null; please provide a username.']],
+            ],
+        });
+        throw 'Invalid Username';
+    }
+    else {
+        return username;
+    }
+};
+const getGameID = (ws) => {
+    const connIndex = exports.connections.indexOf(ws);
+    const gameID = exports.connData[connIndex].gameID;
+    if (!gameID) {
+        sendTo(ws, {
+            error: [
+                ['invalidGameID', ['gameID is null; please provide a gameID.']],
+            ],
+        });
+        throw 'Invalid Game ID';
+    }
+    else {
+        return gameID;
+    }
+};
+const executeAction = (ws, action, ...args) => {
+    try {
+        methods[action](ws, args);
+    }
+    catch (error) {
+        console.error(error);
+    }
+};
+exports.executeAction = executeAction;
+const methods = {
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
     },
     joinGame: (ws, gameID) => {
         const game = exports.games[gameID];
-        const username = (0, exports.getConnData)(ws).username;
+        const username = getUsername(ws);
         const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID(username);
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
@@ -76,46 +115,44 @@ exports.methods = {
         });
     },
     setLeader: (ws, leaderID) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
-        if (game) {
-            const player = game.getPlayer(username);
-            if (player) {
-                if (game.world.setCivLeader(player.civID, leaderID)) {
-                    game.sendToAll({
-                        update: [
-                            ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
-                        ],
-                    });
-                }
-                else {
-                    sendTo(ws, {
-                        error: [
-                            ['leaderTaken', ['That leader is no longer available']],
-                        ],
-                    });
-                }
+        const player = game.getPlayer(username);
+        if (player) {
+            if (game.world.setCivLeader(player.civID, leaderID)) {
+                game.sendToAll({
+                    update: [
+                        ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
+                    ],
+                });
+            }
+            else {
+                sendTo(ws, {
+                    error: [
+                        ['leaderTaken', ['That leader is no longer available']],
+                    ],
+                });
             }
         }
     },
     ready: (ws, state) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
-        if (game) {
-            const player = game.getPlayer(username);
-            if (player) {
-                const civ = game.world.getCiv(player.civID);
-                if (!civ.leader) {
-                    sendTo(ws, { error: [
-                            ['notReady', ['Please select leader']],
-                        ] });
-                    return;
-                }
-                player.ready = state;
-                if (Object.keys(game.players).length === game.playerCount) {
-                    if (Object.values(game.players).every((player) => player.ready)) {
-                        game.startGame(player);
-                    }
+        const player = game.getPlayer(username);
+        if (player) {
+            const civ = game.world.getCiv(player.civID);
+            if (!civ.leader) {
+                sendTo(ws, { error: [
+                        ['notReady', ['Please select leader']],
+                    ] });
+                return;
+            }
+            player.ready = state;
+            if (Object.keys(game.players).length === game.playerCount) {
+                if (Object.values(game.players).every((player) => player.ready)) {
+                    game.startGame(player);
                 }
             }
         }
@@ -123,7 +160,8 @@ exports.methods = {
     // Deprecated
     // TODO: replace with turnFinished
     endTurn: (ws) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         game.sendToCiv(civID, {
@@ -134,7 +172,8 @@ exports.methods = {
         return;
     },
     turnFinished: (ws, state) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         const civ = game.world.civs[civID];
@@ -175,7 +214,8 @@ exports.methods = {
         }
     },
     moveUnit: (ws, srcCoords, path, attack) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         console.log(srcCoords, path, attack);
@@ -209,10 +249,12 @@ exports.methods = {
             }
             if (attack) {
                 const unit = src.unit;
-                const target = map.getTile(path[path.length - 1]);
-                if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
-                    world.meleeCombat(unit, target.unit);
-                    unit.movement = 0;
+                if (unit) {
+                    const target = map.getTile(path[path.length - 1]);
+                    if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
+                        world.meleeCombat(unit, target.unit);
+                        unit.movement = 0;
+                    }
                 }
             }
             game.sendUpdates();
@@ -220,7 +262,8 @@ exports.methods = {
     },
     settleCity: (ws, coords, name) => {
         var _a;
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         if (game) {
@@ -235,7 +278,8 @@ exports.methods = {
         }
     },
     buildImprovement: (ws, coords, type) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         if (game) {

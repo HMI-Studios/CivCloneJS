@@ -8,9 +8,10 @@ class Civilization {
         this.turnFinished = false;
     }
     getData() {
-        const leaderData = this.leader.getData();
+        var _a;
+        const leaderData = (_a = this.leader) === null || _a === void 0 ? void 0 : _a.getData();
         return {
-            color: leaderData.color,
+            color: leaderData === null || leaderData === void 0 ? void 0 : leaderData.color,
             leader: leaderData,
         };
     }

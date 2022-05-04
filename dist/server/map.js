@@ -25,16 +25,17 @@ class Map {
     getTile(coords) {
         return this.tiles[this.pos(coords)];
     }
-    getNeighborsCoords({ x, y }, r = 1, tileList = [], isTop = true) {
+    getNeighborsCoordsRecurse({ x, y }, r, tileList) {
         if (r > 0 && this.getTile({ x, y })) {
             tileList.push({ x, y });
             for (const coord of (0, utils_1.getAdjacentCoords)({ x, y })) {
-                this.getNeighborsCoords(coord, r - 1, tileList, false);
+                this.getNeighborsCoordsRecurse(coord, r - 1, tileList);
             }
         }
-        if (isTop) {
-            return tileList;
-        }
+    }
+    getNeighborsCoords(coords, r = 1, tileList = []) {
+        this.getNeighborsCoordsRecurse(coords, r, tileList);
+        return tileList;
     }
     getVisibleTilesCoords(unit) {
         return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
@@ -73,15 +74,11 @@ class Map {
         this.updates.push((civID) => ['tileUpdate', [coords, this.getCivTile(civID, tile)]]);
     }
     moveUnitTo(unit, coords) {
-        if (unit.coords.x !== null && unit.coords.y !== null) {
-            this.getTile(unit.coords).setUnit(null);
-            this.tileUpdate(unit.coords);
-        }
+        this.getTile(unit.coords).setUnit(undefined);
+        this.tileUpdate(unit.coords);
         unit.coords = coords;
-        if (coords.x !== null && coords.y !== null) {
-            this.getTile(coords).setUnit(unit);
-            this.tileUpdate(coords);
-        }
+        this.getTile(coords).setUnit(unit);
+        this.tileUpdate(coords);
     }
     settleCityAt(coords, name, civID) {
         const city = new city_1.City(coords, name, civID);

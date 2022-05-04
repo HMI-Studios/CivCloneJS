@@ -2,8 +2,8 @@ import { Leader, LeaderData } from './leader';
 import { Unit } from './unit';
 
 export interface CivilizationData {
-  color: string;
-  leader: LeaderData;
+  color?: string;
+  leader?: LeaderData;
 }
 
 export class Civilization {
@@ -19,9 +19,9 @@ export class Civilization {
   }
 
   getData(): CivilizationData {
-    const leaderData = this.leader.getData();
+    const leaderData = this.leader?.getData();
     return {
-      color: leaderData.color,
+      color: leaderData?.color,
       leader: leaderData,
     }
   }

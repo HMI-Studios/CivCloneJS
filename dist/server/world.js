@@ -12,8 +12,8 @@ class World {
         this.leaderPool = {};
         for (let i = 0; i < this.civsCount; i++) {
             this.civs[i] = new civilization_1.Civilization();
-            this.addUnit(new unit_1.Unit('settler', i), { x: (i + 1) * 1, y: (i + 1) * 1 }); // REMOVE THESE
-            this.addUnit(new unit_1.Unit('builder', i), { x: (i + 1) * 3, y: (i + 1) * 4 }); // REMOVE THESE
+            this.addUnit(new unit_1.Unit('settler', i, { x: (i + 1) * 1, y: (i + 1) * 1 })); // REMOVE THESE
+            this.addUnit(new unit_1.Unit('builder', i, { x: (i + 1) * 3, y: (i + 1) * 4 })); // REMOVE THESE
             this.updateCivTileVisibility(i);
         }
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
@@ -43,10 +43,11 @@ class World {
     }
     // leaders, civs
     setCivLeader(civID, leaderID) {
+        var _a;
         const leader = this.leaderPool[leaderID];
         if (leader && !leader.isTaken()) {
             if (this.civs[civID].leader) {
-                this.civs[civID].leader.unselect();
+                (_a = this.civs[civID].leader) === null || _a === void 0 ? void 0 : _a.unselect();
             }
             this.civs[civID].leader = leader;
             leader.select(civID);
@@ -82,15 +83,14 @@ class World {
         }
     }
     // map, civs
-    addUnit(unit, coords) {
+    addUnit(unit) {
         this.civs[unit.civID].addUnit(unit);
-        this.map.moveUnitTo(unit, coords);
     }
     // map, civs
     removeUnit(unit) {
         this.civs[unit.civID].removeUnit(unit);
         this.updates.push(() => ['unitKilled', [unit.coords, unit]]);
-        this.map.moveUnitTo(unit, { x: null, y: null });
+        this.map.getTile(unit.coords).setUnit(undefined);
         // TODO: make this more intelligent
         this.updateCivTileVisibility(unit.civID);
         this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);

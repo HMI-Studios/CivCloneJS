@@ -3,11 +3,10 @@ import { Player } from './player';
 import { Map } from './map';
 import { Game } from './game';
 import { WorldGenerator } from './worldGenerator';
-import { Leader } from './leader';
 
 interface ConnectionData {
   ws: WebSocket,
-  ip: string,
+  ip?: string,
   username: string | null,
   gameID: number | null,
 }
@@ -34,14 +33,55 @@ export const getConnData = (ws: WebSocket): ConnectionData => {
   return connData[connIndex];
 };
 
-export const methods = {
+const getUsername = (ws: WebSocket): string => {
+  const connIndex = connections.indexOf(ws);
+  const username = connData[connIndex].username;
+  if (!username) {
+    sendTo(ws, {
+      error: [
+        ['invalidUsername', ['username is null; please provide a username.']],
+      ],
+    });
+    throw 'Invalid Username';
+  } else {
+    return username;
+  }
+};
+
+const getGameID = (ws: WebSocket): number => {
+  const connIndex = connections.indexOf(ws);
+  const gameID = connData[connIndex].gameID;
+  if (!gameID) {
+    sendTo(ws, {
+      error: [
+        ['invalidGameID', ['gameID is null; please provide a gameID.']],
+      ],
+    });
+    throw 'Invalid Game ID';
+  } else {
+    return gameID;
+  }
+};
+
+export const executeAction = (ws: WebSocket, action: string, ...args: unknown[]) => {
+  try {
+    methods[action](ws, args);
+  } catch(error) {
+    console.error(error);
+  }
+};
+
+const methods: {
+  [key: string]: (...args: unknown[]) => void;
+} = {
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
   },
 
   joinGame: (ws: WebSocket, gameID: number) => {
     const game = games[gameID];
-    const username = getConnData(ws).username;
+
+    const username = getUsername(ws);
 
     const civID = game?.newPlayerCivID(username);
 
@@ -95,53 +135,53 @@ export const methods = {
   },
 
   setLeader: (ws: WebSocket, leaderID: number) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
     const game = games[gameID];
 
-    if (game) {
-      const player = game.getPlayer(username);
+    const player = game.getPlayer(username);
 
-      if (player) {
-        if (game.world.setCivLeader(player.civID, leaderID)) {
-          game.sendToAll({
-            update: [
-              ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
-            ],
-          });
-        } else {
-          sendTo(ws, {
-            error: [
-              ['leaderTaken', ['That leader is no longer available']],
-            ],
-          });
-        }
+    if (player) {
+      if (game.world.setCivLeader(player.civID, leaderID)) {
+        game.sendToAll({
+          update: [
+            ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
+          ],
+        });
+      } else {
+        sendTo(ws, {
+          error: [
+            ['leaderTaken', ['That leader is no longer available']],
+          ],
+        });
       }
     }
   },
 
   ready: (ws: WebSocket, state: boolean) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
     const game = games[gameID];
 
-    if (game) {
-      const player = game.getPlayer(username);
+    const player = game.getPlayer(username);
 
-      if (player) {
-        const civ = game.world.getCiv(player.civID);
+    if (player) {
+      const civ = game.world.getCiv(player.civID);
 
-        if (!civ.leader) {
-          sendTo(ws, { error: [
-            ['notReady', ['Please select leader']],
-          ] });
-          return;
-        }
+      if (!civ.leader) {
+        sendTo(ws, { error: [
+          ['notReady', ['Please select leader']],
+        ] });
+        return;
+      }
 
-        player.ready = state;
+      player.ready = state;
 
-        if (Object.keys(game.players).length === game.playerCount) {
-          if (Object.values(game.players).every((player: Player) => player.ready)) {
-            game.startGame(player);
-          }
+      if (Object.keys(game.players).length === game.playerCount) {
+        if (Object.values(game.players).every((player: Player) => player.ready)) {
+          game.startGame(player);
         }
       }
     }
@@ -150,7 +190,9 @@ export const methods = {
   // Deprecated
   // TODO: replace with turnFinished
   endTurn: (ws: WebSocket) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
     const game = games[gameID];
     const civID = game.players[username].civID;
 
@@ -164,7 +206,9 @@ export const methods = {
   },
 
   turnFinished: (ws: WebSocket, state: boolean) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
     const game = games[gameID];
     const civID = game.players[username].civID;
     const civ = game.world.civs[civID];
@@ -213,7 +257,9 @@ export const methods = {
   },
 
   moveUnit: (ws: WebSocket, srcCoords: Coords, path: Coords[], attack: boolean) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+    
     const game = games[gameID];
     const civID = game.players[username].civID;
 
@@ -259,10 +305,12 @@ export const methods = {
 
       if (attack) {
         const unit = src.unit;
-        const target = map.getTile(path[path.length - 1]);
-        if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
-          world.meleeCombat(unit, target.unit);
-          unit.movement = 0;
+        if (unit) {
+          const target = map.getTile(path[path.length - 1]);
+          if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
+            world.meleeCombat(unit, target.unit);
+            unit.movement = 0;
+          }
         }
       }
 
@@ -271,7 +319,9 @@ export const methods = {
   },
 
   settleCity: (ws: WebSocket, coords: Coords, name: string) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
     const game = games[gameID];
     const civID = game.players[username].civID;
 
@@ -291,7 +341,9 @@ export const methods = {
   },
 
   buildImprovement: (ws: WebSocket, coords: Coords, type: string) => {
-    const { username, gameID } = getConnData(ws);
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
     const game = games[gameID];
     const civID = game.players[username].civID;
 

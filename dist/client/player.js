@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const unitActionsTable = {
     'settler': ['settleCity'],
     'scout': [],
@@ -24,9 +23,13 @@ const unitActionsAvailabilityTable = {
         return tile.type === 'plains';
     },
 };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
     constructor() {
-        this.root = document.getElementById('UI');
+        const rootElement = document.getElementById('UI');
+        if (!rootElement)
+            throw 'Root UI Element Missing';
+        this.root = rootElement;
         this.elements = {
             readyBtn: this.createElement('button', 'readyBtn'),
             centerModal: this.createElement('div', 'centerModal'),
@@ -43,7 +46,6 @@ class UI {
         this.buttons = {
             mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
                 text: 'MainBtn',
-                action: null,
             }),
         };
         this.textInputs = {
@@ -57,7 +59,7 @@ class UI {
             ipSelect: new TextInput({
                 query: 'Enter Server Address:',
                 fields: [
-                    ['Address', ''],
+                    ['Address'],
                 ]
             }),
         };
@@ -86,7 +88,7 @@ class UI {
         this.hideGameList();
         this.hideMainMenu();
     }
-    createElement(type, className = null) {
+    createElement(type, className) {
         const element = document.createElement(type);
         if (className) {
             element.className = className;
@@ -186,7 +188,7 @@ class UI {
         logoutBtn.onclick = () => callbacks.logout();
         this.elements.mainMenu.appendChild(logoutBtn);
         this.elements.centerModal.appendChild(this.elements.mainMenu);
-        document.getElementById('UI').appendChild(this.elements.centerModal);
+        this.root.appendChild(this.elements.centerModal);
     }
     hideMainMenu() {
         this.elements.mainMenu.remove();
@@ -205,7 +207,7 @@ class UI {
             this.elements.gameList.appendChild(gameBtn);
         }
         this.elements.centerModal.appendChild(this.elements.gameList);
-        document.getElementById('UI').appendChild(this.elements.centerModal);
+        this.root.appendChild(this.elements.centerModal);
     }
     hideGameList() {
         this.elements.gameList.remove();

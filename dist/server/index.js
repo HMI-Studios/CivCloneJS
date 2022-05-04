@@ -61,7 +61,7 @@ wss.on('connection', (ws, req) => {
             for (let i = 0; i < data.actions.length; i++) {
                 const action = data.actions[i][0];
                 const args = data.actions[i][1];
-                methods_1.methods[action](ws, ...args);
+                (0, methods_1.executeAction)(ws, action, ...args);
             }
         }
     });

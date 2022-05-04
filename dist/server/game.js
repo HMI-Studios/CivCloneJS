@@ -17,6 +17,7 @@ class Game {
             playerCount,
             playersConnected: Object.keys(this.players).length,
         };
+        this.hasStarted = false;
     }
     connectPlayer(username, player) {
         this.players[username] = player;

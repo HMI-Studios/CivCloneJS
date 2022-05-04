@@ -127,7 +127,7 @@ class World {
         return __awaiter(this, void 0, void 0, function* () {
             let username = localStorage.getItem('username');
             if (!username) {
-                const [usr, pass] = yield ui.textInputs.loginMenu.prompt(document.getElementById('UI'), false);
+                const [usr, pass] = yield ui.textInputs.loginMenu.prompt(ui.root, false);
                 username = usr;
                 localStorage.setItem('username', username);
             }
@@ -157,7 +157,7 @@ class World {
                     resolve();
                 });
                 this.socket.addEventListener('error', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
-                    const [newIP] = yield ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
                     localStorage.setItem('serverIP', newIP);
                     yield this.connect();
                     resolve();
@@ -220,7 +220,8 @@ class World {
                 for (const playerName in players) {
                     const player = players[playerName];
                     ui.players[playerName] = Object.assign(Object.assign({}, player), { name: playerName });
-                    ui.civs[player.civID] = Object.assign(Object.assign({}, player), { name: playerName });
+                    if (player.civID !== null)
+                        ui.civs[player.civID] = Object.assign(Object.assign({}, player), { name: playerName });
                 }
                 ui.setView('civPicker');
                 ui.showCivPicker(civPickerFn, this.player);
@@ -239,7 +240,7 @@ class World {
             this.on.error.kicked = (reason) => __awaiter(this, void 0, void 0, function* () {
                 console.error('Kicked:', reason);
                 ui.hideAll();
-                yield ui.textAlerts.errorAlert.alert(document.getElementById('UI'), `Kicked: ${reason}`);
+                yield ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
                 this.sendActions([
                     ['getGames', []],
                 ]);
@@ -270,7 +271,7 @@ class World {
                 }),
                 changeServer: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
-                    const [newIP] = yield ui.textInputs.ipSelect.prompt(document.getElementById('UI'), false);
+                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
                     localStorage.setItem('serverIP', newIP);
                     yield this.connect();
                     ui.showMainMenu(mainMenuFns);

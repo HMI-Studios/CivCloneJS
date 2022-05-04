@@ -19,17 +19,14 @@ const unitCombatStatsTable = {
     'builder': [0, 1, 0],
 };
 class Unit {
-    constructor(type, civID) {
+    constructor(type, civID, coords) {
         this.type = type;
         this.hp = 100;
         this.movement = 0;
         this.movementClass = unitMovementClassTable[type];
         this.combatStats = unitCombatStatsTable[type];
         this.civID = civID;
-        this.coords = {
-            x: null,
-            y: null,
-        };
+        this.coords = coords;
         this.alive = true;
     }
     getData() {
@@ -61,7 +58,7 @@ class Unit {
         this.movement = unitMovementTable[this.type];
     }
     isAdjacentTo(dst) {
-        return dst && (0, utils_1.getAdjacentCoords)(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
+        return !!dst && (0, utils_1.getAdjacentCoords)(this.coords).some(coord => coord.x === dst.x && coord.y === dst.y);
     }
 }
 exports.Unit = Unit;

@@ -2,7 +2,7 @@ import { Map } from './map';
 import { Unit } from './unit';
 import { Civilization, CivilizationData } from './civilization';
 import { Event } from './utils';
-import { Leader, leaderTemplates } from './leader';
+import { Leader, LeaderData, leaderTemplates } from './leader';
 
 export interface Coords {
   x: number;
@@ -26,8 +26,8 @@ export class World {
     for (let i = 0; i < this.civsCount; i++) {
       this.civs[i] = new Civilization();
 
-      this.addUnit(new Unit('settler', i), { x: (i+1)*1, y: (i+1)*1 }); // REMOVE THESE
-      this.addUnit(new Unit('builder', i), { x: (i+1)*3, y: (i+1)*4 }); // REMOVE THESE
+      this.addUnit(new Unit('settler', i, { x: (i+1)*1, y: (i+1)*1 })); // REMOVE THESE
+      this.addUnit(new Unit('builder', i, { x: (i+1)*3, y: (i+1)*4 })); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
     }
@@ -50,9 +50,9 @@ export class World {
   }
 
   // leaders
-  getLeaderPool(): [Leader[], Leader[]] {
-    const leaderList = [];
-    const takenLeaderList = [];
+  getLeaderPool(): [LeaderData[], LeaderData[]] {
+    const leaderList: LeaderData[] = [];
+    const takenLeaderList: LeaderData[] = [];
 
     for (const id in this.leaderPool) {
       const leader = this.leaderPool[id];
@@ -71,7 +71,7 @@ export class World {
     const leader = this.leaderPool[leaderID];
     if (leader && !leader.isTaken()) {
       if (this.civs[civID].leader) {
-        this.civs[civID].leader.unselect();
+        this.civs[civID].leader?.unselect();
       }
       this.civs[civID].leader = leader;
       leader.select(civID);
@@ -112,16 +112,15 @@ export class World {
   }
 
   // map, civs
-  addUnit(unit: Unit, coords: Coords): void {
+  addUnit(unit: Unit): void {
     this.civs[unit.civID].addUnit(unit);
-    this.map.moveUnitTo(unit, coords);
   }
 
   // map, civs
   removeUnit(unit: Unit): void {
     this.civs[unit.civID].removeUnit(unit);
     this.updates.push(() => ['unitKilled', [ unit.coords, unit ]]);
-    this.map.moveUnitTo(unit, { x: null, y: null });
+    this.map.getTile(unit.coords).setUnit(undefined);
     // TODO: make this more intelligent
     this.updateCivTileVisibility(unit.civID)
     this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);

@@ -9,9 +9,9 @@ class Random {
         this.prevRand = ((1103515245 * this.prevRand) + 12345) % 2147483648;
         return ((this.prevRand / 2147483648) * (to - from)) + from;
     }
-    randFloat(from = null, to = null) {
-        if (from !== null) {
-            if (to !== null) {
+    randFloat(from, to) {
+        if (from !== undefined) {
+            if (to !== undefined) {
                 return this._randNumber(from, to);
             }
             else {
@@ -22,7 +22,7 @@ class Random {
             return this._randNumber(0, 1);
         }
     }
-    randInt(from = null, to = null) {
+    randInt(from, to) {
         return Math.round(this.randFloat(from, to));
     }
     doubleRandInt(n1, n2, n3, n4) {

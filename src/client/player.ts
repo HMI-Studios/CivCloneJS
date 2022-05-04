@@ -5,8 +5,6 @@ interface Leader {
   civID: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
@@ -35,6 +33,7 @@ const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coor
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
 
   root: HTMLElement;
@@ -51,7 +50,9 @@ class UI {
   public view: string;
 
   constructor() {
-    this.root = document.getElementById('UI');
+    const rootElement = document.getElementById('UI');
+    if (!rootElement) throw 'Root UI Element Missing';
+    this.root = rootElement;
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),
       centerModal: this.createElement('div', 'centerModal'),
@@ -69,7 +70,6 @@ class UI {
     this.buttons = {
       mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
         text: 'MainBtn',
-        action: null,
       }),
     };
 
@@ -84,7 +84,7 @@ class UI {
       ipSelect: new TextInput({
         query: 'Enter Server Address:',
         fields: [
-          ['Address', ''],
+          ['Address'],
         ]
       }),
     };
@@ -120,7 +120,7 @@ class UI {
     this.hideMainMenu();
   }
 
-  createElement(type: string, className=null): HTMLElement {
+  createElement(type: string, className?: string): HTMLElement {
     const element = document.createElement(type);
     if (className) {
       element.className = className;
@@ -240,7 +240,7 @@ class UI {
     this.elements.mainMenu.appendChild(logoutBtn);
 
     this.elements.centerModal.appendChild(this.elements.mainMenu);
-    document.getElementById('UI').appendChild(this.elements.centerModal);
+    this.root.appendChild(this.elements.centerModal);
   }
 
   hideMainMenu(): void {
@@ -266,7 +266,7 @@ class UI {
     }
 
     this.elements.centerModal.appendChild(this.elements.gameList);
-    document.getElementById('UI').appendChild(this.elements.centerModal);
+    this.root.appendChild(this.elements.centerModal);
   }
 
   hideGameList(): void {
