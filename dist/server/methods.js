@@ -36,7 +36,7 @@ exports.methods = {
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
-                    ['leaderPool', [...game.world.getLeaderPool()]],
+                    ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
                 ],
             });
             const gameList = {};
@@ -79,7 +79,7 @@ exports.methods = {
                 if (game.world.setCivLeader(player.civID, leaderID)) {
                     game.sendToAll({
                         update: [
-                            ['leaderPool', [...game.world.getLeaderPool()]],
+                            ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
                         ],
                     });
                 }

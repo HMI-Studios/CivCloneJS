@@ -52,7 +52,7 @@ export const methods = {
       sendTo(ws, {
         update: [
           ['civID', [ civID ]],
-          ['leaderPool', [ ...game.world.getLeaderPool() ]],
+          ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
         ],
       });
 
@@ -101,7 +101,7 @@ export const methods = {
         if (game.world.setCivLeader(player.civID, leaderID)) {
           game.sendToAll({
             update: [
-              ['leaderPool', [ ...game.world.getLeaderPool() ]],
+              ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
             ],
           });
         } else {

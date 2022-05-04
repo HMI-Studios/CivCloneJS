@@ -10,6 +10,8 @@ class UI {
         };
         this.leaderPool = [];
         this.takenLeaders = [];
+        this.players = {};
+        this.civs = {};
         this.turnActive = false;
         this.buttons = {
             mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
@@ -68,7 +70,7 @@ class UI {
         const civItem = this.createElement('li', 'civItem');
         civItem.style.backgroundColor = leader.color;
         const nameText = this.createElement('span');
-        nameText.innerHTML = `${leader.name} - Selected by ${leader.civID}`;
+        nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - Selected by ${this.civs[leader.civID].name}` : '');
         civItem.appendChild(nameText);
         return civItem;
     }

@@ -211,9 +211,16 @@ class World {
             this.on.update.tileUpdate = ({ x, y }, tile) => {
                 this.tiles[this.pos(x, y)] = tile;
             };
-            this.on.update.leaderPool = (leaders, takenLeaders) => {
+            this.on.update.leaderPool = (leaders, takenLeaders, players) => {
                 ui.leaderPool = leaders;
                 ui.takenLeaders = takenLeaders;
+                ui.players = {};
+                ui.civs = {};
+                for (const playerName in players) {
+                    const player = players[playerName];
+                    ui.players[playerName] = Object.assign(Object.assign({}, player), { name: playerName });
+                    ui.civs[player.civID] = Object.assign(Object.assign({}, player), { name: playerName });
+                }
                 ui.setView('civPicker');
                 ui.showCivPicker(civPickerFn, this.player);
             };

@@ -52,7 +52,7 @@ const events = {
   update: sortObj({
     civID: [ [ 'civID: number' ], '' ],
     colorPool: [ [], 'DEPRECATED: Use `leaderPool`.' ],
-    leaderPool: [ [ 'leaders: Leader[], takenLeaders: Leader[]' ], '' ],
+    leaderPool: [ [ 'leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: PlayerData}' ], '' ],
     gameList: [ [ 'gameIDs: number[]' ], 'List of all available games.' ],
     beginGame: [ [ '[width: number, height: number]', 'playerCount: number' ], '`width` and `height` of map; `playerCount` of game.' ],
     civData: [ [ 'civData: { [civID: number]: CivilizationData }' ], '' ],

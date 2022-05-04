@@ -280,9 +280,16 @@ class World {
       this.tiles[this.pos(x, y)] = tile;
     };
 
-    this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[]): void => {
+    this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {
       ui.leaderPool = leaders;
       ui.takenLeaders = takenLeaders;
+      ui.players = {};
+      ui.civs = {};
+      for (const playerName in players) {
+        const player = players[playerName];
+        ui.players[playerName] = { ...player, name: playerName };
+        ui.civs[player.civID] = { ...player, name: playerName };
+      }
       ui.setView('civPicker');
       ui.showCivPicker(civPickerFn, this.player);
     };
