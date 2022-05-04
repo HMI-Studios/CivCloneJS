@@ -4,17 +4,20 @@ import { Coords } from './world';
 const unitMovementTable: { [unit: string]: number } = {
   'settler': 3,
   'scout': 5,
+  'builder': 3,
 };
 
 const unitMovementClassTable: { [unit: string]: number } = {
   'settler': 0,
   'scout': 0,
+  'builder': 0,
 };
 
 const unitCombatStatsTable: { [unit: string]: [number, number, number] } = {
   // 'unit': [offense, defense, awareness],
   'settler': [0, 1, 0],
   'scout': [5, 3, 20],
+  'builder': [0, 1, 0],
 }
 
 export interface UnitData {

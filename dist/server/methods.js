@@ -13,7 +13,7 @@ const sendTo = (ws, msg) => {
 exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 2),
+    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 1),
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
@@ -209,10 +209,26 @@ exports.methods = {
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         if (game) {
-            const map = game.world.map;
+            const world = game.world;
+            const map = world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
                 map.settleCityAt(coords, name, civID);
+                world.removeUnit(unit);
+                game.sendUpdates();
+            }
+        }
+    },
+    buildImprovement: (ws, coords, type) => {
+        const { username, gameID } = (0, exports.getConnData)(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
+                map.buildImprovementAt(coords, type);
             }
         }
     },
