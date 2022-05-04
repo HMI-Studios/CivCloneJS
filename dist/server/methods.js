@@ -13,7 +13,9 @@ const sendTo = (ws, msg) => {
 exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 1),
+    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), {
+        playerCount: 1,
+    }),
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
@@ -30,7 +32,7 @@ exports.methods = {
         const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID();
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
-            game.players[username] = new player_1.Player(civID, ws);
+            game.connectPlayer(username, new player_1.Player(civID, ws));
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
@@ -47,7 +49,7 @@ exports.methods = {
     getGames: (ws) => {
         const gameList = {};
         for (const gameID in exports.games) {
-            gameList[gameID] = exports.games[gameID].world.metaData;
+            gameList[gameID] = exports.games[gameID].getMetaData();
         }
         sendTo(ws, {
             update: [

@@ -23,9 +23,6 @@ class World {
             '#bd7400', // ORANGE
         ].slice(0, Math.max(this.civsCount, 6));
         this.colorPool = colorList.reduce((obj, color) => (Object.assign(Object.assign({}, obj), { [color]: true })), {});
-        this.metaData = {
-            gameName: "New Game",
-        };
         this.updates = [];
     }
     getUpdates() {

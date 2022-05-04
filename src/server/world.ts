@@ -1,7 +1,5 @@
 import { Map } from './map';
 import { Unit } from './unit';
-import { Tile } from './tile';
-import { City } from './city';
 import { Civilization, CivilizationData } from './civilization';
 import { Event } from './utils';
 
@@ -15,7 +13,6 @@ export class World {
   civs: { [civID: number]: Civilization };
   civsCount: number;
   colorPool: { [color: string]: boolean };
-  metaData: { gameName: string };
   updates: { (civID: number): Event }[];
 
   constructor(map: Map, civsCount: number) {
@@ -43,10 +40,6 @@ export class World {
     ].slice(0, Math.max(this.civsCount, 6));
 
     this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
-
-    this.metaData = {
-      gameName: "New Game",
-    };
 
     this.updates = [];
   }
@@ -158,7 +151,7 @@ export class World {
 
     if (attacker.isDead()) this.removeUnit(attacker);
     if (defender.isDead()) this.removeUnit(defender);
-    
+
     this.map.tileUpdate(attacker.coords);
     this.map.tileUpdate(defender.coords);
   }

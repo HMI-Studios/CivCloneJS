@@ -1,19 +1,42 @@
-import { World, Coords } from './world';
+import { World } from './world';
 import { Player } from './player';
-import { Tile } from './tile';
 import { Map } from './map';
 import { EventMsg } from './utils';
+
+interface MetaData {
+  gameName: string,
+  ownerName: string,
+  playerCount: number,
+  playersConnected: number,
+}
 
 export class Game {
   world: World;
   players: { [playerName: string]: Player };
   playerCount: number;
+  metaData: MetaData;
 
-  constructor(map: Map, playerCount: number) {
+  constructor(map: Map, options: { playerCount: number, ownerName?: string, gameName?: string }) {
+    const { playerCount, ownerName } = options;
+    let { gameName } = options;
+    if (!gameName) gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
+
     this.world = new World(map, playerCount);
 
     this.players = {};
     this.playerCount = playerCount;
+
+    this.metaData = {
+      gameName,
+      ownerName,
+      playerCount,
+      playersConnected: Object.keys(this.players).length,
+    };
+  }
+
+  connectPlayer(username, player) {
+    this.players[username] = player;
+    this.metaData = { ...this.metaData, playersConnected: Object.keys(this.players).length };
   }
 
   beginTurnForCiv(civID: number): void {
@@ -47,6 +70,10 @@ export class Game {
 
   getPlayer(username: string): Player {
     return this.players[username];
+  }
+
+  getMetaData(): MetaData & { players: {[playerName: string]: Player} } {
+    return { ...this.metaData, players: this.players };
   }
 
   sendToAll(msg: EventMsg): void {

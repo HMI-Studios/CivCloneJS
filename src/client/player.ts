@@ -200,8 +200,9 @@ class UI {
     this.elements.gameList.appendChild(titleHeading);
 
     for (const gameID in gameList) {
+      const { gameName, playersConnected, playerCount } = gameList[gameID];
       const gameBtn = this.createElement('button');
-      gameBtn.innerText = gameList[gameID].gameName;
+      gameBtn.innerText = `${gameName} - ${playersConnected} / ${playerCount} players connected`;
       gameBtn.onclick = () => callbacks.joinGame(gameID);
       this.elements.gameList.appendChild(gameBtn);
     }

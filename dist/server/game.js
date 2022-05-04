@@ -3,10 +3,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Game = void 0;
 const world_1 = require("./world");
 class Game {
-    constructor(map, playerCount) {
+    constructor(map, options) {
+        const { playerCount, ownerName } = options;
+        let { gameName } = options;
+        if (!gameName)
+            gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
         this.world = new world_1.World(map, playerCount);
         this.players = {};
         this.playerCount = playerCount;
+        this.metaData = {
+            gameName,
+            ownerName,
+            playerCount,
+            playersConnected: Object.keys(this.players).length,
+        };
+    }
+    connectPlayer(username, player) {
+        this.players[username] = player;
+        this.metaData = Object.assign(Object.assign({}, this.metaData), { playersConnected: Object.keys(this.players).length });
     }
     beginTurnForCiv(civID) {
         this.world.civs[civID].newTurn();
@@ -36,6 +50,9 @@ class Game {
     }
     getPlayer(username) {
         return this.players[username];
+    }
+    getMetaData() {
+        return Object.assign(Object.assign({}, this.metaData), { players: this.players });
     }
     sendToAll(msg) {
         for (const playerName in this.players) {

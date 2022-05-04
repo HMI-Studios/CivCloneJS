@@ -34,6 +34,8 @@ interface Tile {
 
 interface GameMetadata {
   gameName: string;
+  playerCount: number;
+  playersConnected: number;
 }
 
 interface Coords {

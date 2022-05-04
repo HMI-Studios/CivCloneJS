@@ -1,9 +1,6 @@
-import * as fs from 'fs';
-import path from 'path';
 import * as WebSocket from 'ws';
 import { Player } from './player';
 import { Map } from './map';
-import { World } from './world';
 import { Game } from './game';
 import { WorldGenerator } from './worldGenerator';
 
@@ -25,7 +22,9 @@ export const games: { [gameID: number] : Game } = {
   0: new Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    1
+    {
+      playerCount: 1,
+    }
   ),
 };
 
@@ -47,7 +46,7 @@ export const methods = {
 
     if (civID !== null) {
       getConnData(ws).gameID = gameID;
-      game.players[username] = new Player(civID, ws);
+      game.connectPlayer(username, new Player(civID, ws));
 
       sendTo(ws, {
         update: [
@@ -65,7 +64,7 @@ export const methods = {
   getGames: (ws: WebSocket) => {
     const gameList = {};
     for (const gameID in games) {
-      gameList[gameID] = games[gameID].world.metaData;
+      gameList[gameID] = games[gameID].getMetaData();
     }
 
     sendTo(ws, {
