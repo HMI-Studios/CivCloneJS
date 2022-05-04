@@ -14,7 +14,7 @@ exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), {
-        playerCount: 2,
+        playerCount: 1,
     }),
 };
 const getConnData = (ws) => {
@@ -54,7 +54,8 @@ const getGameID = (ws) => {
 };
 const executeAction = (ws, action, ...args) => {
     try {
-        methods[action](ws, args);
+        console.log(args);
+        methods[action](ws, ...args);
     }
     catch (error) {
         console.error(error);
