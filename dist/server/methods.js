@@ -224,10 +224,26 @@ exports.methods = {
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         if (game) {
-            const map = game.world.map;
+            const world = game.world;
+            const map = world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
                 map.settleCityAt(coords, name, civID);
+                world.removeUnit(unit);
+                game.sendUpdates();
+            }
+        }
+    },
+    buildImprovement: (ws, coords, type) => {
+        const { username, gameID } = (0, exports.getConnData)(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
+                map.buildImprovementAt(coords, type);
             }
         }
     },

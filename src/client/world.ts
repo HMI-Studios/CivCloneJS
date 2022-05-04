@@ -24,9 +24,14 @@ interface Unit {
   civID: number;
 }
 
+interface Improvement {
+  type: string;
+  pillaged: boolean;
+}
+
 interface Tile {
   type: string;
-  improvement: any;
+  improvement: Improvement;
   movementCost: [number, number];
   unit: Unit;
   visible: boolean;

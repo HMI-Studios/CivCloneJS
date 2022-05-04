@@ -61,6 +61,8 @@ export class Tile {
 
     this.discoveredBy = {};
     this.visibleTo = {};
+
+    this.baseYield = baseYield;
   }
 
   getTileYield(): Yield {

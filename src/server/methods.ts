@@ -276,11 +276,33 @@ export const methods = {
     const civID = game.players[username].civID;
 
     if (game) {
-      const map = game.world.map;
+      const world = game.world;
+      const map = world.map;
 
-      const unit = map.getTile(coords)?.unit
+      const unit = map.getTile(coords)?.unit;
       if (unit?.type === 'settler' && unit?.civID === civID) {
         map.settleCityAt(coords, name, civID);
+
+        world.removeUnit(unit);
+
+        game.sendUpdates();
+      }
+    }
+  },
+
+  buildImprovement: (ws: WebSocket, coords: Coords, type: string) => {
+    const { username, gameID } = getConnData(ws);
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile?.unit;
+
+      if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
+        map.buildImprovementAt(coords, type);
       }
     }
   },

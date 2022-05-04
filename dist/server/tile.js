@@ -32,6 +32,7 @@ class Tile {
         this.owner = undefined;
         this.discoveredBy = {};
         this.visibleTo = {};
+        this.baseYield = baseYield;
     }
     getTileYield() {
         if (this.improvement) {
