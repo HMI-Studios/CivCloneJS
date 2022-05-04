@@ -14,7 +14,7 @@ exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), {
-        playerCount: 1,
+        playerCount: 2,
     }),
 };
 const getConnData = (ws) => {
@@ -39,6 +39,19 @@ exports.methods = {
                     ['colorPool', [game.world.getColorPool()]],
                 ],
             });
+            const gameList = {};
+            for (const id in exports.games) {
+                gameList[id] = exports.games[id].getMetaData();
+            }
+            for (const conn of exports.connData) {
+                if (conn.gameID === null) {
+                    sendTo(conn.ws, {
+                        update: [
+                            ['gameList', [gameList]],
+                        ],
+                    });
+                }
+            }
         }
         else {
             sendTo(ws, { error: [

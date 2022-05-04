@@ -1,7 +1,7 @@
 import { World } from './world';
 import { Player } from './player';
 import { Map } from './map';
-import { EventMsg } from './utils';
+import { EventMsg, PlayerData } from './utils';
 
 interface MetaData {
   gameName: string,
@@ -71,9 +71,17 @@ export class Game {
   getPlayer(username: string): Player {
     return this.players[username];
   }
+  
+  getPlayersData(): {[playerName: string]: PlayerData} {
+    const playersData = {};
+    for (const playerName in this.players) {
+      playersData[playerName] = this.players[playerName].getData();
+    }
+    return playersData;
+  }
 
-  getMetaData(): MetaData & { players: {[playerName: string]: Player} } {
-    return { ...this.metaData, players: this.players };
+  getMetaData(): MetaData & { players: {[playerName: string]: PlayerData} } {
+    return { ...this.metaData, players: this.getPlayersData() };
   }
 
   sendToAll(msg: EventMsg): void {

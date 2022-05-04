@@ -23,7 +23,7 @@ export const games: { [gameID: number] : Game } = {
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
     {
-      playerCount: 1,
+      playerCount: 2,
     }
   ),
 };
@@ -54,6 +54,21 @@ export const methods = {
           ['colorPool', [ game.world.getColorPool() ]],
         ],
       });
+
+      const gameList = {};
+      for (const id in games) {
+        gameList[id] = games[id].getMetaData();
+      }
+
+      for (const conn of connData) {
+        if (conn.gameID === null) {
+          sendTo(conn.ws, {
+            update: [
+              ['gameList', [gameList]],
+            ],
+          });
+        }
+      }
     } else {
       sendTo(ws, { error: [
         ['kicked', ['Game full']],

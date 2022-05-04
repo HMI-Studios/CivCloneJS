@@ -37,6 +37,9 @@ class UI {
             }),
         };
     }
+    setView(view) {
+        this.view = view;
+    }
     hideAll() {
         for (const widgetName in this.buttons) {
             this.buttons[widgetName].hide();

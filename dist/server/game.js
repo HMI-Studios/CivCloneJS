@@ -51,8 +51,15 @@ class Game {
     getPlayer(username) {
         return this.players[username];
     }
+    getPlayersData() {
+        const playersData = {};
+        for (const playerName in this.players) {
+            playersData[playerName] = this.players[playerName].getData();
+        }
+        return playersData;
+    }
     getMetaData() {
-        return Object.assign(Object.assign({}, this.metaData), { players: this.players });
+        return Object.assign(Object.assign({}, this.metaData), { players: this.getPlayersData() });
     }
     sendToAll(msg) {
         for (const playerName in this.players) {

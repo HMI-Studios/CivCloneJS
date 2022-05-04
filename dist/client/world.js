@@ -177,23 +177,27 @@ class World {
                 ]);
             };
             this.on.update.gameList = (gameList) => {
-                ui.hideMainMenu();
-                ui.showGameList(gameList, {
-                    joinGame: (gameID) => {
-                        if (gameID !== null) {
-                            this.sendActions([
-                                ['joinGame', [gameID]],
-                            ]);
-                            ui.hideGameList();
-                            ui.showReadyBtn(readyFn);
-                            ui.showCivPicker(civPickerFn);
-                        }
-                    },
-                });
+                if (ui.view === 'gameList') {
+                    ui.hideAll();
+                    ui.showGameList(gameList, {
+                        joinGame: (gameID) => {
+                            if (gameID !== null) {
+                                this.sendActions([
+                                    ['joinGame', [gameID]],
+                                ]);
+                                ui.hideGameList();
+                                ui.setView('civPicker');
+                                ui.showReadyBtn(readyFn);
+                                ui.showCivPicker(civPickerFn);
+                            }
+                        },
+                    });
+                }
             };
             this.on.update.beginGame = ([width, height]) => {
                 ui.hideReadyBtn();
                 ui.hideCivPicker();
+                ui.setView('inGame');
                 ui.showGameUI(this);
                 [this.width, this.height] = [width, height];
                 camera.start(this, 1000 / 60);
@@ -209,6 +213,7 @@ class World {
             };
             this.on.update.colorPool = (colors) => {
                 ui.colorPool = colors;
+                ui.setView('civPicker');
                 ui.showCivPicker(civPickerFn);
             };
             this.on.update.civData = (civs) => {
@@ -240,6 +245,7 @@ class World {
                     this.sendActions([
                         ['getGames', []],
                     ]);
+                    ui.setView('gameList');
                 },
                 logout: () => __awaiter(this, void 0, void 0, function* () {
                     localStorage.setItem('username', '');
@@ -255,6 +261,7 @@ class World {
                     ui.showMainMenu(mainMenuFns);
                 })
             };
+            ui.setView('mainMenu');
             ui.showMainMenu(mainMenuFns);
         });
     }

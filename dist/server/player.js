@@ -8,6 +8,11 @@ class Player {
         this.isAI = !connection;
         this.connection = connection;
     }
+    getData() {
+        return {
+            civID: this.civID
+        };
+    }
 }
 exports.Player = Player;
 //# sourceMappingURL=player.js.map

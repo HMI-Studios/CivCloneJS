@@ -8,6 +8,8 @@ class UI {
   textInputs: { [key: string]: TextInput };
   textAlerts: { [key: string]: TextAlert };
 
+  public view: string;
+
   constructor() {
     this.elements = {
       readyBtn: this.createElement('button', 'readyBtn'),
@@ -47,6 +49,10 @@ class UI {
         message: 'Error',
       }),
     };
+  }
+
+  setView(view: string) {
+    this.view = view;
   }
 
   hideAll(): void {

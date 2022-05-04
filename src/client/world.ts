@@ -239,26 +239,30 @@ class World {
     };
 
     this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
-      ui.hideMainMenu();
+      if (ui.view === 'gameList') {
+        ui.hideAll();
 
-      ui.showGameList(gameList, {
-        joinGame: (gameID: string): void => {
-          if (gameID !== null) {
-            this.sendActions([
-              ['joinGame', [gameID]],
-            ]);
+        ui.showGameList(gameList, {
+          joinGame: (gameID: string): void => {
+            if (gameID !== null) {
+              this.sendActions([
+                ['joinGame', [gameID]],
+              ]);
 
-            ui.hideGameList();
-            ui.showReadyBtn(readyFn);
-            ui.showCivPicker(civPickerFn);
-          }
-        },
-      });
+              ui.hideGameList();
+              ui.setView('civPicker');
+              ui.showReadyBtn(readyFn);
+              ui.showCivPicker(civPickerFn);
+            }
+          },
+        });
+      }
     };
 
     this.on.update.beginGame = ([width, height]: [number, number]): void => {
       ui.hideReadyBtn();
       ui.hideCivPicker();
+      ui.setView('inGame');
       ui.showGameUI(this);
       [this.width, this.height] = [width, height];
       camera.start(this, 1000/60);
@@ -278,6 +282,7 @@ class World {
 
     this.on.update.colorPool = (colors: string[]): void => {
       ui.colorPool = colors;
+      ui.setView('civPicker');
       ui.showCivPicker(civPickerFn);
     };
 
@@ -319,6 +324,7 @@ class World {
         this.sendActions([
           ['getGames', []],
         ]);
+        ui.setView('gameList');
       },
       logout: async () => {
         localStorage.setItem('username', '');
@@ -335,6 +341,7 @@ class World {
       }
     };
 
+    ui.setView('mainMenu');
     ui.showMainMenu(mainMenuFns);
   }
 

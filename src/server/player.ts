@@ -1,4 +1,5 @@
 import * as WebSocket from 'ws';
+import { PlayerData } from './utils';
 
 export class Player {
   civID: number;
@@ -11,5 +12,11 @@ export class Player {
     this.ready = false;
     this.isAI = !connection;
     this.connection = connection;
+  }
+
+  getData(): PlayerData {
+    return {
+      civID: this.civID
+    };
   }
 }
