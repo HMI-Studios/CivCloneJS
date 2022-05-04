@@ -8,7 +8,7 @@ class Camera {
   textures: { tile: { [key: string]: HTMLElement }, selector: HTMLElement, unit: { [key: string]: HTMLElement } };
   interval?: NodeJS.Timer;
   mouseDownTime: number;
-  selectedUnitPos: [number, number];
+  selectedUnitPos: [number, number] | null;
   highlightedTiles: { [key: string]: [number, number] };
 
   constructor() {
@@ -16,20 +16,25 @@ class Camera {
     this.y = 0;
     this.zoom = 1;
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
-    this.ctx = this.canvas.getContext('2d');
+
+    const ctx = this.canvas.getContext('2d');
+    if (!ctx) throw 'Canvas Context Error';
+    this.ctx = ctx;
+
     this.textures = {
       tile: {
-        plains: document.getElementById('tile_plains'),
-        ocean: document.getElementById('tile_ocean'),
-        river: document.getElementById('tile_coastal'),
-        desert: document.getElementById('tile_desert'),
-        mountain: document.getElementById('tile_mountain'),
-        empty: document.getElementById('border_overlay'),
+        plains: this.loadTexture('tile_plains'),
+        ocean: this.loadTexture('tile_ocean'),
+        river: this.loadTexture('tile_coastal'),
+        desert: this.loadTexture('tile_desert'),
+        mountain: this.loadTexture('tile_mountain'),
+        empty: this.loadTexture('border_overlay'),
       },
-      selector: document.getElementById('selector'),
+      selector: this.loadTexture('selector'),
       unit: {
-        settler: document.getElementById('unit_settler'),
-        scout: document.getElementById('unit_scout'),
+        settler: this.loadTexture('unit_settler'),
+        scout: this.loadTexture('unit_scout'),
+        builder: this.loadTexture('unit_settler'),
       },
     };
     this.interval;
@@ -38,12 +43,18 @@ class Camera {
     this.highlightedTiles = {};
   }
 
+  loadTexture(path: string): HTMLElement {
+    const texture = document.getElementById(path);
+    if (!texture) throw 'Error: Missing Texture';
+    return texture;
+  }
+
   start(world: World, FPS: number): void {
     this.interval = setInterval(() => this.render(world), FPS);
   }
 
   stop(): void {
-    clearInterval(this.interval);
+    if (this.interval !== undefined) clearInterval(this.interval);
   }
 
   clear(): void {
@@ -89,7 +100,7 @@ class Camera {
     );
   }
 
-  render(world) {
+  render(world: World) {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height } = world;
     const [ wmX, wmY ] = [ camX + (mouseX / zoom), camY + (mouseY / zoom) ];
@@ -155,15 +166,14 @@ class Camera {
 
             if (this.mouseDownTime === 1) {
               console.log(x, y);
-              if (world.pos(x, y) in this.highlightedTiles) {
-                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles);
-
-                this.highlightedTiles = {};
-                this.selectedUnitPos = null;
-              } else {
-                this.highlightedTiles = {};
-                this.selectedUnitPos = null;
+              if (this.selectedUnitPos && world.pos(x, y) in this.highlightedTiles) {
+                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
               }
+
+              this.highlightedTiles = {};
+              this.selectedUnitPos = null;
+
+              world.on.event.deselectUnit();
             }
 
             ctx.drawImage(
@@ -178,11 +188,11 @@ class Camera {
               console.log(tile.unit);
               this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
               this.selectedUnitPos = [x, y];
+
+              world.on.event.selectUnit({x, y}, tile.unit);
             }
           }
         }
-
-
       }
     }
   }

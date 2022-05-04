@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.methods = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
+exports.executeAction = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
 const player_1 = require("./player");
 const map_1 = require("./map");
 const game_1 = require("./game");
@@ -13,30 +13,89 @@ const sendTo = (ws, msg) => {
 exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), 1),
+    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), {
+        playerCount: 2,
+    }),
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
     return exports.connData[connIndex];
 };
 exports.getConnData = getConnData;
-exports.methods = {
+const getUsername = (ws) => {
+    const connIndex = exports.connections.indexOf(ws);
+    const username = exports.connData[connIndex].username;
+    if (!username) {
+        sendTo(ws, {
+            error: [
+                ['invalidUsername', ['username is null; please provide a username.']],
+            ],
+        });
+        throw 'Invalid Username';
+    }
+    else {
+        return username;
+    }
+};
+const getGameID = (ws) => {
+    const connIndex = exports.connections.indexOf(ws);
+    const gameID = exports.connData[connIndex].gameID;
+    if (!gameID) {
+        sendTo(ws, {
+            error: [
+                ['invalidGameID', ['gameID is null; please provide a gameID.']],
+            ],
+        });
+        throw 'Invalid Game ID';
+    }
+    else {
+        return gameID;
+    }
+};
+const executeAction = (ws, action, ...args) => {
+    try {
+        methods[action](ws, args);
+    }
+    catch (error) {
+        console.error(error);
+    }
+};
+exports.executeAction = executeAction;
+const methods = {
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
     },
     joinGame: (ws, gameID) => {
         const game = exports.games[gameID];
-        const username = (0, exports.getConnData)(ws).username;
-        const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID();
+        const username = getUsername(ws);
+        const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID(username);
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
-            game.players[username] = new player_1.Player(civID, ws);
+            if (!game.players[username]) {
+                game.connectPlayer(username, new player_1.Player(civID, ws));
+            }
+            else {
+                game.players[username].reset(ws);
+            }
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
-                    ['colorPool', [game.world.getColorPool()]],
+                    ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
                 ],
             });
+            const gameList = {};
+            for (const id in exports.games) {
+                gameList[id] = exports.games[id].getMetaData();
+            }
+            for (const conn of exports.connData) {
+                if (conn.gameID === null) {
+                    sendTo(conn.ws, {
+                        update: [
+                            ['gameList', [gameList]],
+                        ],
+                    });
+                }
+            }
         }
         else {
             sendTo(ws, { error: [
@@ -47,7 +106,7 @@ exports.methods = {
     getGames: (ws) => {
         const gameList = {};
         for (const gameID in exports.games) {
-            gameList[gameID] = exports.games[gameID].world.metaData;
+            gameList[gameID] = exports.games[gameID].getMetaData();
         }
         sendTo(ws, {
             update: [
@@ -55,104 +114,54 @@ exports.methods = {
             ],
         });
     },
-    setColor: (ws, color) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+    setLeader: (ws, leaderID) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
-        if (game) {
-            const player = game.getPlayer(username);
-            if (player) {
-                if (game.world.setCivColor(player.civID, color)) {
-                    game.sendToAll({
-                        update: [
-                            ['colorPool', [game.world.getColorPool()]],
-                        ],
-                    });
-                }
-                else {
-                    sendTo(ws, {
-                        error: [
-                            ['colorTaken', ['That color is no longer available']],
-                        ],
-                    });
-                }
+        const player = game.getPlayer(username);
+        if (player) {
+            if (game.world.setCivLeader(player.civID, leaderID)) {
+                game.sendToAll({
+                    update: [
+                        ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
+                    ],
+                });
+            }
+            else {
+                sendTo(ws, {
+                    error: [
+                        ['leaderTaken', ['That leader is no longer available']],
+                    ],
+                });
             }
         }
     },
     ready: (ws, state) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
-        if (game) {
-            const player = game.getPlayer(username);
-            if (player) {
-                const civ = game.world.getCiv(player.civID);
-                if (!civ.color) {
-                    sendTo(ws, { error: [
-                            ['notReady', ['Please select civ color']],
-                        ] });
-                    return;
-                }
-                player.ready = state;
-                if (Object.keys(game.players).length === game.playerCount) {
-                    if (Object.values(game.players).every((player) => player.ready)) {
-                        game.sendToAll({
-                            update: [
-                                ['beginGame', [[game.world.map.width, game.world.map.height], game.playerCount]],
-                                ['civData', [game.world.getAllCivsData()]],
-                            ],
-                        });
-                        game.forEachCivID((civID) => {
-                            game.sendToCiv(civID, {
-                                update: [
-                                    ['setMap', [game.world.map.getCivMap(civID)]],
-                                ],
-                            });
-                        });
-                        game.beginTurnForCiv(0);
-                    }
-                }
+        const player = game.getPlayer(username);
+        if (player) {
+            const civ = game.world.getCiv(player.civID);
+            if (!civ.leader) {
+                sendTo(ws, { error: [
+                        ['notReady', ['Please select leader']],
+                    ] });
+                return;
             }
-        }
-    },
-    moveUnit: (ws, srcCoords, path) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
-        const game = exports.games[gameID];
-        const civID = game.players[username].civID;
-        console.log(srcCoords, path);
-        if (game) {
-            const map = game.world.map;
-            let src = map.getTile(srcCoords);
-            for (const dstCoords of path) {
-                const dst = map.getTile(dstCoords);
-                const unit = src.unit;
-                if (!(unit && unit.civID === civID && dst.unit === null && unit.movement >= dst.getMovementCost(unit))) {
-                    return;
+            player.ready = state;
+            if (Object.keys(game.players).length === game.playerCount) {
+                if (Object.values(game.players).every((player) => player.ready)) {
+                    game.startGame(player);
                 }
-                // mark tiles currently visible by unit as unseen
-                const srcVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of srcVisible) {
-                    const tile = map.getTile(coords);
-                    tile.setVisibility(civID, false);
-                    game.sendTileUpdate(coords, tile);
-                }
-                unit.movement -= dst.getMovementCost(unit);
-                map.moveUnitTo(unit, dstCoords);
-                game.sendTileUpdate(srcCoords, src);
-                game.sendTileUpdate(dstCoords, dst);
-                // mark tiles now visible by unit as seen
-                const newVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of newVisible) {
-                    const tile = map.getTile(coords);
-                    tile.setVisibility(civID, true);
-                    game.sendTileUpdate(coords, tile);
-                }
-                src = dst;
             }
         }
     },
     // Deprecated
     // TODO: replace with turnFinished
     endTurn: (ws) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         game.sendToCiv(civID, {
@@ -163,7 +172,8 @@ exports.methods = {
         return;
     },
     turnFinished: (ws, state) => {
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         const civ = game.world.civs[civID];
@@ -203,16 +213,81 @@ exports.methods = {
             });
         }
     },
+    moveUnit: (ws, srcCoords, path, attack) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        console.log(srcCoords, path, attack);
+        if (game) {
+            const world = game.world;
+            const map = world.map;
+            let src = map.getTile(srcCoords);
+            for (const dstCoords of path) {
+                const dst = map.getTile(dstCoords);
+                const unit = src.unit;
+                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit))) {
+                    game.sendUpdates();
+                    return;
+                }
+                if (dst.unit) {
+                    break;
+                }
+                // mark tiles currently visible by unit as unseen
+                const srcVisible = map.getVisibleTilesCoords(unit);
+                for (const coords of srcVisible) {
+                    map.setTileVisibility(civID, coords, false);
+                }
+                unit.movement -= dst.getMovementCost(unit);
+                map.moveUnitTo(unit, dstCoords);
+                // mark tiles now visible by unit as seen
+                const newVisible = map.getVisibleTilesCoords(unit);
+                for (const coords of newVisible) {
+                    map.setTileVisibility(civID, coords, true);
+                }
+                src = dst;
+            }
+            if (attack) {
+                const unit = src.unit;
+                if (unit) {
+                    const target = map.getTile(path[path.length - 1]);
+                    if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
+                        world.meleeCombat(unit, target.unit);
+                        unit.movement = 0;
+                    }
+                }
+            }
+            game.sendUpdates();
+        }
+    },
     settleCity: (ws, coords, name) => {
         var _a;
-        const { username, gameID } = (0, exports.getConnData)(ws);
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const world = game.world;
+            const map = world.map;
+            const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
+                map.settleCityAt(coords, name, civID);
+                world.removeUnit(unit);
+                game.sendUpdates();
+            }
+        }
+    },
+    buildImprovement: (ws, coords, type) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
         if (game) {
             const map = game.world.map;
-            const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
-            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
-                game.settleCityAt(coords, name, civID);
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
+                map.buildImprovementAt(coords, type);
             }
         }
     },

@@ -3,11 +3,11 @@ interface Civ {
 }
 
 interface Player {
-  name: string;
-  civID: number;
+  name: string | null;
+  civID: number | null;
 }
 
-interface WorldEventHandler {
+interface WorldEventHandlerMap {
   [key: string]: (...args: unknown[]) => void;
 }
 
@@ -24,9 +24,14 @@ interface Unit {
   civID: number;
 }
 
+interface Improvement {
+  type: string;
+  pillaged: boolean;
+}
+
 interface Tile {
   type: string;
-  improvement: any;
+  improvement: Improvement;
   movementCost: [number, number];
   unit: Unit;
   visible: boolean;
@@ -34,6 +39,8 @@ interface Tile {
 
 interface GameMetadata {
   gameName: string;
+  playerCount: number;
+  playersConnected: number;
 }
 
 interface Coords {
@@ -49,10 +56,10 @@ class World {
   height: number;
   width: number;
   socket: WebSocket;
-  on: { update: WorldEventHandler, error: WorldEventHandler };
+  on: { update: WorldEventHandlerMap, error: WorldEventHandlerMap, event: WorldEventHandlerMap };
   civs: { [key: string]: Civ };
   player: Player;
-  constructor(playerName: string) {
+  constructor() {
     this.tiles = [];
     this.height;
     this.width;
@@ -60,10 +67,11 @@ class World {
     this.on = {
       update: {},
       error: {},
+      event: {},
     };
     this.civs = {};
     this.player = {
-      name: playerName,
+      name: null,
       civID: null,
     };
   }
@@ -106,7 +114,7 @@ class World {
   getTilesInRange(srcX: number, srcY: number, range: number, mode = 0): { [key: string]: [number, number] } {
     // BFS to find all tiles within `range` steps
 
-    const queue = [];
+    const queue: [number, number][] = [];
     queue.push([srcX, srcY]);
 
     const dst = {};
@@ -115,15 +123,12 @@ class World {
     const paths = {};
 
     while (queue.length) {
-      const [atX, atY] = queue.shift();
+      const [atX, atY] = queue.shift() as [number, number];
 
       for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
 
         if (!(this.pos(adjX, adjY) in dst)) {
           const tile = this.getTile(adjX, adjY);
-
-          // can't walk through tile with unit
-          if (tile.unit) continue;
 
           const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
           dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
@@ -139,7 +144,7 @@ class World {
     return paths;
   }
 
-  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }): void {
+  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }, attack: boolean): void { // TODO: phase out CoordTuple type
     console.log(srcPos, dstPos, pathMap);
     let curPos: CoordTuple = dstPos;
     const path: Coords[] = [];
@@ -153,14 +158,8 @@ class World {
     path.reverse();
     const [ x, y ] = srcPos;
     this.sendActions([
-      ['moveUnit', [ { x, y }, path ]]
+      ['moveUnit', [ { x, y }, path, attack ]]
     ]);
-
-    // const actions: [ string, Coords[] ][] = [];
-    // for (let i = 0; i < path.length - 1; i++) {
-    //   actions.push(['moveUnit', [ path[i], path[i+1] ]])
-    // }
-    // this.sendActions(actions);
   }
 
   sendJSON(data: EventMsg): void {
@@ -192,80 +191,21 @@ class World {
     }
   }
 
-  setup(serverIP: string, camera: Camera, ui: UI): Promise<void> {
-
-    const readyFn = (isReady: boolean): void => {
-      this.sendActions([
-        ['ready', [isReady]],
-      ]);
-    };
-
-    const civPickerFn = (color: string): void => {
-      this.sendActions([
-        ['setColor', [color]],
-      ]);
-    };
-
-    this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
-      const gameTitles = [];
-      // const defaultGame = Object.keys(gameList)[0];
-      for (const gameID in gameList) {
-        gameTitles.push(`#${gameID} - ${gameList[gameID].gameName}`)
-      }
-
-      const gameID = '0';//prompt(`Select game to join:\n${gameTitles.join('\n')}`, defaultGame);
-
-      if (gameID !== null) {
-        this.sendActions([
-          ['joinGame', [gameID]],
-        ]);
-
-        ui.showReadyBtn(readyFn);
-        ui.showCivPicker(civPickerFn);
-      }
-    };
-
-    this.on.update.beginGame = ([width, height]: [number, number]): void => {
-      ui.hideReadyBtn();
-      ui.hideCivPicker();
-      ui.showGameUI(this);
-      [this.width, this.height] = [width, height];
-      camera.start(this, 1000/60);
-    };
-
-    this.on.update.beginTurn = (): void => {
-      ui.setTurnState(true);
-    };
-
-    this.on.update.setMap = (map: Tile[]): void => {
-      this.tiles = map;
-    };
-
-    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile) => {
-      this.tiles[this.pos(x, y)] = tile;
-    };
-
-    this.on.update.colorPool = (colors: string[]): void => {
-      ui.colorPool = colors;
-      ui.showCivPicker(civPickerFn);
-    };
-
-    this.on.update.civData = (civs: { [key: string]: Civ }) => {
-      this.civs = civs;
-    };
-
-    this.on.update.civID = (civID: number) => {
-      this.player.civID = civID;
-    };
-
-
-
-    this.on.error.notReady = (reason) => {
-      console.error('Error:', reason);
-      ui.hideReadyBtn();
-      ui.showReadyBtn(readyFn);
+  async login(): Promise<void> {
+    let username = localStorage.getItem('username');
+    if (!username) {
+      const [usr, pass] = await ui.textInputs.loginMenu.prompt(ui.root, false);
+      username = usr;
+      localStorage.setItem('username', username);
     }
+    this.player.name = username;
+    this.sendActions([
+      ['setPlayer', [this.player.name]],
+    ]);
+  }
 
+  async connect(): Promise<void> {
+    const serverIP = localStorage.getItem('serverIP');
     return new Promise((resolve: () => void/* reject: () => void*/) => {
       this.socket = new WebSocket(`ws://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
@@ -281,10 +221,152 @@ class World {
       this.socket.addEventListener('open', (/*event: Event*/) => {
         resolve();
       });
+      this.socket.addEventListener('error', async (/*event: Event*/) => {
+        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
+        resolve();
+      });
     });
   }
 
+  async setup(camera: Camera, ui: UI): Promise<void> {
+
+    const readyFn = (isReady: boolean): void => {
+      this.sendActions([
+        ['ready', [isReady]],
+      ]);
+    };
+
+    const civPickerFn = (leaderID: number): void => {
+      this.sendActions([
+        ['setLeader', [leaderID]],
+      ]);
+    };
+
+    this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
+      if (ui.view === 'gameList') {
+        ui.hideAll();
+
+        ui.showGameList(gameList, {
+          joinGame: (gameID: string): void => {
+            if (gameID !== null) {
+              this.sendActions([
+                ['joinGame', [gameID]],
+              ]);
+
+              ui.hideGameList();
+              ui.setView('civPicker');
+              ui.showReadyBtn(readyFn);
+              ui.showCivPicker(civPickerFn, this.player);
+            }
+          },
+        });
+      }
+    };
+
+    this.on.update.beginGame = ([width, height]: [number, number]): void => {
+      ui.hideReadyBtn();
+      ui.hideCivPicker();
+      ui.setView('inGame');
+      ui.showGameUI(this);
+      [this.width, this.height] = [width, height];
+      camera.start(this, 1000/60);
+    };
+
+    this.on.update.beginTurn = (): void => {
+      ui.setTurnState(true);
+    };
+
+    this.on.update.setMap = (map: Tile[]): void => {
+      this.tiles = map;
+    };
+
+    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile): void => {
+      this.tiles[this.pos(x, y)] = tile;
+    };
+
+    this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {
+      ui.leaderPool = leaders;
+      ui.takenLeaders = takenLeaders;
+      ui.players = {};
+      ui.civs = {};
+      for (const playerName in players) {
+        const player = players[playerName];
+        ui.players[playerName] = { ...player, name: playerName };
+        if (player.civID !== null) ui.civs[player.civID] = { ...player, name: playerName };
+      }
+      ui.setView('civPicker');
+      ui.showCivPicker(civPickerFn, this.player);
+    };
+
+    this.on.update.civData = (civs: { [key: string]: Civ }) => {
+      this.civs = civs;
+    };
+
+    this.on.update.civID = (civID: number): void => {
+      this.player.civID = civID;
+    };
+
+    this.on.error.notReady = (reason): void => {
+      console.error('Error:', reason);
+      ui.hideReadyBtn();
+      ui.showReadyBtn(readyFn);
+    }
+
+    this.on.error.kicked = async (reason) => {
+      console.error('Kicked:', reason);
+      ui.hideAll();
+      await ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
+      this.sendActions([
+        ['getGames', []],
+      ]);
+    }
+
+    this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
+      ui.showUnitActionsMenu(this, coords, unit);
+    }
+
+    this.on.event.deselectUnit = (): void => {
+      ui.hideUnitActionsMenu();
+    }
+
+    await this.connect();
+
+    await this.login();
+
+    this.sendActions([
+      ['setPlayer', [world.player.name]],
+    ]);
+
+    const mainMenuFns = {
+      listGames: () => {
+        this.sendActions([
+          ['getGames', []],
+        ]);
+        ui.setView('gameList');
+      },
+      logout: async () => {
+        localStorage.setItem('username', '');
+        ui.hideMainMenu();
+        await this.login();
+        ui.showMainMenu(mainMenuFns);
+      },
+      changeServer:async () => {
+        ui.hideMainMenu();
+        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
+        ui.showMainMenu(mainMenuFns);
+      }
+    };
+
+    ui.setView('mainMenu');
+    ui.showMainMenu(mainMenuFns);
+  }
+
   sendActions(actions: [string, unknown[]][]): void {
+    console.log(this);
     this.sendJSON({ actions });
   }
 }

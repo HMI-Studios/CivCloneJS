@@ -42,9 +42,9 @@ export class Tile {
   movementCost: [number, number];
   type: string;
 
-  unit: Unit;
-  improvement: Improvement;
-  owner: City;
+  unit?: Unit;
+  improvement?: Improvement;
+  owner?: City;
 
   discoveredBy: { [civID: number]: boolean };
   visibleTo: { [civID: number]: number };
@@ -55,16 +55,18 @@ export class Tile {
     this.movementCost = tileMovementCostTable[type];
     this.type = type;
 
-    this.unit = null;
-    this.improvement = null;
-    this.owner = null;
+    this.unit = undefined;
+    this.improvement = undefined;
+    this.owner = undefined;
 
     this.discoveredBy = {};
     this.visibleTo = {};
+
+    this.baseYield = baseYield;
   }
 
   getTileYield(): Yield {
-    if (this.improvement !== null) {
+    if (this.improvement) {
       return this.baseYield.add(this.improvement.yield);
     } else {
       return this.baseYield;
@@ -94,7 +96,7 @@ export class Tile {
     return mode > -1 ? this.movementCost[mode] || Infinity : 1;
   }
 
-  setUnit(unit: Unit): void {
+  setUnit(unit?: Unit): void {
     this.unit = unit;
   }
 

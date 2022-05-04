@@ -11,9 +11,9 @@ export class Random {
     return ((this.prevRand / 2147483648) * (to - from)) + from;
   }
 
-  randFloat(from: number = null, to: number = null): number {
-    if (from !== null) {
-      if (to !== null) {
+  randFloat(from?: number, to?: number): number {
+    if (from !== undefined) {
+      if (to !== undefined) {
         return this._randNumber(from, to);
       } else {
         return this._randNumber(0, from);
@@ -23,7 +23,7 @@ export class Random {
     }
   }
 
-  randInt(from: number = null, to: number = null): number {
+  randInt(from?: number, to?: number): number {
     return Math.round(this.randFloat(from, to));
   }
 

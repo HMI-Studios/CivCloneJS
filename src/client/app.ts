@@ -1,6 +1,11 @@
+let camera: Camera;
+let ui: UI;
+let world: World;
+
 const resize = () => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
   ctx.setTransform(1, 0, 0, 1, canvas.width / 2, canvas.height / 2);
@@ -12,7 +17,11 @@ window.onload = () => {
   resize();
 };
 window.onresize = resize;
-document.getElementById('UI').onwheel = (evt) => {
+
+const rootElement = document.getElementById('UI'); // FIXME;
+if (!rootElement) throw 'Root UI Element Missing';
+
+rootElement.onwheel = (evt) => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const { zoom } = camera;
   if (evt.deltaY > 0) {
@@ -44,7 +53,7 @@ const getMousePos = ( canvas: HTMLCanvasElement, evt: MouseEvent ): { x: number,
     };
   return pos;
 };
-document.getElementById('UI').onmousemove = (evt: MouseEvent) => {
+rootElement.onmousemove = (evt: MouseEvent) => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	const mousePos = getMousePos(canvas, evt);
 	mouseX = mousePos.x - Math.round(canvas.width/2);
@@ -56,14 +65,14 @@ document.getElementById('UI').onmousemove = (evt: MouseEvent) => {
 		camera.y = oldY - ((mouseY-clickY) / camera.zoom);
 	}
 };
-document.getElementById('UI').onmousedown = function(evt) {
+rootElement.onmousedown = function(evt) {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	const mousePos = getMousePos(canvas, evt);
 	clickX = mousePos.x - Math.round(canvas.width/2);
 	clickY = canvas.height - (mousePos.y + Math.round(canvas.height/2));
 	mouseDown = true;
 }
-document.getElementById('UI').onmouseup = function() {
+rootElement.onmouseup = function() {
 	mouseDown = false;
 	oldX = camera.x;
 	oldY = camera.y;
@@ -78,19 +87,17 @@ const mod = (a, b) => {
   }
 };
 
-// const SERVER_IP = '192.168.5.47:8080';
-// const SERVER_IP = '192.168.4.29:8080';
-const SERVER_IP = 'localhost:8080';
-const PLAYER_NAME = localStorage.getItem('username') || prompt('Username?');
-localStorage.setItem('username', PLAYER_NAME);
+const main = async () => {
+  // const SERVER_IP = '192.168.5.47:8080';
+  // const SERVER_IP = '192.168.4.29:8080';
+  // const SERVER_IP = 'hmi.dynu.net:8080';
+  // const SERVER_IP = 'localhost:8080';
 
-const camera = new Camera();
-const ui = new UI();
-const world = new World(PLAYER_NAME);
-world.setup(SERVER_IP, camera, ui)
-  .then(() => {
-    world.sendActions([
-      ['getGames', []],
-      ['setPlayer', [world.player.name]],
-    ]);
-  });
+  camera = new Camera();
+  ui = new UI();
+  world = new World();
+
+  await world.setup(camera, ui);
+}
+
+main();

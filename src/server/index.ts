@@ -15,8 +15,8 @@ const server = app.listen(port, () => {
 
 const wss = new WebSocket.Server({ server });
 
-import { methods, getConnData, connections, connData, games } from './methods';
-import { EventMsg } from './game';
+import { executeAction, connections, connData, getConnData } from './methods';
+import { EventMsg } from './utils';
 
 wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
 
@@ -46,7 +46,7 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
         const action = data.actions[i][0];
         const args = data.actions[i][1];
 
-        methods[action](ws, ...args);
+        executeAction(ws, action, ...args);
       }
     }
   });

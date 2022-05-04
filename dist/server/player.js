@@ -8,6 +8,16 @@ class Player {
         this.isAI = !connection;
         this.connection = connection;
     }
+    getData() {
+        return {
+            civID: this.civID
+        };
+    }
+    reset(connection) {
+        this.ready = false;
+        this.isAI = !connection;
+        this.connection = connection;
+    }
 }
 exports.Player = Player;
 //# sourceMappingURL=player.js.map

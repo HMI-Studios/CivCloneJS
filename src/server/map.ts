@@ -2,12 +2,15 @@ import { Coords } from './world';
 import { Unit } from './unit';
 import { City } from './city';
 import { Tile, TileData, Yield } from './tile';
+import { Improvement } from './improvement';
+import { getAdjacentCoords, mod, Event } from './utils';
 
 export class Map {
   height: number;
   width: number;
   tiles: Tile[];
   cities: City[];
+  updates: { (civID: number): Event }[];
 
   constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
     this.height = height;
@@ -16,69 +19,41 @@ export class Map {
     for (let i = 0; i < height*width; i++) {
       this.tiles[i] = new Tile(terrain[i], heightMap[i], new Yield({ food: 1, production: 1 }));
     }
+    this.cities = [];
+    this.updates = [];
   }
 
   pos({ x, y }: Coords): number {
-    return (y * this.width) + this.mod(x, this.width)
+    return (y * this.width) + mod(x, this.width)
   }
 
-  mod(a: number, b: number): number {
-    if (a >= 0) {
-      return a % b;
-    } else {
-      return ((a % b) + b) % b;
-    }
+  getUpdates(): { (civID: number): Event }[] {
+    return this.updates.splice(0);
   }
 
   getTile(coords: Coords): Tile {
     return this.tiles[this.pos(coords)];
   }
 
-  getNeighborsCoords({ x, y }: Coords, r: number = 1, tileList: Coords[] = [], isTop = true): Coords[] {
+  private getNeighborsCoordsRecurse({ x, y }: Coords, r, tileList: Coords[]): void {
     if (r > 0 && this.getTile({x, y})) {
       tileList.push({x, y});
-      if (this.mod(x, 2) === 1) {
-        this.getNeighborsCoords({ x: x,   y: y+1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x+1, y: y+1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x+1, y: y   }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x,   y: y-1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x-1, y: y   }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x-1, y: y+1 }, r-1, tileList, false);
-      } else {
-        this.getNeighborsCoords({ x: x,   y: y+1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x+1, y: y   }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x+1, y: y-1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x,   y: y-1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x-1, y: y-1 }, r-1, tileList, false);
-        this.getNeighborsCoords({ x: x-1, y: y   }, r-1, tileList, false);
+      for (const coord of getAdjacentCoords({x, y})) {
+        this.getNeighborsCoordsRecurse(coord, r-1, tileList);
       }
     }
-    if (isTop) {
-      return tileList;
-    }
+  }
+
+  getNeighborsCoords(coords: Coords, r = 1, tileList: Coords[] = []): Coords[] {
+    this.getNeighborsCoordsRecurse(coords, r, tileList);
+
+    return tileList;
   }
 
   getVisibleTilesCoords(unit: Unit): Coords[] {
     return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
   }
-
-  moveUnitTo(unit: Unit, coords: Coords): void {
-    if (unit.coords.x !== null && unit.coords.y !== null) {
-      this.getTile(unit.coords).setUnit(null);
-    }
-    unit.coords = coords;
-    if (coords.x !== null && coords.y !== null) {
-      this.getTile(coords).setUnit(unit);
-    }
-  }
-
-  settleCityAt(coords: Coords, name: string, civID: number): City {
-    let city = new City(coords, name, civID);
-    this.cities.push(city);
-
-    return city;
-  }
-
+  
   setTileOwner(coords: Coords, owner: City): void {
     this.getTile(coords).owner?.removeTile(coords);
     this.getTile(coords).owner = owner;
@@ -96,14 +71,48 @@ export class Map {
       return null;
     }
   }
-
-  getCivMap(civID: number): TileData[] {
+  
+  getCivMap(civID: number): (TileData | null)[] {
     return this.tiles.map((tile) => {
       return this.getCivTile(civID, tile);
     });
   }
-
+  
   setTileVisibility(civID: number, coords: Coords, visible: boolean) {
     this.getTile(coords).setVisibility(civID, visible);
+    this.tileUpdate(coords);
+  }
+
+  tileUpdate(coords: Coords) {
+    // if (coords.x === null && coords.y === null) return;
+    const tile = this.getTile(coords);
+    this.updates.push( (civID: number) => ['tileUpdate', [ coords, this.getCivTile(civID, tile) ]] );
+  }
+
+  moveUnitTo(unit: Unit, coords: Coords): void {
+    this.getTile(unit.coords).setUnit(undefined);
+    this.tileUpdate(unit.coords);
+    unit.coords = coords;
+    this.getTile(coords).setUnit(unit);
+    this.tileUpdate(coords);
+  }
+
+  settleCityAt(coords: Coords, name: string, civID: number) {
+    const city: City = new City(coords, name, civID);
+    this.cities.push(city);
+
+    for (const neighbor of this.getNeighborsCoords(coords)) {
+      this.setTileOwner(neighbor, city);
+
+      this.tileUpdate(neighbor);
+    }
+
+    this.tileUpdate(coords);
+  }
+
+  buildImprovementAt(coords: Coords, type: string) {
+    this.getTile(coords).improvement = new Improvement(type);
+
+    this.tileUpdate(coords);
   }
 }

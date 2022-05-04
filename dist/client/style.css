@@ -12,44 +12,70 @@ canvas {
 }
 
 #UI {
-	/*background-color: rgba(100, 100, 100, 0.5);*/
-	display: grid;
-	grid-template-columns: 50px 150px 1fr 18% 150px 18% 1fr 150px 50px;
-	grid-template-rows: 50px 1fr 1fr 1fr 100px 150px 50px;
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	top: 0;
+  /*background-color: rgba(100, 100, 100, 0.5);*/
+  display: grid;
+  grid-template-columns: 50px 150px 1fr 18% 150px 18% 1fr 150px 50px;
+  grid-template-rows: 50px 1fr 1fr 1fr 100px 150px 50px;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
 }
 
 .readyBtn {
-	grid-column: 5;
-	grid-row: 6;
-	margin: 25px 10px;
+  grid-column: 5;
+  grid-row: 6;
+  margin: 25px 10px;
 }
 
 .centerModal {
-	grid-column: 4 / 7;
-	grid-row: 2 / 5;
-	background-color: gray;
-	border-radius: 10px;
+  grid-column: 4 / 7;
+  grid-row: 2 / 5;
+  background-color: gray;
+  border-radius: 10px;
 }
 
 .civList {
-	list-style-type: none;
-	padding: 40px;
+  list-style-type: none;
+  padding: 40px;
 }
 
 .civItem {
-	display: flex;
-    align-items: center;
-    justify-content: center;
-	margin-bottom: 10px;
-	border-radius: 10px;
-	height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  height: 50px;
 }
 
 .mainActionBtn {
-	grid-column: 8;
+  grid-column: 8;
+  grid-row: 6;
+}
+
+.textInput {
+  grid-column: 4 / 7;
+  grid-row: 3 / 5;
+  background-color: gray;
+  border-radius: 10px;
+  padding: 25px;
+}
+
+.mainMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gameList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.unitActionsMenu {
+	grid-column: 6;
 	grid-row: 6;
+  background-color: red;
 }
