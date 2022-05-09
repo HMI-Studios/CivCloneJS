@@ -65,7 +65,7 @@ const getGameID = (ws: WebSocket): number => {
 
 export const executeAction = (ws: WebSocket, action: string, ...args: unknown[]) => {
   try {
-    methods[action](ws, args);
+    methods[action](ws, ...args);
   } catch(error) {
     console.error(error);
   }

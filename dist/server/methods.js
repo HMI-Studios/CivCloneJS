@@ -54,7 +54,7 @@ const getGameID = (ws) => {
 };
 const executeAction = (ws, action, ...args) => {
     try {
-        methods[action](ws, args);
+        methods[action](ws, ...args);
     }
     catch (error) {
         console.error(error);

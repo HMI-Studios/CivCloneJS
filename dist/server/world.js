@@ -84,7 +84,10 @@ class World {
     }
     // map, civs
     addUnit(unit) {
-        this.civs[unit.civID].addUnit(unit);
+        if (this.map.isInBounds(unit.coords)) {
+            this.civs[unit.civID].addUnit(unit);
+            this.map.getTile(unit.coords).setUnit(unit);
+        }
     }
     // map, civs
     removeUnit(unit) {

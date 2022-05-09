@@ -113,7 +113,10 @@ export class World {
 
   // map, civs
   addUnit(unit: Unit): void {
-    this.civs[unit.civID].addUnit(unit);
+    if (this.map.isInBounds(unit.coords)) {
+      this.civs[unit.civID].addUnit(unit);
+      this.map.getTile(unit.coords).setUnit(unit);
+    }
   }
 
   // map, civs
