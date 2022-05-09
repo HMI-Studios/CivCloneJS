@@ -69,7 +69,7 @@ class Map {
         this.tileUpdate(coords);
     }
     isInBounds(coords) {
-        return coords.x > 0 && coords.x < this.width && coords.y > 0 && coords.y < this.height;
+        return coords.x >= 0 && coords.x < this.width && coords.y >= 0 && coords.y < this.height;
     }
     tileUpdate(coords) {
         // if (coords.x === null && coords.y === null) return;
