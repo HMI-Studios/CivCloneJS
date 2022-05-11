@@ -1,9 +1,12 @@
 export class Random {
 
-  prevRand: number;
+  private prevRand: number;
 
   constructor(seed: number) {
     this.prevRand = seed;
+    this.randFloat = this.randFloat.bind(this);
+    this.randInt = this.randInt.bind(this);
+    this.doubleRandInt = this.doubleRandInt.bind(this);
   }
 
   private _randNumber(from: number, to: number): number {
@@ -11,7 +14,7 @@ export class Random {
     return ((this.prevRand / 2147483648) * (to - from)) + from;
   }
 
-  randFloat(from?: number, to?: number): number {
+  public randFloat(from?: number, to?: number): number {
     if (from !== undefined) {
       if (to !== undefined) {
         return this._randNumber(from, to);
@@ -23,11 +26,11 @@ export class Random {
     }
   }
 
-  randInt(from?: number, to?: number): number {
+  public randInt(from?: number, to?: number): number {
     return Math.round(this.randFloat(from, to));
   }
 
-  doubleRandInt(n1: number, n2: number, n3: number, n4: number): number {
+  public doubleRandInt(n1: number, n2: number, n3: number, n4: number): number {
     return this.randInt(this.randInt(n1, n2), this.randInt(n3, n4));
   }
 }
