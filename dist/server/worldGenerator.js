@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorldGenerator = exports.PerlinWorldGenerator = void 0;
 const random_1 = require("./random");
 const simplex_noise_1 = __importDefault(require("simplex-noise"));
+const biome_1 = __importDefault(require("./biome"));
 const TAU = 2 * Math.PI;
 class PerlinWorldGenerator {
     constructor(seed, width, height) {
@@ -13,28 +14,47 @@ class PerlinWorldGenerator {
         this.simplex = new simplex_noise_1.default(this.random.randFloat);
         this.width = width;
         this.height = height;
+        // Constants
+        const SEA_LEVEL = 35;
+        const COAST_LEVEL = 45;
+        const PLAINS_LEVEL = 50;
+        const HILLS_LEVEL = 70;
+        const HIGHLANDS_LEVEL = 90;
+        const MOUNTAIN_LEVEL = 98;
+        // Define Biomes
+        this.biomes = {
+            'plains': new biome_1.default('ocean', [
+                [SEA_LEVEL, 'river'],
+                [COAST_LEVEL, 'grass_lowlands'],
+                [PLAINS_LEVEL, 'plains'],
+                [HILLS_LEVEL, 'grass_hills'],
+                [HIGHLANDS_LEVEL, 'grass_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+            'tundra': new biome_1.default('ocean', [
+                [SEA_LEVEL, 'river'],
+                [SEA_LEVEL + 5, 'frozen_river'],
+                [COAST_LEVEL, 'snow_plains'],
+                [HILLS_LEVEL, 'snow_hills'],
+                [HIGHLANDS_LEVEL, 'snow_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+            'arctic': new biome_1.default('frozen_ocean', [
+                [SEA_LEVEL, 'frozen_river'],
+                [COAST_LEVEL, 'snow_plains'],
+                [HILLS_LEVEL, 'snow_hills'],
+                [HIGHLANDS_LEVEL, 'snow_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+        };
     }
     getTile(elevation, temp) {
-        if (elevation < 35) {
-            return 'ocean';
-        }
-        else if (elevation < 45) {
-            return 'river';
-        }
-        else if (elevation < 50) {
-            return 'plains'; // lowlands
-        }
-        else if (elevation < 90) {
-            if (temp < 70) {
-                return 'plains';
-            }
-            else {
-                return 'desert';
-            }
-        }
-        else {
-            return 'mountain';
-        }
+        if (temp < 5)
+            return this.biomes.arctic.getTile(elevation);
+        if (temp < 20)
+            return this.biomes.tundra.getTile(elevation);
+        // Default Biome in case no match is found
+        return this.biomes.plains.getTile(elevation);
     }
     getElevation(x, y) {
         const mapScale = 0.015;

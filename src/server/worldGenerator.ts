@@ -1,5 +1,6 @@
 import { Random } from './random';
 import SimplexNoise from 'simplex-noise';
+import Biome from './biome';
 
 const TAU = 2 * Math.PI;
 
@@ -9,30 +10,56 @@ export class PerlinWorldGenerator {
   private simplex: SimplexNoise;
   private width: number;
   private height: number;
+  private biomes: { [key: string]: Biome }
 
   constructor(seed: number, width: number, height: number) {
     this.random = new Random(seed);
     this.simplex = new SimplexNoise(this.random.randFloat);
     this.width = width;
     this.height = height;
+
+    // Constants
+    const SEA_LEVEL = 35;
+    const COAST_LEVEL = 45;
+    const PLAINS_LEVEL = 50;
+    const HILLS_LEVEL = 70;
+    const HIGHLANDS_LEVEL = 90;
+    const MOUNTAIN_LEVEL = 98;
+
+    // Define Biomes
+    this.biomes = {
+      'plains': new Biome('ocean', [
+        [SEA_LEVEL, 'river'],
+        [COAST_LEVEL, 'grass_lowlands'],
+        [PLAINS_LEVEL, 'plains'],
+        [HILLS_LEVEL, 'grass_hills'],
+        [HIGHLANDS_LEVEL, 'grass_mountains'],
+        [MOUNTAIN_LEVEL, 'mountain'],
+      ]),
+      'tundra': new Biome('ocean', [
+        [SEA_LEVEL, 'river'],
+        [SEA_LEVEL + 5, 'frozen_river'],
+        [COAST_LEVEL, 'snow_plains'],
+        [HILLS_LEVEL, 'snow_hills'],
+        [HIGHLANDS_LEVEL, 'snow_mountains'],
+        [MOUNTAIN_LEVEL, 'mountain'],
+      ]),
+      'arctic': new Biome('frozen_ocean', [
+        [SEA_LEVEL, 'frozen_river'],
+        [COAST_LEVEL, 'snow_plains'],
+        [HILLS_LEVEL, 'snow_hills'],
+        [HIGHLANDS_LEVEL, 'snow_mountains'],
+        [MOUNTAIN_LEVEL, 'mountain'],
+      ]),
+    };
   }
 
   getTile(elevation: number, temp: number): string {
-    if (elevation < 35) {
-      return 'ocean';
-    } else if (elevation < 45) {
-      return 'river';
-    } else if (elevation < 50) {
-      return 'plains'; // lowlands
-    } else if (elevation < 90) {
-      if (temp < 70) {
-        return 'plains';
-      } else {
-        return 'desert';
-      }
-    } else {
-      return 'mountain';
-    }
+    if (temp < 5) return this.biomes.arctic.getTile(elevation);
+    if (temp < 20) return this.biomes.tundra.getTile(elevation);
+
+    // Default Biome in case no match is found
+    return this.biomes.plains.getTile(elevation);
   }
 
   getElevation(x: number, y: number): number {
