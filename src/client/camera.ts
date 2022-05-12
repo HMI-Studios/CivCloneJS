@@ -33,14 +33,20 @@ class Camera {
         frozen_ocean: this.loadTexture('tile_frozen_ocean'),
         river: this.loadTexture('tile_coastal'),
         frozen_river: this.loadTexture('tile_frozen_coastal'),
+
         grass_lowlands: this.loadTexture('tile_grass_lowlands'),
         plains: this.loadTexture('tile_plains'),
         grass_hills: this.loadTexture('tile_grass_hills'),
         grass_mountains: this.loadTexture('tile_grass_mountains'),
-        desert: this.loadTexture('tile_desert'),
+
         snow_plains: this.loadTexture('tile_snow_plains'),
         snow_hills: this.loadTexture('tile_snow_hills'),
         snow_mountains: this.loadTexture('tile_snow_mountains'),
+
+        desert: this.loadTexture('tile_desert'),
+        desert_hills: this.loadTexture('tile_desert_hills'),
+        desert_mountains: this.loadTexture('tile_desert_mountains'),
+
         mountain: this.loadTexture('tile_mountain'),
         empty: this.loadTexture('border_overlay'),
       },

@@ -51,12 +51,21 @@ export class PerlinWorldGenerator {
         [HIGHLANDS_LEVEL, 'snow_mountains'],
         [MOUNTAIN_LEVEL, 'mountain'],
       ]),
+      'desert': new Biome('ocean', [
+        [SEA_LEVEL, 'river'],
+        [COAST_LEVEL, 'desert'],
+        [HILLS_LEVEL, 'desert_hills'],
+        [HIGHLANDS_LEVEL, 'desert_mountains'],
+        [MOUNTAIN_LEVEL, 'mountain'],
+      ]),
     };
   }
 
   getTile(elevation: number, temp: number): string {
     if (temp < 5) return this.biomes.arctic.getTile(elevation);
     if (temp < 20) return this.biomes.tundra.getTile(elevation);
+    if (temp < 50) return this.biomes.plains.getTile(elevation);
+    if (temp < 100) return this.biomes.desert.getTile(elevation);
 
     // Default Biome in case no match is found
     return this.biomes.plains.getTile(elevation);
