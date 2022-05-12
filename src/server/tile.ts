@@ -13,6 +13,7 @@ const tileMovementCostTable: { [type: string]: [number, number] } = {
 
 export interface TileData {
   type: string;
+  elevation: number;
   movementCost: [number, number];
   yield: Yield;
   unit?: UnitData;
@@ -41,6 +42,7 @@ export class Yield {
 export class Tile {
   movementCost: [number, number];
   type: string;
+  elevation: number;
 
   unit?: Unit;
   improvement?: Improvement;
@@ -54,6 +56,7 @@ export class Tile {
   constructor(type: string, tileHeight: number, baseYield: Yield) {
     this.movementCost = tileMovementCostTable[type];
     this.type = type;
+    this.elevation = tileHeight;
 
     this.unit = undefined;
     this.improvement = undefined;
@@ -80,6 +83,7 @@ export class Tile {
       improvement: this.improvement?.getData(),
       owner: this.owner?.getData(),
       yield: this.getTileYield(),
+      elevation: this.elevation,
     };
   }
 

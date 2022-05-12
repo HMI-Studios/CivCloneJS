@@ -27,6 +27,7 @@ class Tile {
     constructor(type, tileHeight, baseYield) {
         this.movementCost = tileMovementCostTable[type];
         this.type = type;
+        this.elevation = tileHeight;
         this.unit = undefined;
         this.improvement = undefined;
         this.owner = undefined;
@@ -50,6 +51,7 @@ class Tile {
             improvement: (_a = this.improvement) === null || _a === void 0 ? void 0 : _a.getData(),
             owner: (_b = this.owner) === null || _b === void 0 ? void 0 : _b.getData(),
             yield: this.getTileYield(),
+            elevation: this.elevation,
         };
     }
     getVisibleData() {
