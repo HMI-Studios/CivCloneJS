@@ -55,17 +55,17 @@ class PerlinWorldGenerator {
             ]),
         };
     }
-    getTile(elevation, temp) {
+    getBiome(temp) {
         if (temp < 5)
-            return this.biomes.arctic.getTile(elevation);
+            return this.biomes.arctic;
         if (temp < 20)
-            return this.biomes.tundra.getTile(elevation);
-        if (temp < 50)
-            return this.biomes.plains.getTile(elevation);
-        if (temp < 100)
-            return this.biomes.desert.getTile(elevation);
+            return this.biomes.tundra;
+        if (temp < 60)
+            return this.biomes.plains;
+        if (temp <= 100)
+            return this.biomes.desert;
         // Default Biome in case no match is found
-        return this.biomes.plains.getTile(elevation);
+        return this.biomes.plains;
     }
     getElevation(x, y) {
         const mapScale = 0.015;
@@ -74,9 +74,11 @@ class PerlinWorldGenerator {
         const freq2 = (mapScale * 2) * this.width;
         const noise2 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq2) * noise1;
         const freq3 = (mapScale * 4) * this.width;
-        const noise3 = 0.25 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
-        const noiseVal = noise1 + noise2 + noise3;
-        return Math.pow(noiseVal, 1) / 1.75 * 100;
+        const noise3 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
+        const freq4 = (mapScale * 8) * this.width;
+        const noise4 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq4);
+        const noiseVal = (noise1 + noise2 + noise3 + noise4) / 2.5;
+        return Math.pow(noiseVal, 1) * 100;
     }
     getTemp(x, y) {
         const mapScale = 0.01;
@@ -84,8 +86,22 @@ class PerlinWorldGenerator {
         const noise1 = this.cylindernoise(x / this.width, y / this.width, freq1);
         const freq2 = (mapScale * 2) * this.width;
         const noise2 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq2) * noise1;
-        const noiseVal = noise1 + noise2;
-        return noiseVal / 1.5 * 100;
+        // let noiseVal = (noise1 + noise2) / 1.5;
+        let noiseVal = (noise1);
+        const tempBias = Math.pow(1 - (Math.abs(0.5 - (y / this.height)) * 4), 5);
+        noiseVal = Math.min(1, Math.max(0, ((noiseVal / 2) + 0.25) + tempBias));
+        return noiseVal * 100;
+    }
+    getHumidity(x, y) {
+        const mapScale = 0.01;
+        const freq1 = (mapScale * 1) * this.width;
+        const noise1 = this.cylindernoise(x / this.width, y / this.width, freq1);
+        const freq2 = (mapScale * 2) * this.width;
+        const noise2 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq2) * noise1;
+        let noiseVal = (noise1 + noise2) / 1.5;
+        const tempBias = 0.25 - Math.abs(0.5 - (y / this.height));
+        noiseVal = ((noiseVal / 2) + 0.25) + tempBias;
+        return noiseVal * 100;
     }
     ridgenoise(nx, ny, freq) {
         return 2 * (0.5 - Math.abs(0.5 - this.cylindernoise(nx, ny, freq)));
@@ -102,7 +118,7 @@ class PerlinWorldGenerator {
             for (let x = 0; x < width; x++) {
                 const elevation = this.getElevation(x, y);
                 const temp = this.getTemp(x, y);
-                tiles.push(this.getTile(elevation, temp));
+                tiles.push(this.getBiome(temp).getTile(elevation));
                 heightMap.push(elevation);
             }
         }
