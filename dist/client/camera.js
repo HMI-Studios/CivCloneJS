@@ -61,6 +61,12 @@ class Camera {
         const UNIT_WIDTH = (74 * 0.2);
         const UNIT_HEIGHT = (88 * 0.2);
         const UNIT_RECT_HEIGHT = (51 * 0.2);
+        // Unit Health Bar
+        ctx.fillStyle = unit.hp > 66 ? 'limegreen' : (unit.hp > 33 ? 'gold' : 'red');
+        ctx.beginPath();
+        ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 1.9) * zoom, UNIT_WIDTH * zoom * (unit.hp / 100), 2 * zoom);
+        ctx.fill();
+        // Unit Color Background
         ctx.fillStyle = civs[unit.civID].color;
         ctx.beginPath();
         ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
@@ -93,7 +99,8 @@ class Camera {
         const selectedX = Math.round((wmX / X_TILE_SPACING) + selectorXOffset);
         const selectedY = Math.round(((wmY + height) / TILE_HEIGHT) + (selectorYOffset + (mod(selectedX, 2) / -2)));
         this.clear();
-        for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
+        // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
+        for (let y = Math.min(yEnd, height) - 1; y >= Math.max(yStart, 0); y--) {
             for (let x = xStart; x < xEnd; x++) {
                 const tile = world.getTile(x, y);
                 if (tile) {
