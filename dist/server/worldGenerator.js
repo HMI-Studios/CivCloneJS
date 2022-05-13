@@ -15,10 +15,10 @@ class PerlinWorldGenerator {
         this.width = width;
         this.height = height;
         // Constants
-        const SEA_LEVEL = 35;
-        const COAST_LEVEL = 45;
-        const PLAINS_LEVEL = 50;
-        const HILLS_LEVEL = 70;
+        const SEA_LEVEL = 45;
+        const COAST_LEVEL = 55;
+        const PLAINS_LEVEL = 60;
+        const HILLS_LEVEL = 80;
         const HIGHLANDS_LEVEL = 90;
         const MOUNTAIN_LEVEL = 98;
         // Define Biomes
