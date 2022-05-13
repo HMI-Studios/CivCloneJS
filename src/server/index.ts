@@ -7,6 +7,7 @@ const port = 8080;
 
 import path from 'path';
 app.use('/', express.static(path.join(__dirname, '../client')));
+app.use('/src', express.static(path.join(__dirname, '../../src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
 app.use('/docs', express.static(path.join(__dirname, '../docs')));
 
 const server = app.listen(port, () => {
