@@ -54,7 +54,7 @@ class Camera {
     start(world, FPS) {
         [selectorXOffset, selectorYOffset] = [
             world.width * 0.5 + -0.6951295757078696,
-            world.height * 0.46 + 0.5038168562195441,
+            world.height * 0.4614 + 0.5038168562195441,
         ];
         this.interval = setInterval(() => this.render(world), FPS);
     }
