@@ -79,3 +79,13 @@ canvas {
 	grid-row: 6;
   background-color: red;
 }
+
+.unitInfoMenu {
+	grid-column: 7;
+	grid-row: 6;
+  background-color: lightgray;
+}
+
+.unitInfo {
+	display: block;
+}
