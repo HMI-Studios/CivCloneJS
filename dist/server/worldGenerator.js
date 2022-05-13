@@ -86,8 +86,7 @@ class PerlinWorldGenerator {
         const noise1 = this.cylindernoise(x / this.width, y / this.width, freq1);
         const freq2 = (mapScale * 2) * this.width;
         const noise2 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq2) * noise1;
-        // let noiseVal = (noise1 + noise2) / 1.5;
-        let noiseVal = (noise1);
+        let noiseVal = (noise1 + noise2) / 1.5;
         const tempBias = Math.pow(1 - (Math.abs(0.5 - (y / this.height)) * 4), 5);
         noiseVal = Math.min(1, Math.max(0, ((noiseVal / 2) + 0.25) + tempBias));
         return noiseVal * 100;
