@@ -17,6 +17,7 @@
   "dependencies": {
     "@pixi/graphics-extras": "^6.2.1",
     "express": "^4.17.2",
+    "simplex-noise": "^3.0.1",
     "ws": "^8.5.0"
   },
   "devDependencies": {

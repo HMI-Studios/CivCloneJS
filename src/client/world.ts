@@ -31,6 +31,7 @@ interface Improvement {
 
 interface Tile {
   type: string;
+  elevation: number;
   improvement: Improvement;
   movementCost: [number, number];
   unit: Unit;
