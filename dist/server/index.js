@@ -32,6 +32,7 @@ const app = (0, express_1.default)();
 const port = 8080;
 const path_1 = __importDefault(require("path"));
 app.use('/', express_1.default.static(path_1.default.join(__dirname, '../client')));
+app.use('/src', express_1.default.static(path_1.default.join(__dirname, '../../src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
 app.use('/docs', express_1.default.static(path_1.default.join(__dirname, '../docs')));
 const server = app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);

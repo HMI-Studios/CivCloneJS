@@ -16,10 +16,20 @@ class Camera {
         this.ctx = ctx;
         this.textures = {
             tile: {
-                plains: this.loadTexture('tile_plains'),
                 ocean: this.loadTexture('tile_ocean'),
+                frozen_ocean: this.loadTexture('tile_frozen_ocean'),
                 river: this.loadTexture('tile_coastal'),
+                frozen_river: this.loadTexture('tile_frozen_coastal'),
+                grass_lowlands: this.loadTexture('tile_grass_lowlands'),
+                plains: this.loadTexture('tile_plains'),
+                grass_hills: this.loadTexture('tile_grass_hills'),
+                grass_mountains: this.loadTexture('tile_grass_mountains'),
+                snow_plains: this.loadTexture('tile_snow_plains'),
+                snow_hills: this.loadTexture('tile_snow_hills'),
+                snow_mountains: this.loadTexture('tile_snow_mountains'),
                 desert: this.loadTexture('tile_desert'),
+                desert_hills: this.loadTexture('tile_desert_hills'),
+                desert_mountains: this.loadTexture('tile_desert_mountains'),
                 mountain: this.loadTexture('tile_mountain'),
                 empty: this.loadTexture('border_overlay'),
             },
@@ -44,7 +54,7 @@ class Camera {
     start(world, FPS) {
         [selectorXOffset, selectorYOffset] = [
             world.width * 0.5 + -0.6951295757078696,
-            world.height * 0.46 + 0.5038168562195441,
+            world.height * 0.4614 + 0.5038168562195441,
         ];
         this.interval = setInterval(() => this.render(world), FPS);
     }

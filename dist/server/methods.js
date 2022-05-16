@@ -13,8 +13,9 @@ const sendTo = (ws, msg) => {
 exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    new map_1.Map(38, 38, ...new worldGenerator_1.WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)), {
-        playerCount: 2,
+    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+    new map_1.Map(200, 200, ...new worldGenerator_1.PerlinWorldGenerator(3634, 200, 200).generate()), {
+        playerCount: 1,
     }),
 };
 const getConnData = (ws) => {

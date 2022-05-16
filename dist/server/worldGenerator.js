@@ -1,7 +1,130 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorldGenerator = void 0;
+exports.WorldGenerator = exports.PerlinWorldGenerator = void 0;
 const random_1 = require("./random");
+const simplex_noise_1 = __importDefault(require("simplex-noise"));
+const biome_1 = __importDefault(require("./biome"));
+const TAU = 2 * Math.PI;
+class PerlinWorldGenerator {
+    constructor(seed, width, height) {
+        this.random = new random_1.Random(seed);
+        this.simplex = new simplex_noise_1.default(this.random.randFloat);
+        this.width = width;
+        this.height = height;
+        // Constants
+        const SEA_LEVEL = 45;
+        const COAST_LEVEL = 55;
+        const PLAINS_LEVEL = 60;
+        const HILLS_LEVEL = 80;
+        const HIGHLANDS_LEVEL = 90;
+        const MOUNTAIN_LEVEL = 98;
+        // Define Biomes
+        this.biomes = {
+            'plains': new biome_1.default('ocean', [
+                [SEA_LEVEL, 'river'],
+                [COAST_LEVEL, 'grass_lowlands'],
+                [PLAINS_LEVEL, 'plains'],
+                [HILLS_LEVEL, 'grass_hills'],
+                [HIGHLANDS_LEVEL, 'grass_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+            'tundra': new biome_1.default('ocean', [
+                [SEA_LEVEL, 'river'],
+                [SEA_LEVEL + 5, 'frozen_river'],
+                [COAST_LEVEL, 'snow_plains'],
+                [HILLS_LEVEL, 'snow_hills'],
+                [HIGHLANDS_LEVEL, 'snow_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+            'arctic': new biome_1.default('frozen_ocean', [
+                [SEA_LEVEL, 'frozen_river'],
+                [COAST_LEVEL, 'snow_plains'],
+                [HILLS_LEVEL, 'snow_hills'],
+                [HIGHLANDS_LEVEL, 'snow_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+            'desert': new biome_1.default('ocean', [
+                [SEA_LEVEL, 'river'],
+                [COAST_LEVEL, 'desert'],
+                [HILLS_LEVEL, 'desert_hills'],
+                [HIGHLANDS_LEVEL, 'desert_mountains'],
+                [MOUNTAIN_LEVEL, 'mountain'],
+            ]),
+        };
+    }
+    getBiome(temp) {
+        if (temp < 5)
+            return this.biomes.arctic;
+        if (temp < 20)
+            return this.biomes.tundra;
+        if (temp < 60)
+            return this.biomes.plains;
+        if (temp <= 100)
+            return this.biomes.desert;
+        // Default Biome in case no match is found
+        return this.biomes.plains;
+    }
+    getElevation(x, y) {
+        const mapScale = 0.015;
+        const freq1 = (mapScale * 1) * this.width;
+        const noise1 = this.ridgenoise(x / this.width, y / this.width, freq1);
+        const freq2 = (mapScale * 2) * this.width;
+        const noise2 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq2) * noise1;
+        const freq3 = (mapScale * 4) * this.width;
+        const noise3 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
+        const freq4 = (mapScale * 8) * this.width;
+        const noise4 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq4);
+        const noiseVal = (noise1 + noise2 + noise3 + noise4) / 2.5;
+        return Math.pow(noiseVal, 1) * 100;
+    }
+    getTemp(x, y) {
+        const mapScale = 0.01;
+        const freq1 = (mapScale * 1) * this.width;
+        const noise1 = this.cylindernoise(x / this.width, y / this.width, freq1);
+        const freq2 = (mapScale * 2) * this.width;
+        const noise2 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq2) * noise1;
+        let noiseVal = (noise1 + noise2) / 1.5;
+        const tempBias = Math.pow(1 - (Math.abs(0.5 - (y / this.height)) * 4), 5);
+        noiseVal = Math.min(1, Math.max(0, ((noiseVal / 2) + 0.25) + tempBias));
+        return noiseVal * 100;
+    }
+    getHumidity(x, y) {
+        const mapScale = 0.01;
+        const freq1 = (mapScale * 1) * this.width;
+        const noise1 = this.cylindernoise(x / this.width, y / this.width, freq1);
+        const freq2 = (mapScale * 2) * this.width;
+        const noise2 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq2) * noise1;
+        let noiseVal = (noise1 + noise2) / 1.5;
+        const tempBias = 0.25 - Math.abs(0.5 - (y / this.height));
+        noiseVal = ((noiseVal / 2) + 0.25) + tempBias;
+        return noiseVal * 100;
+    }
+    ridgenoise(nx, ny, freq) {
+        return 2 * (0.5 - Math.abs(0.5 - this.cylindernoise(nx, ny, freq)));
+    }
+    cylindernoise(nx, ny, freq) {
+        const angle_x = TAU * nx;
+        return (this.simplex.noise3D(Math.cos(angle_x) / TAU * freq, Math.sin(angle_x) / TAU * freq, ny * freq) + 1) / 2;
+    }
+    generate() {
+        const { width, height } = this;
+        const tiles = [];
+        const heightMap = [];
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const elevation = this.getElevation(x, y);
+                const temp = this.getTemp(x, y);
+                tiles.push(this.getBiome(temp).getTile(elevation));
+                heightMap.push(elevation);
+            }
+        }
+        return [tiles, heightMap];
+    }
+}
+exports.PerlinWorldGenerator = PerlinWorldGenerator;
 class WorldGenerator {
     constructor(seed, width, height) {
         this.random = new random_1.Random(seed);
