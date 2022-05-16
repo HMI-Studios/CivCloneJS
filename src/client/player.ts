@@ -60,6 +60,7 @@ class UI {
       mainMenu: this.createElement('div', 'mainMenu'),
       gameList: this.createElement('div', 'gameList'),
       unitActionsMenu: this.createElement('div', 'unitActionsMenu'),
+      unitInfoMenu: this.createElement('div', 'unitInfoMenu'),
     };
     this.leaderPool = [];
     this.takenLeaders = [];
@@ -273,7 +274,7 @@ class UI {
     this.elements.gameList.remove();
     this.elements.centerModal.remove();
   }
-  
+
   showUnitActionsMenu(world: World, pos: Coords, unit: Unit): void {
     for (const action of unitActionsTable[unit.type]) {
       if (!unitActionsAvailabilityTable[action](world, pos)) {
@@ -282,7 +283,7 @@ class UI {
 
       const actionBtn = new Button(
         this.createElement('button'),
-        { 
+        {
           text: action,
           action: unitActionsFnTable[action](pos),
         }
@@ -299,5 +300,21 @@ class UI {
   hideUnitActionsMenu(): void {
     this.elements.unitActionsMenu.remove();
     this.elements.unitActionsMenu.innerHTML = '';
+  }
+
+  showUnitInfoMenu(world: World, pos: Coords, unit: Unit): void {
+    const unitHP = this.createElement('span', 'unitInfo');
+    unitHP.innerText = `HP: ${unit.hp}%`;
+    const unitMovement = this.createElement('span', 'unitInfo');
+    unitMovement.innerText = `Movement: ${unit.movement}`;
+
+    this.elements.unitInfoMenu.appendChild(unitHP);
+    this.elements.unitInfoMenu.appendChild(unitMovement);
+    this.root.appendChild(this.elements.unitInfoMenu);
+  }
+
+  hideUnitInfoMenu(): void {
+    this.elements.unitInfoMenu.remove();
+    this.elements.unitInfoMenu.innerHTML = '';
   }
 }

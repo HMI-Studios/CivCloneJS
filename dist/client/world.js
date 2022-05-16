@@ -247,9 +247,11 @@ class World {
             });
             this.on.event.selectUnit = (coords, unit) => {
                 ui.showUnitActionsMenu(this, coords, unit);
+                ui.showUnitInfoMenu(this, coords, unit);
             };
             this.on.event.deselectUnit = () => {
                 ui.hideUnitActionsMenu();
+                ui.hideUnitInfoMenu();
             };
             yield this.connect();
             yield this.login();

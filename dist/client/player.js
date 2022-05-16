@@ -37,6 +37,7 @@ class UI {
             mainMenu: this.createElement('div', 'mainMenu'),
             gameList: this.createElement('div', 'gameList'),
             unitActionsMenu: this.createElement('div', 'unitActionsMenu'),
+            unitInfoMenu: this.createElement('div', 'unitInfoMenu'),
         };
         this.leaderPool = [];
         this.takenLeaders = [];
@@ -230,6 +231,19 @@ class UI {
     hideUnitActionsMenu() {
         this.elements.unitActionsMenu.remove();
         this.elements.unitActionsMenu.innerHTML = '';
+    }
+    showUnitInfoMenu(world, pos, unit) {
+        const unitHP = this.createElement('span', 'unitInfo');
+        unitHP.innerText = `HP: ${unit.hp}%`;
+        const unitMovement = this.createElement('span', 'unitInfo');
+        unitMovement.innerText = `Movement: ${unit.movement}`;
+        this.elements.unitInfoMenu.appendChild(unitHP);
+        this.elements.unitInfoMenu.appendChild(unitMovement);
+        this.root.appendChild(this.elements.unitInfoMenu);
+    }
+    hideUnitInfoMenu() {
+        this.elements.unitInfoMenu.remove();
+        this.elements.unitInfoMenu.innerHTML = '';
     }
 }
 //# sourceMappingURL=player.js.map
