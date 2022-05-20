@@ -1,8 +1,30 @@
 import { Random } from './random';
 import SimplexNoise from 'simplex-noise';
-import Biome from './biome';
+import { Biome, TilePool, TileType } from './biome';
 
 const TAU = 2 * Math.PI;
+
+// Tile Types
+const OCEAN = new TileType('ocean', 0, true);
+const RIVER = new TileType('river', 0, true);
+const FROZEN_OCEAN = new TileType('frozen_ocean', 0, true);
+const FROZEN_RIVER = new TileType('frozen_river', 0, true);
+
+const GRASS_LOWLANDS = new TileType('grass_lowlands', 1);
+const GRASS_PLAINS = new TileType('plains', 2);
+const GRASS_HILLS = new TileType('grass_hills', 3);
+const GRASS_MOUNTAINS = new TileType('grass_mountains', 4);
+
+const DESERT_PLAINS = new TileType('desert', 2);
+const DESERT_HILLS = new TileType('desert_hills', 3);
+const DESERT_MOUNTAINS = new TileType('desert_mountains', 4);
+
+const SNOW_PLAINS = new TileType('snow_plains', 2);
+const SNOW_HILLS = new TileType('snow_hills', 3);
+const SNOW_MOUNTAINS = new TileType('snow_mountains', 4);
+
+const MOUNTAIN = new TileType('mountain', 5);
+const MOUNTAIN_SPRING = new TileType('frozen_ocean', 5, false, true);
 
 export class PerlinWorldGenerator {
 
@@ -18,7 +40,7 @@ export class PerlinWorldGenerator {
     this.width = width;
     this.height = height;
 
-    // Constants
+    // Elevation Constants - Make these configurable later
     const SEA_LEVEL = 45;
     const COAST_LEVEL = 55;
     const PLAINS_LEVEL = 60;
@@ -28,35 +50,39 @@ export class PerlinWorldGenerator {
 
     // Define Biomes
     this.biomes = {
-      'plains': new Biome('ocean', [
-        [SEA_LEVEL, 'river'],
-        [COAST_LEVEL, 'grass_lowlands'],
-        [PLAINS_LEVEL, 'plains'],
-        [HILLS_LEVEL, 'grass_hills'],
-        [HIGHLANDS_LEVEL, 'grass_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'plains': new Biome(this.random,
+        OCEAN, [
+        [SEA_LEVEL, RIVER],
+        [COAST_LEVEL, GRASS_LOWLANDS],
+        [PLAINS_LEVEL, GRASS_PLAINS],
+        [HILLS_LEVEL, GRASS_HILLS],
+        [HIGHLANDS_LEVEL, new TilePool([[GRASS_MOUNTAINS, 20], [MOUNTAIN_SPRING, 1]])],
+        [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 5], [MOUNTAIN_SPRING, 1]])],
       ]),
-      'tundra': new Biome('ocean', [
-        [SEA_LEVEL, 'river'],
-        [SEA_LEVEL + 5, 'frozen_river'],
-        [COAST_LEVEL, 'snow_plains'],
-        [HILLS_LEVEL, 'snow_hills'],
-        [HIGHLANDS_LEVEL, 'snow_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'tundra': new Biome(this.random,
+        OCEAN, [
+        [SEA_LEVEL, RIVER],
+        [SEA_LEVEL + 5, FROZEN_RIVER],
+        [COAST_LEVEL, SNOW_PLAINS],
+        [HILLS_LEVEL, SNOW_HILLS],
+        [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
+        [MOUNTAIN_LEVEL, MOUNTAIN],
       ]),
-      'arctic': new Biome('frozen_ocean', [
-        [SEA_LEVEL, 'frozen_river'],
-        [COAST_LEVEL, 'snow_plains'],
-        [HILLS_LEVEL, 'snow_hills'],
-        [HIGHLANDS_LEVEL, 'snow_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'arctic': new Biome(this.random,
+        FROZEN_OCEAN, [
+        [SEA_LEVEL, FROZEN_RIVER],
+        [COAST_LEVEL, SNOW_PLAINS],
+        [HILLS_LEVEL, SNOW_HILLS],
+        [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
+        [MOUNTAIN_LEVEL, MOUNTAIN],
       ]),
-      'desert': new Biome('ocean', [
-        [SEA_LEVEL, 'river'],
-        [COAST_LEVEL, 'desert'],
-        [HILLS_LEVEL, 'desert_hills'],
-        [HIGHLANDS_LEVEL, 'desert_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'desert': new Biome(this.random,
+        OCEAN, [
+        [SEA_LEVEL, RIVER],
+        [COAST_LEVEL, DESERT_PLAINS],
+        [HILLS_LEVEL, DESERT_HILLS],
+        [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
+        [MOUNTAIN_LEVEL, MOUNTAIN],
       ]),
     };
   }
@@ -130,7 +156,7 @@ export class PerlinWorldGenerator {
       for (let x = 0; x < width; x++) {
         const elevation = this.getElevation(x, y);
         const temp = this.getTemp(x, y);
-        tiles.push(this.getBiome(temp).getTile(elevation));
+        tiles.push(this.getBiome(temp).getTile(elevation).type);
         heightMap.push(elevation);
       }
     }
