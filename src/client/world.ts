@@ -329,9 +329,17 @@ class World {
       ui.showUnitInfoMenu(this, coords, unit);
     }
 
+    this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
+      ui.showTileInfoMenu(this, coords, tile);
+    }
+
     this.on.event.deselectUnit = (): void => {
       ui.hideUnitActionsMenu();
       ui.hideUnitInfoMenu();
+    }
+
+    this.on.event.deselectTile = (): void => {
+      ui.hideTileInfoMenu();
     }
 
     await this.connect();
