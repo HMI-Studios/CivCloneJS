@@ -44,8 +44,8 @@ class PerlinWorldGenerator {
                 [SEA_LEVEL, RIVER],
                 [COAST_LEVEL, GRASS_LOWLANDS],
                 [PLAINS_LEVEL, GRASS_PLAINS],
-                [HILLS_LEVEL, GRASS_HILLS],
-                [HIGHLANDS_LEVEL, new biome_1.TilePool([[GRASS_MOUNTAINS, 20], [MOUNTAIN_SPRING, 1]])],
+                [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 1000], [MOUNTAIN_SPRING, 1]])],
+                [HIGHLANDS_LEVEL, new biome_1.TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 5], [MOUNTAIN_SPRING, 1]])],
             ]),
             'tundra': new biome_1.Biome(this.random, OCEAN, [
@@ -68,7 +68,7 @@ class PerlinWorldGenerator {
                 [COAST_LEVEL, DESERT_PLAINS],
                 [HILLS_LEVEL, DESERT_HILLS],
                 [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
-                [MOUNTAIN_LEVEL, MOUNTAIN],
+                [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
             ]),
         };
     }
@@ -85,16 +85,18 @@ class PerlinWorldGenerator {
         return this.biomes.plains;
     }
     getElevation(x, y) {
-        const mapScale = 0.015;
+        const mapScale = 0.005; // .015
         const freq1 = (mapScale * 1) * this.width;
         const noise1 = this.ridgenoise(x / this.width, y / this.width, freq1);
         const freq2 = (mapScale * 2) * this.width;
-        const noise2 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq2) * noise1;
+        const noise2 = 0.75 * this.ridgenoise(x / this.width, y / this.width, freq2) * noise1;
         const freq3 = (mapScale * 4) * this.width;
-        const noise3 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
+        const noise3 = 0.625 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
         const freq4 = (mapScale * 8) * this.width;
-        const noise4 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq4);
-        const noiseVal = (noise1 + noise2 + noise3 + noise4) / 2.5;
+        const noise4 = 0.25 * this.cylindernoise(x / this.width, y / this.width, freq4);
+        const freq5 = (mapScale * 24) * this.width;
+        const noise5 = 0.375 * this.cylindernoise(x / this.width, y / this.width, freq5);
+        const noiseVal = (noise1 + noise2 + noise3 + noise4 + noise5) / 3;
         return Math.pow(noiseVal, 1) * 100;
     }
     getTemp(x, y) {
@@ -130,13 +132,21 @@ class PerlinWorldGenerator {
         const { width, height } = this;
         const tiles = [];
         const heightMap = [];
+        const riverSources = []; // change to list of Coords
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const elevation = this.getElevation(x, y);
                 const temp = this.getTemp(x, y);
-                tiles.push(this.getBiome(temp).getTile(elevation).type);
+                const tile = this.getBiome(temp).getTile(elevation);
+                if (tile.isRiverGen)
+                    riverSources.push([x, y]);
+                tiles.push(tile.type);
                 heightMap.push(elevation);
             }
+        }
+        for (const [x, y] of riverSources) {
+            const river = new biome_1.River(x, y, this.width);
+            river.generate(tiles, heightMap);
         }
         return [tiles, heightMap];
     }

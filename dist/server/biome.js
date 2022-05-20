@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Biome = exports.TilePool = exports.TileType = void 0;
+exports.Biome = exports.River = exports.TilePool = exports.TileType = void 0;
+const utils_1 = require("./utils");
 class TileType {
     constructor(type, heightClass, isWater = false, isRiverGen = false) {
         this.type = type;
@@ -23,11 +24,11 @@ class TilePool {
         console.log(this.tileWeights);
     }
     resolve(random) {
-        const targetWeight = random.randInt(this.weightRange);
+        const targetWeight = random.randFloat(this.weightRange);
         let resultTile;
         for (const [tile, weight] of this.tileWeights) {
             resultTile = tile;
-            if (weight > targetWeight) {
+            if (weight >= targetWeight) {
                 break;
             }
         }
@@ -40,6 +41,63 @@ class TilePool {
     }
 }
 exports.TilePool = TilePool;
+class River {
+    constructor(x, y, width) {
+        [this.x, this.y] = [x, y];
+        this.mapWidth = width;
+    }
+    // FIXME
+    pos({ x, y }) {
+        return (y * this.mapWidth) + x;
+    }
+    flood(pos, waterLevels, tiles, riverLen, prevPos) {
+        const MAX_RIVER_LEN = this.mapWidth * 2;
+        if (tiles[this.pos(pos)] === 'ocean')
+            return;
+        const adjCoords = (0, utils_1.getAdjacentCoords)(pos);
+        let greatestDiff = 0;
+        let greatestDiffCoords;
+        for (const coords of adjCoords) {
+            const diff = waterLevels[this.pos(pos)] - waterLevels[this.pos(coords)];
+            if (diff > greatestDiff && coords.x !== prevPos.x && coords.y !== prevPos.y) {
+                greatestDiff = diff;
+                greatestDiffCoords = coords;
+            }
+        }
+        if (greatestDiffCoords) {
+            tiles[this.pos(pos)] = 'river'; // FIXME
+            if (riverLen < MAX_RIVER_LEN)
+                this.flood(greatestDiffCoords, waterLevels, tiles, riverLen + 1, pos);
+        }
+        else {
+            waterLevels[this.pos(pos)]++;
+            if (riverLen < MAX_RIVER_LEN)
+                this.flood(pos, waterLevels, tiles, riverLen + 1, prevPos);
+        }
+    }
+    generate(tiles, heightMap) {
+        const waterLevels = [...heightMap];
+        const startPos = { x: this.x, y: this.y };
+        const adjCoords = (0, utils_1.getAdjacentCoords)(startPos);
+        let greatestDiff = 0;
+        let greatestDiffCoords;
+        for (const coords of adjCoords) {
+            const diff = waterLevels[this.pos(startPos)] - waterLevels[this.pos(coords)];
+            if (diff > greatestDiff) {
+                greatestDiff = diff;
+                greatestDiffCoords = coords;
+            }
+        }
+        if (greatestDiffCoords) {
+            this.flood(greatestDiffCoords, waterLevels, tiles, 1, startPos);
+        }
+        // let riverLen = 0;
+        // // while (riverLen < MAX_RIVER_LEN) {
+        //   riverLen++;
+        // }
+    }
+}
+exports.River = River;
 class Biome {
     constructor(random, oceanTile, tileLevels) {
         this.oceanTile = oceanTile;

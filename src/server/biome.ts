@@ -1,4 +1,5 @@
 import { Random } from './random';
+import { getAdjacentCoords } from './utils';
 
 export class TileType {
   public type: string;
@@ -32,11 +33,11 @@ export class TilePool {
   }
 
   resolve(random: Random): TileType {
-    const targetWeight = random.randInt(this.weightRange);
+    const targetWeight = random.randFloat(this.weightRange);
     let resultTile: TileType | undefined;
     for (const [tile, weight] of this.tileWeights) {
       resultTile = tile;
-      if (weight > targetWeight) {
+      if (weight >= targetWeight) {
         break;
       }
     }
@@ -45,6 +46,73 @@ export class TilePool {
     } else {
       throw `Broken Tile Pool: ${this.tileWeights}`;
     }
+  }
+}
+
+export class River {
+  private x: number;
+  private y: number;
+  private mapWidth: number; // FIXME
+
+
+  constructor(x: number, y: number, width: number) { // change to coords later
+    [this.x, this.y] = [x, y];
+
+    this.mapWidth = width;
+  }
+
+  // FIXME
+  pos({ x, y }: Coords): number {
+    return (y * this.mapWidth) + x;
+  }
+
+  flood(pos: Coords, waterLevels: number[], tiles: string[], riverLen: number, prevPos: Coords): void {
+    const MAX_RIVER_LEN = this.mapWidth * 2;
+
+    if (tiles[this.pos(pos)] === 'ocean') return;
+
+    const adjCoords = getAdjacentCoords(pos);
+    let greatestDiff = 0;
+    let greatestDiffCoords: Coords | undefined;
+    for (const coords of adjCoords) {
+      const diff = waterLevels[this.pos(pos)] - waterLevels[this.pos(coords)]
+      if (diff > greatestDiff && coords.x !== prevPos.x && coords.y !== prevPos.y) {
+        greatestDiff = diff;
+        greatestDiffCoords = coords;
+      }
+    }
+
+    if (greatestDiffCoords) {
+      tiles[this.pos(pos)] = 'river'; // FIXME
+      if (riverLen < MAX_RIVER_LEN) this.flood(greatestDiffCoords, waterLevels, tiles, riverLen+1, pos);
+    } else {
+      waterLevels[this.pos(pos)]++;
+      if (riverLen < MAX_RIVER_LEN) this.flood(pos, waterLevels, tiles, riverLen+1, prevPos);
+    }
+  }
+
+  generate(tiles: string[], heightMap: number[]): void {
+    const waterLevels = [...heightMap];
+    const startPos = { x: this.x, y: this.y };
+
+    const adjCoords = getAdjacentCoords(startPos);
+    let greatestDiff = 0;
+    let greatestDiffCoords: Coords | undefined;
+    for (const coords of adjCoords) {
+      const diff = waterLevels[this.pos(startPos)] - waterLevels[this.pos(coords)]
+      if (diff > greatestDiff ) {
+        greatestDiff = diff;
+        greatestDiffCoords = coords;
+      }
+    }
+    if (greatestDiffCoords) {
+      this.flood(greatestDiffCoords, waterLevels, tiles, 1, startPos);
+    }
+
+    // let riverLen = 0;
+    // // while (riverLen < MAX_RIVER_LEN) {
+    //   riverLen++;
+    // }
   }
 }
 
