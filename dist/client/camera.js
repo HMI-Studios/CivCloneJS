@@ -1,3 +1,8 @@
+const [TILE_WIDTH, TILE_HEIGHT] = [28, 26];
+const X_TILE_SPACING = TILE_WIDTH * 3 / 4;
+const Y_TILE_SPACING = TILE_HEIGHT / 2;
+const X_CLIP_OFFSET = X_TILE_SPACING * Math.cos(60 * (Math.PI / 180));
+let [selectorXOffset, selectorYOffset] = [0, 0];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Camera {
     constructor() {
@@ -11,10 +16,20 @@ class Camera {
         this.ctx = ctx;
         this.textures = {
             tile: {
-                plains: this.loadTexture('tile_plains'),
                 ocean: this.loadTexture('tile_ocean'),
+                frozen_ocean: this.loadTexture('tile_frozen_ocean'),
                 river: this.loadTexture('tile_coastal'),
+                frozen_river: this.loadTexture('tile_frozen_coastal'),
+                grass_lowlands: this.loadTexture('tile_grass_lowlands'),
+                plains: this.loadTexture('tile_plains'),
+                grass_hills: this.loadTexture('tile_grass_hills'),
+                grass_mountains: this.loadTexture('tile_grass_mountains'),
+                snow_plains: this.loadTexture('tile_snow_plains'),
+                snow_hills: this.loadTexture('tile_snow_hills'),
+                snow_mountains: this.loadTexture('tile_snow_mountains'),
                 desert: this.loadTexture('tile_desert'),
+                desert_hills: this.loadTexture('tile_desert_hills'),
+                desert_mountains: this.loadTexture('tile_desert_mountains'),
                 mountain: this.loadTexture('tile_mountain'),
                 empty: this.loadTexture('border_overlay'),
             },
@@ -37,6 +52,10 @@ class Camera {
         return texture;
     }
     start(world, FPS) {
+        [selectorXOffset, selectorYOffset] = [
+            world.width * 0.5 + -0.6951295757078696,
+            world.height * 0.4614 + 0.5038168562195441,
+        ];
         this.interval = setInterval(() => this.render(world), FPS);
     }
     stop() {
@@ -52,12 +71,18 @@ class Camera {
         const UNIT_WIDTH = (74 * 0.2);
         const UNIT_HEIGHT = (88 * 0.2);
         const UNIT_RECT_HEIGHT = (51 * 0.2);
+        // Unit Health Bar
+        ctx.fillStyle = unit.hp > 66 ? 'limegreen' : (unit.hp > 33 ? 'gold' : 'red');
+        ctx.beginPath();
+        ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 1.9) * zoom, UNIT_WIDTH * zoom * (unit.hp / 100), 2 * zoom);
+        ctx.fill();
+        // Unit Color Background
         ctx.fillStyle = civs[unit.civID].color;
         ctx.beginPath();
-        ctx.rect((-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
-        ctx.arc((-camX + ((x - (width / 2)) * 19.8) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
+        ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
+        ctx.arc((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
         ctx.fill();
-        ctx.drawImage(textures.unit[unit.type], (-camX + ((x - (width / 2)) * 19.8) + 6.5) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
+        ctx.drawImage(textures.unit[unit.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
     }
     render(world) {
         const { zoom, x: camX, y: camY, textures, ctx } = this;
@@ -75,28 +100,29 @@ class Camera {
         else {
             this.mouseDownTime = 0;
         }
-        const yStart = (Math.round(((camY * zoom) - ((12.5 * height * zoom) + scy2)) / (25 * zoom)) + (height - 2));
-        const yEnd = (Math.round(((camY * zoom) - ((12.5 * height * zoom) + scy1)) / (25 * zoom)) + (height + 3));
-        const xStart = (Math.round((((camX * zoom) + (10 * width * zoom)) + scx1) / (19.8 * zoom)) - 1);
-        const xEnd = (Math.round((((camX * zoom) + (10 * width * zoom)) + scx2) / (19.8 * zoom)) + 1);
-        const selectedX = Math.round((wmX / 19.8) + 18.3);
-        const selectedY = Math.round(((wmY + height) / 25) + (18 + (mod(selectedX, 2) / -2)));
         // const TILE_SIZE = [28, 25];
         // const UNIT_SCALE = [74, 88];
+        const yStart = (Math.round(((camY * zoom) - ((Y_TILE_SPACING * height * zoom) + scy2)) / (TILE_HEIGHT * zoom)) + (height - 2));
+        const yEnd = (Math.round(((camY * zoom) - ((Y_TILE_SPACING * height * zoom) + scy1)) / (TILE_HEIGHT * zoom)) + (height + 3));
+        const xStart = (Math.round((((camX * zoom) + (X_CLIP_OFFSET * width * zoom)) + scx1) / (X_TILE_SPACING * zoom)) - 1);
+        const xEnd = (Math.round((((camX * zoom) + (X_CLIP_OFFSET * width * zoom)) + scx2) / (X_TILE_SPACING * zoom)) + 1);
+        const selectedX = Math.round((wmX / X_TILE_SPACING) + selectorXOffset);
+        const selectedY = Math.round(((wmY + height) / TILE_HEIGHT) + (selectorYOffset + (mod(selectedX, 2) / -2)));
         this.clear();
-        for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
+        // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
+        for (let y = Math.min(yEnd, height) - 1; y >= Math.max(yStart, 0); y--) {
             for (let x = xStart; x < xEnd; x++) {
                 const tile = world.getTile(x, y);
                 if (tile) {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
-                    ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * 19.8)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom, 28 * zoom, 25 * zoom);
+                    ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                     ctx.globalAlpha = 1;
                     if (tile.unit) {
                         this.renderUnit(world, tile.unit, x, y);
                     }
                     if (world.pos(x, y) in this.highlightedTiles) {
-                        ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * 19.8)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom, 28 * zoom, 25 * zoom);
+                        ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                     }
                     if (x === selectedX && y === selectedY) {
                         if (this.mouseDownTime === 1) {
@@ -108,7 +134,7 @@ class Camera {
                             this.selectedUnitPos = null;
                             world.on.event.deselectUnit();
                         }
-                        ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * 19.8)) * zoom, (camY - (((y - (height / 2)) * 25) + (mod(x, 2) * 12.5))) * zoom, 28 * zoom, 25 * zoom);
+                        ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                         if (tile.unit && this.mouseDownTime === 1) {
                             console.log(tile.unit);
                             this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);

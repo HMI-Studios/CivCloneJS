@@ -53,7 +53,7 @@ export class Map {
   getVisibleTilesCoords(unit: Unit): Coords[] {
     return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
   }
-  
+
   setTileOwner(coords: Coords, owner: City): void {
     this.getTile(coords).owner?.removeTile(coords);
     this.getTile(coords).owner = owner;
@@ -71,16 +71,20 @@ export class Map {
       return null;
     }
   }
-  
+
   getCivMap(civID: number): (TileData | null)[] {
     return this.tiles.map((tile) => {
       return this.getCivTile(civID, tile);
     });
   }
-  
+
   setTileVisibility(civID: number, coords: Coords, visible: boolean) {
     this.getTile(coords).setVisibility(civID, visible);
     this.tileUpdate(coords);
+  }
+
+  isInBounds(coords: Coords): boolean {
+    return coords.x >= 0 && coords.x < this.width && coords.y >= 0 && coords.y < this.height;
   }
 
   tileUpdate(coords: Coords) {

@@ -31,6 +31,7 @@ interface Improvement {
 
 interface Tile {
   type: string;
+  elevation: number;
   improvement: Improvement;
   movementCost: [number, number];
   unit: Unit;
@@ -325,10 +326,12 @@ class World {
 
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
       ui.showUnitActionsMenu(this, coords, unit);
+      ui.showUnitInfoMenu(this, coords, unit);
     }
 
     this.on.event.deselectUnit = (): void => {
       ui.hideUnitActionsMenu();
+      ui.hideUnitInfoMenu();
     }
 
     await this.connect();

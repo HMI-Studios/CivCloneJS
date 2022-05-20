@@ -4,6 +4,9 @@ exports.Random = void 0;
 class Random {
     constructor(seed) {
         this.prevRand = seed;
+        this.randFloat = this.randFloat.bind(this);
+        this.randInt = this.randInt.bind(this);
+        this.doubleRandInt = this.doubleRandInt.bind(this);
     }
     _randNumber(from, to) {
         this.prevRand = ((1103515245 * this.prevRand) + 12345) % 2147483648;

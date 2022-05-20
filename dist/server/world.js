@@ -12,8 +12,9 @@ class World {
         this.leaderPool = {};
         for (let i = 0; i < this.civsCount; i++) {
             this.civs[i] = new civilization_1.Civilization();
-            this.addUnit(new unit_1.Unit('settler', i, { x: (i + 1) * 1, y: (i + 1) * 1 })); // REMOVE THESE
-            this.addUnit(new unit_1.Unit('builder', i, { x: (i + 1) * 3, y: (i + 1) * 4 })); // REMOVE THESE
+            this.addUnit(new unit_1.Unit('settler', i, { x: (i + 1) * 1, y: (i + 1) * 1 + 1 })); // REMOVE THESE
+            this.addUnit(new unit_1.Unit('builder', i, { x: (i + 1) * 3, y: (i + 1) * 3 + 1 })); // REMOVE THESE
+            this.addUnit(new unit_1.Unit('scout', i, { x: (i + 1) * 4, y: (i + 1) * 4 + 1 })); // REMOVE THESE
             this.updateCivTileVisibility(i);
         }
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
@@ -84,7 +85,10 @@ class World {
     }
     // map, civs
     addUnit(unit) {
-        this.civs[unit.civID].addUnit(unit);
+        if (this.map.isInBounds(unit.coords)) {
+            this.civs[unit.civID].addUnit(unit);
+            this.map.getTile(unit.coords).setUnit(unit);
+        }
     }
     // map, civs
     removeUnit(unit) {

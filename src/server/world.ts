@@ -26,8 +26,9 @@ export class World {
     for (let i = 0; i < this.civsCount; i++) {
       this.civs[i] = new Civilization();
 
-      this.addUnit(new Unit('settler', i, { x: (i+1)*1, y: (i+1)*1 })); // REMOVE THESE
-      this.addUnit(new Unit('builder', i, { x: (i+1)*3, y: (i+1)*4 })); // REMOVE THESE
+      this.addUnit(new Unit('settler', i, { x: (i+1)*1, y: (i+1)*1+1 })); // REMOVE THESE
+      this.addUnit(new Unit('builder', i, { x: (i+1)*3, y: (i+1)*3+1 })); // REMOVE THESE
+      this.addUnit(new Unit('scout', i, { x: (i+1)*4, y: (i+1)*4+1 })); // REMOVE THESE
 
       this.updateCivTileVisibility(i);
     }
@@ -113,7 +114,10 @@ export class World {
 
   // map, civs
   addUnit(unit: Unit): void {
-    this.civs[unit.civID].addUnit(unit);
+    if (this.map.isInBounds(unit.coords)) {
+      this.civs[unit.civID].addUnit(unit);
+      this.map.getTile(unit.coords).setUnit(unit);
+    }
   }
 
   // map, civs
