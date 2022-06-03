@@ -44,9 +44,9 @@ class PerlinWorldGenerator {
                 [SEA_LEVEL, RIVER],
                 [COAST_LEVEL, GRASS_LOWLANDS],
                 [PLAINS_LEVEL, GRASS_PLAINS],
-                [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 1000], [MOUNTAIN_SPRING, 1]])],
+                [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
                 [HIGHLANDS_LEVEL, new biome_1.TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
-                [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 5], [MOUNTAIN_SPRING, 1]])],
+                [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
             ]),
             'tundra': new biome_1.Biome(this.random, OCEAN, [
                 [SEA_LEVEL, RIVER],
@@ -129,8 +129,9 @@ class PerlinWorldGenerator {
         return (this.simplex.noise3D(Math.cos(angle_x) / TAU * freq, Math.sin(angle_x) / TAU * freq, ny * freq) + 1) / 2;
     }
     generate() {
+        const startTime = new Date().getTime();
         const { width, height } = this;
-        const tiles = [];
+        const tileTypeMap = [];
         const heightMap = [];
         const riverSources = []; // change to list of Coords
         for (let y = 0; y < height; y++) {
@@ -140,14 +141,16 @@ class PerlinWorldGenerator {
                 const tile = this.getBiome(temp).getTile(elevation);
                 if (tile.isRiverGen)
                     riverSources.push([x, y]);
-                tiles.push(tile.type);
+                tileTypeMap.push(tile);
                 heightMap.push(elevation);
             }
         }
         for (const [x, y] of riverSources) {
             const river = new biome_1.River(x, y, this.width);
-            river.generate(tiles, heightMap);
+            river.generate(tileTypeMap, heightMap);
         }
+        const tiles = tileTypeMap.map(tile => tile.type);
+        console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`);
         return [tiles, heightMap];
     }
 }

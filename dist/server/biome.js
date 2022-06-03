@@ -21,7 +21,6 @@ class TilePool {
             sum += weight;
         }
         this.weightRange = sum;
-        console.log(this.tileWeights);
     }
     resolve(random) {
         const targetWeight = random.randFloat(this.weightRange);
@@ -50,9 +49,11 @@ class River {
     pos({ x, y }) {
         return (y * this.mapWidth) + x;
     }
-    flood(pos, waterLevels, tiles, riverLen, prevPos) {
+    flood(pos, waterLevels, tileTypeMap, riverLen, prevPos) {
         const MAX_RIVER_LEN = this.mapWidth * 2;
-        if (tiles[this.pos(pos)] === 'ocean')
+        if (tileTypeMap[this.pos(pos)].type === 'ocean')
+            return;
+        if (tileTypeMap[this.pos(pos)].isRiverGen)
             return;
         const adjCoords = (0, utils_1.getAdjacentCoords)(pos);
         let greatestDiff = 0;
@@ -65,17 +66,17 @@ class River {
             }
         }
         if (greatestDiffCoords) {
-            tiles[this.pos(pos)] = 'river'; // FIXME
+            tileTypeMap[this.pos(pos)] = tileTypeMap[10719]; // FIXME!!!
             if (riverLen < MAX_RIVER_LEN)
-                this.flood(greatestDiffCoords, waterLevels, tiles, riverLen + 1, pos);
+                this.flood(greatestDiffCoords, waterLevels, tileTypeMap, riverLen + 1, pos);
         }
         else {
             waterLevels[this.pos(pos)]++;
             if (riverLen < MAX_RIVER_LEN)
-                this.flood(pos, waterLevels, tiles, riverLen + 1, prevPos);
+                this.flood(pos, waterLevels, tileTypeMap, riverLen + 1, prevPos);
         }
     }
-    generate(tiles, heightMap) {
+    generate(tileTypeMap, heightMap) {
         const waterLevels = [...heightMap];
         const startPos = { x: this.x, y: this.y };
         const adjCoords = (0, utils_1.getAdjacentCoords)(startPos);
@@ -89,7 +90,7 @@ class River {
             }
         }
         if (greatestDiffCoords) {
-            this.flood(greatestDiffCoords, waterLevels, tiles, 1, startPos);
+            this.flood(greatestDiffCoords, waterLevels, tileTypeMap, 1, startPos);
         }
         // let riverLen = 0;
         // // while (riverLen < MAX_RIVER_LEN) {

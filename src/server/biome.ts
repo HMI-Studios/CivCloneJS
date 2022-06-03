@@ -29,7 +29,6 @@ export class TilePool {
       sum += weight;
     }
     this.weightRange = sum;
-    console.log(this.tileWeights);
   }
 
   resolve(random: Random): TileType {
@@ -66,10 +65,11 @@ export class River {
     return (y * this.mapWidth) + x;
   }
 
-  flood(pos: Coords, waterLevels: number[], tiles: string[], riverLen: number, prevPos: Coords): void {
+  flood(pos: Coords, waterLevels: number[], tileTypeMap: TileType[], riverLen: number, prevPos: Coords): void {
     const MAX_RIVER_LEN = this.mapWidth * 2;
 
-    if (tiles[this.pos(pos)] === 'ocean') return;
+    if (tileTypeMap[this.pos(pos)].type === 'ocean') return;
+    if (tileTypeMap[this.pos(pos)].isRiverGen) return;
 
     const adjCoords = getAdjacentCoords(pos);
     let greatestDiff = 0;
@@ -83,15 +83,15 @@ export class River {
     }
 
     if (greatestDiffCoords) {
-      tiles[this.pos(pos)] = 'river'; // FIXME
-      if (riverLen < MAX_RIVER_LEN) this.flood(greatestDiffCoords, waterLevels, tiles, riverLen+1, pos);
+      tileTypeMap[this.pos(pos)] = tileTypeMap[10719]; // FIXME!!!
+      if (riverLen < MAX_RIVER_LEN) this.flood(greatestDiffCoords, waterLevels, tileTypeMap, riverLen+1, pos);
     } else {
       waterLevels[this.pos(pos)]++;
-      if (riverLen < MAX_RIVER_LEN) this.flood(pos, waterLevels, tiles, riverLen+1, prevPos);
+      if (riverLen < MAX_RIVER_LEN) this.flood(pos, waterLevels, tileTypeMap, riverLen+1, prevPos);
     }
   }
 
-  generate(tiles: string[], heightMap: number[]): void {
+  generate(tileTypeMap: TileType[], heightMap: number[]): void {
     const waterLevels = [...heightMap];
     const startPos = { x: this.x, y: this.y };
 
@@ -106,7 +106,7 @@ export class River {
       }
     }
     if (greatestDiffCoords) {
-      this.flood(greatestDiffCoords, waterLevels, tiles, 1, startPos);
+      this.flood(greatestDiffCoords, waterLevels, tileTypeMap, 1, startPos);
     }
 
     // let riverLen = 0;

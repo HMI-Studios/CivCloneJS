@@ -152,8 +152,10 @@ export class PerlinWorldGenerator {
   }
 
   generate(): [string[], number[]] {
+    const startTime = new Date().getTime();
+
     const { width, height } = this;
-    const tiles: string[] = [];
+    const tileTypeMap: TileType[] = [];
     const heightMap: number[] = [];
     const riverSources: [number, number][] = []; // change to list of Coords
     for (let y = 0; y < height; y++) {
@@ -162,16 +164,19 @@ export class PerlinWorldGenerator {
         const temp = this.getTemp(x, y);
         const tile = this.getBiome(temp).getTile(elevation)
         if (tile.isRiverGen) riverSources.push([x, y]);
-        tiles.push(tile.type);
+        tileTypeMap.push(tile);
         heightMap.push(elevation);
       }
     }
 
     for (const [x, y] of riverSources) {
       const river = new River(x, y, this.width);
-      river.generate(tiles, heightMap);
+      river.generate(tileTypeMap, heightMap);
     }
 
+    const tiles: string[] = tileTypeMap.map(tile => tile.type);
+
+    console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`)
     return [tiles, heightMap];
   }
 }
