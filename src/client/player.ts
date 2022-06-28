@@ -61,6 +61,7 @@ class UI {
       gameList: this.createElement('div', 'gameList'),
       unitActionsMenu: this.createElement('div', 'unitActionsMenu'),
       unitInfoMenu: this.createElement('div', 'unitInfoMenu'),
+      tileInfoMenu: this.createElement('div', 'tileInfoMenu'),
     };
     this.leaderPool = [];
     this.takenLeaders = [];
@@ -303,9 +304,9 @@ class UI {
   }
 
   showUnitInfoMenu(world: World, pos: Coords, unit: Unit): void {
-    const unitHP = this.createElement('span', 'unitInfo');
+    const unitHP = this.createElement('span', 'infoSpan');
     unitHP.innerText = `HP: ${unit.hp}%`;
-    const unitMovement = this.createElement('span', 'unitInfo');
+    const unitMovement = this.createElement('span', 'infoSpan');
     unitMovement.innerText = `Movement: ${unit.movement}`;
 
     this.elements.unitInfoMenu.appendChild(unitHP);
@@ -316,5 +317,26 @@ class UI {
   hideUnitInfoMenu(): void {
     this.elements.unitInfoMenu.remove();
     this.elements.unitInfoMenu.innerHTML = '';
+  }
+
+  showTileInfoMenu(world: World, pos: Coords, tile: Tile): void {
+    this.elements.tileInfoMenu.innerHTML = '';
+
+    const tileType = this.createElement('span', 'infoSpan');
+    tileType.innerText = `Type: ${tile.type}`;
+    const tileMovementCost = this.createElement('span', 'infoSpan');
+    tileMovementCost.innerText = `Movement Cost: ${tile.movementCost[0]} - ${tile.movementCost[1]}`;
+    const tileElevation = this.createElement('span', 'infoSpan');
+    tileElevation.innerText = `Elevation: ${Math.round(tile.elevation)}`;
+
+    this.elements.tileInfoMenu.appendChild(tileType);
+    this.elements.tileInfoMenu.appendChild(tileMovementCost);
+    this.elements.tileInfoMenu.appendChild(tileElevation);
+    this.root.appendChild(this.elements.tileInfoMenu);
+  }
+
+  hideTileInfoMenu(): void {
+    this.elements.tileInfoMenu.remove();
+    this.elements.tileInfoMenu.innerHTML = '';
   }
 }
