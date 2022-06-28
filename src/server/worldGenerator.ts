@@ -1,8 +1,30 @@
 import { Random } from './random';
 import SimplexNoise from 'simplex-noise';
-import Biome from './biome';
+import { Biome, River, TilePool, TileType } from './biome';
 
 const TAU = 2 * Math.PI;
+
+// Tile Types
+const OCEAN = new TileType('ocean', 0, true);
+const RIVER = new TileType('river', 0, true);
+const FROZEN_OCEAN = new TileType('frozen_ocean', 0, true);
+const FROZEN_RIVER = new TileType('frozen_river', 0, true);
+
+const GRASS_LOWLANDS = new TileType('grass_lowlands', 1);
+const GRASS_PLAINS = new TileType('plains', 2);
+const GRASS_HILLS = new TileType('grass_hills', 3);
+const GRASS_MOUNTAINS = new TileType('grass_mountains', 4);
+
+const DESERT_PLAINS = new TileType('desert', 2);
+const DESERT_HILLS = new TileType('desert_hills', 3);
+const DESERT_MOUNTAINS = new TileType('desert_mountains', 4);
+
+const SNOW_PLAINS = new TileType('snow_plains', 2);
+const SNOW_HILLS = new TileType('snow_hills', 3);
+const SNOW_MOUNTAINS = new TileType('snow_mountains', 4);
+
+const MOUNTAIN = new TileType('mountain', 5);
+const MOUNTAIN_SPRING = new TileType('frozen_ocean', 5, false, true);
 
 export class PerlinWorldGenerator {
 
@@ -18,7 +40,7 @@ export class PerlinWorldGenerator {
     this.width = width;
     this.height = height;
 
-    // Constants
+    // Elevation Constants - Make these configurable later
     const SEA_LEVEL = 45;
     const COAST_LEVEL = 55;
     const PLAINS_LEVEL = 60;
@@ -28,35 +50,39 @@ export class PerlinWorldGenerator {
 
     // Define Biomes
     this.biomes = {
-      'plains': new Biome('ocean', [
-        [SEA_LEVEL, 'river'],
-        [COAST_LEVEL, 'grass_lowlands'],
-        [PLAINS_LEVEL, 'plains'],
-        [HILLS_LEVEL, 'grass_hills'],
-        [HIGHLANDS_LEVEL, 'grass_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'plains': new Biome(this.random,
+        OCEAN, [
+        [SEA_LEVEL, RIVER],
+        [COAST_LEVEL, GRASS_LOWLANDS],
+        [PLAINS_LEVEL, GRASS_PLAINS],
+        [HILLS_LEVEL, new TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
+        [HIGHLANDS_LEVEL, new TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
+        [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
       ]),
-      'tundra': new Biome('ocean', [
-        [SEA_LEVEL, 'river'],
-        [SEA_LEVEL + 5, 'frozen_river'],
-        [COAST_LEVEL, 'snow_plains'],
-        [HILLS_LEVEL, 'snow_hills'],
-        [HIGHLANDS_LEVEL, 'snow_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'tundra': new Biome(this.random,
+        OCEAN, [
+        [SEA_LEVEL, RIVER],
+        [SEA_LEVEL + 5, FROZEN_RIVER],
+        [COAST_LEVEL, SNOW_PLAINS],
+        [HILLS_LEVEL, SNOW_HILLS],
+        [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
+        [MOUNTAIN_LEVEL, MOUNTAIN],
       ]),
-      'arctic': new Biome('frozen_ocean', [
-        [SEA_LEVEL, 'frozen_river'],
-        [COAST_LEVEL, 'snow_plains'],
-        [HILLS_LEVEL, 'snow_hills'],
-        [HIGHLANDS_LEVEL, 'snow_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'arctic': new Biome(this.random,
+        FROZEN_OCEAN, [
+        [SEA_LEVEL, FROZEN_RIVER],
+        [COAST_LEVEL, SNOW_PLAINS],
+        [HILLS_LEVEL, SNOW_HILLS],
+        [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
+        [MOUNTAIN_LEVEL, MOUNTAIN],
       ]),
-      'desert': new Biome('ocean', [
-        [SEA_LEVEL, 'river'],
-        [COAST_LEVEL, 'desert'],
-        [HILLS_LEVEL, 'desert_hills'],
-        [HIGHLANDS_LEVEL, 'desert_mountains'],
-        [MOUNTAIN_LEVEL, 'mountain'],
+      'desert': new Biome(this.random,
+        OCEAN, [
+        [SEA_LEVEL, RIVER],
+        [COAST_LEVEL, DESERT_PLAINS],
+        [HILLS_LEVEL, DESERT_HILLS],
+        [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
+        [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
       ]),
     };
   }
@@ -72,16 +98,19 @@ export class PerlinWorldGenerator {
   }
 
   getElevation(x: number, y: number): number {
-    const mapScale = 0.015;
+    const mapScale = 0.005; // .015
     const freq1 = (mapScale * 1) * this.width;
     const noise1 = this.ridgenoise(x / this.width, y / this.width, freq1);
     const freq2 = (mapScale * 2) * this.width;
-    const noise2 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq2) * noise1;
+    const noise2 = 0.75 * this.ridgenoise(x / this.width, y / this.width, freq2) * noise1;
     const freq3 = (mapScale * 4) * this.width;
-    const noise3 = 0.5 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
+    const noise3 = 0.625 * this.ridgenoise(x / this.width, y / this.width, freq3) * (noise1 + noise2);
     const freq4 = (mapScale * 8) * this.width;
-    const noise4 = 0.5 * this.cylindernoise(x / this.width, y / this.width, freq4);
-    const noiseVal = (noise1 + noise2 + noise3 + noise4) / 2.5;
+    const noise4 = 0.25 * this.cylindernoise(x / this.width, y / this.width, freq4);
+    const freq5 = (mapScale * 24) * this.width;
+    const noise5 = 0.375 * this.cylindernoise(x / this.width, y / this.width, freq5);
+
+    const noiseVal = (noise1 + noise2 + noise3 + noise4 + noise5) / 3;
     return Math.pow(noiseVal, 1) * 100;
   }
 
@@ -123,18 +152,31 @@ export class PerlinWorldGenerator {
   }
 
   generate(): [string[], number[]] {
+    const startTime = new Date().getTime();
+
     const { width, height } = this;
-    const tiles: string[] = [];
+    const tileTypeMap: TileType[] = [];
     const heightMap: number[] = [];
+    const riverSources: [number, number][] = []; // change to list of Coords
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const elevation = this.getElevation(x, y);
         const temp = this.getTemp(x, y);
-        tiles.push(this.getBiome(temp).getTile(elevation));
+        const tile = this.getBiome(temp).getTile(elevation)
+        if (tile.isRiverGen) riverSources.push([x, y]);
+        tileTypeMap.push(tile);
         heightMap.push(elevation);
       }
     }
 
+    for (const [x, y] of riverSources) {
+      const river = new River(x, y, this.width);
+      river.generate(tileTypeMap, heightMap);
+    }
+
+    const tiles: string[] = tileTypeMap.map(tile => tile.type);
+
+    console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`)
     return [tiles, heightMap];
   }
 }
