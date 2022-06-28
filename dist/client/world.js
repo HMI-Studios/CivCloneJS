@@ -249,9 +249,15 @@ class World {
                 ui.showUnitActionsMenu(this, coords, unit);
                 ui.showUnitInfoMenu(this, coords, unit);
             };
+            this.on.event.selectTile = (coords, tile) => {
+                ui.showTileInfoMenu(this, coords, tile);
+            };
             this.on.event.deselectUnit = () => {
                 ui.hideUnitActionsMenu();
                 ui.hideUnitInfoMenu();
+            };
+            this.on.event.deselectTile = () => {
+                ui.hideTileInfoMenu();
             };
             yield this.connect();
             yield this.login();

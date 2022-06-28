@@ -152,6 +152,9 @@ class Camera {
       this.mouseDownTime = 0;
     }
 
+    // Bool to keep track of whether a tile has been clicked
+    let mapClicked = false;
+
     // const TILE_SIZE = [28, 25];
     // const UNIT_SCALE = [74, 88];
 
@@ -201,7 +204,12 @@ class Camera {
           if (x === selectedX && y === selectedY) {
 
             if (this.mouseDownTime === 1) {
+
+              mapClicked = true;
+              world.on.event.selectTile({x, y}, tile);
+
               console.log(x, y);
+
               if (this.selectedUnitPos && world.pos(x, y) in this.highlightedTiles) {
                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
               }
@@ -230,6 +238,13 @@ class Camera {
           }
         }
       }
+    }
+
+    if (!mapClicked && this.mouseDownTime === 1) {
+      this.highlightedTiles = {};
+      this.selectedUnitPos = null;
+      world.on.event.deselectUnit();
+      world.on.event.deselectTile();
     }
   }
 }
