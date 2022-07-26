@@ -57,7 +57,6 @@ class Camera {
             world.height * 0.4614 + 0.5038168562195441,
         ];
         this.interval = setInterval(() => this.render(world), FPS);
-        [this.x, this.y] = this.toCameraPos(world, 4, 5);
     }
     stop() {
         if (this.interval !== undefined)
