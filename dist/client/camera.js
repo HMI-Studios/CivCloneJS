@@ -57,6 +57,7 @@ class Camera {
             world.height * 0.4614 + 0.5038168562195441,
         ];
         this.interval = setInterval(() => this.render(world), FPS);
+        [this.x, this.y] = this.toCameraPos(world, 4, 5);
     }
     stop() {
         if (this.interval !== undefined)
@@ -64,6 +65,12 @@ class Camera {
     }
     clear() {
         this.ctx.clearRect(-this.canvas.width / 2, -this.canvas.height / 2, this.canvas.width, this.canvas.height);
+    }
+    toCameraPos(world, tileX, tileY) {
+        const { width, height, civs } = world;
+        const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
+        const camY = -0.5 * height * TILE_HEIGHT + (mod(tileX, 2) * Y_TILE_SPACING) + TILE_HEIGHT * tileY - 1.9;
+        return [camX, camY];
     }
     renderUnit(world, unit, x, y) {
         const { zoom, x: camX, y: camY, textures, ctx } = this;
