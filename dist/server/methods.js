@@ -224,6 +224,7 @@ const methods = {
             const world = game.world;
             const map = world.map;
             let src = map.getTile(srcCoords);
+            let finalCoords = srcCoords;
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
                 const unit = src.unit;
@@ -247,6 +248,7 @@ const methods = {
                     map.setTileVisibility(civID, coords, true);
                 }
                 src = dst;
+                finalCoords = dstCoords;
             }
             if (attack) {
                 const unit = src.unit;
@@ -259,6 +261,11 @@ const methods = {
                 }
             }
             game.sendUpdates();
+            game.sendToCiv(civID, {
+                error: [
+                    ['unitPositionUpdate', [srcCoords, finalCoords]],
+                ],
+            });
         }
     },
     settleCity: (ws, coords, name) => {
