@@ -85,6 +85,7 @@ export class Game {
     this.sendToCiv(civID, {
       update: [
         ['setMap', [this.world.map.getCivMap(civID)]],
+        ['unitPositions', [this.world.getCivUnitPositions(civID)]],
         ['beginTurn', []],
       ],
     });

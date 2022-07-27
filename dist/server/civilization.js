@@ -25,6 +25,12 @@ class Civilization {
     endTurn() {
         this.turnActive = false;
     }
+    getUnits() {
+        return this.units;
+    }
+    getUnitPositions() {
+        return this.units.map(unit => unit.coords);
+    }
     addUnit(unit) {
         this.units.push(unit);
     }

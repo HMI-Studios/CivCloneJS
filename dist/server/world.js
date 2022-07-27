@@ -83,6 +83,14 @@ class World {
             }
         }
     }
+    // civs
+    getCivUnits(civID) {
+        return this.civs[civID].getUnits();
+    }
+    // civs
+    getCivUnitPositions(civID) {
+        return this.civs[civID].getUnitPositions();
+    }
     // map, civs
     addUnit(unit) {
         if (this.map.isInBounds(unit.coords)) {
