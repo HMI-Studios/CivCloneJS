@@ -54,6 +54,8 @@ type CoordTuple = [number, number];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
   tiles: Tile[];
+  unitPositions: Coords[];
+  unitIndex: number;
   height: number;
   width: number;
   socket: WebSocket;
@@ -62,6 +64,8 @@ class World {
   player: Player;
   constructor() {
     this.tiles = [];
+    this.unitPositions = [];
+    this.unitIndex = 0;
     this.height;
     this.width;
     this.socket;
@@ -276,6 +280,8 @@ class World {
     };
 
     this.on.update.beginTurn = (): void => {
+      const { x, y } = this.unitPositions[this.unitIndex];
+      [camera.x, camera.y] = camera.toCameraPos(this, x, y);
       ui.setTurnState(true);
     };
 
@@ -285,6 +291,10 @@ class World {
 
     this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile): void => {
       this.tiles[this.pos(x, y)] = tile;
+    };
+
+    this.on.update.unitPositions = (unitPositions: Coords[]): void => {
+      this.unitPositions = unitPositions;
     };
 
     this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {

@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 class World {
     constructor() {
         this.tiles = [];
+        this.unitPositions = [];
+        this.unitIndex = 0;
         this.height;
         this.width;
         this.socket;
@@ -204,6 +206,8 @@ class World {
                 camera.start(this, 1000 / 60);
             };
             this.on.update.beginTurn = () => {
+                const { x, y } = this.unitPositions[this.unitIndex];
+                [camera.x, camera.y] = camera.toCameraPos(this, x, y);
                 ui.setTurnState(true);
             };
             this.on.update.setMap = (map) => {
@@ -211,6 +215,9 @@ class World {
             };
             this.on.update.tileUpdate = ({ x, y }, tile) => {
                 this.tiles[this.pos(x, y)] = tile;
+            };
+            this.on.update.unitPositions = (unitPositions) => {
+                this.unitPositions = unitPositions;
             };
             this.on.update.leaderPool = (leaders, takenLeaders, players) => {
                 ui.leaderPool = leaders;
