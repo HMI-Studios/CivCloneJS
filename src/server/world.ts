@@ -112,6 +112,16 @@ export class World {
     }
   }
 
+  // civs
+  getCivUnits(civID: number): Unit[] {
+    return this.civs[civID].getUnits();
+  }
+
+  // civs
+  getCivUnitPositions(civID: number): Coords[] {
+    return this.civs[civID].getUnitPositions();
+  }
+
   // map, civs
   addUnit(unit: Unit): void {
     if (this.map.isInBounds(unit.coords)) {

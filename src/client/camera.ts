@@ -89,6 +89,13 @@ class Camera {
       this.canvas.height
     );
   }
+  
+  toCameraPos(world: World, tileX: number, tileY: number): [number, number] {
+    const { width, height, civs } = world;
+    const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
+    const camY = -0.5 * height * TILE_HEIGHT + (mod(tileX, 2) * Y_TILE_SPACING) + TILE_HEIGHT * tileY - 1.9;
+    return [camX, camY];
+  }
 
   renderUnit(world: World, unit: Unit, x: number, y: number): void {
     const { zoom, x: camX, y: camY, textures, ctx } = this;

@@ -9,9 +9,11 @@ const simplex_noise_1 = __importDefault(require("simplex-noise"));
 const biome_1 = require("./biome");
 const TAU = 2 * Math.PI;
 // Tile Types
-const OCEAN = new biome_1.TileType('ocean', 0, true);
+const OCEAN = new biome_1.TileType('ocean', 0, true, true);
+const SHALLOW_OCEAN = new biome_1.TileType('river', 0, true, true);
 const RIVER = new biome_1.TileType('river', 0, true);
-const FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, true);
+const FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, true, true);
+const SHALLOW_FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, true, true);
 const FROZEN_RIVER = new biome_1.TileType('frozen_river', 0, true);
 const GRASS_LOWLANDS = new biome_1.TileType('grass_lowlands', 1);
 const GRASS_PLAINS = new biome_1.TileType('plains', 2);
@@ -24,7 +26,7 @@ const SNOW_PLAINS = new biome_1.TileType('snow_plains', 2);
 const SNOW_HILLS = new biome_1.TileType('snow_hills', 3);
 const SNOW_MOUNTAINS = new biome_1.TileType('snow_mountains', 4);
 const MOUNTAIN = new biome_1.TileType('mountain', 5);
-const MOUNTAIN_SPRING = new biome_1.TileType('frozen_ocean', 5, false, true);
+const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, false, false, true);
 class PerlinWorldGenerator {
     constructor(seed, width, height) {
         this.random = new random_1.Random(seed);
@@ -41,7 +43,7 @@ class PerlinWorldGenerator {
         // Define Biomes
         this.biomes = {
             'plains': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, RIVER],
+                [SEA_LEVEL, SHALLOW_OCEAN],
                 [COAST_LEVEL, GRASS_LOWLANDS],
                 [PLAINS_LEVEL, GRASS_PLAINS],
                 [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
@@ -49,7 +51,7 @@ class PerlinWorldGenerator {
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
             ]),
             'tundra': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, RIVER],
+                [SEA_LEVEL, SHALLOW_OCEAN],
                 [SEA_LEVEL + 5, FROZEN_RIVER],
                 [COAST_LEVEL, SNOW_PLAINS],
                 [HILLS_LEVEL, SNOW_HILLS],
@@ -57,14 +59,14 @@ class PerlinWorldGenerator {
                 [MOUNTAIN_LEVEL, MOUNTAIN],
             ]),
             'arctic': new biome_1.Biome(this.random, FROZEN_OCEAN, [
-                [SEA_LEVEL, FROZEN_RIVER],
+                [SEA_LEVEL, SHALLOW_FROZEN_OCEAN],
                 [COAST_LEVEL, SNOW_PLAINS],
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
             ]),
             'desert': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, RIVER],
+                [SEA_LEVEL, SHALLOW_OCEAN],
                 [COAST_LEVEL, DESERT_PLAINS],
                 [HILLS_LEVEL, DESERT_HILLS],
                 [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
@@ -147,7 +149,7 @@ class PerlinWorldGenerator {
         }
         for (const [x, y] of riverSources) {
             const river = new biome_1.River(x, y, this.width);
-            river.generate(tileTypeMap, heightMap);
+            river.generate(tileTypeMap, heightMap, RIVER);
         }
         const tiles = tileTypeMap.map(tile => tile.type);
         console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`);

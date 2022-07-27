@@ -39,6 +39,14 @@ export class Civilization {
     this.turnActive = false;
   }
 
+  getUnits(): Unit[] {
+    return this.units;
+  }
+
+  getUnitPositions(): Coords[] {
+    return this.units.map(unit => unit.coords);
+  }
+
   addUnit(unit: Unit): void {
     this.units.push(unit);
   }

@@ -22,7 +22,7 @@ export const games: { [gameID: number] : Game } = {
   0: new Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new Map(200, 200, ...new PerlinWorldGenerator(/*3634*/1, 200, 200).generate()),
+    new Map(200, 200, ...new PerlinWorldGenerator(1, 200, 200).generate()),
     {
       playerCount: 1,
     }

@@ -5,9 +5,11 @@ import { Biome, River, TilePool, TileType } from './biome';
 const TAU = 2 * Math.PI;
 
 // Tile Types
-const OCEAN = new TileType('ocean', 0, true);
+const OCEAN = new TileType('ocean', 0, true, true);
+const SHALLOW_OCEAN = new TileType('river', 0, true, true);
 const RIVER = new TileType('river', 0, true);
-const FROZEN_OCEAN = new TileType('frozen_ocean', 0, true);
+const FROZEN_OCEAN = new TileType('frozen_ocean', 0, true, true);
+const SHALLOW_FROZEN_OCEAN = new TileType('frozen_ocean', 0, true, true);
 const FROZEN_RIVER = new TileType('frozen_river', 0, true);
 
 const GRASS_LOWLANDS = new TileType('grass_lowlands', 1);
@@ -24,7 +26,7 @@ const SNOW_HILLS = new TileType('snow_hills', 3);
 const SNOW_MOUNTAINS = new TileType('snow_mountains', 4);
 
 const MOUNTAIN = new TileType('mountain', 5);
-const MOUNTAIN_SPRING = new TileType('frozen_ocean', 5, false, true);
+const MOUNTAIN_SPRING = new TileType('mountain', 5, false, false, true);
 
 export class PerlinWorldGenerator {
 
@@ -52,7 +54,7 @@ export class PerlinWorldGenerator {
     this.biomes = {
       'plains': new Biome(this.random,
         OCEAN, [
-        [SEA_LEVEL, RIVER],
+        [SEA_LEVEL, SHALLOW_OCEAN],
         [COAST_LEVEL, GRASS_LOWLANDS],
         [PLAINS_LEVEL, GRASS_PLAINS],
         [HILLS_LEVEL, new TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
@@ -61,7 +63,7 @@ export class PerlinWorldGenerator {
       ]),
       'tundra': new Biome(this.random,
         OCEAN, [
-        [SEA_LEVEL, RIVER],
+        [SEA_LEVEL, SHALLOW_OCEAN],
         [SEA_LEVEL + 5, FROZEN_RIVER],
         [COAST_LEVEL, SNOW_PLAINS],
         [HILLS_LEVEL, SNOW_HILLS],
@@ -70,7 +72,7 @@ export class PerlinWorldGenerator {
       ]),
       'arctic': new Biome(this.random,
         FROZEN_OCEAN, [
-        [SEA_LEVEL, FROZEN_RIVER],
+        [SEA_LEVEL, SHALLOW_FROZEN_OCEAN],
         [COAST_LEVEL, SNOW_PLAINS],
         [HILLS_LEVEL, SNOW_HILLS],
         [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
@@ -78,7 +80,7 @@ export class PerlinWorldGenerator {
       ]),
       'desert': new Biome(this.random,
         OCEAN, [
-        [SEA_LEVEL, RIVER],
+        [SEA_LEVEL, SHALLOW_OCEAN],
         [COAST_LEVEL, DESERT_PLAINS],
         [HILLS_LEVEL, DESERT_HILLS],
         [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
@@ -171,7 +173,7 @@ export class PerlinWorldGenerator {
 
     for (const [x, y] of riverSources) {
       const river = new River(x, y, this.width);
-      river.generate(tileTypeMap, heightMap);
+      river.generate(tileTypeMap, heightMap, RIVER);
     }
 
     const tiles: string[] = tileTypeMap.map(tile => tile.type);
