@@ -297,6 +297,15 @@ class World {
       this.unitPositions = unitPositions;
     };
 
+    this.on.update.unitPositionUpdate = (startPos: Coords, endPos: Coords): void => {
+      for (let i = 0; i < this.unitPositions.length; i++) {
+        const { x, y } = this.unitPositions[i];
+        if (x === startPos.x && y === startPos.y) {
+          this.unitPositions[i] = endPos;
+        }
+      }
+    };
+
     this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {
       ui.leaderPool = leaders;
       ui.takenLeaders = takenLeaders;
