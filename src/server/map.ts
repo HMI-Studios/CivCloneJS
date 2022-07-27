@@ -35,7 +35,7 @@ export class Map {
     return this.tiles[this.pos(coords)];
   }
 
-  private getNeighborsCoordsRecurse({ x, y }: Coords, r, tileList: Coords[]): void {
+  private getNeighborsCoordsRecurse({ x, y }: Coords, r: number, tileList: Coords[]): void {
     if (r > 0 && this.getTile({x, y})) {
       tileList.push({x, y});
       for (const coord of getAdjacentCoords({x, y})) {
