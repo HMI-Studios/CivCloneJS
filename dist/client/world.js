@@ -220,9 +220,9 @@ class World {
                 camera.start(this, 1000 / 60);
             };
             this.on.update.beginTurn = () => {
+                ui.setTurnState(this, true);
                 const { x, y } = this.unitPositions[this.unitIndex];
                 camera.setPos(...camera.toCameraPos(this, x, y));
-                ui.setTurnState(this, true);
             };
             this.on.update.setMap = (map) => {
                 this.tiles = map;
@@ -239,8 +239,19 @@ class World {
                     const { x, y } = this.unitPositions[i];
                     if (x === startPos.x && y === startPos.y) {
                         this.unitPositions[i] = endPos;
+                        break;
                     }
                 }
+            };
+            this.on.update.unitKilled = (unitPos, unit) => {
+                for (let i = 0; i < this.unitPositions.length; i++) {
+                    const { x, y } = this.unitPositions[i];
+                    if (x === unitPos.x && y === unitPos.y) {
+                        this.unitPositions.splice(i, 1);
+                        break;
+                    }
+                }
+                camera.deselectUnit(this);
             };
             this.on.update.leaderPool = (leaders, takenLeaders, players) => {
                 ui.leaderPool = leaders;

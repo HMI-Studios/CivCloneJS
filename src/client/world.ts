@@ -296,9 +296,9 @@ class World {
     };
 
     this.on.update.beginTurn = (): void => {
+      ui.setTurnState(this, true);
       const { x, y } = this.unitPositions[this.unitIndex];
       camera.setPos(...camera.toCameraPos(this, x, y));
-      ui.setTurnState(this, true);
     };
 
     this.on.update.setMap = (map: Tile[]): void => {
@@ -319,8 +319,20 @@ class World {
         const { x, y } = this.unitPositions[i];
         if (x === startPos.x && y === startPos.y) {
           this.unitPositions[i] = endPos;
+          break;
         }
       }
+    };
+
+    this.on.update.unitKilled = (unitPos: Coords, unit: Unit): void => {
+      for (let i = 0; i < this.unitPositions.length; i++) {
+        const { x, y } = this.unitPositions[i];
+        if (x === unitPos.x && y === unitPos.y) {
+          this.unitPositions.splice(i, 1);
+          break;
+        }
+      }
+      camera.deselectUnit(this);
     };
 
     this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {
