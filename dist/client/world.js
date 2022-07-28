@@ -139,11 +139,12 @@ class World {
             ]);
         });
     }
-    connect() {
+    connect(secureProtocol = true) {
         return __awaiter(this, void 0, void 0, function* () {
             const serverIP = localStorage.getItem('serverIP');
-            return new Promise((resolve /* reject: () => void*/) => {
-                this.socket = new WebSocket(`ws://${serverIP}`);
+            return new Promise((resolve, reject) => {
+                console.log(`Connecting to ${`ws${secureProtocol ? 's' : ''}://${serverIP}`}...`);
+                this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
                 this.socket.addEventListener('message', (event) => {
                     let data;
                     try {
@@ -158,6 +159,18 @@ class World {
                 this.socket.addEventListener('open', ( /*event: Event*/) => {
                     resolve();
                 });
+                this.socket.addEventListener('close', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
+                    console.warn('Failed to connect.');
+                    if (secureProtocol) {
+                        console.warn('Retrying with unsecure protocol...');
+                        yield this.connect(false);
+                        resolve();
+                    }
+                    else {
+                        console.error('Connection Terminated');
+                        reject();
+                    }
+                }));
                 this.socket.addEventListener('error', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
                     const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
                     localStorage.setItem('serverIP', newIP);
