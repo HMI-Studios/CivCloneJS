@@ -225,10 +225,11 @@ class World {
     ]);
   }
 
-  async connect(): Promise<void> {
+  async connect(secureProtocol = true): Promise<void> {
     const serverIP = localStorage.getItem('serverIP');
-    return new Promise((resolve: () => void/* reject: () => void*/) => {
-      this.socket = new WebSocket(`ws://${serverIP}`);
+    return new Promise((resolve: () => void, reject: () => void) => {
+      console.log(`Connecting to ${`ws${secureProtocol ? 's' : ''}://${serverIP}`}...`);
+      this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
       this.socket.addEventListener('message', (event) => {
         let data;
         try {
@@ -241,6 +242,17 @@ class World {
       });
       this.socket.addEventListener('open', (/*event: Event*/) => {
         resolve();
+      });
+      this.socket.addEventListener('close', async (/*event: Event*/) => {
+        console.warn('Failed to connect.');
+        if (secureProtocol) {
+          console.warn('Retrying with unsecure protocol...');
+          await this.connect(false);
+          resolve();
+        } else {
+          console.error('Connection Terminated');
+          reject();
+        }
       });
       this.socket.addEventListener('error', async (/*event: Event*/) => {
         const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
