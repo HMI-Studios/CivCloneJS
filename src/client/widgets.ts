@@ -26,6 +26,14 @@ class Button {
     };
   }
 
+  bindCallback(func: ((event: MouseEvent) => any)): void {
+    this.element.onclick = func;
+  }
+
+  unbindCallback(): void {
+    this.element.onclick = null;
+  }
+
   setText(text: string) {
     this.state.text = text;
     this.element.innerText = text;

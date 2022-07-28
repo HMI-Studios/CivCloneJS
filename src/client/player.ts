@@ -139,13 +139,23 @@ class UI {
     return civItem;
   }
 
-  setTurnState(state: boolean) {
+  setTurnState(world: World, state: boolean) {
     this.turnActive = state;
 
     if (state) {
-      this.buttons.mainBtn.setAction(['turnFinished', [true]]);
-      this.buttons.mainBtn.setText('Finish');
+      this.buttons.mainBtn.bindCallback(() => {
+        const isFinished = world.nextUnit();
+        if (isFinished) {
+          this.buttons.mainBtn.bindActionCallback(world.sendActions.bind(world));
+          this.buttons.mainBtn.setAction(['turnFinished', [true]]);
+          this.buttons.mainBtn.setText('Finish Turn');
+        }
+      });
+      this.buttons.mainBtn.setText('Next Unit');
+      // automatically select the first unit by "pressing" the button
+      this.buttons.mainBtn.element.click();
     } else {
+      this.buttons.mainBt.unbindCallback();
       this.buttons.mainBtn.setText('Waiting...');
     }
   }

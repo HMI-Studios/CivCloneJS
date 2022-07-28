@@ -320,7 +320,7 @@ const methods: {
       game.sendUpdates();
 
       game.sendToCiv(civID, {
-        error: [
+        update: [
           ['unitPositionUpdate', [srcCoords, finalCoords]],
         ],
       });
