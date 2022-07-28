@@ -108,6 +108,13 @@ class Camera {
     world.on.event.selectUnit({x, y}, unit);
   }
 
+  deselectUnit(world: World): void {
+    this.highlightedTiles = {};
+    this.selectedUnitPos = null;
+
+    world.on.event.deselectUnit();
+  }
+
   renderUnit(world: World, unit: Unit, x: number, y: number): void {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height, civs } = world;
@@ -232,10 +239,7 @@ class Camera {
                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
               }
 
-              this.highlightedTiles = {};
-              this.selectedUnitPos = null;
-
-              world.on.event.deselectUnit();
+              this.deselectUnit(world);
             }
 
             ctx.drawImage(

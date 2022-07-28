@@ -80,6 +80,11 @@ class Camera {
         this.selectedUnitPos = [x, y];
         world.on.event.selectUnit({ x, y }, unit);
     }
+    deselectUnit(world) {
+        this.highlightedTiles = {};
+        this.selectedUnitPos = null;
+        world.on.event.deselectUnit();
+    }
     renderUnit(world, unit, x, y) {
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height, civs } = world;
@@ -149,9 +154,7 @@ class Camera {
                             if (this.selectedUnitPos && world.pos(x, y) in this.highlightedTiles) {
                                 world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
                             }
-                            this.highlightedTiles = {};
-                            this.selectedUnitPos = null;
-                            world.on.event.deselectUnit();
+                            this.deselectUnit(world);
                         }
                         ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                         if (tile.unit && this.mouseDownTime === 1) {
