@@ -3,15 +3,15 @@ import * as WebSocket from 'ws';
 
 import express from 'express';
 const app = express();
-const port = 8080;
+import { PORT, ADDR_PREFIX } from './config';
 
 import path from 'path';
-app.use('/', express.static(path.join(__dirname, '../client')));
-app.use('/src', express.static(path.join(__dirname, '../../src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
-app.use('/docs', express.static(path.join(__dirname, '../docs')));
+app.use(`${ADDR_PREFIX}`, express.static(path.join(__dirname, '../client')));
+app.use(`${ADDR_PREFIX}/src`, express.static(path.join(__dirname, '../../src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
+app.use(`${ADDR_PREFIX}/docs`, express.static(path.join(__dirname, '../docs')));
 
-const server = app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
+const server = app.listen(PORT, () => {
+  console.log(`Server listening at http://localhost:${PORT}`);
 });
 
 const wss = new WebSocket.Server({ server });

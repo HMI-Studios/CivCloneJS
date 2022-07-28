@@ -1,2 +1,6 @@
 package-lock.json
 node_modules
+
+dist/server/config.js
+dist/server/config.js.map
+src/server/config.ts
