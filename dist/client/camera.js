@@ -65,11 +65,20 @@ class Camera {
     clear() {
         this.ctx.clearRect(-this.canvas.width / 2, -this.canvas.height / 2, this.canvas.width, this.canvas.height);
     }
+    setPos(x, y) {
+        this.x = x;
+        this.y = y;
+    }
     toCameraPos(world, tileX, tileY) {
         const { width, height, civs } = world;
         const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
         const camY = -0.5 * height * TILE_HEIGHT + (mod(tileX, 2) * Y_TILE_SPACING) + TILE_HEIGHT * tileY - 1.9;
         return [camX, camY];
+    }
+    selectUnit(world, { x, y }, unit) {
+        this.highlightedTiles = world.getTilesInRange(x, y, unit.movement);
+        this.selectedUnitPos = [x, y];
+        world.on.event.selectUnit({ x, y }, unit);
     }
     renderUnit(world, unit, x, y) {
         const { zoom, x: camX, y: camY, textures, ctx } = this;
@@ -147,9 +156,7 @@ class Camera {
                         ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                         if (tile.unit && this.mouseDownTime === 1) {
                             console.log(tile.unit);
-                            this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
-                            this.selectedUnitPos = [x, y];
-                            world.on.event.selectUnit({ x, y }, tile.unit);
+                            this.selectUnit(world, { x, y }, tile.unit);
                         }
                     }
                 }

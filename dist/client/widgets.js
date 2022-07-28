@@ -15,6 +15,12 @@ class Button {
             }
         };
     }
+    bindCallback(func) {
+        this.element.onclick = func;
+    }
+    unbindCallback() {
+        this.element.onclick = null;
+    }
     setText(text) {
         this.state.text = text;
         this.element.innerText = text;

@@ -89,12 +89,23 @@ class Camera {
       this.canvas.height
     );
   }
+
+  setPos(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
   
   toCameraPos(world: World, tileX: number, tileY: number): [number, number] {
     const { width, height, civs } = world;
     const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
     const camY = -0.5 * height * TILE_HEIGHT + (mod(tileX, 2) * Y_TILE_SPACING) + TILE_HEIGHT * tileY - 1.9;
     return [camX, camY];
+  }
+
+  selectUnit(world: World, { x, y }: Coords, unit: Unit): void {
+    this.highlightedTiles = world.getTilesInRange(x, y, unit.movement);
+    this.selectedUnitPos = [x, y];
+    world.on.event.selectUnit({x, y}, unit);
   }
 
   renderUnit(world: World, unit: Unit, x: number, y: number): void {
@@ -237,10 +248,7 @@ class Camera {
 
             if (tile.unit && this.mouseDownTime === 1) {
               console.log(tile.unit);
-              this.highlightedTiles = world.getTilesInRange(x, y, tile.unit.movement);
-              this.selectedUnitPos = [x, y];
-
-              world.on.event.selectUnit({x, y}, tile.unit);
+              this.selectUnit(world, { x, y }, tile.unit);
             }
           }
         }
