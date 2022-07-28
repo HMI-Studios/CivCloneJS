@@ -117,6 +117,8 @@ class UI {
                 }
             });
             this.buttons.mainBtn.setText('Next Unit');
+            // automatically select the first unit by "pressing" the button
+            this.buttons.mainBtn.element.click();
         }
         else {
             this.buttons.mainBt.unbindCallback();
