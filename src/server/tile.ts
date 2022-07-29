@@ -78,6 +78,20 @@ export class Tile {
     this.baseYield = baseYield;
   }
 
+  export() {
+    return {
+      // movementCost: this.movementCost,
+      type: this.type,
+      elevation: this.elevation,
+      unit: this.unit?.export(),
+      improvement: this.improvement,
+      // owner: this.owner?,
+      discoveredBy: this.discoveredBy,
+      // visibleTo: { [civID: number]: number },
+      baseYield: this.baseYield,
+    };
+  }
+
   getTileYield(): Yield {
     if (this.improvement) {
       return this.baseYield.add(this.improvement.yield);

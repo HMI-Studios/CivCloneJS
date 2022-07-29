@@ -18,6 +18,13 @@ export class Civilization {
     this.turnFinished = false;
   }
 
+  export() {
+    return {
+      turnActive: this.turnActive,
+      turnFinished: this.turnFinished,
+    };
+  }
+
   getData(): CivilizationData {
     const leaderData = this.leader?.getData();
     return {

@@ -14,6 +14,12 @@ export class Player {
     this.connection = connection;
   }
 
+  export() {
+    return {
+      civID: this.civID,
+    };
+  }
+
   getData(): PlayerData {
     return {
       civID: this.civID

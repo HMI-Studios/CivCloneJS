@@ -19,6 +19,20 @@ class Game {
         };
         this.hasStarted = false;
     }
+    export() {
+        const exportedPlayers = {};
+        for (const playerName in this.players) {
+            const player = this.players[playerName];
+            exportedPlayers[playerName] = player.export();
+        }
+        return {
+            world: this.world.export(),
+            players: exportedPlayers,
+            playerCount: this.playerCount,
+            metaData: this.metaData,
+            hasStarted: this.hasStarted,
+        };
+    }
     connectPlayer(username, player) {
         this.players[username] = player;
         this.metaData = Object.assign(Object.assign({}, this.metaData), { playersConnected: Object.keys(this.players).length });

@@ -45,6 +45,21 @@ export class World {
     this.updates = [];
   }
 
+  export() {
+    const exportedCivs = {};
+    for (const civID in this.civs) {
+      const civ = this.civs[civID];
+      exportedCivs[civID] = civ.export();
+    }
+
+    return {
+      map: this.map.export(),
+      civs: exportedCivs,
+      civsCount: this.civsCount,
+      leaderPool: this.leaderPool,
+    };
+  }
+
   getUpdates(): { (civID: number): Event }[] {
     // TODO: more updates?
     return this.map.getUpdates().concat(this.updates.splice(0));

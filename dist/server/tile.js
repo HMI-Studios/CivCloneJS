@@ -45,6 +45,20 @@ class Tile {
         this.visibleTo = {};
         this.baseYield = baseYield;
     }
+    export() {
+        var _a;
+        return {
+            // movementCost: this.movementCost,
+            type: this.type,
+            elevation: this.elevation,
+            unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.export(),
+            improvement: this.improvement,
+            // owner: this.owner?,
+            discoveredBy: this.discoveredBy,
+            // visibleTo: { [civID: number]: number },
+            baseYield: this.baseYield,
+        };
+    }
     getTileYield() {
         if (this.improvement) {
             return this.baseYield.add(this.improvement.yield);

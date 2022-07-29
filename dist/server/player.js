@@ -8,6 +8,11 @@ class Player {
         this.isAI = !connection;
         this.connection = connection;
     }
+    export() {
+        return {
+            civID: this.civID,
+        };
+    }
     getData() {
         return {
             civID: this.civID

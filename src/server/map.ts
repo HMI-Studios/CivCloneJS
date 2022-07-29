@@ -23,6 +23,15 @@ export class Map {
     this.updates = [];
   }
 
+  export() {
+    return {
+      height: this.height,
+      width: this.width,
+      tiles: this.tiles.map(tile => tile.export()),
+      cities: this.cities.map(city => city.export()),
+    };
+  }
+
   pos({ x, y }: Coords): number {
     return (y * this.width) + mod(x, this.width)
   }

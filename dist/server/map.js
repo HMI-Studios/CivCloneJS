@@ -16,6 +16,14 @@ class Map {
         this.cities = [];
         this.updates = [];
     }
+    export() {
+        return {
+            height: this.height,
+            width: this.width,
+            tiles: this.tiles.map(tile => tile.export()),
+            cities: this.cities.map(city => city.export()),
+        };
+    }
     pos({ x, y }) {
         return (y * this.width) + (0, utils_1.mod)(x, this.width);
     }
