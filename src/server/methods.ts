@@ -1,6 +1,6 @@
 import * as WebSocket from 'ws';
 import { Player } from './player';
-import { Map } from './map';
+import { Map, MapOptions } from './map';
 import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './worldGenerator';
 
@@ -22,7 +22,7 @@ export const games: { [gameID: number] : Game } = {
   0: new Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new Map(20, 20, ...new PerlinWorldGenerator(1, 20, 20).generate()),
+    new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
     {
       playerCount: 1,
     }
@@ -88,6 +88,11 @@ const methods: {
       ] });
     }
   },
+
+  // createGame: (ws: WebSocket, gameName: string, playerCount: number, mapOptions: MapOptions, seed?: number) => {
+  //   const username = getUsername(ws);
+
+  // },
 
   joinGame: (ws: WebSocket, gameID: number) => {
     const game = games[gameID];

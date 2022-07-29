@@ -5,6 +5,11 @@ import { Tile, TileData, Yield } from './tile';
 import { Improvement } from './improvement';
 import { getAdjacentCoords, mod, Event } from './utils';
 
+export interface MapOptions {
+  width: number;
+  height: number;
+}
+
 export class Map {
   height: number;
   width: number;
