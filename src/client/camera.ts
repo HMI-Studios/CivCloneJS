@@ -54,7 +54,7 @@ class Camera {
       unit: {
         settler: this.loadTexture('unit_settler'),
         scout: this.loadTexture('unit_scout'),
-        builder: this.loadTexture('unit_settler'),
+        builder: this.loadTexture('unit_builder'),
       },
     };
     this.interval;

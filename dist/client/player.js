@@ -244,10 +244,13 @@ class UI {
         this.elements.unitActionsMenu.innerHTML = '';
     }
     showUnitInfoMenu(world, pos, unit) {
+        const unitName = this.createElement('h2', 'infoSpan');
+        unitName.innerText = unit.type[0].toUpperCase() + unit.type.substring(1);
         const unitHP = this.createElement('span', 'infoSpan');
         unitHP.innerText = `HP: ${unit.hp}%`;
         const unitMovement = this.createElement('span', 'infoSpan');
         unitMovement.innerText = `Movement: ${unit.movement}`;
+        this.elements.unitInfoMenu.appendChild(unitName);
         this.elements.unitInfoMenu.appendChild(unitHP);
         this.elements.unitInfoMenu.appendChild(unitMovement);
         this.root.appendChild(this.elements.unitInfoMenu);
