@@ -17,6 +17,14 @@ exports.games = {
         playerCount: 1,
     }),
 };
+const createGame = (username, playerCount, mapOptions, options) => {
+    const newID = Object.keys(exports.games)[Object.keys(exports.games).length - 1] + 1;
+    exports.games[newID] = new game_1.Game(new worldGenerator_1.PerlinWorldGenerator(options.seed || Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
+        playerCount,
+        ownerName: username,
+        gameName: options.gameName,
+    });
+};
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
     return exports.connData[connIndex];
@@ -74,9 +82,13 @@ const methods = {
                 ] });
         }
     },
-    // createGame: (ws: WebSocket, gameName: string, playerCount: number, mapOptions: MapOptions, seed?: number) => {
-    //   const username = getUsername(ws);
-    // },
+    createGame: (ws, playerCount, mapOptions, options) => {
+        const username = getUsername(ws);
+        if (username && playerCount && mapOptions) {
+            createGame(username, playerCount, mapOptions, options || {});
+        }
+        methods.getGames(ws);
+    },
     joinGame: (ws, gameID) => {
         const game = exports.games[gameID];
         const username = getUsername(ws);
