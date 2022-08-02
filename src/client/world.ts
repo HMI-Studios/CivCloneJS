@@ -294,6 +294,11 @@ class World {
               ui.showCivPicker(civPickerFn, this.player);
             }
           },
+          return: (): void => {
+            ui.hideGameList();
+            ui.setView('mainMenu');
+            ui.showMainMenu(mainMenuFns);
+          },
         });
       }
     };
@@ -429,7 +434,12 @@ class World {
         localStorage.setItem('serverIP', newIP);
         await this.connect();
         ui.showMainMenu(mainMenuFns);
-      }
+      },
+      createGame: (): void => {
+        ui.hideGameList();
+        // ui.setView('createGame');
+        // ui.showCreateGameMenu();
+      },
     };
 
     ui.setView('mainMenu');

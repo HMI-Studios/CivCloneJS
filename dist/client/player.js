@@ -211,6 +211,10 @@ class UI {
         const titleHeading = this.createElement('h1');
         titleHeading.innerText = 'Active Games';
         this.elements.gameList.appendChild(titleHeading);
+        const returnBtn = this.createElement('button');
+        returnBtn.onclick = () => callbacks.return();
+        returnBtn.innerText = 'Return to Main Menu';
+        this.elements.gameList.appendChild(returnBtn);
         for (const gameID in gameList) {
             const { gameName, playersConnected, playerCount } = gameList[gameID];
             const gameBtn = this.createElement('button');

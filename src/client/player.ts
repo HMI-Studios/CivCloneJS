@@ -229,6 +229,7 @@ class UI {
     listGames: () => void,
     logout: () => void,
     changeServer: () => void,
+    createGame: () => void,
   }): void {
     this.elements.mainMenu.innerHTML = '';
 
@@ -262,12 +263,18 @@ class UI {
 
   showGameList(gameList: { [key: string]: GameMetadata }, callbacks: {
     joinGame: (gameID: string) => void,
+    return: () => void,
   }): void {
     this.elements.gameList.innerHTML = '';
 
     const titleHeading = this.createElement('h1');
     titleHeading.innerText = 'Active Games';
     this.elements.gameList.appendChild(titleHeading);
+
+    const returnBtn = this.createElement('button');
+    returnBtn.onclick = () => callbacks.return();
+    returnBtn.innerText = 'Return to Main Menu';
+    this.elements.gameList.appendChild(returnBtn);
 
     for (const gameID in gameList) {
       const { gameName, playersConnected, playerCount } = gameList[gameID];
