@@ -416,6 +416,13 @@ class World {
     ]);
 
     const mainMenuFns = {
+      createGame: async () => {
+        ui.hideMainMenu();
+        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
+        ui.showMainMenu(mainMenuFns);
+      },
       listGames: () => {
         this.sendActions([
           ['getGames', []],
@@ -434,11 +441,6 @@ class World {
         localStorage.setItem('serverIP', newIP);
         await this.connect();
         ui.showMainMenu(mainMenuFns);
-      },
-      createGame: (): void => {
-        ui.hideGameList();
-        // ui.setView('createGame');
-        // ui.showCreateGameMenu();
       },
     };
 

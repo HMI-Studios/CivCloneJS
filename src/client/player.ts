@@ -80,13 +80,20 @@ class UI {
         query: 'Please log in:',
         fields: [
           ['Username', 'username here...'],
-          ['Password', 'password here...'],
+          ['Password', 'password here...', 'password'],
         ]
       }),
       ipSelect: new TextInput({
         query: 'Enter Server Address:',
         fields: [
           ['Address'],
+        ]
+      }),
+      createGame: new TextInput({
+        query: 'New Game:',
+        fields: [
+          ['Username', 'username here...'],
+          ['Password', 'password here...'],
         ]
       }),
     };
@@ -226,16 +233,21 @@ class UI {
   }
 
   showMainMenu(callbacks: {
+    createGame: () => void,
     listGames: () => void,
     logout: () => void,
     changeServer: () => void,
-    createGame: () => void,
   }): void {
     this.elements.mainMenu.innerHTML = '';
 
     const titleHeading = this.createElement('h1');
     titleHeading.innerText = 'CivCloneJS';
     this.elements.mainMenu.appendChild(titleHeading);
+
+    const createGameBtn = this.createElement('button');
+    createGameBtn.innerText = 'New Game';
+    createGameBtn.onclick = () => callbacks.createGame();
+    this.elements.mainMenu.appendChild(createGameBtn);
 
     const gameListBtn = this.createElement('button');
     gameListBtn.innerText = 'List Games';

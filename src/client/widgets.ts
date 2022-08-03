@@ -95,7 +95,7 @@ class TextInput extends TextAlert {
   private abortBtn: HTMLButtonElement;
   private inputFields: HTMLInputElement[];
 
-  constructor(options: { className?: string, query: string, fields: [string, string?][] }) {
+  constructor(options: { className?: string, query: string, fields: [string, string?, string?][] }) {
     const { className, query, fields } = options;
     super({ className, message: query });
 
@@ -104,7 +104,7 @@ class TextInput extends TextAlert {
     this.submitBtn.remove();
 
     this.inputFields = [];
-    for (const [fieldTitle, placeholder] of fields) {
+    for (const [fieldTitle, placeholder, type] of fields) {
       const fieldElement =  document.createElement('div');
       fieldElement.className = 'inputField';
 
@@ -114,6 +114,7 @@ class TextInput extends TextAlert {
 
       const fieldInputElement = document.createElement('input');
       if (placeholder) fieldInputElement.placeholder = placeholder;
+      if (type) fieldInputElement.type = type;
       fieldElement.appendChild(fieldInputElement);
       this.inputFields.push(fieldInputElement);
 

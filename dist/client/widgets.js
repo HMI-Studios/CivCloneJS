@@ -72,7 +72,7 @@ class TextInput extends TextAlert {
         this.submitBtn.innerText = 'Submit';
         this.submitBtn.remove();
         this.inputFields = [];
-        for (const [fieldTitle, placeholder] of fields) {
+        for (const [fieldTitle, placeholder, type] of fields) {
             const fieldElement = document.createElement('div');
             fieldElement.className = 'inputField';
             const fieldTitleElement = document.createElement('label');
@@ -81,6 +81,8 @@ class TextInput extends TextAlert {
             const fieldInputElement = document.createElement('input');
             if (placeholder)
                 fieldInputElement.placeholder = placeholder;
+            if (type)
+                fieldInputElement.type = type;
             fieldElement.appendChild(fieldInputElement);
             this.inputFields.push(fieldInputElement);
             this.element.appendChild(fieldElement);

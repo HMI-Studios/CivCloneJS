@@ -324,6 +324,13 @@ class World {
                 ['setPlayer', [world.player.name]],
             ]);
             const mainMenuFns = {
+                createGame: () => __awaiter(this, void 0, void 0, function* () {
+                    ui.hideMainMenu();
+                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
+                    localStorage.setItem('serverIP', newIP);
+                    yield this.connect();
+                    ui.showMainMenu(mainMenuFns);
+                }),
                 listGames: () => {
                     this.sendActions([
                         ['getGames', []],
@@ -343,11 +350,6 @@ class World {
                     yield this.connect();
                     ui.showMainMenu(mainMenuFns);
                 }),
-                createGame: () => {
-                    ui.hideGameList();
-                    // ui.setView('createGame');
-                    // ui.showCreateGameMenu();
-                },
             };
             ui.setView('mainMenu');
             ui.showMainMenu(mainMenuFns);
