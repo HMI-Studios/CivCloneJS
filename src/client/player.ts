@@ -152,12 +152,16 @@ class UI {
   setTurnState(world: World, state: boolean) {
     this.turnActive = state;
 
+    console.log('TURN STATE:', state)
+
     if (state) {
       this.buttons.mainBtn.bindCallback(() => {
         const isFinished = world.nextUnit();
         if (isFinished) {
-          this.buttons.mainBtn.bindActionCallback(world.sendActions.bind(world));
-          this.buttons.mainBtn.setAction(['turnFinished', [true]]);
+          this.buttons.mainBtn.bindCallback(() => {
+            world.sendActions([['turnFinished', [true]]]);
+            this.setTurnState(world, false);
+          });
           this.buttons.mainBtn.setText('Finish Turn');
         }
       });
@@ -165,7 +169,7 @@ class UI {
       // automatically select the first unit by "pressing" the button
       this.buttons.mainBtn.element.click();
     } else {
-      this.buttons.mainBt.unbindCallback();
+      this.buttons.mainBtn.unbindCallback();
       this.buttons.mainBtn.setText('Waiting...');
     }
   }
