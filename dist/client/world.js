@@ -326,10 +326,15 @@ class World {
             const mainMenuFns = {
                 createGame: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
-                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
-                    localStorage.setItem('serverIP', newIP);
-                    yield this.connect();
-                    ui.showMainMenu(mainMenuFns);
+                    const [gameName, playerCount, width, height, seed] = yield ui.textInputs.createGame.prompt(ui.root, true);
+                    this.sendActions([['createGame', [Number(playerCount), {
+                                    width: Number(width),
+                                    height: Number(height),
+                                }, {
+                                    gameName,
+                                    seed: Number(seed),
+                                }]]]);
+                    ui.setView('gameList');
                 }),
                 listGames: () => {
                     this.sendActions([

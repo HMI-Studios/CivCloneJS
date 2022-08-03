@@ -92,8 +92,11 @@ class UI {
       createGame: new TextInput({
         query: 'New Game:',
         fields: [
-          ['Username', 'username here...'],
-          ['Password', 'password here...'],
+          ['Game Name'],
+          ['# of players', undefined, 'number'],
+          ['Map Width', undefined, 'number'],
+          ['Map Height', undefined, 'number'],
+          ['Seed', 'Leave blank for random seed', 'number'],
         ]
       }),
     };
