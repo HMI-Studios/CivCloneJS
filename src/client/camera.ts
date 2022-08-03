@@ -250,7 +250,7 @@ class Camera {
               TILE_HEIGHT * zoom
             );
 
-            if (tile.unit && this.mouseDownTime === 1) {
+            if (tile.unit && this.mouseDownTime === 1 && tile.unit.civID === world.player.civID && ui.turnActive) {
               console.log(tile.unit);
               this.selectUnit(world, { x, y }, tile.unit);
             }
