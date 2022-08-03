@@ -183,6 +183,7 @@ class World {
       camera.setPos(...camera.toCameraPos(this, x, y));
       const tile = this.getTile(x, y);
       this.on.event.selectTile({ x, y }, tile);
+      camera.deselectUnit(this);
       camera.selectUnit(this, { x, y }, tile.unit);
     }
     return this.unusedUnits.length === 0;
