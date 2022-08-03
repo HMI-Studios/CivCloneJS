@@ -5,6 +5,11 @@ import { Tile, TileData, Yield } from './tile';
 import { Improvement } from './improvement';
 import { getAdjacentCoords, mod, Event } from './utils';
 
+export interface MapOptions {
+  width: number;
+  height: number;
+}
+
 export class Map {
   height: number;
   width: number;
@@ -21,6 +26,15 @@ export class Map {
     }
     this.cities = [];
     this.updates = [];
+  }
+
+  export() {
+    return {
+      height: this.height,
+      width: this.width,
+      tiles: this.tiles.map(tile => tile.export()),
+      cities: this.cities.map(city => city.export()),
+    };
   }
 
   pos({ x, y }: Coords): number {

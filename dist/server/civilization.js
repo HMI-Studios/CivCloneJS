@@ -7,6 +7,12 @@ class Civilization {
         this.turnActive = false;
         this.turnFinished = false;
     }
+    export() {
+        return {
+            turnActive: this.turnActive,
+            turnFinished: this.turnFinished,
+        };
+    }
     getData() {
         var _a;
         const leaderData = (_a = this.leader) === null || _a === void 0 ? void 0 : _a.getData();

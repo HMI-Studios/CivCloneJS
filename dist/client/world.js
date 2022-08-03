@@ -221,6 +221,11 @@ class World {
                                 ui.showCivPicker(civPickerFn, this.player);
                             }
                         },
+                        return: () => {
+                            ui.hideGameList();
+                            ui.setView('mainMenu');
+                            ui.showMainMenu(mainMenuFns);
+                        },
                     });
                 }
             };
@@ -319,6 +324,18 @@ class World {
                 ['setPlayer', [world.player.name]],
             ]);
             const mainMenuFns = {
+                createGame: () => __awaiter(this, void 0, void 0, function* () {
+                    ui.hideMainMenu();
+                    const [gameName, playerCount, width, height, seed] = yield ui.textInputs.createGame.prompt(ui.root, true);
+                    this.sendActions([['createGame', [Number(playerCount), {
+                                    width: Number(width),
+                                    height: Number(height),
+                                }, {
+                                    gameName,
+                                    seed: Number(seed),
+                                }]]]);
+                    ui.setView('gameList');
+                }),
                 listGames: () => {
                     this.sendActions([
                         ['getGames', []],
@@ -337,7 +354,7 @@ class World {
                     localStorage.setItem('serverIP', newIP);
                     yield this.connect();
                     ui.showMainMenu(mainMenuFns);
-                })
+                }),
             };
             ui.setView('mainMenu');
             ui.showMainMenu(mainMenuFns);

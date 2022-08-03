@@ -1,6 +1,7 @@
 import { Random } from './random';
 import SimplexNoise from 'simplex-noise';
 import { Biome, River, TilePool, TileType } from './biome';
+import { Map, MapOptions } from './map';
 
 const TAU = 2 * Math.PI;
 
@@ -36,7 +37,7 @@ export class PerlinWorldGenerator {
   private height: number;
   private biomes: { [key: string]: Biome }
 
-  constructor(seed: number, width: number, height: number) {
+  constructor(seed: number, { width, height }: MapOptions) {
     this.random = new Random(seed);
     this.simplex = new SimplexNoise(this.random.randFloat);
     this.width = width;
@@ -153,7 +154,7 @@ export class PerlinWorldGenerator {
     ) + 1) / 2;
   }
 
-  generate(): [string[], number[]] {
+  generate(): Map {
     const startTime = new Date().getTime();
 
     const { width, height } = this;
@@ -179,7 +180,7 @@ export class PerlinWorldGenerator {
     const tiles: string[] = tileTypeMap.map(tile => tile.type);
 
     console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`)
-    return [tiles, heightMap];
+    return new Map(height, width, tiles, heightMap);
   }
 }
 

@@ -9,6 +9,14 @@ class City {
         this.tiles = new Set();
         this.tiles.add(center);
     }
+    export() {
+        return {
+            center: this.center,
+            name: this.name,
+            civID: this.civID,
+            tiles: this.tiles,
+        };
+    }
     getData() {
         return {
             name: this.name,

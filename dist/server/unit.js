@@ -29,6 +29,17 @@ class Unit {
         this.coords = coords;
         this.alive = true;
     }
+    export() {
+        return {
+            type: this.type,
+            hp: this.hp,
+            movement: this.movement,
+            movementClass: this.movementClass,
+            combatStats: this.combatStats,
+            civID: this.civID,
+            alive: this.alive,
+        };
+    }
     getData() {
         return {
             type: this.type,

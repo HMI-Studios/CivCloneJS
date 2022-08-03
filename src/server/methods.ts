@@ -1,6 +1,6 @@
 import * as WebSocket from 'ws';
 import { Player } from './player';
-import { Map } from './map';
+import { Map, MapOptions } from './map';
 import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './worldGenerator';
 
@@ -22,11 +22,23 @@ export const games: { [gameID: number] : Game } = {
   0: new Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new Map(200, 200, ...new PerlinWorldGenerator(1, 200, 200).generate()),
+    new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
     {
       playerCount: 1,
     }
   ),
+};
+
+const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
+  const newID = Object.keys(games)[Object.keys(games).length - 1] + 1;
+  games[newID] = new Game(
+    new PerlinWorldGenerator(options.seed || Math.floor(Math.random() * 9007199254740991), mapOptions).generate(),
+    {
+      playerCount,
+      ownerName: username,
+      gameName: options.gameName,
+    }
+  );
 };
 
 export const getConnData = (ws: WebSocket): ConnectionData => {
@@ -77,6 +89,25 @@ const methods: {
 } = {
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
+  },
+
+  exportGame: (ws: WebSocket) => {
+    const gameID = getGameID(ws);
+    const game = games[gameID];
+    if (game) {
+      sendTo(ws, { update: [
+        ['gameExportData', [JSON.stringify(game.export())]],
+      ] });
+    }
+  },
+
+  createGame: (ws: WebSocket, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
+    const username = getUsername(ws);
+    if (username && playerCount && mapOptions) {
+      createGame(username, playerCount, mapOptions, options || {});
+    }
+    
+    methods.getGames(ws);
   },
 
   joinGame: (ws: WebSocket, gameID: number) => {

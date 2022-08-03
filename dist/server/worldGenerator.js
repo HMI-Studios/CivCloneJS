@@ -7,6 +7,7 @@ exports.WorldGenerator = exports.PerlinWorldGenerator = void 0;
 const random_1 = require("./random");
 const simplex_noise_1 = __importDefault(require("simplex-noise"));
 const biome_1 = require("./biome");
+const map_1 = require("./map");
 const TAU = 2 * Math.PI;
 // Tile Types
 const OCEAN = new biome_1.TileType('ocean', 0, true, true);
@@ -28,7 +29,7 @@ const SNOW_MOUNTAINS = new biome_1.TileType('snow_mountains', 4);
 const MOUNTAIN = new biome_1.TileType('mountain', 5);
 const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, false, false, true);
 class PerlinWorldGenerator {
-    constructor(seed, width, height) {
+    constructor(seed, { width, height }) {
         this.random = new random_1.Random(seed);
         this.simplex = new simplex_noise_1.default(this.random.randFloat);
         this.width = width;
@@ -153,7 +154,7 @@ class PerlinWorldGenerator {
         }
         const tiles = tileTypeMap.map(tile => tile.type);
         console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`);
-        return [tiles, heightMap];
+        return new map_1.Map(height, width, tiles, heightMap);
     }
 }
 exports.PerlinWorldGenerator = PerlinWorldGenerator;

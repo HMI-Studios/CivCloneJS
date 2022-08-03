@@ -48,6 +48,7 @@ const events = {
     endTurn: [ [], 'DEPRECATED: Use `turnFinished` action instead.' ],
     turnFinished: [ ['state: boolean'], 'Flags an active player as "finished"; "unfinished" if state = false. When all active players are finished, their turns are ended.' ],
     settleCity: [ ['coords: Coords, name: string'], 'Settles a city at `coords` with the name `name`.' ],
+    exportGame: [ [], 'Responds with a `gameExportData` update if sender is currenly in a game.' ],
   }),
   update: sortObj({
     civID: [ [ 'civID: number' ], '' ],
@@ -60,6 +61,7 @@ const events = {
     beginTurn: [ [], '' ],
     tileUpdate: [ [ 'coords: Coords', 'tile: TileData | null' ], '' ],
     endTurn: [ [], 'Sent to all active players when the turn ends.' ],
+    gameExportData: [ [ 'data: JSON' ], 'All game data as a JSON string.' ],
   }),
   error: sortObj({
     kicked: [ [ 'reason: string' ], '' ],

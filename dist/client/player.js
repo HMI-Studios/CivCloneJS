@@ -55,13 +55,23 @@ class UI {
                 query: 'Please log in:',
                 fields: [
                     ['Username', 'username here...'],
-                    ['Password', 'password here...'],
+                    ['Password', 'password here...', 'password'],
                 ]
             }),
             ipSelect: new TextInput({
                 query: 'Enter Server Address:',
                 fields: [
                     ['Address'],
+                ]
+            }),
+            createGame: new TextInput({
+                query: 'New Game:',
+                fields: [
+                    ['Game Name'],
+                    ['# of players', undefined, 'number'],
+                    ['Map Width', undefined, 'number'],
+                    ['Map Height', undefined, 'number'],
+                    ['Seed', 'Leave blank for random seed', 'number'],
                 ]
             }),
         };
@@ -187,6 +197,10 @@ class UI {
         const titleHeading = this.createElement('h1');
         titleHeading.innerText = 'CivCloneJS';
         this.elements.mainMenu.appendChild(titleHeading);
+        const createGameBtn = this.createElement('button');
+        createGameBtn.innerText = 'New Game';
+        createGameBtn.onclick = () => callbacks.createGame();
+        this.elements.mainMenu.appendChild(createGameBtn);
         const gameListBtn = this.createElement('button');
         gameListBtn.innerText = 'List Games';
         gameListBtn.onclick = () => callbacks.listGames();
@@ -211,6 +225,10 @@ class UI {
         const titleHeading = this.createElement('h1');
         titleHeading.innerText = 'Active Games';
         this.elements.gameList.appendChild(titleHeading);
+        const returnBtn = this.createElement('button');
+        returnBtn.onclick = () => callbacks.return();
+        returnBtn.innerText = 'Return to Main Menu';
+        this.elements.gameList.appendChild(returnBtn);
         for (const gameID in gameList) {
             const { gameName, playersConnected, playerCount } = gameList[gameID];
             const gameBtn = this.createElement('button');

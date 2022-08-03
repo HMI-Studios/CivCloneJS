@@ -19,6 +19,15 @@ export class City {
     this.tiles.add(center);
   }
 
+  export() {
+    return {
+      center: this.center,
+      name: this.name,
+      civID: this.civID,
+      tiles: this.tiles,
+    };
+  }
+
   getData(): CityData {
     return {
       name: this.name,

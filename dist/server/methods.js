@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeAction = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
 const player_1 = require("./player");
-const map_1 = require("./map");
 const game_1 = require("./game");
 const worldGenerator_1 = require("./worldGenerator");
 exports.connections = [];
@@ -14,9 +13,17 @@ exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new map_1.Map(200, 200, ...new worldGenerator_1.PerlinWorldGenerator(1, 200, 200).generate()), {
+    new worldGenerator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
         playerCount: 1,
     }),
+};
+const createGame = (username, playerCount, mapOptions, options) => {
+    const newID = Object.keys(exports.games)[Object.keys(exports.games).length - 1] + 1;
+    exports.games[newID] = new game_1.Game(new worldGenerator_1.PerlinWorldGenerator(options.seed || Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
+        playerCount,
+        ownerName: username,
+        gameName: options.gameName,
+    });
 };
 const getConnData = (ws) => {
     const connIndex = exports.connections.indexOf(ws);
@@ -65,6 +72,22 @@ exports.executeAction = executeAction;
 const methods = {
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
+    },
+    exportGame: (ws) => {
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        if (game) {
+            sendTo(ws, { update: [
+                    ['gameExportData', [JSON.stringify(game.export())]],
+                ] });
+        }
+    },
+    createGame: (ws, playerCount, mapOptions, options) => {
+        const username = getUsername(ws);
+        if (username && playerCount && mapOptions) {
+            createGame(username, playerCount, mapOptions, options || {});
+        }
+        methods.getGames(ws);
     },
     joinGame: (ws, gameID) => {
         const game = exports.games[gameID];
