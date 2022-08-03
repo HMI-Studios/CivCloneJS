@@ -35,6 +35,10 @@ interface Tile {
   improvement: Improvement;
   movementCost: [number, number];
   unit: Unit;
+  owner?: {
+    civID: number,
+    name: string,
+  };
   visible: boolean;
 }
 

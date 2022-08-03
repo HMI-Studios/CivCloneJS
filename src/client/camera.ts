@@ -216,16 +216,39 @@ class Camera {
             this.renderUnit(world, tile.unit, x, y);
           }
 
+          if (tile.owner) {
+            const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
+            const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
+            const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
+            const rightCapXOffset = X_TILE_SPACING * zoom;
+            const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+            const margin = 1 * zoom;
+
+            const positions: [number, number][] = [
+              [leftX + rightCapXOffset - margin, topY + margin],
+              [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
+              [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
+              [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
+              [leftX + margin, topY + middleYOffset],
+              [leftX + leftCapXOffset + margin, topY + margin],
+            ];
+
+            const neighbors = world.getNeighbors(x, y, false);
+            ctx.beginPath();
+            ctx.lineWidth = margin * 2;
+            ctx.lineCap='square';
+            ctx.strokeStyle = world.civs[tile.owner.civID].color;
+            ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
+            for (let i = 0; i < neighbors.length; i++) {
+              if (world.getTile(...neighbors[i]).owner?.civID === tile.owner.civID) ctx.moveTo(...positions[i]);
+              else ctx.lineTo(...positions[i]);
+            }
+            ctx.stroke();
+          }
+
           if (world.pos(x, y) in this.highlightedTiles || (
               this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos))
             )) {
-            // ctx.drawImage(
-            //   textures['selector'] as CanvasImageSource,
-            //   (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
-            //   (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom,
-            //   TILE_WIDTH * zoom,
-            //   TILE_HEIGHT * zoom
-            // );
             const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
             const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
             const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
