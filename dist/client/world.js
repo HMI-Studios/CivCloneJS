@@ -33,7 +33,7 @@ class World {
     getTile(x, y) {
         return this.tiles[this.pos(x, y)] || null;
     }
-    getNeighbors(x, y) {
+    getNeighbors(x, y, filter = true) {
         let tiles;
         if (mod(x, 2) === 1) {
             tiles = [
@@ -55,7 +55,11 @@ class World {
                 [x - 1, y],
             ];
         }
-        return tiles.filter(([x, y]) => !!this.getTile(x, y));
+        return filter ? tiles.filter(([x, y]) => !!this.getTile(x, y)) : tiles;
+    }
+    isAdjacent(posA, posB) {
+        // TODO - possibly optimize this? memoize?
+        return this.getNeighbors(posB.x, posB.y).map(coord => this.pos(...coord)).includes(this.pos(posA.x, posA.y));
     }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
     getTilesInRange(srcX, srcY, range, mode = 0) {
