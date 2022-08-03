@@ -66,13 +66,15 @@ rootElement.onmousemove = (evt: MouseEvent) => {
 	}
 };
 rootElement.onmousedown = function(evt) {
-  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-	const mousePos = getMousePos(canvas, evt);
-	clickX = mousePos.x - Math.round(canvas.width/2);
-	clickY = canvas.height - (mousePos.y + Math.round(canvas.height/2));
-	mouseDown = true;
-	oldX = camera.x;
-	oldY = camera.y;
+  if (evt.target === rootElement) {
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    const mousePos = getMousePos(canvas, evt);
+    clickX = mousePos.x - Math.round(canvas.width/2);
+    clickY = canvas.height - (mousePos.y + Math.round(canvas.height/2));
+    mouseDown = true;
+    oldX = camera.x;
+    oldY = camera.y;
+  }
 }
 rootElement.onmouseup = function() {
 	mouseDown = false;
