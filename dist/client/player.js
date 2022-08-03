@@ -117,7 +117,6 @@ class UI {
     }
     setTurnState(world, state) {
         this.turnActive = state;
-        console.log('TURN STATE:', state);
         if (state) {
             this.buttons.mainBtn.bindCallback(() => {
                 const isFinished = world.nextUnit();
