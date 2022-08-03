@@ -132,11 +132,12 @@ class World {
       const [atX, atY] = queue.shift() as [number, number];
 
       for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
+        
+        const tile = this.getTile(adjX, adjY);
+        if (tile.unit && tile.unit.civID === this.player.civID) continue;
 
-        if (!(this.pos(adjX, adjY) in dst)) {
-          const tile = this.getTile(adjX, adjY);
-
-          const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+        const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+        if (!(this.pos(adjX, adjY) in dst) || dst[this.pos(adjX, adjY)] > dst[this.pos(atX, atY)] + movementCost) {
           dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
 
           if (dst[this.pos(adjX, adjY)] <= range) {
