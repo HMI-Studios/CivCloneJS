@@ -252,9 +252,10 @@ class UI {
             }
             const actionBtn = new Button(this.createElement('button'), {
                 text: action,
-                action: unitActionsFnTable[action](pos),
             });
-            actionBtn.bindActionCallback(world.sendActions.bind(world));
+            actionBtn.bindCallback(() => {
+                world.sendActions([unitActionsFnTable[action](pos)]);
+            });
             this.elements.unitActionsMenu.appendChild(actionBtn.element);
         }
         this.root.appendChild(this.elements.unitActionsMenu);

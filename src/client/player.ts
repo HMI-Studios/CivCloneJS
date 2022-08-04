@@ -320,11 +320,11 @@ class UI {
         this.createElement('button'),
         {
           text: action,
-          action: unitActionsFnTable[action](pos),
         }
       );
-
-      actionBtn.bindActionCallback(world.sendActions.bind(world));
+      actionBtn.bindCallback(() => {
+        world.sendActions([unitActionsFnTable[action](pos)]);
+      });
 
       this.elements.unitActionsMenu.appendChild(actionBtn.element);
     }

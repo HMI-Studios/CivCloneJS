@@ -105,6 +105,7 @@ class Camera {
         ctx.drawImage(textures.unit[unit.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
     }
     render(world) {
+        var _a;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height } = world;
         const [wmX, wmY] = [camX + (mouseX / zoom), camY + (mouseY / zoom)];
@@ -143,8 +144,63 @@ class Camera {
                     if (tile.unit) {
                         this.renderUnit(world, tile.unit, x, y);
                     }
-                    if (world.pos(x, y) in this.highlightedTiles) {
-                        ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
+                    if (tile.owner) {
+                        const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
+                        const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
+                        const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
+                        const rightCapXOffset = X_TILE_SPACING * zoom;
+                        const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+                        const margin = 1 * zoom;
+                        const positions = [
+                            [leftX + rightCapXOffset - margin, topY + margin],
+                            [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
+                            [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
+                            [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
+                            [leftX + margin, topY + middleYOffset],
+                            [leftX + leftCapXOffset + margin, topY + margin],
+                        ];
+                        const neighbors = world.getNeighbors(x, y, false);
+                        ctx.beginPath();
+                        ctx.lineWidth = margin * 2;
+                        ctx.lineCap = 'square';
+                        ctx.strokeStyle = world.civs[tile.owner.civID].color;
+                        ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
+                        for (let i = 0; i < neighbors.length; i++) {
+                            if (((_a = world.getTile(...neighbors[i]).owner) === null || _a === void 0 ? void 0 : _a.civID) === tile.owner.civID)
+                                ctx.moveTo(...positions[i]);
+                            else
+                                ctx.lineTo(...positions[i]);
+                        }
+                        ctx.stroke();
+                    }
+                    if (world.pos(x, y) in this.highlightedTiles || (this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos)))) {
+                        const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
+                        const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
+                        const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
+                        const rightCapXOffset = X_TILE_SPACING * zoom;
+                        const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+                        const margin = 1 * zoom;
+                        const positions = [
+                            [leftX + rightCapXOffset - margin, topY + margin],
+                            [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
+                            [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
+                            [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
+                            [leftX + margin, topY + middleYOffset],
+                            [leftX + leftCapXOffset + margin, topY + margin],
+                        ];
+                        const neighbors = world.getNeighbors(x, y, false);
+                        ctx.beginPath();
+                        ctx.lineWidth = margin * 2;
+                        ctx.lineCap = 'square';
+                        ctx.strokeStyle = "#66faff";
+                        ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
+                        for (let i = 0; i < neighbors.length; i++) {
+                            if (world.pos(...neighbors[i]) in this.highlightedTiles || (this.selectedUnitPos && (world.pos(...neighbors[i]) === world.pos(...this.selectedUnitPos))))
+                                ctx.moveTo(...positions[i]);
+                            else
+                                ctx.lineTo(...positions[i]);
+                        }
+                        ctx.stroke();
                     }
                     if (x === selectedX && y === selectedY) {
                         if (this.mouseDownTime === 1) {
