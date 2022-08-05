@@ -1,5 +1,6 @@
 interface Civ {
   color: string;
+  leader: Leader;
 }
 
 interface Player {

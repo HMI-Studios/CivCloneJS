@@ -395,6 +395,7 @@ const methods: {
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
         map.buildImprovementAt(coords, type);
+        // TODO - send tile update?
       }
     }
   },
