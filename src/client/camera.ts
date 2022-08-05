@@ -269,7 +269,9 @@ class Camera {
               else if (neighbor.owner?.civID === tile.owner.civID) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
             }
+            if (tile.owner.civID === world.player.civID) ctx.setLineDash([5 * zoom, 5 * zoom]);
             ctx.stroke();
+            ctx.setLineDash([]);
           }
 
           if (world.pos(x, y) in this.highlightedTiles || (

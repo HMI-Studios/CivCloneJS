@@ -185,7 +185,10 @@ class Camera {
                             else
                                 ctx.lineTo(...positions[i]);
                         }
+                        if (tile.owner.civID === world.player.civID)
+                            ctx.setLineDash([5 * zoom, 5 * zoom]);
                         ctx.stroke();
+                        ctx.setLineDash([]);
                     }
                     if (world.pos(x, y) in this.highlightedTiles || (this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos)))) {
                         const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
