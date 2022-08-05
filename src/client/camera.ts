@@ -240,21 +240,6 @@ class Camera {
 
           ctx.globalAlpha = 1;
 
-          if (tile.improvement) {
-            const overlay = textures.improvements[tile.improvement.type];
-            ctx.drawImage(
-              overlay.texture as CanvasImageSource,
-              (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
-              (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom,
-              TILE_WIDTH * zoom,
-              overlay.texture.height * zoom
-            );
-          }
-
-          if (tile.unit) {
-            this.renderUnit(world, tile.unit, x, y);
-          }
-
           if (tile.owner) {
             const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
             const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -349,6 +334,21 @@ class Camera {
               console.log(tile.unit);
               this.selectUnit(world, { x, y }, tile.unit);
             }
+          }
+
+          if (tile.improvement) {
+            const overlay = textures.improvements[tile.improvement.type];
+            ctx.drawImage(
+              overlay.texture as CanvasImageSource,
+              (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
+              (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom,
+              TILE_WIDTH * zoom,
+              overlay.texture.height * zoom
+            );
+          }
+
+          if (tile.unit) {
+            this.renderUnit(world, tile.unit, x, y);
           }
         }
       }
