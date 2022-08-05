@@ -145,14 +145,20 @@ class Camera {
         const selectedY = Math.round(((wmY + height) / TILE_HEIGHT) + (selectorYOffset + (mod(selectedX, 2) / -2)));
         this.clear();
         // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
-        for (let y = Math.min(yEnd, height) - 1; y >= Math.max(yStart, 0); y--) {
-            for (let x = xStart; x < xEnd; x++) {
+        for (let yCount = Math.min(yEnd, height) - 0.5; yCount >= Math.max(yStart, 0); yCount -= 0.5) {
+            const shiftedXStart = xStart + Number((mod(yCount, 1) === 0) !== (mod(xStart, 2) === 0));
+            for (let x = shiftedXStart; x < xEnd; x += 2) {
+                const y = Math.floor(yCount);
                 const tile = world.getTile(x, y);
                 if (tile) {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                     ctx.globalAlpha = 1;
+                    if (tile.improvement) {
+                        const overlay = textures.improvements[tile.improvement.type];
+                        ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
+                    }
                     if (tile.unit) {
                         this.renderUnit(world, tile.unit, x, y);
                     }
