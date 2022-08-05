@@ -50,7 +50,7 @@ export class Map {
   }
 
   private getNeighborsCoordsRecurse({ x, y }: Coords, r: number, tileList: Coords[]): void {
-    if (r > 0 && this.getTile({x, y})) {
+    if (r >= 0 && this.getTile({x, y})) {
       tileList.push({x, y});
       for (const coord of getAdjacentCoords({x, y})) {
         this.getNeighborsCoordsRecurse(coord, r-1, tileList);
@@ -65,7 +65,7 @@ export class Map {
   }
 
   getVisibleTilesCoords(unit: Unit): Coords[] {
-    return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
+    return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
   }
 
   setTileOwner(coords: Coords, owner: City): void {

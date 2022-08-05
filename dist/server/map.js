@@ -34,7 +34,7 @@ class Map {
         return this.tiles[this.pos(coords)];
     }
     getNeighborsCoordsRecurse({ x, y }, r, tileList) {
-        if (r > 0 && this.getTile({ x, y })) {
+        if (r >= 0 && this.getTile({ x, y })) {
             tileList.push({ x, y });
             for (const coord of (0, utils_1.getAdjacentCoords)({ x, y })) {
                 this.getNeighborsCoordsRecurse(coord, r - 1, tileList);
@@ -46,7 +46,7 @@ class Map {
         return tileList;
     }
     getVisibleTilesCoords(unit) {
-        return [unit.coords, ...this.getNeighborsCoords(unit.coords, 3)];
+        return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
     }
     setTileOwner(coords, owner) {
         var _a;

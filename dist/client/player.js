@@ -293,7 +293,7 @@ class UI {
         this.elements.tileInfoMenu.appendChild(tileElevation);
         if (tile.owner) {
             const tileOwner = this.createElement('span', 'infoSpan');
-            tileOwner.innerText = `Elevation: ${world.civs[tile.owner.civID].leader.name}`;
+            tileOwner.innerText = `Owner: ${world.civs[tile.owner.civID].leader.name}`;
             this.elements.tileInfoMenu.appendChild(tileOwner);
         }
         this.root.appendChild(this.elements.tileInfoMenu);
