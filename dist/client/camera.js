@@ -39,6 +39,9 @@ class Camera {
                 scout: this.loadTexture('unit_scout'),
                 builder: this.loadTexture('unit_builder'),
             },
+            improvements: {
+                farm: this.loadOverlayTexture('improvement_farm'),
+            },
         };
         this.interval;
         this.mouseDownTime = 0;
@@ -49,7 +52,16 @@ class Camera {
         const texture = document.getElementById(path);
         if (!texture)
             throw 'Error: Missing Texture';
+        if (!(texture instanceof HTMLImageElement))
+            throw 'Error: Bad Image Element';
         return texture;
+    }
+    loadOverlayTexture(path) {
+        const texture = this.loadTexture(path);
+        return {
+            offset: texture.height - TILE_HEIGHT,
+            texture,
+        };
     }
     start(world, FPS) {
         [selectorXOffset, selectorYOffset] = [

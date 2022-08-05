@@ -4,6 +4,11 @@ const Y_TILE_SPACING = TILE_HEIGHT / 2;
 const X_CLIP_OFFSET = X_TILE_SPACING * Math.cos(60 * (Math.PI / 180));
 let [selectorXOffset, selectorYOffset] = [0, 0];
 
+type OverlayTexture = {
+  offset: number;
+  texture: HTMLImageElement;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Camera {
   x: number;
@@ -11,7 +16,12 @@ class Camera {
   zoom: number;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  textures: { tile: { [key: string]: HTMLElement }, selector: HTMLElement, unit: { [key: string]: HTMLElement } };
+  textures: {
+    tile: { [key: string]: HTMLImageElement },
+    selector: HTMLImageElement,
+    unit: { [key: string]: HTMLImageElement },
+    improvements: { [key: string]: OverlayTexture },
+  };
   interval?: NodeJS.Timer;
   mouseDownTime: number;
   selectedUnitPos: [number, number] | null;
@@ -56,6 +66,9 @@ class Camera {
         scout: this.loadTexture('unit_scout'),
         builder: this.loadTexture('unit_builder'),
       },
+      improvements: {
+        farm: this.loadOverlayTexture('improvement_farm'),
+      },
     };
     this.interval;
     this.mouseDownTime = 0;
@@ -63,10 +76,22 @@ class Camera {
     this.highlightedTiles = {};
   }
 
-  loadTexture(path: string): HTMLElement {
+  loadTexture(path: string): HTMLImageElement {
     const texture = document.getElementById(path);
     if (!texture) throw 'Error: Missing Texture';
+    if (!(texture instanceof HTMLImageElement)) throw 'Error: Bad Image Element';
     return texture;
+  }
+
+  loadOverlayTexture(path: string): {
+    offset: number,
+    texture: HTMLImageElement,
+  } {
+    const texture = this.loadTexture(path);
+    return {
+      offset: texture.height - TILE_HEIGHT,
+      texture,
+    };
   }
 
   start(world: World, FPS: number): void {
@@ -94,7 +119,7 @@ class Camera {
     this.x = x;
     this.y = y;
   }
-  
+
   toCameraPos(world: World, tileX: number, tileY: number): [number, number] {
     const { width, height, civs } = world;
     const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
