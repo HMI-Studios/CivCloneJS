@@ -184,7 +184,10 @@ class Camera {
                         ctx.strokeStyle = world.civs[tile.owner.civID].color;
                         ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
                         for (let i = 0; i < neighbors.length; i++) {
-                            if (((_a = world.getTile(...neighbors[i]).owner) === null || _a === void 0 ? void 0 : _a.civID) === tile.owner.civID)
+                            const neighbor = world.getTile(...neighbors[i]);
+                            if (!neighbor)
+                                ctx.moveTo(...positions[i]);
+                            else if (((_a = neighbor.owner) === null || _a === void 0 ? void 0 : _a.civID) === tile.owner.civID)
                                 ctx.moveTo(...positions[i]);
                             else
                                 ctx.lineTo(...positions[i]);
