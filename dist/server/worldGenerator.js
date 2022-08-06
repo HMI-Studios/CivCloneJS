@@ -12,15 +12,15 @@ const tile_1 = require("./tile");
 const improvement_1 = require("./improvement");
 const TAU = 2 * Math.PI;
 // Tile Types
-const OCEAN = new biome_1.TileType('ocean', 0, true, true);
-const SHALLOW_OCEAN = new biome_1.TileType('river', 0, true, true);
-const RIVER = new biome_1.TileType('river', 0, true);
-const FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, true, true);
-const SHALLOW_FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, true, true);
-const FROZEN_RIVER = new biome_1.TileType('frozen_river', 0, true);
-const GRASS_LOWLANDS = new biome_1.TileType('grass_lowlands', 1);
-const GRASS_PLAINS = new biome_1.TileType('plains', 2);
-const GRASS_HILLS = new biome_1.TileType('grass_hills', 3);
+const OCEAN = new biome_1.TileType('ocean', 0, null, true, true);
+const SHALLOW_OCEAN = new biome_1.TileType('river', 0, null, true, true);
+const RIVER = new biome_1.TileType('river', 0, null, true);
+const FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, null, true, true);
+const SHALLOW_FROZEN_OCEAN = new biome_1.TileType('frozen_ocean', 0, null, true, true);
+const FROZEN_RIVER = new biome_1.TileType('frozen_river', 0, null, true);
+const GRASS_LOWLANDS = new biome_1.TileType('grass_lowlands', 1, [0.25, 'forest']);
+const GRASS_PLAINS = new biome_1.TileType('plains', 2, [0.5, 'forest']);
+const GRASS_HILLS = new biome_1.TileType('grass_hills', 3, [0.25, 'forest']);
 const GRASS_MOUNTAINS = new biome_1.TileType('grass_mountains', 4);
 const DESERT_PLAINS = new biome_1.TileType('desert', 2);
 const DESERT_HILLS = new biome_1.TileType('desert_hills', 3);
@@ -29,9 +29,7 @@ const SNOW_PLAINS = new biome_1.TileType('snow_plains', 2);
 const SNOW_HILLS = new biome_1.TileType('snow_hills', 3);
 const SNOW_MOUNTAINS = new biome_1.TileType('snow_mountains', 4);
 const MOUNTAIN = new biome_1.TileType('mountain', 5);
-const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, false, false, true);
-// Vegetation Types
-const TEMPERATE_FOREST = new biome_1.TileType('forest');
+const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, null, false, false, true);
 class PerlinWorldGenerator {
     constructor(seed, { width, height }) {
         this.random = new random_1.Random(seed);
@@ -54,8 +52,6 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
                 [HIGHLANDS_LEVEL, new biome_1.TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
-            ], [
-                [50, TEMPERATE_FOREST],
             ]),
             'tundra': new biome_1.Biome(this.random, OCEAN, [
                 [SEA_LEVEL, SHALLOW_OCEAN],
@@ -64,8 +60,6 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
-            ], [
-                [80, TEMPERATE_FOREST],
             ]),
             'arctic': new biome_1.Biome(this.random, FROZEN_OCEAN, [
                 [SEA_LEVEL, SHALLOW_FROZEN_OCEAN],
@@ -73,8 +67,6 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
-            ], [
-                [99, TEMPERATE_FOREST],
             ]),
             'desert': new biome_1.Biome(this.random, OCEAN, [
                 [SEA_LEVEL, SHALLOW_OCEAN],
@@ -82,8 +74,6 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, DESERT_HILLS],
                 [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
-            ], [
-                [99, TEMPERATE_FOREST],
             ]),
         };
     }
@@ -166,14 +156,13 @@ class PerlinWorldGenerator {
             river.generate(tileTypeMap, heightMap, RIVER);
         }
         const map = new map_1.Map(height, width);
-        const terrain = tileTypeMap.map(tile => tile.type);
         let i = 0;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                const tile = new tile_1.Tile(terrain[i], heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
-                const temp = this.getTemp(x, y);
-                const humidity = this.getHumidity(x, y);
-                const vegetation = this.getBiome(temp).getVegetation(humidity);
+                const tile = new tile_1.Tile(tileTypeMap[i].type, heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
+                // const temp = this.getTemp(x, y);
+                // const humidity = this.getHumidity(x, y);
+                const vegetation = tileTypeMap[i].getVegetation(this.random);
                 if (vegetation)
                     tile.improvement = new improvement_1.Improvement(vegetation);
                 map.setTile({ x, y }, tile);

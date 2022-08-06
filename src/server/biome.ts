@@ -3,19 +3,25 @@ import { getAdjacentCoords } from './utils';
 
 export class TileType {
   public type: string;
+  public vegetation: [number, string | null];
   public isMountain: boolean;
   public isWater: boolean;
   public isOcean: boolean;
   public isRiverGen: boolean;
   public heightClass: number; // 0 = Sea Level, 1 = Lowlands, 2 = Plains, 3 = Highlands, 4 = Mountains, 5 = Mountain Peak
 
-  constructor(type: string, heightClass = 0, isWater = false, isOcean = false, isRiverGen = false) {
+  constructor(type: string, heightClass: number, vegetation: [number, string] | null = null, isWater = false, isOcean = false, isRiverGen = false) {
     this.type = type;
+    this.vegetation = vegetation || [0, null];
     this.isMountain = (heightClass === 5);
     this.isWater = isWater;
     this.isOcean = isOcean;
     this.isRiverGen = isRiverGen;
     this.heightClass = heightClass;
+  }
+
+  getVegetation(random: Random): string | null {
+    return (random.randFloat(100) < this.vegetation[0]) ? this.vegetation[1] : null;
   }
 }
 
@@ -121,13 +127,11 @@ export class River {
 export class Biome {
   private oceanTile: TileType;
   private tileLevels: [number, TileType | TilePool][];
-  private vegetationLevels: [number, TileType | TilePool][];
   private random: Random;
 
-  constructor(random: Random, oceanTile: TileType, tileLevels: [number, TileType | TilePool][], vegetationLevels: [number, TileType | TilePool][]) {
+  constructor(random: Random, oceanTile: TileType, tileLevels: [number, TileType | TilePool][]) {
     this.oceanTile = oceanTile;
     this.tileLevels = tileLevels;
-    this.vegetationLevels = vegetationLevels;
     this.random = random;
   }
 
@@ -142,20 +146,5 @@ export class Biome {
       }
     }
     return resultTile;
-  }
-
-  // TODO - maybe create a new 'VegetationType' class instead of reusing TileType here?
-  getVegetation(humidity: number): string | null {
-    let resultVegatation: TileType | null = null;
-    for (const [level, tile] of this.vegetationLevels) {
-      if (humidity > level) {
-        if (tile instanceof TileType) resultVegatation = tile;
-        else if (tile instanceof TilePool) resultVegatation = tile.resolve(this.random);
-        else resultVegatation = null;
-      } else {
-        break;
-      }
-    }
-    return resultVegatation?.type || null; 
   }
 }

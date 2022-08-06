@@ -3,13 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Biome = exports.River = exports.TilePool = exports.TileType = void 0;
 const utils_1 = require("./utils");
 class TileType {
-    constructor(type, heightClass = 0, isWater = false, isOcean = false, isRiverGen = false) {
+    constructor(type, heightClass, vegetation = null, isWater = false, isOcean = false, isRiverGen = false) {
         this.type = type;
+        this.vegetation = vegetation || [0, null];
         this.isMountain = (heightClass === 5);
         this.isWater = isWater;
         this.isOcean = isOcean;
         this.isRiverGen = isRiverGen;
         this.heightClass = heightClass;
+    }
+    getVegetation(random) {
+        return (random.randFloat(100) < this.vegetation[0]) ? this.vegetation[1] : null;
     }
 }
 exports.TileType = TileType;
@@ -101,10 +105,9 @@ class River {
 }
 exports.River = River;
 class Biome {
-    constructor(random, oceanTile, tileLevels, vegetationLevels) {
+    constructor(random, oceanTile, tileLevels) {
         this.oceanTile = oceanTile;
         this.tileLevels = tileLevels;
-        this.vegetationLevels = vegetationLevels;
         this.random = random;
     }
     getTile(elevation) {
@@ -121,24 +124,6 @@ class Biome {
             }
         }
         return resultTile;
-    }
-    // TODO - maybe create a new 'VegetationType' class instead of reusing TileType here?
-    getVegetation(humidity) {
-        let resultVegatation = null;
-        for (const [level, tile] of this.vegetationLevels) {
-            if (humidity > level) {
-                if (tile instanceof TileType)
-                    resultVegatation = tile;
-                else if (tile instanceof TilePool)
-                    resultVegatation = tile.resolve(this.random);
-                else
-                    resultVegatation = null;
-            }
-            else {
-                break;
-            }
-        }
-        return (resultVegatation === null || resultVegatation === void 0 ? void 0 : resultVegatation.type) || null;
     }
 }
 exports.Biome = Biome;
