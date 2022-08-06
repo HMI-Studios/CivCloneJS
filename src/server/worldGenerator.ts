@@ -20,6 +20,11 @@ const GRASS_PLAINS = new TileType('plains', 2, [0.5, 'forest']);
 const GRASS_HILLS = new TileType('grass_hills', 3, [0.25, 'forest']);
 const GRASS_MOUNTAINS = new TileType('grass_mountains', 4);
 
+const TEMPERATE_FOREST_LOWLANDS = new TileType('grass_lowlands', 1, [20, 'forest']);
+const TEMPERATE_FOREST_PLAINS = new TileType('plains', 2, [80, 'forest']);
+const TEMPERATE_FOREST_HILLS = new TileType('grass_hills', 3, [50, 'forest']);
+const TEMPERATE_FOREST_MOUNTAINS = new TileType('grass_mountains', 4, [20, 'forest']);
+
 const DESERT_PLAINS = new TileType('desert', 2);
 const DESERT_HILLS = new TileType('desert_hills', 3);
 const DESERT_MOUNTAINS = new TileType('desert_mountains', 4);
@@ -65,6 +70,16 @@ export class PerlinWorldGenerator {
           [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
         ]
       ),
+      'temperate_forest': new Biome(this.random,
+        OCEAN, [
+          [SEA_LEVEL, SHALLOW_OCEAN],
+          [COAST_LEVEL, TEMPERATE_FOREST_LOWLANDS],
+          [PLAINS_LEVEL, TEMPERATE_FOREST_PLAINS],
+          [HILLS_LEVEL, new TilePool([[TEMPERATE_FOREST_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
+          [HIGHLANDS_LEVEL, new TilePool([[TEMPERATE_FOREST_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
+          [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
+        ]
+      ),
       'tundra': new Biome(this.random,
         OCEAN, [
           [SEA_LEVEL, SHALLOW_OCEAN],
@@ -93,14 +108,31 @@ export class PerlinWorldGenerator {
           [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
         ]
       ),
+      'mild_desert': new Biome(this.random,
+        OCEAN, [
+          [SEA_LEVEL, SHALLOW_OCEAN],
+          [COAST_LEVEL, new TilePool([[DESERT_PLAINS, 3], [GRASS_LOWLANDS, 1]])], // TODO - replace grass lowlands with desert lowlands
+          [PLAINS_LEVEL, DESERT_PLAINS],
+          [HILLS_LEVEL, DESERT_HILLS],
+          [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
+          [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
+        ]
+      ),
     };
   }
 
-  getBiome(temp: number): Biome {
+  getBiome(temp: number, humidity: number): Biome {
     if (temp < 5) return this.biomes.arctic;
     if (temp < 20) return this.biomes.tundra;
-    if (temp < 60) return this.biomes.plains;
-    if (temp <= 100) return this.biomes.desert;
+    if (temp < 60) {
+      if (humidity < 55) return this.biomes.plains;
+      if (humidity < 80) return this.biomes.temperate_forest;
+      if (humidity <= 100) return this.biomes.plains; // TODO - swamp biome
+    }
+    if (temp <= 100) {
+      if (humidity < 60) return this.biomes.desert;
+      if (humidity <= 100) return this.biomes.mild_desert;
+    }
 
     // Default Biome in case no match is found
     return this.biomes.plains;
@@ -172,7 +204,7 @@ export class PerlinWorldGenerator {
         const elevation = this.getElevation(x, y);
         const temp = this.getTemp(x, y);
         const humidity = this.getHumidity(x, y);
-        const tile = this.getBiome(temp).getTile(elevation);
+        const tile = this.getBiome(temp, humidity).getTile(elevation);
         if (tile.isRiverGen) riverSources.push([x, y]);
         tileTypeMap.push(tile);
         heightMap.push(elevation);
@@ -191,8 +223,6 @@ export class PerlinWorldGenerator {
       for (let x = 0; x < width; x++) {
         const tile = new Tile(tileTypeMap[i].type, heightMap[i], new Yield({ food: 1, production: 1 }));
 
-        // const temp = this.getTemp(x, y);
-        // const humidity = this.getHumidity(x, y);
         const vegetation = tileTypeMap[i].getVegetation(this.random);
         if (vegetation) tile.improvement = new Improvement(vegetation);
 
