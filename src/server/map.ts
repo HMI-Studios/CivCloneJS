@@ -126,7 +126,7 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.tileUpdate(coords);
+    this.buildImprovementAt(coords, 'settlement');
   }
 
   buildImprovementAt(coords: Coords, type: string) {

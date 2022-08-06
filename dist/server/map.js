@@ -100,7 +100,7 @@ class Map {
             this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
-        this.tileUpdate(coords);
+        this.buildImprovementAt(coords, 'settlement');
     }
     buildImprovementAt(coords, type) {
         this.getTile(coords).improvement = new improvement_1.Improvement(type);

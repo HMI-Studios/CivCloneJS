@@ -67,6 +67,7 @@ class Camera {
         builder: this.loadTexture('unit_builder'),
       },
       improvements: {
+        settlement: this.loadOverlayTexture('improvement_settlement'),
         farm: this.loadOverlayTexture('improvement_farm'),
       },
     };
