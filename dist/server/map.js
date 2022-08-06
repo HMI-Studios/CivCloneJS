@@ -48,8 +48,10 @@ class Map {
     getVisibleTilesCoords(unit) {
         return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
     }
-    setTileOwner(coords, owner) {
+    setTileOwner(coords, owner, overwrite) {
         var _a;
+        if (!overwrite && this.getTile(coords).owner)
+            return;
         (_a = this.getTile(coords).owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
         this.getTile(coords).owner = owner;
         owner.addTile(coords);
@@ -95,7 +97,7 @@ class Map {
         const city = new city_1.City(coords, name, civID);
         this.cities.push(city);
         for (const neighbor of this.getNeighborsCoords(coords)) {
-            this.setTileOwner(neighbor, city);
+            this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
         this.tileUpdate(coords);

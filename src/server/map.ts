@@ -68,7 +68,8 @@ export class Map {
     return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
   }
 
-  setTileOwner(coords: Coords, owner: City): void {
+  setTileOwner(coords: Coords, owner: City, overwrite: boolean): void {
+    if (!overwrite && this.getTile(coords).owner) return;
     this.getTile(coords).owner?.removeTile(coords);
     this.getTile(coords).owner = owner;
     owner.addTile(coords);
@@ -120,7 +121,7 @@ export class Map {
     this.cities.push(city);
 
     for (const neighbor of this.getNeighborsCoords(coords)) {
-      this.setTileOwner(neighbor, city);
+      this.setTileOwner(neighbor, city, false);
 
       this.tileUpdate(neighbor);
     }
