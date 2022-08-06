@@ -17,13 +17,10 @@ export class Map {
   cities: City[];
   updates: { (civID: number): Event }[];
 
-  constructor(height: number, width: number, terrain: string[], heightMap: number[]) {
+  constructor(height: number, width: number) {
     this.height = height;
     this.width = width;
     this.tiles = new Array(height*width);
-    for (let i = 0; i < height*width; i++) {
-      this.tiles[i] = new Tile(terrain[i], heightMap[i], new Yield({ food: 1, production: 1 }));
-    }
     this.cities = [];
     this.updates = [];
   }
@@ -47,6 +44,10 @@ export class Map {
 
   getTile(coords: Coords): Tile {
     return this.tiles[this.pos(coords)];
+  }
+
+  setTile(coords: Coords, tile: Tile): void {
+    this.tiles[this.pos(coords)] = tile;
   }
 
   private getNeighborsCoordsRecurse({ x, y }: Coords, r: number, tileList: Coords[]): void {

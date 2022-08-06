@@ -8,6 +8,8 @@ const random_1 = require("./random");
 const simplex_noise_1 = __importDefault(require("simplex-noise"));
 const biome_1 = require("./biome");
 const map_1 = require("./map");
+const tile_1 = require("./tile");
+const improvement_1 = require("./improvement");
 const TAU = 2 * Math.PI;
 // Tile Types
 const OCEAN = new biome_1.TileType('ocean', 0, true, true);
@@ -28,6 +30,8 @@ const SNOW_HILLS = new biome_1.TileType('snow_hills', 3);
 const SNOW_MOUNTAINS = new biome_1.TileType('snow_mountains', 4);
 const MOUNTAIN = new biome_1.TileType('mountain', 5);
 const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, false, false, true);
+// Vegetation Types
+const TEMPERATE_FOREST = new biome_1.TileType('forest');
 class PerlinWorldGenerator {
     constructor(seed, { width, height }) {
         this.random = new random_1.Random(seed);
@@ -50,6 +54,8 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
                 [HIGHLANDS_LEVEL, new biome_1.TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
+            ], [
+                [50, TEMPERATE_FOREST],
             ]),
             'tundra': new biome_1.Biome(this.random, OCEAN, [
                 [SEA_LEVEL, SHALLOW_OCEAN],
@@ -58,6 +64,8 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
+            ], [
+                [80, TEMPERATE_FOREST],
             ]),
             'arctic': new biome_1.Biome(this.random, FROZEN_OCEAN, [
                 [SEA_LEVEL, SHALLOW_FROZEN_OCEAN],
@@ -65,6 +73,8 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
+            ], [
+                [99, TEMPERATE_FOREST],
             ]),
             'desert': new biome_1.Biome(this.random, OCEAN, [
                 [SEA_LEVEL, SHALLOW_OCEAN],
@@ -72,6 +82,8 @@ class PerlinWorldGenerator {
                 [HILLS_LEVEL, DESERT_HILLS],
                 [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
+            ], [
+                [99, TEMPERATE_FOREST],
             ]),
         };
     }
@@ -141,6 +153,7 @@ class PerlinWorldGenerator {
             for (let x = 0; x < width; x++) {
                 const elevation = this.getElevation(x, y);
                 const temp = this.getTemp(x, y);
+                const humidity = this.getHumidity(x, y);
                 const tile = this.getBiome(temp).getTile(elevation);
                 if (tile.isRiverGen)
                     riverSources.push([x, y]);
@@ -152,9 +165,23 @@ class PerlinWorldGenerator {
             const river = new biome_1.River(x, y, this.width);
             river.generate(tileTypeMap, heightMap, RIVER);
         }
-        const tiles = tileTypeMap.map(tile => tile.type);
+        const map = new map_1.Map(height, width);
+        const terrain = tileTypeMap.map(tile => tile.type);
+        let i = 0;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const tile = new tile_1.Tile(terrain[i], heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
+                const temp = this.getTemp(x, y);
+                const humidity = this.getHumidity(x, y);
+                const vegetation = this.getBiome(temp).getVegetation(humidity);
+                if (vegetation)
+                    tile.improvement = new improvement_1.Improvement(vegetation);
+                map.setTile({ x, y }, tile);
+                i++;
+            }
+        }
         console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`);
-        return new map_1.Map(height, width, tiles, heightMap);
+        return map;
     }
 }
 exports.PerlinWorldGenerator = PerlinWorldGenerator;

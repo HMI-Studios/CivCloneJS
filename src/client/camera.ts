@@ -68,7 +68,10 @@ class Camera {
       },
       improvements: {
         settlement: this.loadOverlayTexture('improvement_settlement'),
+
         farm: this.loadOverlayTexture('improvement_farm'),
+
+        forest: this.loadOverlayTexture('improvement_forest'),
       },
     };
     this.interval;

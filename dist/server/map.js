@@ -2,17 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
 const city_1 = require("./city");
-const tile_1 = require("./tile");
 const improvement_1 = require("./improvement");
 const utils_1 = require("./utils");
 class Map {
-    constructor(height, width, terrain, heightMap) {
+    constructor(height, width) {
         this.height = height;
         this.width = width;
         this.tiles = new Array(height * width);
-        for (let i = 0; i < height * width; i++) {
-            this.tiles[i] = new tile_1.Tile(terrain[i], heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
-        }
         this.cities = [];
         this.updates = [];
     }
@@ -32,6 +28,9 @@ class Map {
     }
     getTile(coords) {
         return this.tiles[this.pos(coords)];
+    }
+    setTile(coords, tile) {
+        this.tiles[this.pos(coords)] = tile;
     }
     getNeighborsCoordsRecurse({ x, y }, r, tileList) {
         if (r >= 0 && this.getTile({ x, y })) {
