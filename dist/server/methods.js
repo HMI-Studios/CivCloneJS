@@ -14,7 +14,15 @@ exports.games = {
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
     new worldGenerator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
+        gameName: 'singleplayer test',
         playerCount: 1,
+    }),
+    1: new game_1.Game(
+    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+    new worldGenerator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
+        gameName: 'multiplayer test',
+        playerCount: 2,
     }),
 };
 const createGame = (username, playerCount, mapOptions, options) => {
