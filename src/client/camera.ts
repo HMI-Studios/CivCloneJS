@@ -239,8 +239,6 @@ class Camera {
             TILE_HEIGHT * zoom
           );
 
-          ctx.globalAlpha = 1;
-
           if (tile.owner) {
             const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
             const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -274,6 +272,8 @@ class Camera {
             ctx.stroke();
             ctx.setLineDash([]);
           }
+
+          ctx.globalAlpha = 1;
 
           if (world.pos(x, y) in this.highlightedTiles || (
               this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos))
@@ -339,6 +339,8 @@ class Camera {
             }
           }
 
+          if (!tile.visible) ctx.globalAlpha = 0.5;
+
           if (tile.improvement) {
             const overlay = textures.improvements[tile.improvement.type];
             ctx.drawImage(
@@ -349,6 +351,8 @@ class Camera {
               overlay.texture.height * zoom
             );
           }
+
+          ctx.globalAlpha = 1;
 
           if (tile.unit) {
             this.renderUnit(world, tile.unit, x, y);
