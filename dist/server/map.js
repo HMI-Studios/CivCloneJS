@@ -100,10 +100,14 @@ class Map {
             this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
-        this.buildImprovementAt(coords, 'settlement');
+        this.buildImprovementAt(coords, 'settlement', civID);
     }
-    buildImprovementAt(coords, type) {
-        this.getTile(coords).improvement = new improvement_1.Improvement(type);
+    buildImprovementAt(coords, type, ownerID) {
+        var _a;
+        const tile = this.getTile(coords);
+        if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
+            return;
+        tile.improvement = new improvement_1.Improvement(type);
         this.tileUpdate(coords);
     }
 }

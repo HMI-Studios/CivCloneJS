@@ -394,7 +394,7 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
-        map.buildImprovementAt(coords, type);
+        map.buildImprovementAt(coords, type, civID);
         game.sendUpdates();
       }
     }

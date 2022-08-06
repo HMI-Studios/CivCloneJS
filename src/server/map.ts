@@ -126,11 +126,13 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.buildImprovementAt(coords, 'settlement');
+    this.buildImprovementAt(coords, 'settlement', civID);
   }
 
-  buildImprovementAt(coords: Coords, type: string) {
-    this.getTile(coords).improvement = new Improvement(type);
+  buildImprovementAt(coords: Coords, type: string, ownerID: number): void {
+    const tile = this.getTile(coords);
+    if (tile.owner?.civID !== ownerID) return;
+    tile.improvement = new Improvement(type);
 
     this.tileUpdate(coords);
   }
