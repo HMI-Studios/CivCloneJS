@@ -116,7 +116,10 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  settleCityAt(coords: Coords, name: string, civID: number) {
+  settleCityAt(coords: Coords, name: string, civID: number): boolean {
+    const tile = this.getTile(coords);
+    if (tile.owner) return false;
+
     const city: City = new City(coords, name, civID);
     this.cities.push(city);
 
@@ -127,6 +130,7 @@ export class Map {
     }
 
     this.buildImprovementAt(coords, 'settlement', civID);
+    return true;
   }
 
   buildImprovementAt(coords: Coords, type: string, ownerID: number): void {

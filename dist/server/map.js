@@ -94,6 +94,9 @@ class Map {
         this.tileUpdate(coords);
     }
     settleCityAt(coords, name, civID) {
+        const tile = this.getTile(coords);
+        if (tile.owner)
+            return false;
         const city = new city_1.City(coords, name, civID);
         this.cities.push(city);
         for (const neighbor of this.getNeighborsCoords(coords)) {
@@ -101,6 +104,7 @@ class Map {
             this.tileUpdate(neighbor);
         }
         this.buildImprovementAt(coords, 'settlement', civID);
+        return true;
     }
     buildImprovementAt(coords, type, ownerID) {
         var _a;

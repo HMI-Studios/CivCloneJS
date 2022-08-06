@@ -310,8 +310,13 @@ const methods = {
             const map = world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
-                map.settleCityAt(coords, name, civID);
-                world.removeUnit(unit);
+                const validCityLocation = map.settleCityAt(coords, name, civID);
+                if (validCityLocation) {
+                    world.removeUnit(unit);
+                }
+                else {
+                    // TODO - some kind of error here?
+                }
                 game.sendUpdates();
             }
         }
