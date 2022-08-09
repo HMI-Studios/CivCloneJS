@@ -39,6 +39,11 @@ class Camera {
                 scout: this.loadTexture('unit_scout'),
                 builder: this.loadTexture('unit_builder'),
             },
+            improvements: {
+                settlement: this.loadOverlayTexture('improvement_settlement'),
+                farm: this.loadOverlayTexture('improvement_farm'),
+                forest: this.loadOverlayTexture('improvement_forest'),
+            },
         };
         this.interval;
         this.mouseDownTime = 0;
@@ -49,7 +54,16 @@ class Camera {
         const texture = document.getElementById(path);
         if (!texture)
             throw 'Error: Missing Texture';
+        if (!(texture instanceof HTMLImageElement))
+            throw 'Error: Bad Image Element';
         return texture;
+    }
+    loadOverlayTexture(path) {
+        const texture = this.loadTexture(path);
+        return {
+            offset: texture.height - TILE_HEIGHT,
+            texture,
+        };
     }
     start(world, FPS) {
         [selectorXOffset, selectorYOffset] = [
@@ -133,17 +147,15 @@ class Camera {
         const selectedY = Math.round(((wmY + height) / TILE_HEIGHT) + (selectorYOffset + (mod(selectedX, 2) / -2)));
         this.clear();
         // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
-        for (let y = Math.min(yEnd, height) - 1; y >= Math.max(yStart, 0); y--) {
-            for (let x = xStart; x < xEnd; x++) {
+        for (let yCount = Math.min(yEnd, height) - 0.5; yCount >= Math.max(yStart, 0); yCount -= 0.5) {
+            const shiftedXStart = xStart + Number((mod(yCount, 1) === 0) !== (mod(xStart, 2) === 0));
+            for (let x = shiftedXStart; x < xEnd; x += 2) {
+                const y = Math.floor(yCount);
                 const tile = world.getTile(x, y);
                 if (tile) {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
-                    ctx.globalAlpha = 1;
-                    if (tile.unit) {
-                        this.renderUnit(world, tile.unit, x, y);
-                    }
                     if (tile.owner) {
                         const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
                         const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -166,13 +178,20 @@ class Camera {
                         ctx.strokeStyle = world.civs[tile.owner.civID].color;
                         ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
                         for (let i = 0; i < neighbors.length; i++) {
-                            if (((_a = world.getTile(...neighbors[i]).owner) === null || _a === void 0 ? void 0 : _a.civID) === tile.owner.civID)
+                            const neighbor = world.getTile(...neighbors[i]);
+                            if (!neighbor)
+                                ctx.moveTo(...positions[i]);
+                            else if (((_a = neighbor.owner) === null || _a === void 0 ? void 0 : _a.civID) === tile.owner.civID)
                                 ctx.moveTo(...positions[i]);
                             else
                                 ctx.lineTo(...positions[i]);
                         }
+                        if (tile.owner.civID === world.player.civID)
+                            ctx.setLineDash([5 * zoom, 5 * zoom]);
                         ctx.stroke();
+                        ctx.setLineDash([]);
                     }
+                    ctx.globalAlpha = 1;
                     if (world.pos(x, y) in this.highlightedTiles || (this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos)))) {
                         const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
                         const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -217,6 +236,16 @@ class Camera {
                             console.log(tile.unit);
                             this.selectUnit(world, { x, y }, tile.unit);
                         }
+                    }
+                    if (!tile.visible)
+                        ctx.globalAlpha = 0.5;
+                    if (tile.improvement) {
+                        const overlay = textures.improvements[tile.improvement.type];
+                        ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
+                    }
+                    ctx.globalAlpha = 1;
+                    if (tile.unit) {
+                        this.renderUnit(world, tile.unit, x, y);
                     }
                 }
             }

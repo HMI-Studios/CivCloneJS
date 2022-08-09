@@ -24,7 +24,17 @@ export const games: { [gameID: number] : Game } = {
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
     new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
     {
+      gameName: 'singleplayer test',
       playerCount: 1,
+    }
+  ),
+  1: new Game(
+    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+    new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
+    {
+      gameName: 'multiplayer test',
+      playerCount: 2,
     }
   ),
 };
@@ -382,9 +392,13 @@ const methods: {
 
       const unit = map.getTile(coords)?.unit;
       if (unit?.type === 'settler' && unit?.civID === civID) {
-        map.settleCityAt(coords, name, civID);
+        const validCityLocation = map.settleCityAt(coords, name, civID);
 
-        world.removeUnit(unit);
+        if (validCityLocation) {
+          world.removeUnit(unit);
+        } else {
+          // TODO - some kind of error here?
+        }
 
         game.sendUpdates();
       }
@@ -405,7 +419,8 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
-        map.buildImprovementAt(coords, type);
+        map.buildImprovementAt(coords, type, civID);
+        game.sendUpdates();
       }
     }
   },

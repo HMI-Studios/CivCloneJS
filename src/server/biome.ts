@@ -3,19 +3,25 @@ import { getAdjacentCoords } from './utils';
 
 export class TileType {
   public type: string;
+  public vegetation: [number, string | null];
   public isMountain: boolean;
   public isWater: boolean;
   public isOcean: boolean;
   public isRiverGen: boolean;
   public heightClass: number; // 0 = Sea Level, 1 = Lowlands, 2 = Plains, 3 = Highlands, 4 = Mountains, 5 = Mountain Peak
 
-  constructor(type: string, heightClass: number, isWater = false, isOcean = false, isRiverGen = false) {
+  constructor(type: string, heightClass: number, vegetation: [number, string] | null = null, isWater = false, isOcean = false, isRiverGen = false) {
     this.type = type;
+    this.vegetation = vegetation ?? [0, null];
     this.isMountain = (heightClass === 5);
     this.isWater = isWater;
     this.isOcean = isOcean;
     this.isRiverGen = isRiverGen;
     this.heightClass = heightClass;
+  }
+
+  getVegetation(random: Random): string | null {
+    return (random.randFloat(100) < this.vegetation[0]) ? this.vegetation[1] : null;
   }
 }
 

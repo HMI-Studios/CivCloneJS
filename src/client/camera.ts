@@ -4,6 +4,11 @@ const Y_TILE_SPACING = TILE_HEIGHT / 2;
 const X_CLIP_OFFSET = X_TILE_SPACING * Math.cos(60 * (Math.PI / 180));
 let [selectorXOffset, selectorYOffset] = [0, 0];
 
+type OverlayTexture = {
+  offset: number;
+  texture: HTMLImageElement;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Camera {
   x: number;
@@ -11,7 +16,12 @@ class Camera {
   zoom: number;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  textures: { tile: { [key: string]: HTMLElement }, selector: HTMLElement, unit: { [key: string]: HTMLElement } };
+  textures: {
+    tile: { [key: string]: HTMLImageElement },
+    selector: HTMLImageElement,
+    unit: { [key: string]: HTMLImageElement },
+    improvements: { [key: string]: OverlayTexture },
+  };
   interval?: NodeJS.Timer;
   mouseDownTime: number;
   selectedUnitPos: [number, number] | null;
@@ -56,6 +66,13 @@ class Camera {
         scout: this.loadTexture('unit_scout'),
         builder: this.loadTexture('unit_builder'),
       },
+      improvements: {
+        settlement: this.loadOverlayTexture('improvement_settlement'),
+
+        farm: this.loadOverlayTexture('improvement_farm'),
+
+        forest: this.loadOverlayTexture('improvement_forest'),
+      },
     };
     this.interval;
     this.mouseDownTime = 0;
@@ -63,10 +80,22 @@ class Camera {
     this.highlightedTiles = {};
   }
 
-  loadTexture(path: string): HTMLElement {
+  loadTexture(path: string): HTMLImageElement {
     const texture = document.getElementById(path);
     if (!texture) throw 'Error: Missing Texture';
+    if (!(texture instanceof HTMLImageElement)) throw 'Error: Bad Image Element';
     return texture;
+  }
+
+  loadOverlayTexture(path: string): {
+    offset: number,
+    texture: HTMLImageElement,
+  } {
+    const texture = this.loadTexture(path);
+    return {
+      offset: texture.height - TILE_HEIGHT,
+      texture,
+    };
   }
 
   start(world: World, FPS: number): void {
@@ -94,7 +123,7 @@ class Camera {
     this.x = x;
     this.y = y;
   }
-  
+
   toCameraPos(world: World, tileX: number, tileY: number): [number, number] {
     const { width, height, civs } = world;
     const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
@@ -194,8 +223,11 @@ class Camera {
 
     this.clear();
     // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
-    for (let y = Math.min(yEnd, height) - 1; y >= Math.max(yStart, 0); y--) {
-      for (let x = xStart; x < xEnd; x++) {
+    for (let yCount = Math.min(yEnd, height) - 0.5; yCount >= Math.max(yStart, 0); yCount -= 0.5) {
+      const shiftedXStart = xStart + Number((mod(yCount, 1) === 0) !== (mod(xStart, 2) === 0));
+
+      for (let x = shiftedXStart; x < xEnd; x += 2) {
+        const y = Math.floor(yCount);
 
         const tile = world.getTile(x, y);
         if (tile) {
@@ -209,12 +241,6 @@ class Camera {
             TILE_WIDTH * zoom,
             TILE_HEIGHT * zoom
           );
-
-          ctx.globalAlpha = 1;
-
-          if (tile.unit) {
-            this.renderUnit(world, tile.unit, x, y);
-          }
 
           if (tile.owner) {
             const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
@@ -240,11 +266,17 @@ class Camera {
             ctx.strokeStyle = world.civs[tile.owner.civID].color;
             ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
             for (let i = 0; i < neighbors.length; i++) {
-              if (world.getTile(...neighbors[i]).owner?.civID === tile.owner.civID) ctx.moveTo(...positions[i]);
+              const neighbor = world.getTile(...neighbors[i]);
+              if (!neighbor) ctx.moveTo(...positions[i]);
+              else if (neighbor.owner?.civID === tile.owner.civID) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
             }
+            if (tile.owner.civID === world.player.civID) ctx.setLineDash([5 * zoom, 5 * zoom]);
             ctx.stroke();
+            ctx.setLineDash([]);
           }
+
+          ctx.globalAlpha = 1;
 
           if (world.pos(x, y) in this.highlightedTiles || (
               this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos))
@@ -308,6 +340,25 @@ class Camera {
               console.log(tile.unit);
               this.selectUnit(world, { x, y }, tile.unit);
             }
+          }
+
+          if (!tile.visible) ctx.globalAlpha = 0.5;
+
+          if (tile.improvement) {
+            const overlay = textures.improvements[tile.improvement.type];
+            ctx.drawImage(
+              overlay.texture as CanvasImageSource,
+              (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
+              (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom,
+              TILE_WIDTH * zoom,
+              overlay.texture.height * zoom
+            );
+          }
+
+          ctx.globalAlpha = 1;
+
+          if (tile.unit) {
+            this.renderUnit(world, tile.unit, x, y);
           }
         }
       }
