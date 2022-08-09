@@ -101,6 +101,7 @@ const methods = {
         const game = exports.games[gameID];
         const username = getUsername(ws);
         const civID = game === null || game === void 0 ? void 0 : game.newPlayerCivID(username);
+        const isRejoin = username in game.players;
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
             if (!game.players[username]) {
@@ -112,9 +113,18 @@ const methods = {
             sendTo(ws, {
                 update: [
                     ['civID', [civID]],
-                    ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
-                ],
+                ]
             });
+            if (isRejoin) {
+                game.startGame(game.players[username]);
+            }
+            else {
+                sendTo(ws, {
+                    update: [
+                        ['leaderPool', [...game.world.getLeaderPool(), game.getPlayersData()]],
+                    ],
+                });
+            }
             const gameList = {};
             for (const id in exports.games) {
                 gameList[id] = exports.games[id].getMetaData();
