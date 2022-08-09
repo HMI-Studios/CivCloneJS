@@ -12,7 +12,7 @@ export class TileType {
 
   constructor(type: string, heightClass: number, vegetation: [number, string] | null = null, isWater = false, isOcean = false, isRiverGen = false) {
     this.type = type;
-    this.vegetation = vegetation || [0, null];
+    this.vegetation = vegetation ?? [0, null];
     this.isMountain = (heightClass === 5);
     this.isWater = isWater;
     this.isOcean = isOcean;
