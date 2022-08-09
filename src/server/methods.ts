@@ -121,10 +121,10 @@ const methods: {
     if (civID !== null) {
       getConnData(ws).gameID = gameID;
       
-      if (!game.players[username]) {
-        game.connectPlayer(username, new Player(civID, ws));
-      } else {
+      if (isRejoin) {
         game.players[username].reset(ws);
+      } else {
+        game.connectPlayer(username, new Player(civID, ws));
       }
 
       sendTo(ws, {
