@@ -56,7 +56,6 @@ class Map {
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {
-        return tile.getVisibleData();
         if (tile.discoveredBy[civID]) {
             if (tile.visibleTo[civID]) {
                 return tile.getVisibleData();

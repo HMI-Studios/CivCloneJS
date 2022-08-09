@@ -5,7 +5,7 @@ const utils_1 = require("./utils");
 class TileType {
     constructor(type, heightClass, vegetation = null, isWater = false, isOcean = false, isRiverGen = false) {
         this.type = type;
-        this.vegetation = vegetation || [0, null];
+        this.vegetation = vegetation !== null && vegetation !== void 0 ? vegetation : [0, null];
         this.isMountain = (heightClass === 5);
         this.isWater = isWater;
         this.isOcean = isOcean;

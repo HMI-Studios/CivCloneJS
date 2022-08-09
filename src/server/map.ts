@@ -77,7 +77,6 @@ export class Map {
   }
 
   getCivTile(civID: number, tile: Tile): TileData | null {
-    return tile.getVisibleData();
     if (tile.discoveredBy[civID]) {
       if (tile.visibleTo[civID]) {
         return tile.getVisibleData();

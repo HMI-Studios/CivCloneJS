@@ -104,11 +104,11 @@ const methods = {
         const isRejoin = username in game.players;
         if (civID !== null) {
             (0, exports.getConnData)(ws).gameID = gameID;
-            if (!game.players[username]) {
-                game.connectPlayer(username, new player_1.Player(civID, ws));
+            if (isRejoin) {
+                game.players[username].reset(ws);
             }
             else {
-                game.players[username].reset(ws);
+                game.connectPlayer(username, new player_1.Player(civID, ws));
             }
             sendTo(ws, {
                 update: [
