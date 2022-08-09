@@ -116,9 +116,11 @@ const methods: {
     const username = getUsername(ws);
 
     const civID = game?.newPlayerCivID(username);
+    const isRejoin = username in game.players;
 
     if (civID !== null) {
       getConnData(ws).gameID = gameID;
+      
       if (!game.players[username]) {
         game.connectPlayer(username, new Player(civID, ws));
       } else {
@@ -128,9 +130,18 @@ const methods: {
       sendTo(ws, {
         update: [
           ['civID', [ civID ]],
-          ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
-        ],
+        ]
       });
+
+      if (isRejoin) {
+        game.startGame(game.players[username]);
+      } else {
+        sendTo(ws, {
+          update: [
+            ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
+          ],
+        });
+      }
 
       const gameList = {};
       for (const id in games) {
