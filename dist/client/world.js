@@ -16,6 +16,7 @@ class World {
         this.unusedUnits = [];
         this.width;
         this.socket;
+        this.socketDidOpen = false;
         this.on = {
             update: {},
             error: {},
@@ -160,19 +161,26 @@ class World {
             ]);
         });
     }
+    askConnect(secureProtocol = true) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
+            localStorage.setItem('serverIP', newIP);
+            return this.connect();
+        });
+    }
     connect(secureProtocol = true) {
         return __awaiter(this, void 0, void 0, function* () {
             const serverIP = localStorage.getItem('serverIP');
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 console.log(`Connecting to ${`ws${secureProtocol ? 's' : ''}://${serverIP}`}...`);
+                const controller = new AbortController();
                 try {
                     this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
+                    this.socketDidOpen = false;
                 }
                 catch (err) {
                     console.warn('Invalid address.');
-                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
-                    localStorage.setItem('serverIP', newIP);
-                    yield this.connect().catch(() => reject());
+                    yield this.askConnect().catch(() => reject());
                     resolve();
                 }
                 this.socket.addEventListener('message', (event) => {
@@ -185,28 +193,33 @@ class World {
                         return;
                     }
                     this.handleResponse(data);
-                });
+                }, { signal: controller.signal });
                 this.socket.addEventListener('open', ( /*event: Event*/) => {
+                    this.socketDidOpen = true;
                     resolve();
-                });
+                }, { signal: controller.signal });
                 this.socket.addEventListener('close', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
-                    console.warn('Failed to connect.');
-                    if (secureProtocol) {
+                    if (this.socketDidOpen) {
+                        console.error('Connection Terminated');
+                        controller.abort();
+                        reject();
+                    }
+                    else if (secureProtocol) {
                         console.warn('Retrying with unsecure protocol...');
                         yield this.connect(false).catch(() => reject());
                         resolve();
                     }
                     else {
-                        console.error('Connection Terminated');
-                        reject();
+                        console.warn('Failed to connect.');
+                        yield this.askConnect().catch(() => reject());
+                        resolve();
                     }
-                }));
-                this.socket.addEventListener('error', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
-                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
-                    localStorage.setItem('serverIP', newIP);
-                    yield this.connect().catch(() => reject());
-                    resolve();
-                }));
+                }), { signal: controller.signal });
+                // this.socket.addEventListener('error', async (/*event: Event*/) => {
+                //   console.error('Connection Error');
+                //   await this.askConnect().catch(() => reject());
+                //   resolve();
+                // }, { signal: controller.signal });
             }));
         });
     }
