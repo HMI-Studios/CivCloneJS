@@ -169,9 +169,10 @@ class World {
                     this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
                 }
                 catch (err) {
+                    console.warn('Invalid address.');
                     const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
                     localStorage.setItem('serverIP', newIP);
-                    yield this.connect();
+                    yield this.connect().catch(() => reject());
                     resolve();
                 }
                 this.socket.addEventListener('message', (event) => {
@@ -192,7 +193,7 @@ class World {
                     console.warn('Failed to connect.');
                     if (secureProtocol) {
                         console.warn('Retrying with unsecure protocol...');
-                        yield this.connect(false);
+                        yield this.connect(false).catch(() => reject());
                         resolve();
                     }
                     else {
@@ -203,7 +204,7 @@ class World {
                 this.socket.addEventListener('error', ( /*event: Event*/) => __awaiter(this, void 0, void 0, function* () {
                     const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
                     localStorage.setItem('serverIP', newIP);
-                    yield this.connect();
+                    yield this.connect().catch(() => reject());
                     resolve();
                 }));
             }));
@@ -333,7 +334,11 @@ class World {
             this.on.event.deselectTile = () => {
                 ui.hideTileInfoMenu();
             };
-            yield this.connect();
+            yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {
+                console.error('Connection Failed. Reload page to retry.');
+                yield ui.textAlerts.reloadAlert.showAsync(ui.root);
+                location.reload();
+            }));
             yield this.login();
             this.sendActions([
                 ['setPlayer', [world.player.name]],

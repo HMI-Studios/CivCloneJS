@@ -244,9 +244,10 @@ class World {
       try {
         this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
       } catch (err) {
+        console.warn('Invalid address.');
         const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
         localStorage.setItem('serverIP', newIP);
-        await this.connect();
+        await this.connect().catch(() => reject());
         resolve();
       }
       this.socket.addEventListener('message', (event) => {
@@ -266,7 +267,7 @@ class World {
         console.warn('Failed to connect.');
         if (secureProtocol) {
           console.warn('Retrying with unsecure protocol...');
-          await this.connect(false);
+          await this.connect(false).catch(() => reject());
           resolve();
         } else {
           console.error('Connection Terminated');
@@ -276,7 +277,7 @@ class World {
       this.socket.addEventListener('error', async (/*event: Event*/) => {
         const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
         localStorage.setItem('serverIP', newIP);
-        await this.connect();
+        await this.connect().catch(() => reject());
         resolve();
       });
     });
@@ -426,7 +427,11 @@ class World {
       ui.hideTileInfoMenu();
     }
 
-    await this.connect();
+    await this.connect().catch(async () => {
+      console.error('Connection Failed. Reload page to retry.')
+      await ui.textAlerts.reloadAlert.showAsync(ui.root);
+      location.reload();
+    });
 
     await this.login();
 
