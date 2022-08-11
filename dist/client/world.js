@@ -163,9 +163,17 @@ class World {
     connect(secureProtocol = true) {
         return __awaiter(this, void 0, void 0, function* () {
             const serverIP = localStorage.getItem('serverIP');
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 console.log(`Connecting to ${`ws${secureProtocol ? 's' : ''}://${serverIP}`}...`);
-                this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
+                try {
+                    this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
+                }
+                catch (err) {
+                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
+                    localStorage.setItem('serverIP', newIP);
+                    yield this.connect();
+                    resolve();
+                }
                 this.socket.addEventListener('message', (event) => {
                     let data;
                     try {
@@ -198,7 +206,7 @@ class World {
                     yield this.connect();
                     resolve();
                 }));
-            });
+            }));
         });
     }
     setup(camera, ui) {

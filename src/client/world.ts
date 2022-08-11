@@ -239,9 +239,16 @@ class World {
 
   async connect(secureProtocol = true): Promise<void> {
     const serverIP = localStorage.getItem('serverIP');
-    return new Promise((resolve: () => void, reject: () => void) => {
+    return new Promise(async (resolve: () => void, reject: () => void) => {
       console.log(`Connecting to ${`ws${secureProtocol ? 's' : ''}://${serverIP}`}...`);
-      this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
+      try {
+        this.socket = new WebSocket(`ws${secureProtocol ? 's' : ''}://${serverIP}`);
+      } catch (err) {
+        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
+        localStorage.setItem('serverIP', newIP);
+        await this.connect();
+        resolve();
+      }
       this.socket.addEventListener('message', (event) => {
         let data;
         try {
