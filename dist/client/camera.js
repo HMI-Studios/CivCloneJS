@@ -96,8 +96,8 @@ class Camera {
     }
     deselectUnit(world) {
         this.highlightedTiles = {};
+        world.on.event.deselectUnit(this.selectedUnitPos);
         this.selectedUnitPos = null;
-        world.on.event.deselectUnit();
     }
     renderUnit(world, unit, x, y) {
         const { zoom, x: camX, y: camY, textures, ctx } = this;
@@ -252,9 +252,9 @@ class Camera {
         }
         if (!mapClicked && this.mouseDownTime === 1) {
             this.highlightedTiles = {};
-            this.selectedUnitPos = null;
-            world.on.event.deselectUnit();
+            world.on.event.deselectUnit(this.selectedUnitPos);
             world.on.event.deselectTile();
+            this.selectedUnitPos = null;
         }
     }
 }

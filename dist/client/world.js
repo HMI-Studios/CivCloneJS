@@ -107,7 +107,7 @@ class World {
     }
     nextUnit() {
         this.unitIndex = Number(this.unusedUnits.shift());
-        if (false) {
+        if (false) { // TODO - remove me!
             this.unusedUnits.push(this.unitIndex);
         }
         if (this.unitPositions[this.unitIndex]) {
@@ -119,6 +119,15 @@ class World {
             camera.selectUnit(this, { x, y }, tile.unit);
         }
         return this.unusedUnits.length === 0;
+    }
+    getUnitIndex(pos) {
+        for (let i = 0; i < this.unitPositions.length; i++) {
+            const { x, y } = this.unitPositions[i];
+            if (x === pos.x && y === pos.y) {
+                return i;
+            }
+        }
+        return null;
     }
     sendJSON(data) {
         this.socket.send(JSON.stringify(data));
@@ -282,22 +291,19 @@ class World {
                 this.unusedUnits = unitPositions.map((_, index) => index);
             };
             this.on.update.unitPositionUpdate = (startPos, endPos) => {
-                for (let i = 0; i < this.unitPositions.length; i++) {
-                    const { x, y } = this.unitPositions[i];
-                    if (x === startPos.x && y === startPos.y) {
-                        this.unitPositions[i] = endPos;
-                        break;
+                const index = this.getUnitIndex(startPos);
+                if (index !== null) {
+                    this.unitPositions[index] = endPos;
+                    const unit = this.getTile(endPos.x, endPos.y).unit;
+                    if (unit && unit.movement === 0) {
+                        this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
                     }
                 }
             };
             this.on.update.unitKilled = (unitPos, unit) => {
-                for (let i = 0; i < this.unitPositions.length; i++) {
-                    const { x, y } = this.unitPositions[i];
-                    if (x === unitPos.x && y === unitPos.y) {
-                        this.unitPositions.splice(i, 1);
-                        break;
-                    }
-                }
+                const index = this.getUnitIndex(unitPos);
+                if (index !== null)
+                    this.unitPositions.splice(index, 1);
                 camera.deselectUnit(this);
             };
             this.on.update.leaderPool = (leaders, takenLeaders, players) => {
@@ -340,9 +346,17 @@ class World {
             this.on.event.selectTile = (coords, tile) => {
                 ui.showTileInfoMenu(this, coords, tile);
             };
-            this.on.event.deselectUnit = () => {
+            this.on.event.deselectUnit = (selectedUnitPos) => {
+                var _a;
                 ui.hideUnitActionsMenu();
                 ui.hideUnitInfoMenu();
+                if (selectedUnitPos) {
+                    const [x, y] = selectedUnitPos;
+                    const index = this.getUnitIndex({ x, y });
+                    if (index !== null && ((_a = this.getTile(x, y).unit) === null || _a === void 0 ? void 0 : _a.movement) > 0 && !this.unusedUnits.includes(index)) {
+                        this.unusedUnits.push(index);
+                    }
+                }
             };
             this.on.event.deselectTile = () => {
                 ui.hideTileInfoMenu();
