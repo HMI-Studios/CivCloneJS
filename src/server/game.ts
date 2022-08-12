@@ -85,9 +85,8 @@ export class Game {
             ['setMap', [this.world.map.getCivMap(civID)]],
           ],
         });
+        this.beginTurnForCiv(civID);
       });
-
-      this.beginTurnForCiv(0);
     }
   }
 
@@ -128,7 +127,7 @@ export class Game {
   getPlayer(username: string): Player {
     return this.players[username];
   }
-  
+
   getPlayersData(): {[playerName: string]: PlayerData} {
     const playersData = {};
     for (const playerName in this.players) {

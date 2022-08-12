@@ -63,8 +63,8 @@ class Game {
                         ['setMap', [this.world.map.getCivMap(civID)]],
                     ],
                 });
+                this.beginTurnForCiv(civID);
             });
-            this.beginTurnForCiv(0);
         }
     }
     beginTurnForCiv(civID) {
