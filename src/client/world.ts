@@ -183,7 +183,7 @@ class World {
 
   nextUnit(): boolean {
     this.unitIndex = Number(this.unusedUnits.shift());
-    if (false) {
+    if (false) { // TODO - remove me!
       this.unusedUnits.push(this.unitIndex);
     }
     if (this.unitPositions[this.unitIndex]) {
@@ -195,6 +195,17 @@ class World {
       camera.selectUnit(this, { x, y }, tile.unit);
     }
     return this.unusedUnits.length === 0;
+  }
+
+  getUnitIndex(pos: Coords): number | null {
+    for (let i = 0; i < this.unitPositions.length; i++) {
+      const { x, y } = this.unitPositions[i];
+      if (x === pos.x && y === pos.y) {
+        return i;
+      }
+    }
+
+    return null;
   }
 
   sendJSON(data: EventMsg): void {
@@ -364,23 +375,19 @@ class World {
     };
 
     this.on.update.unitPositionUpdate = (startPos: Coords, endPos: Coords): void => {
-      for (let i = 0; i < this.unitPositions.length; i++) {
-        const { x, y } = this.unitPositions[i];
-        if (x === startPos.x && y === startPos.y) {
-          this.unitPositions[i] = endPos;
-          break;
+      const index = this.getUnitIndex(startPos);
+      if (index !== null) {
+        this.unitPositions[index] = endPos;
+        const unit = this.getTile(endPos.x, endPos.y).unit;
+        if (unit && unit.movement === 0) {
+          this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
         }
       }
     };
 
     this.on.update.unitKilled = (unitPos: Coords, unit: Unit): void => {
-      for (let i = 0; i < this.unitPositions.length; i++) {
-        const { x, y } = this.unitPositions[i];
-        if (x === unitPos.x && y === unitPos.y) {
-          this.unitPositions.splice(i, 1);
-          break;
-        }
-      }
+      const index = this.getUnitIndex(unitPos);
+      if (index !== null) this.unitPositions.splice(index, 1);
       camera.deselectUnit(this);
     };
 
@@ -430,9 +437,16 @@ class World {
       ui.showTileInfoMenu(this, coords, tile);
     }
 
-    this.on.event.deselectUnit = (): void => {
+    this.on.event.deselectUnit = (selectedUnitPos: [number, number] | null): void => {
       ui.hideUnitActionsMenu();
       ui.hideUnitInfoMenu();
+      if (selectedUnitPos) {
+        const [ x, y ] = selectedUnitPos;
+        const index = this.getUnitIndex({ x, y });
+        if (index !== null && this.getTile(x, y).unit?.movement > 0 && !this.unusedUnits.includes(index)) {
+          this.unusedUnits.push(index);
+        }
+      }
     }
 
     this.on.event.deselectTile = (): void => {

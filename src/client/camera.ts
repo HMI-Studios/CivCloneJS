@@ -139,9 +139,8 @@ class Camera {
 
   deselectUnit(world: World): void {
     this.highlightedTiles = {};
+    world.on.event.deselectUnit(this.selectedUnitPos);
     this.selectedUnitPos = null;
-
-    world.on.event.deselectUnit();
   }
 
   renderUnit(world: World, unit: Unit, x: number, y: number): void {
@@ -366,9 +365,9 @@ class Camera {
 
     if (!mapClicked && this.mouseDownTime === 1) {
       this.highlightedTiles = {};
-      this.selectedUnitPos = null;
-      world.on.event.deselectUnit();
+      world.on.event.deselectUnit(this.selectedUnitPos);
       world.on.event.deselectTile();
+      this.selectedUnitPos = null;
     }
   }
 }
