@@ -31,6 +31,7 @@ class Button {
 }
 class TextAlert {
     constructor(options) {
+        var _a;
         const { className, message } = options;
         this.element = document.createElement('div');
         this.element.className = 'textInput';
@@ -41,11 +42,20 @@ class TextAlert {
         this.messageElement.innerText = message;
         this.element.appendChild(this.messageElement);
         this.submitBtn = document.createElement('button');
-        this.submitBtn.innerText = 'Ok';
+        this.submitBtn.innerText = (_a = options.submitText) !== null && _a !== void 0 ? _a : 'Ok';
         this.element.appendChild(this.submitBtn);
     }
     show(root) {
         root.appendChild(this.element);
+    }
+    showAsync(root) {
+        root.appendChild(this.element);
+        return new Promise((resolve, reject) => {
+            this.submitBtn.onclick = () => {
+                resolve();
+                this.hide();
+            };
+        });
     }
     hide() {
         this.element.remove();

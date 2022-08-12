@@ -49,7 +49,7 @@ class TextAlert {
   protected messageElement: HTMLParagraphElement;
   protected submitBtn: HTMLButtonElement;
 
-  constructor(options: { className?: string, message: string }) {
+  constructor(options: { className?: string, message: string, submitText?: string }) {
     const { className, message } = options;
     this.element = document.createElement('div');
     this.element.className = 'textInput';
@@ -62,13 +62,23 @@ class TextAlert {
     this.element.appendChild(this.messageElement);
 
     this.submitBtn = document.createElement('button');
-    this.submitBtn.innerText = 'Ok';
+    this.submitBtn.innerText = options.submitText ?? 'Ok';
     this.element.appendChild(this.submitBtn);
 
   }
 
   show(root: HTMLElement): void {
     root.appendChild(this.element);
+  }
+
+  showAsync(root: HTMLElement): Promise<void> {
+    root.appendChild(this.element);
+    return new Promise((resolve: () => void, reject: (reason?: unknown) => void) => {
+      this.submitBtn.onclick = () => {
+        resolve();
+        this.hide();
+      }
+    });
   }
 
   hide(): void {

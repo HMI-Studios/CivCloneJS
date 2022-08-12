@@ -105,6 +105,10 @@ class UI {
       errorAlert: new TextAlert({
         message: 'Error',
       }),
+      reloadAlert: new TextAlert({
+        message: 'A fatal error has occured. Please reload to correct the problem.',
+        submitText: 'Reload',
+      }),
     };
   }
 
