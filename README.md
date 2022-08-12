@@ -1,6 +1,6 @@
 # CivClone
 
-CivClone is a game inspired by Sid Mier's Civilizations.
+CivClone is a game inspired by Sid Meier's Civilizations.
 
 ## Implementation
 
