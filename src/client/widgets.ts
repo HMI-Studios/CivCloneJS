@@ -62,7 +62,7 @@ class TextAlert {
     this.element.appendChild(this.messageElement);
 
     this.submitBtn = document.createElement('button');
-    this.submitBtn.innerText = options.submitText || 'Ok';
+    this.submitBtn.innerText = options.submitText ?? 'Ok';
     this.element.appendChild(this.submitBtn);
 
   }
