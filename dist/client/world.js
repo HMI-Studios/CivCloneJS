@@ -32,7 +32,8 @@ class World {
         return (y * this.width) + mod(x, this.width);
     }
     getTile(pos) {
-        return this.tiles[this.posIndex(pos)] || null;
+        var _a;
+        return (_a = this.tiles[this.posIndex(pos)]) !== null && _a !== void 0 ? _a : null;
     }
     getNeighbors(pos, filter = true) {
         let tiles;

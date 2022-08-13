@@ -94,7 +94,7 @@ class World {
   }
 
   getTile(pos: Coords): Tile {
-    return this.tiles[this.posIndex(pos)] || null;
+    return this.tiles[this.posIndex(pos)] ?? null;
   }
 
   getNeighbors(pos: Coords, filter = true): Coords[] {
