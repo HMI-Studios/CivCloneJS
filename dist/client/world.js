@@ -28,60 +28,62 @@ class World {
             civID: null,
         };
     }
-    pos(x, y) {
+    posIndex({ x, y }) {
         return (y * this.width) + mod(x, this.width);
     }
-    getTile(x, y) {
-        return this.tiles[this.pos(x, y)] || null;
+    getTile(pos) {
+        var _a;
+        return (_a = this.tiles[this.posIndex(pos)]) !== null && _a !== void 0 ? _a : null;
     }
-    getNeighbors(x, y, filter = true) {
+    getNeighbors(pos, filter = true) {
         let tiles;
+        const { x, y } = pos;
         if (mod(x, 2) === 1) {
             tiles = [
-                [x, y + 1],
-                [x + 1, y + 1],
-                [x + 1, y],
-                [x, y - 1],
-                [x - 1, y],
-                [x - 1, y + 1],
+                { x, y: y + 1 },
+                { x: x + 1, y: y + 1 },
+                { x: x + 1, y },
+                { x, y: y - 1 },
+                { x: x - 1, y },
+                { x: x - 1, y: y + 1 },
             ];
         }
         else {
             tiles = [
-                [x, y + 1],
-                [x + 1, y],
-                [x + 1, y - 1],
-                [x, y - 1],
-                [x - 1, y - 1],
-                [x - 1, y],
+                { x, y: y + 1 },
+                { x: x + 1, y },
+                { x: x + 1, y: y - 1 },
+                { x, y: y - 1 },
+                { x: x - 1, y: y - 1 },
+                { x: x - 1, y },
             ];
         }
-        return filter ? tiles.filter(([x, y]) => !!this.getTile(x, y)) : tiles;
+        return filter ? tiles.filter((pos) => !!this.getTile(pos)) : tiles;
     }
     isAdjacent(posA, posB) {
         // TODO - possibly optimize this? memoize?
-        return this.getNeighbors(posB.x, posB.y).map(coord => this.pos(...coord)).includes(this.pos(posA.x, posA.y));
+        return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
     }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-    getTilesInRange(srcX, srcY, range, mode = 0) {
+    getTilesInRange(srcPos, range, mode = 0) {
         // BFS to find all tiles within `range` steps
         const queue = [];
-        queue.push([srcX, srcY]);
+        queue.push(srcPos);
         const dst = {};
-        dst[this.pos(srcX, srcY)] = 0;
+        dst[this.posIndex(srcPos)] = 0;
         const paths = {};
         while (queue.length) {
-            const [atX, atY] = queue.shift();
-            for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
-                const tile = this.getTile(adjX, adjY);
+            const atPos = queue.shift();
+            for (const adjPos of this.getNeighbors(atPos)) {
+                const tile = this.getTile(adjPos);
                 if (tile.unit && tile.unit.civID === this.player.civID)
                     continue;
                 const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
-                if (!(this.pos(adjX, adjY) in dst) || dst[this.pos(adjX, adjY)] > dst[this.pos(atX, atY)] + movementCost) {
-                    dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
-                    if (dst[this.pos(adjX, adjY)] <= range) {
-                        paths[this.pos(adjX, adjY)] = [atX, atY];
-                        queue.push([adjX, adjY]);
+                if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {
+                    dst[this.posIndex(adjPos)] = dst[this.posIndex(atPos)] + movementCost;
+                    if (dst[this.posIndex(adjPos)] <= range) {
+                        paths[this.posIndex(adjPos)] = atPos;
+                        queue.push(adjPos);
                     }
                 }
             }
@@ -92,17 +94,14 @@ class World {
         console.log(srcPos, dstPos, pathMap);
         let curPos = dstPos;
         const path = [];
-        // const [ x, y ] = curPos;
-        // path.push({ x, y });
-        while (this.pos(...srcPos) !== this.pos(...curPos)) {
-            const [x, y] = curPos;
+        while (this.posIndex(srcPos) !== this.posIndex(curPos)) {
+            const { x, y } = curPos;
             path.push({ x, y });
-            curPos = pathMap[this.pos(...curPos)];
+            curPos = pathMap[this.posIndex(curPos)];
         }
         path.reverse();
-        const [x, y] = srcPos;
         this.sendActions([
-            ['moveUnit', [{ x, y }, path, attack]]
+            ['moveUnit', [srcPos, path, attack]]
         ]);
     }
     nextUnit() {
@@ -111,12 +110,12 @@ class World {
             this.unusedUnits.push(this.unitIndex);
         }
         if (this.unitPositions[this.unitIndex]) {
-            const { x, y } = this.unitPositions[this.unitIndex];
-            camera.setPos(...camera.toCameraPos(this, x, y));
-            const tile = this.getTile(x, y);
-            this.on.event.selectTile({ x, y }, tile);
+            const unitPos = this.unitPositions[this.unitIndex];
+            camera.setPos(camera.toCameraPos(this, unitPos));
+            const tile = this.getTile(unitPos);
+            this.on.event.selectTile(unitPos, tile);
             camera.deselectUnit(this);
-            camera.selectUnit(this, { x, y }, tile.unit);
+            camera.selectUnit(this, unitPos, tile.unit);
         }
         return this.unusedUnits.length === 0;
     }
@@ -277,14 +276,14 @@ class World {
             };
             this.on.update.beginTurn = () => {
                 ui.setTurnState(this, true);
-                const { x, y } = this.unitPositions[this.unitIndex];
-                camera.setPos(...camera.toCameraPos(this, x, y));
+                const unitPos = this.unitPositions[this.unitIndex];
+                camera.setPos(camera.toCameraPos(this, unitPos));
             };
             this.on.update.setMap = (map) => {
                 this.tiles = map;
             };
-            this.on.update.tileUpdate = ({ x, y }, tile) => {
-                this.tiles[this.pos(x, y)] = tile;
+            this.on.update.tileUpdate = (pos, tile) => {
+                this.tiles[this.posIndex(pos)] = tile;
             };
             this.on.update.unitPositions = (unitPositions) => {
                 this.unitPositions = unitPositions;
@@ -294,7 +293,7 @@ class World {
                 const index = this.getUnitIndex(startPos);
                 if (index !== null) {
                     this.unitPositions[index] = endPos;
-                    const unit = this.getTile(endPos.x, endPos.y).unit;
+                    const unit = this.getTile(endPos).unit;
                     if (unit && unit.movement === 0) {
                         this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
                     }
@@ -351,9 +350,8 @@ class World {
                 ui.hideUnitActionsMenu();
                 ui.hideUnitInfoMenu();
                 if (selectedUnitPos) {
-                    const [x, y] = selectedUnitPos;
-                    const index = this.getUnitIndex({ x, y });
-                    if (index !== null && ((_a = this.getTile(x, y).unit) === null || _a === void 0 ? void 0 : _a.movement) > 0 && !this.unusedUnits.includes(index)) {
+                    const index = this.getUnitIndex(selectedUnitPos);
+                    if (index !== null && ((_a = this.getTile(selectedUnitPos).unit) === null || _a === void 0 ? void 0 : _a.movement) > 0 && !this.unusedUnits.includes(index)) {
                         this.unusedUnits.push(index);
                     }
                 }

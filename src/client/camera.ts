@@ -24,8 +24,8 @@ class Camera {
   };
   interval?: NodeJS.Timer;
   mouseDownTime: number;
-  selectedUnitPos: [number, number] | null;
-  highlightedTiles: { [key: string]: [number, number] };
+  selectedUnitPos: Coords | null;
+  highlightedTiles: { [key: string]: Coords };
 
   constructor() {
     this.x = 0;
@@ -119,21 +119,21 @@ class Camera {
     );
   }
 
-  setPos(x: number, y: number) {
-    this.x = x;
-    this.y = y;
+  setPos(pos: Coords): void {
+    this.x = pos.x;
+    this.y = pos.y;
   }
 
-  toCameraPos(world: World, tileX: number, tileY: number): [number, number] {
+  toCameraPos(world: World, tilePos: Coords): Coords {
     const { width, height, civs } = world;
-    const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tileX + 6.5;
-    const camY = -0.5 * height * TILE_HEIGHT + (mod(tileX, 2) * Y_TILE_SPACING) + TILE_HEIGHT * tileY - 1.9;
-    return [camX, camY];
+    const camX = -0.5 * X_TILE_SPACING * width + X_TILE_SPACING * tilePos.x + 6.5;
+    const camY = -0.5 * height * TILE_HEIGHT + (mod(tilePos.x, 2) * Y_TILE_SPACING) + TILE_HEIGHT * tilePos.y - 1.9;
+    return { x: camX, y: camY };
   }
 
   selectUnit(world: World, { x, y }: Coords, unit: Unit): void {
-    this.highlightedTiles = world.getTilesInRange(x, y, unit.movement);
-    this.selectedUnitPos = [x, y];
+    this.highlightedTiles = world.getTilesInRange({x, y}, unit.movement);
+    this.selectedUnitPos = {x, y};
     world.on.event.selectUnit({x, y}, unit);
   }
 
@@ -143,6 +143,7 @@ class Camera {
     this.selectedUnitPos = null;
   }
 
+  // The `render` and `renderUnit` methods are exempt from using Coord type, as they must store the `x` and `y` variables separately.
   renderUnit(world: World, unit: Unit, x: number, y: number): void {
     const { zoom, x: camX, y: camY, textures, ctx } = this;
     const { width, height, civs } = world;
@@ -228,7 +229,7 @@ class Camera {
       for (let x = shiftedXStart; x < xEnd; x += 2) {
         const y = Math.floor(yCount);
 
-        const tile = world.getTile(x, y);
+        const tile = world.getTile({x, y});
         if (tile) {
 
           if (!tile.visible) ctx.globalAlpha = 0.5;
@@ -258,14 +259,14 @@ class Camera {
               [leftX + leftCapXOffset + margin, topY + margin],
             ];
 
-            const neighbors = world.getNeighbors(x, y, false);
+            const neighbors = world.getNeighbors({x, y}, false);
             ctx.beginPath();
             ctx.lineWidth = margin * 2;
             ctx.lineCap='square';
             ctx.strokeStyle = world.civs[tile.owner.civID].color;
             ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
             for (let i = 0; i < neighbors.length; i++) {
-              const neighbor = world.getTile(...neighbors[i]);
+              const neighbor = world.getTile(neighbors[i]);
               if (!neighbor) ctx.moveTo(...positions[i]);
               else if (neighbor.owner?.civID === tile.owner.civID) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
@@ -277,8 +278,8 @@ class Camera {
 
           ctx.globalAlpha = 1;
 
-          if (world.pos(x, y) in this.highlightedTiles || (
-              this.selectedUnitPos && (world.pos(x, y) === world.pos(...this.selectedUnitPos))
+          if (world.posIndex({x, y}) in this.highlightedTiles || (
+              this.selectedUnitPos && (world.posIndex({x, y}) === world.posIndex(this.selectedUnitPos))
             )) {
             const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
             const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -296,15 +297,15 @@ class Camera {
               [leftX + leftCapXOffset + margin, topY + margin],
             ];
 
-            const neighbors = world.getNeighbors(x, y, false);
+            const neighbors = world.getNeighbors({x, y}, false);
             ctx.beginPath();
             ctx.lineWidth = margin * 2;
             ctx.lineCap='square';
             ctx.strokeStyle = "#66faff";
             ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
             for (let i = 0; i < neighbors.length; i++) {
-              if (world.pos(...neighbors[i]) in this.highlightedTiles || (
-                this.selectedUnitPos && (world.pos(...neighbors[i]) === world.pos(...this.selectedUnitPos))
+              if (world.posIndex(neighbors[i]) in this.highlightedTiles || (
+                this.selectedUnitPos && (world.posIndex(neighbors[i]) === world.posIndex(this.selectedUnitPos))
               )) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
             }
@@ -320,8 +321,8 @@ class Camera {
 
               console.log(x, y);
 
-              if (this.selectedUnitPos && world.pos(x, y) in this.highlightedTiles) {
-                world.moveUnit(this.selectedUnitPos, [x, y], this.highlightedTiles, !!tile.unit);
+              if (this.selectedUnitPos && world.posIndex({x, y}) in this.highlightedTiles) {
+                world.moveUnit(this.selectedUnitPos, {x, y}, this.highlightedTiles, !!tile.unit);
               }
 
               this.deselectUnit(world);
