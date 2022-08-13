@@ -1,5 +1,5 @@
 import * as WebSocket from 'ws';
-import { PlayerData } from './utils';
+import { PlayerData } from '../utils';
 
 export class Player {
   civID: number;

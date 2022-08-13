@@ -1,4 +1,4 @@
-import { Coords } from './world';
+import { Coords } from './game/world';
 
 export type Event = [string, unknown[]];
 

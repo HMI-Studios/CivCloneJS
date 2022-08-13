@@ -1,9 +1,9 @@
-import { Coords } from './world';
+import { Coords } from '../world';
 import { Unit } from './unit';
 import { City } from './city';
 import { Tile, TileData, Yield } from './tile';
 import { Improvement } from './improvement';
-import { getAdjacentCoords, mod, Event } from './utils';
+import { getAdjacentCoords, mod, Event } from '../../utils';
 
 export interface MapOptions {
   width: number;
