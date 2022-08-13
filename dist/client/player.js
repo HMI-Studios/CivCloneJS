@@ -15,11 +15,11 @@ const unitActionsFnTable = {
 };
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
-        const tile = world.getTile(pos.x, pos.y);
+        const tile = world.getTile(pos);
         return tile.type === 'plains';
     },
     'buildFarm': (world, pos) => {
-        const tile = world.getTile(pos.x, pos.y);
+        const tile = world.getTile(pos);
         return tile.type === 'plains';
     },
 };

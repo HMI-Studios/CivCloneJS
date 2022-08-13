@@ -24,11 +24,11 @@ const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[
 
 const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
   'settleCity': (world: World, pos: Coords): boolean => {
-    const tile = world.getTile(pos.x, pos.y);
+    const tile = world.getTile(pos);
     return tile.type === 'plains';
   },
   'buildFarm': (world: World, pos: Coords): boolean => {
-    const tile = world.getTile(pos.x, pos.y);
+    const tile = world.getTile(pos);
     return tile.type === 'plains';
   },
 };
