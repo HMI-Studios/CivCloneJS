@@ -1,7 +1,7 @@
 import { World } from './world';
 import { Player } from './player';
 import { Map } from './map';
-import { EventMsg, PlayerData } from './utils';
+import { EventMsg, PlayerData } from '../utils';
 
 interface MetaData {
   gameName: string,

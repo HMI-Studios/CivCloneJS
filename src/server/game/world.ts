@@ -1,7 +1,7 @@
 import { Map } from './map';
-import { Unit } from './unit';
+import { Unit } from './map/tile/unit';
 import { Civilization, CivilizationData } from './civilization';
-import { Event } from './utils';
+import { Event } from '../utils';
 import { Leader, LeaderData, leaderTemplates } from './leader';
 
 export interface Coords {

@@ -1,8 +1,8 @@
 import * as WebSocket from 'ws';
-import { Player } from './player';
-import { Map, MapOptions } from './map';
+import { Player } from './game/player';
+import { Map, MapOptions } from './game/map';
 import { Game } from './game';
-import { PerlinWorldGenerator, WorldGenerator } from './worldGenerator';
+import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
 
 interface ConnectionData {
   ws: WebSocket,

@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeAction = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
-const player_1 = require("./player");
+const player_1 = require("./game/player");
 const game_1 = require("./game");
-const worldGenerator_1 = require("./worldGenerator");
+const generator_1 = require("./game/map/generator");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -13,14 +13,14 @@ exports.games = {
     0: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new worldGenerator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
+    new generator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
         gameName: 'singleplayer test',
         playerCount: 1,
     }),
     1: new game_1.Game(
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new worldGenerator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
+    new generator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
         gameName: 'multiplayer test',
         playerCount: 2,
     }),
@@ -28,7 +28,7 @@ exports.games = {
 const createGame = (username, playerCount, mapOptions, options) => {
     var _a;
     const newID = Object.keys(exports.games)[Object.keys(exports.games).length - 1] + 1;
-    exports.games[newID] = new game_1.Game(new worldGenerator_1.PerlinWorldGenerator((_a = options.seed) !== null && _a !== void 0 ? _a : Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
+    exports.games[newID] = new game_1.Game(new generator_1.PerlinWorldGenerator((_a = options.seed) !== null && _a !== void 0 ? _a : Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
         playerCount,
         ownerName: username,
         gameName: options.gameName,

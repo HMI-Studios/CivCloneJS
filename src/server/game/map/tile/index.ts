@@ -1,6 +1,7 @@
 import { Unit, UnitData } from './unit';
 import { Improvement, ImprovementData } from './improvement';
 import { City, CityData } from './city';
+import { Yield } from './yield';
 
 const tileMovementCostTable: { [type: string]: [number, number] } = {
   // tile name: [land mp, water mp] (0 = impassable)
@@ -30,23 +31,6 @@ export interface TileData {
   improvement?: ImprovementData;
   owner?: CityData;
   visible?: boolean;
-}
-
-export class Yield {
-  food: number;
-  production: number;
-
-  constructor(params: { food?: number, production?: number }) {
-    this.food = params.food ?? 0;
-    this.production = params.production ?? 0;
-  }
-
-  add(other: Yield): Yield {
-    return new Yield({
-      food: this.food + other.food,
-      production: this.production + other.production,
-    });
-  }
 }
 
 export class Tile {

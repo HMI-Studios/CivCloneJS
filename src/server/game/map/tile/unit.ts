@@ -1,5 +1,5 @@
-import { getAdjacentCoords } from './utils';
-import { Coords } from './world';
+import { getAdjacentCoords } from '../../../utils';
+import { Coords } from '../../world';
 
 const unitMovementTable: { [unit: string]: number } = {
   'settler': 3,
