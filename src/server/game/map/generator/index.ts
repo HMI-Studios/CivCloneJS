@@ -1,4 +1,4 @@
-import { Random } from '../../../random';
+import { Random } from '../../../utils/random';
 import SimplexNoise from 'simplex-noise';
 import { Biome, River, TilePool, TileType } from './biome';
 import { Map, MapOptions } from '..';

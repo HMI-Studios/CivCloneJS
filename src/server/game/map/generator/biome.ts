@@ -1,4 +1,4 @@
-import { Random } from '../../../random';
+import { Random } from '../../../utils/random';
 import { getAdjacentCoords } from '../../../utils';
 
 export class TileType {
