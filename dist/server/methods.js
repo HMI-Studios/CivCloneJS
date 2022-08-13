@@ -26,8 +26,9 @@ exports.games = {
     }),
 };
 const createGame = (username, playerCount, mapOptions, options) => {
+    var _a;
     const newID = Object.keys(exports.games)[Object.keys(exports.games).length - 1] + 1;
-    exports.games[newID] = new game_1.Game(new worldGenerator_1.PerlinWorldGenerator(options.seed || Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
+    exports.games[newID] = new game_1.Game(new worldGenerator_1.PerlinWorldGenerator((_a = options.seed) !== null && _a !== void 0 ? _a : Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
         playerCount,
         ownerName: username,
         gameName: options.gameName,
@@ -93,7 +94,7 @@ const methods = {
     createGame: (ws, playerCount, mapOptions, options) => {
         const username = getUsername(ws);
         if (username && playerCount && mapOptions) {
-            createGame(username, playerCount, mapOptions, options || {});
+            createGame(username, playerCount, mapOptions, options !== null && options !== void 0 ? options : {});
         }
         methods.getGames(ws);
     },

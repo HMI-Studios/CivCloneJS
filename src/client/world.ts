@@ -34,7 +34,7 @@ interface Tile {
   type: string;
   elevation: number;
   improvement: Improvement;
-  movementCost: [number, number];
+  movementCost: MovementCost;
   unit: Unit;
   owner?: {
     civID: number,
@@ -49,12 +49,12 @@ interface GameMetadata {
   playersConnected: number;
 }
 
-interface Coords {
+type Coords = {
   x: number;
   y: number;
-}
+};
 
-type CoordTuple = [number, number];
+type MovementCost = [number, number];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
@@ -89,72 +89,73 @@ class World {
     };
   }
 
-  pos(x: number, y: number): number {
+  posIndex({ x, y }: Coords): number {
     return (y * this.width) + mod(x, this.width)
   }
 
-  getTile(x: number, y: number): Tile {
-    return this.tiles[this.pos(x, y)] || null;
+  getTile(pos: Coords): Tile {
+    return this.tiles[this.posIndex(pos)] ?? null;
   }
 
-  getNeighbors(x: number, y: number, filter = true): [number, number][] {
-    let tiles: [number, number][];
+  getNeighbors(pos: Coords, filter = true): Coords[] {
+    let tiles: Coords[];
+    const {x, y} = pos;
 
     if (mod(x, 2) === 1) {
       tiles = [
-        [x, y+1],
-        [x+1, y+1],
-        [x+1, y],
-        [x, y-1],
-        [x-1, y],
-        [x-1, y+1],
+        {x, y: y+1},
+        {x: x+1, y: y+1},
+        {x: x+1, y},
+        {x, y: y-1},
+        {x: x-1, y},
+        {x: x-1, y: y+1},
       ];
     } else {
       tiles = [
-        [x, y+1],
-        [x+1, y],
-        [x+1, y-1],
-        [x, y-1],
-        [x-1, y-1],
-        [x-1, y],
+        {x, y: y+1},
+        {x: x+1, y},
+        {x: x+1, y: y-1},
+        {x, y: y-1},
+        {x: x-1, y: y-1},
+        {x: x-1, y},
       ];
     }
 
-    return filter ? tiles.filter(([x, y]) => !!this.getTile(x, y)) : tiles;
+    return filter ? tiles.filter((pos) => !!this.getTile(pos)) : tiles;
   }
 
   isAdjacent(posA: Coords, posB: Coords): boolean {
     // TODO - possibly optimize this? memoize?
-    return this.getNeighbors(posB.x, posB.y).map(coord => this.pos(...coord)).includes(this.pos(posA.x, posA.y));
+    return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
   }
 
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-  getTilesInRange(srcX: number, srcY: number, range: number, mode = 0): { [key: string]: [number, number] } {
+  getTilesInRange(srcPos: Coords, range: number, mode = 0): { [key: string]: Coords } {
     // BFS to find all tiles within `range` steps
 
-    const queue: [number, number][] = [];
-    queue.push([srcX, srcY]);
+    const queue: Coords[] = [];
+    queue.push(srcPos);
 
     const dst = {};
-    dst[this.pos(srcX, srcY)] = 0;
+    dst[this.posIndex(srcPos)] = 0;
 
     const paths = {};
 
     while (queue.length) {
-      const [atX, atY] = queue.shift() as [number, number];
+      const atPos = queue.shift() as Coords;
 
-      for (const [adjX, adjY] of this.getNeighbors(atX, atY)) {
+      for (const adjPos of this.getNeighbors(atPos)) {
         
-        const tile = this.getTile(adjX, adjY);
+        const tile = this.getTile(adjPos);
         if (tile.unit && tile.unit.civID === this.player.civID) continue;
 
         const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
-        if (!(this.pos(adjX, adjY) in dst) || dst[this.pos(adjX, adjY)] > dst[this.pos(atX, atY)] + movementCost) {
-          dst[this.pos(adjX, adjY)] = dst[this.pos(atX, atY)] + movementCost;
+        if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {
+          dst[this.posIndex(adjPos)] = dst[this.posIndex(atPos)] + movementCost;
 
-          if (dst[this.pos(adjX, adjY)] <= range) {
-            paths[this.pos(adjX, adjY)] = [atX, atY];
-            queue.push([adjX, adjY]);
+          if (dst[this.posIndex(adjPos)] <= range) {
+            paths[this.posIndex(adjPos)] = atPos;
+            queue.push(adjPos);
           }
         }
       }
@@ -163,21 +164,18 @@ class World {
     return paths;
   }
 
-  moveUnit(srcPos: CoordTuple, dstPos: CoordTuple, pathMap: { [key: string]: CoordTuple }, attack: boolean): void { // TODO: phase out CoordTuple type
+  moveUnit(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attack: boolean): void {
     console.log(srcPos, dstPos, pathMap);
-    let curPos: CoordTuple = dstPos;
+    let curPos: Coords = dstPos;
     const path: Coords[] = [];
-    // const [ x, y ] = curPos;
-    // path.push({ x, y });
-    while (this.pos(...srcPos) !== this.pos(...curPos)) {
-      const [ x, y ] = curPos;
+    while (this.posIndex(srcPos) !== this.posIndex(curPos)) {
+      const { x, y } = curPos;
       path.push({ x, y });
-      curPos = pathMap[this.pos(...curPos)];
+      curPos = pathMap[this.posIndex(curPos)];
     }
     path.reverse();
-    const [ x, y ] = srcPos;
     this.sendActions([
-      ['moveUnit', [ { x, y }, path, attack ]]
+      ['moveUnit', [ srcPos, path, attack ]]
     ]);
   }
 
@@ -187,12 +185,12 @@ class World {
       this.unusedUnits.push(this.unitIndex);
     }
     if (this.unitPositions[this.unitIndex]) {
-      const { x, y } = this.unitPositions[this.unitIndex];
-      camera.setPos(...camera.toCameraPos(this, x, y));
-      const tile = this.getTile(x, y);
-      this.on.event.selectTile({ x, y }, tile);
+      const unitPos = this.unitPositions[this.unitIndex];
+      camera.setPos(camera.toCameraPos(this, unitPos));
+      const tile = this.getTile(unitPos);
+      this.on.event.selectTile(unitPos, tile);
       camera.deselectUnit(this);
-      camera.selectUnit(this, { x, y }, tile.unit);
+      camera.selectUnit(this, unitPos, tile.unit);
     }
     return this.unusedUnits.length === 0;
   }
@@ -357,16 +355,16 @@ class World {
 
     this.on.update.beginTurn = (): void => {
       ui.setTurnState(this, true);
-      const { x, y } = this.unitPositions[this.unitIndex];
-      camera.setPos(...camera.toCameraPos(this, x, y));
+      const unitPos = this.unitPositions[this.unitIndex];
+      camera.setPos(camera.toCameraPos(this, unitPos));
     };
 
     this.on.update.setMap = (map: Tile[]): void => {
       this.tiles = map;
     };
 
-    this.on.update.tileUpdate = ({ x, y }: Coords, tile: Tile): void => {
-      this.tiles[this.pos(x, y)] = tile;
+    this.on.update.tileUpdate = (pos: Coords, tile: Tile): void => {
+      this.tiles[this.posIndex(pos)] = tile;
     };
 
     this.on.update.unitPositions = (unitPositions: Coords[]): void => {
@@ -378,7 +376,7 @@ class World {
       const index = this.getUnitIndex(startPos);
       if (index !== null) {
         this.unitPositions[index] = endPos;
-        const unit = this.getTile(endPos.x, endPos.y).unit;
+        const unit = this.getTile(endPos).unit;
         if (unit && unit.movement === 0) {
           this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
         }
@@ -437,13 +435,12 @@ class World {
       ui.showTileInfoMenu(this, coords, tile);
     }
 
-    this.on.event.deselectUnit = (selectedUnitPos: [number, number] | null): void => {
+    this.on.event.deselectUnit = (selectedUnitPos: Coords | null): void => {
       ui.hideUnitActionsMenu();
       ui.hideUnitInfoMenu();
       if (selectedUnitPos) {
-        const [ x, y ] = selectedUnitPos;
-        const index = this.getUnitIndex({ x, y });
-        if (index !== null && this.getTile(x, y).unit?.movement > 0 && !this.unusedUnits.includes(index)) {
+        const index = this.getUnitIndex(selectedUnitPos);
+        if (index !== null && this.getTile(selectedUnitPos).unit?.movement > 0 && !this.unusedUnits.includes(index)) {
           this.unusedUnits.push(index);
         }
       }

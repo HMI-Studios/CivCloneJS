@@ -42,7 +42,7 @@ export const games: { [gameID: number] : Game } = {
 const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
   const newID = Object.keys(games)[Object.keys(games).length - 1] + 1;
   games[newID] = new Game(
-    new PerlinWorldGenerator(options.seed || Math.floor(Math.random() * 9007199254740991), mapOptions).generate(),
+    new PerlinWorldGenerator(options.seed ?? Math.floor(Math.random() * 9007199254740991), mapOptions).generate(),
     {
       playerCount,
       ownerName: username,
@@ -114,7 +114,7 @@ const methods: {
   createGame: (ws: WebSocket, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
     const username = getUsername(ws);
     if (username && playerCount && mapOptions) {
-      createGame(username, playerCount, mapOptions, options || {});
+      createGame(username, playerCount, mapOptions, options ?? {});
     }
     
     methods.getGames(ws);
