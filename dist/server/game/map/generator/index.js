@@ -9,7 +9,8 @@ const simplex_noise_1 = __importDefault(require("simplex-noise"));
 const biome_1 = require("./biome");
 const __1 = require("..");
 const tile_1 = require("../tile");
-const improvement_1 = require("../improvement");
+const improvement_1 = require("../tile/improvement");
+const yield_1 = require("../tile/yield");
 const TAU = 2 * Math.PI;
 // Tile Types
 const OCEAN = new biome_1.TileType('ocean', 0, null, true, true);
@@ -189,7 +190,7 @@ class PerlinWorldGenerator {
         let i = 0;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                const tile = new tile_1.Tile(tileTypeMap[i].type, heightMap[i], new tile_1.Yield({ food: 1, production: 1 }));
+                const tile = new tile_1.Tile(tileTypeMap[i].type, heightMap[i], new yield_1.Yield({ food: 1, production: 1 }));
                 const vegetation = tileTypeMap[i].getVegetation(this.random);
                 if (vegetation)
                     tile.improvement = new improvement_1.Improvement(vegetation);

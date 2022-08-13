@@ -1,5 +1,5 @@
 import { Leader, LeaderData } from './leader';
-import { Unit } from './map/unit';
+import { Unit } from './map/tile/unit';
 
 export interface CivilizationData {
   color?: string;

@@ -2,8 +2,9 @@ import { Random } from '../../../utils/random';
 import SimplexNoise from 'simplex-noise';
 import { Biome, River, TilePool, TileType } from './biome';
 import { Map, MapOptions } from '..';
-import { Tile, Yield } from '../tile';
-import { Improvement } from '../improvement';
+import { Tile } from '../tile';
+import { Improvement } from '../tile/improvement';
+import { Yield } from '../tile/yield';
 
 const TAU = 2 * Math.PI;
 

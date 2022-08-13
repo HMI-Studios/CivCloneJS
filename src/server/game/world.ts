@@ -1,5 +1,5 @@
 import { Map } from './map';
-import { Unit } from './map/unit';
+import { Unit } from './map/tile/unit';
 import { Civilization, CivilizationData } from './civilization';
 import { Event } from '../utils';
 import { Leader, LeaderData, leaderTemplates } from './leader';

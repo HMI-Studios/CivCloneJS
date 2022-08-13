@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.World = void 0;
-const unit_1 = require("./map/unit");
+const unit_1 = require("./map/tile/unit");
 const civilization_1 = require("./civilization");
 const leader_1 = require("./leader");
 class World {

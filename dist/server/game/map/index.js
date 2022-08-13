@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
-const city_1 = require("./city");
-const improvement_1 = require("./improvement");
+const city_1 = require("./tile/city");
+const improvement_1 = require("./tile/improvement");
 const utils_1 = require("../../utils");
 class Map {
     constructor(height, width) {

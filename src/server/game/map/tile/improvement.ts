@@ -1,4 +1,4 @@
-import { Yield } from './tile';
+import { Yield } from './yield';
 
 const improvementYieldTable: { [improvement: string]: Yield } = {
   'settlement': new Yield({food: 2, production: 2}),
