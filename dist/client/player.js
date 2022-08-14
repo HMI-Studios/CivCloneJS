@@ -74,6 +74,12 @@ class UI {
                     ['Seed', 'Leave blank for random seed', 'number'],
                 ]
             }),
+            reconnectMenu: new TextInput({
+                query: 'Connection to the server was terminated.',
+                submitText: 'Reconnect',
+                abortText: 'Switch Server',
+                fields: []
+            }),
         };
         this.textAlerts = {
             errorAlert: new TextAlert({

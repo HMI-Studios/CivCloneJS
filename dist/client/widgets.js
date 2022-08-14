@@ -76,10 +76,10 @@ class TextAlert {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class TextInput extends TextAlert {
     constructor(options) {
-        const { className, query, fields } = options;
+        const { className, query, submitText, abortText, fields } = options;
         super({ className, message: query });
         // remove submitBtn so it can be readded in the correct position + change text to "Submit"
-        this.submitBtn.innerText = 'Submit';
+        this.submitBtn.innerText = submitText !== null && submitText !== void 0 ? submitText : 'Submit';
         this.submitBtn.remove();
         this.inputFields = [];
         for (const [fieldTitle, placeholder, type] of fields) {
@@ -98,7 +98,7 @@ class TextInput extends TextAlert {
             this.element.appendChild(fieldElement);
         }
         this.abortBtn = document.createElement('button');
-        this.abortBtn.innerText = 'Cancel';
+        this.abortBtn.innerText = abortText !== null && abortText !== void 0 ? abortText : 'Cancel';
         this.element.appendChild(this.abortBtn);
         // re-add submit button
         this.element.appendChild(this.submitBtn);
@@ -116,8 +116,10 @@ class TextInput extends TextAlert {
                 this.hide();
             };
             this.abortBtn.onclick = () => {
-                if (optional)
+                if (optional) {
                     reject();
+                    this.hide();
+                }
                 else {
                     this.prompt(root, optional)
                         .then((result) => {

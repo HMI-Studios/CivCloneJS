@@ -105,12 +105,18 @@ class TextInput extends TextAlert {
   private abortBtn: HTMLButtonElement;
   private inputFields: HTMLInputElement[];
 
-  constructor(options: { className?: string, query: string, fields: [string, string?, string?][] }) {
-    const { className, query, fields } = options;
+  constructor(options: {
+      className?: string,
+      query: string,
+      submitText?: string,
+      abortText?: string,
+      fields: [string, string?, string?][]
+    }) {
+    const { className, query, submitText, abortText, fields } = options;
     super({ className, message: query });
 
     // remove submitBtn so it can be readded in the correct position + change text to "Submit"
-    this.submitBtn.innerText = 'Submit';
+    this.submitBtn.innerText = submitText ?? 'Submit';
     this.submitBtn.remove();
 
     this.inputFields = [];
@@ -132,7 +138,7 @@ class TextInput extends TextAlert {
     }
 
     this.abortBtn = document.createElement('button');
-    this.abortBtn.innerText = 'Cancel';
+    this.abortBtn.innerText = abortText ?? 'Cancel';
     this.element.appendChild(this.abortBtn);
 
     // re-add submit button
@@ -152,8 +158,10 @@ class TextInput extends TextAlert {
         this.hide();
       }
       this.abortBtn.onclick = () => {
-        if (optional) reject();
-        else {
+        if (optional) {
+          reject();
+          this.hide();
+        } else {
           this.prompt(root, optional)
             .then((result) => {
               resolve(result);

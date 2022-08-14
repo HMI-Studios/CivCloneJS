@@ -173,7 +173,7 @@ class World {
         return __awaiter(this, void 0, void 0, function* () {
             const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
             localStorage.setItem('serverIP', newIP);
-            return this.connect();
+            return this.connect(secureProtocol);
         });
     }
     connect(secureProtocol = true) {
@@ -210,7 +210,12 @@ class World {
                     if (this.socketDidOpen) {
                         console.error('Connection Terminated');
                         controller.abort();
-                        reject();
+                        try {
+                            this.on.error.disconnect();
+                        }
+                        catch (err) {
+                            reject();
+                        }
                     }
                     else if (secureProtocol) {
                         console.warn('Retrying with unsecure protocol...');
@@ -338,6 +343,18 @@ class World {
                     ['getGames', []],
                 ]);
             });
+            this.on.error.disconnect = () => __awaiter(this, void 0, void 0, function* () {
+                ui.hideMainMenu();
+                try {
+                    yield ui.textInputs.reconnectMenu.prompt(ui.root, true);
+                    yield this.connect();
+                    ui.showMainMenu(mainMenuFns);
+                }
+                catch (err) {
+                    yield this.askConnect();
+                    ui.showMainMenu(mainMenuFns);
+                }
+            });
             this.on.event.selectUnit = (coords, unit) => {
                 ui.showUnitActionsMenu(this, coords, unit);
                 ui.showUnitInfoMenu(this, coords, unit);
@@ -395,9 +412,7 @@ class World {
                 }),
                 changeServer: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
-                    const [newIP] = yield ui.textInputs.ipSelect.prompt(ui.root, false);
-                    localStorage.setItem('serverIP', newIP);
-                    yield this.connect();
+                    yield this.askConnect();
                     ui.showMainMenu(mainMenuFns);
                 }),
             };
