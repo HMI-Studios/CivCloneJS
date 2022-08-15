@@ -145,7 +145,7 @@ class World {
       const atPos = queue.shift() as Coords;
 
       for (const adjPos of this.getNeighbors(atPos)) {
-        
+
         const tile = this.getTile(adjPos);
         if (tile.unit && tile.unit.civID === this.player.civID) continue;
 
@@ -251,7 +251,7 @@ class World {
   async askConnect(secureProtocol = true) {
     const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
     localStorage.setItem('serverIP', newIP);
-    return this.connect();
+    return this.connect(secureProtocol);
   }
 
   async connect(secureProtocol = true): Promise<void> {
@@ -285,7 +285,11 @@ class World {
         if (this.socketDidOpen) {
           console.error('Connection Terminated');
           controller.abort();
-          reject();
+          try {
+            this.on.error.disconnect();
+          } catch (err) {
+            reject();
+          }
         } else if (secureProtocol) {
           console.warn('Retrying with unsecure protocol...');
           await this.connect(false).catch(() => reject());
@@ -415,7 +419,7 @@ class World {
       console.error('Error:', reason);
       ui.hideReadyBtn();
       ui.showReadyBtn(readyFn);
-    }
+    };
 
     this.on.error.kicked = async (reason) => {
       console.error('Kicked:', reason);
@@ -424,7 +428,19 @@ class World {
       this.sendActions([
         ['getGames', []],
       ]);
-    }
+    };
+
+    this.on.error.disconnect = async () => {
+      ui.hideMainMenu();
+      try {
+        await ui.textInputs.reconnectMenu.prompt(ui.root, true);
+        await this.connect();
+        ui.showMainMenu(mainMenuFns);
+      } catch (err) {
+        await this.askConnect();
+        ui.showMainMenu(mainMenuFns);
+      }
+    };
 
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
       ui.showUnitActionsMenu(this, coords, unit);
@@ -489,9 +505,7 @@ class World {
       },
       changeServer:async () => {
         ui.hideMainMenu();
-        const [newIP] = await ui.textInputs.ipSelect.prompt(ui.root, false);
-        localStorage.setItem('serverIP', newIP);
-        await this.connect();
+        await this.askConnect();
         ui.showMainMenu(mainMenuFns);
       },
     };
