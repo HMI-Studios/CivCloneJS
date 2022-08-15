@@ -111,6 +111,10 @@ const main = async () => {
   // const SERVER_IP = 'hmi.dynu.net:8080';
   // const SERVER_IP = 'localhost:8080';
 
+  if (!localStorage.getItem('lang')) localStorage.setItem('lang', prompt('Language?') as string);
+
+  locale = await (await fetch(`locales/${localStorage.getItem('lang')}.json`)).json()
+
   camera = new Camera();
   ui = new UI();
   world = new World();

@@ -42,7 +42,7 @@ class TextAlert {
         this.messageElement.innerText = message;
         this.element.appendChild(this.messageElement);
         this.submitBtn = document.createElement('button');
-        this.submitBtn.innerText = (_a = options.submitText) !== null && _a !== void 0 ? _a : translate('menu.buttons.ok');
+        this.submitBtn.innerText = (_a = options.submitText) !== null && _a !== void 0 ? _a : translate('buttons.ok');
         this.element.appendChild(this.submitBtn);
     }
     show(root) {
@@ -79,7 +79,7 @@ class TextInput extends TextAlert {
         const { className, query, submitText, abortText, fields } = options;
         super({ className, message: query });
         // remove submitBtn so it can be readded in the correct position + change text to "Submit"
-        this.submitBtn.innerText = submitText !== null && submitText !== void 0 ? submitText : translate('menu.buttons.submit');
+        this.submitBtn.innerText = submitText !== null && submitText !== void 0 ? submitText : translate('buttons.submit');
         this.submitBtn.remove();
         this.inputFields = [];
         for (const [fieldTitle, placeholder, type] of fields) {
@@ -98,7 +98,7 @@ class TextInput extends TextAlert {
             this.element.appendChild(fieldElement);
         }
         this.abortBtn = document.createElement('button');
-        this.abortBtn.innerText = abortText !== null && abortText !== void 0 ? abortText : translate('menu.buttons.abort');
+        this.abortBtn.innerText = abortText !== null && abortText !== void 0 ? abortText : translate('buttons.abort');
         this.element.appendChild(this.abortBtn);
         // re-add submit button
         this.element.appendChild(this.submitBtn);

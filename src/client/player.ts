@@ -83,7 +83,7 @@ class UI {
         query: translate('menu.login.query'),
         fields: [
           [translate('menu.login.fields.username'), undefined],
-          [translate('menu.login.fields.passowrd'), undefined, 'password'],
+          [translate('menu.login.fields.password'), undefined, 'password'],
         ]
       }),
       ipSelect: new TextInput({

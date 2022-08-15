@@ -69,12 +69,30 @@
     "civ_taken": "That leader is already selected!"
   },
   "unit": {
+    "settler": "Settler",
+    "builder": "Builder",
+    "scout": "Scout",
     "info": {
       "hp": "HP",
       "movement": "Movement"
     }
   },
   "tile": {
+    "coastal": "Shallow Water",
+    "desert": "Desert",
+    "desert_hills": "Desert Hills",
+    "desert_mountains": "Desert Mountains",
+    "frozen_coastal": "Frozen Shallow Water",
+    "frozen_ocean": "Frozen Ocean",
+    "grass_hills": "Grassy Hills",
+    "grass_lowlands": "Floodplains",
+    "grass_mountains": "Green Mountains",
+    "mountain": "Mountain",
+    "ocean": "Ocean",
+    "plains": "Grasslands",
+    "snow_hills": "Snowy Hills",
+    "snow_mountains": "Snowy Peaks",
+    "snow_plains": "Tundra",
     "info": {
       "type": "Type",
       "movement": "Movement Cost",
