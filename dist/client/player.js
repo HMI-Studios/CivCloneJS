@@ -52,42 +52,42 @@ class UI {
         };
         this.textInputs = {
             loginMenu: new TextInput({
-                query: 'Please log in:',
+                query: translate('menu.login.query'),
                 fields: [
-                    ['Username', 'username here...'],
-                    ['Password', 'password here...', 'password'],
+                    [translate('menu.login.fields.username'), undefined],
+                    [translate('menu.login.fields.passowrd'), undefined, 'password'],
                 ]
             }),
             ipSelect: new TextInput({
-                query: 'Enter Server Address:',
+                query: translate('menu.connect.query'),
                 fields: [
-                    ['Address'],
+                    [translate('menu.connect.fields.address')],
                 ]
             }),
             createGame: new TextInput({
-                query: 'New Game:',
+                query: translate('menu.game.new.query'),
                 fields: [
-                    ['Game Name'],
-                    ['# of players', undefined, 'number'],
-                    ['Map Width', undefined, 'number'],
-                    ['Map Height', undefined, 'number'],
-                    ['Seed', 'Leave blank for random seed', 'number'],
+                    [translate('menu.game.new.fields.name')],
+                    [translate('menu.game.new.fields.players'), undefined, 'number'],
+                    [translate('menu.game.new.fields.width'), undefined, 'number'],
+                    [translate('menu.game.new.fields.height'), undefined, 'number'],
+                    [translate('menu.game.new.fields.seed'), translate('menu.game.new.hints.seed'), 'number'],
                 ]
             }),
             reconnectMenu: new TextInput({
-                query: 'Connection to the server was terminated.',
-                submitText: 'Reconnect',
-                abortText: 'Switch Server',
+                query: translate('menu.reconnect.query'),
+                submitText: translate('buttons.server.reconnect'),
+                abortText: translate('buttons.server.disconnect'),
                 fields: []
             }),
         };
         this.textAlerts = {
             errorAlert: new TextAlert({
-                message: 'Error',
+                message: translate('error.generic'),
             }),
             reloadAlert: new TextAlert({
-                message: 'A fatal error has occured. Please reload to correct the problem.',
-                submitText: 'Reload',
+                message: translate('error.fatal'),
+                submitText: translate('buttons.reload'),
             }),
         };
     }
@@ -121,7 +121,7 @@ class UI {
         const civItem = this.createElement('li', 'civItem');
         civItem.style.backgroundColor = leader.color;
         const nameText = this.createElement('span');
-        nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - Selected by ${this.civs[leader.civID].name}` : '');
+        nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - ${translate('menu.civ.selected_by')} ${this.civs[leader.civID].name}` : '');
         civItem.appendChild(nameText);
         return civItem;
     }
@@ -135,16 +135,16 @@ class UI {
                         world.sendActions([['turnFinished', [true]]]);
                         this.setTurnState(world, false);
                     });
-                    this.buttons.mainBtn.setText('Finish Turn');
+                    this.buttons.mainBtn.setText(translate('buttons.end_turn'));
                 }
             });
-            this.buttons.mainBtn.setText('Next Unit');
+            this.buttons.mainBtn.setText(translate('buttons.next_unit'));
             // automatically select the first unit by "pressing" the button
             this.buttons.mainBtn.element.click();
         }
         else {
             this.buttons.mainBtn.unbindCallback();
-            this.buttons.mainBtn.setText('Waiting...');
+            this.buttons.mainBtn.setText(translate('buttons.waiting'));
         }
     }
     showGameUI(world) {
@@ -170,7 +170,7 @@ class UI {
             const leader = this.takenLeaders[i];
             const civItem = this.createCivItem(leader);
             civItem.onclick = () => {
-                alert('That leader is already selected!');
+                alert(translate('error.civ_taken'));
             };
             if (leader.civID === self.civID) {
                 selectedLeaderSlot.appendChild(civItem);
@@ -188,14 +188,14 @@ class UI {
     }
     showReadyBtn(callback) {
         let btnState = false;
-        this.elements.readyBtn.innerText = 'Ready';
+        this.elements.readyBtn.innerText = translate('buttons.ready');
         this.elements.readyBtn.onclick = () => {
             btnState = !btnState;
             if (btnState) {
-                this.elements.readyBtn.innerText = 'Waiting';
+                this.elements.readyBtn.innerText = translate('buttons.waiting');
             }
             else {
-                this.elements.readyBtn.innerText = 'Ready';
+                this.elements.readyBtn.innerText = translate('buttons.ready');
             }
             callback(btnState);
         };
@@ -207,22 +207,22 @@ class UI {
     showMainMenu(callbacks) {
         this.elements.mainMenu.innerHTML = '';
         const titleHeading = this.createElement('h1');
-        titleHeading.innerText = 'CivCloneJS';
+        titleHeading.innerText = translate('title');
         this.elements.mainMenu.appendChild(titleHeading);
         const createGameBtn = this.createElement('button');
-        createGameBtn.innerText = 'New Game';
+        createGameBtn.innerText = translate('buttons.game.new');
         createGameBtn.onclick = () => callbacks.createGame();
         this.elements.mainMenu.appendChild(createGameBtn);
         const gameListBtn = this.createElement('button');
-        gameListBtn.innerText = 'List Games';
+        gameListBtn.innerText = translate('buttons.game.list');
         gameListBtn.onclick = () => callbacks.listGames();
         this.elements.mainMenu.appendChild(gameListBtn);
         const changeServerBtn = this.createElement('button');
-        changeServerBtn.innerText = 'Switch Server';
+        changeServerBtn.innerText = translate('buttons.server.disconnect');
         changeServerBtn.onclick = () => callbacks.changeServer();
         this.elements.mainMenu.appendChild(changeServerBtn);
         const logoutBtn = this.createElement('button');
-        logoutBtn.innerText = 'Logout';
+        logoutBtn.innerText = translate('buttons.logout');
         logoutBtn.onclick = () => callbacks.logout();
         this.elements.mainMenu.appendChild(logoutBtn);
         this.elements.centerModal.appendChild(this.elements.mainMenu);
@@ -235,16 +235,16 @@ class UI {
     showGameList(gameList, callbacks) {
         this.elements.gameList.innerHTML = '';
         const titleHeading = this.createElement('h1');
-        titleHeading.innerText = 'Active Games';
+        titleHeading.innerText = translate('menu.game.list.active');
         this.elements.gameList.appendChild(titleHeading);
         const returnBtn = this.createElement('button');
         returnBtn.onclick = () => callbacks.return();
-        returnBtn.innerText = 'Return to Main Menu';
+        returnBtn.innerText = `${translate('buttons.return')} ${translate('menu.main.title')}`;
         this.elements.gameList.appendChild(returnBtn);
         for (const gameID in gameList) {
             const { gameName, playersConnected, playerCount } = gameList[gameID];
             const gameBtn = this.createElement('button');
-            gameBtn.innerText = `${gameName} - ${playersConnected} / ${playerCount} players connected`;
+            gameBtn.innerText = `${gameName} - ${playersConnected} / ${playerCount} ${translate('menu.game.list.players')}`;
             gameBtn.onclick = () => callbacks.joinGame(gameID);
             this.elements.gameList.appendChild(gameBtn);
         }
@@ -276,11 +276,11 @@ class UI {
     }
     showUnitInfoMenu(world, pos, unit) {
         const unitName = this.createElement('h2', 'infoSpan');
-        unitName.innerText = unit.type[0].toUpperCase() + unit.type.substring(1);
+        unitName.innerText = translate(`unit.${unit.type}`);
         const unitHP = this.createElement('span', 'infoSpan');
-        unitHP.innerText = `HP: ${unit.hp}%`;
+        unitHP.innerText = `${translate('unit.info.hp')}: ${unit.hp}%`;
         const unitMovement = this.createElement('span', 'infoSpan');
-        unitMovement.innerText = `Movement: ${unit.movement}`;
+        unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
         this.elements.unitInfoMenu.appendChild(unitName);
         this.elements.unitInfoMenu.appendChild(unitHP);
         this.elements.unitInfoMenu.appendChild(unitMovement);
@@ -293,17 +293,17 @@ class UI {
     showTileInfoMenu(world, pos, tile) {
         this.elements.tileInfoMenu.innerHTML = '';
         const tileType = this.createElement('span', 'infoSpan');
-        tileType.innerText = `Type: ${tile.type}`;
+        tileType.innerText = `${translate('tile.info.type')}: ${translate(`tile.${tile.type}`)}`;
         const tileMovementCost = this.createElement('span', 'infoSpan');
-        tileMovementCost.innerText = `Movement Cost: ${tile.movementCost[0]} - ${tile.movementCost[1]}`;
+        tileMovementCost.innerText = `${translate('tile.info.movement')}: ${tile.movementCost[0]} - ${tile.movementCost[1]}`;
         const tileElevation = this.createElement('span', 'infoSpan');
-        tileElevation.innerText = `Elevation: ${Math.round(tile.elevation)}`;
+        tileElevation.innerText = `${translate('tile.info.elevation')}: ${Math.round(tile.elevation)}`;
         this.elements.tileInfoMenu.appendChild(tileType);
         this.elements.tileInfoMenu.appendChild(tileMovementCost);
         this.elements.tileInfoMenu.appendChild(tileElevation);
         if (tile.owner) {
             const tileOwner = this.createElement('span', 'infoSpan');
-            tileOwner.innerText = `Owner: ${world.civs[tile.owner.civID].leader.name}`;
+            tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
             this.elements.tileInfoMenu.appendChild(tileOwner);
         }
         this.root.appendChild(this.elements.tileInfoMenu);

@@ -97,6 +97,21 @@ const mod = (a, b) => {
         return ((a % b) + b) % b;
     }
 };
+// TODO - load locale here
+let locale = {};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const translate = (path) => {
+    let loc = locale;
+    for (const key of path.split('.')) {
+        loc = loc[key];
+        if (!loc)
+            return path;
+    }
+    if (typeof loc === 'string')
+        return loc;
+    else
+        return path;
+};
 const main = () => __awaiter(this, void 0, void 0, function* () {
     // const SERVER_IP = '192.168.5.47:8080';
     // const SERVER_IP = '192.168.4.29:8080';

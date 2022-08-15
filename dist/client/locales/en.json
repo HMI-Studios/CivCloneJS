@@ -1,0 +1,85 @@
+{
+  "title": "CivCloneJS",
+  "buttons": {
+    "game": {
+      "new": "New Game",
+      "list": "List Games"
+    },
+    "logout": "Logout",
+    "server": {
+      "disconnect": "Switch Server",
+      "reconnect": "Reconnect"
+    },
+    "ok": "Ok",
+    "submit": "Submit",
+    "abort": "Cancel",
+    "reload": "Reload",
+    "end_turn": "Finish Turn",
+    "next_unit": "Unit needs orders",
+    "waiting": "Waiting...",
+    "ready": "Ready",
+    "return": "Return to"
+  },
+  "menu": {
+    "main": {
+      "title": "Main Menu"
+    },
+    "game": {
+      "list": {
+        "active": "Active Games",
+        "players": "players connected"
+      },
+      "new": {
+        "query": "New Game:",
+        "fields": {
+          "name": "Game Name",
+          "players": "# of players",
+          "width": "Map Width",
+          "height": "Map Height",
+          "seed": "Seed"
+        },
+        "hints": {
+          "seed": "Leave blank for random seed"
+        }
+      }
+    },
+    "login": {
+      "query": "Please log in:",
+      "fields": {
+        "username": "Username",
+        "password": "Password"
+      }
+    },
+    "connect": {
+      "query": "Enter Server Address:",
+      "fields": {
+        "address": "Address"
+      }
+    },
+    "reconnect": {
+      "query": "Connection to the server was terminated."
+    },
+    "civ": {
+      "selected_by": "Selected by"
+    }
+  },
+  "error": {
+    "generic": "Error",
+    "fatal": "A fatal error has occured. Please reload to correct the problem.",
+    "civ_taken": "That leader is already selected!"
+  },
+  "unit": {
+    "info": {
+      "hp": "HP",
+      "movement": "Movement"
+    }
+  },
+  "tile": {
+    "info": {
+      "type": "Type",
+      "movement": "Movement Cost",
+      "elevation": "Elevation",
+      "owner": "Owner"
+    }
+  }
+}
