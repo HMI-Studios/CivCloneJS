@@ -62,7 +62,7 @@ class TextAlert {
     this.element.appendChild(this.messageElement);
 
     this.submitBtn = document.createElement('button');
-    this.submitBtn.innerText = options.submitText ?? 'Ok';
+    this.submitBtn.innerText = options.submitText ?? translate('buttons.ok');
     this.element.appendChild(this.submitBtn);
 
   }
@@ -116,7 +116,7 @@ class TextInput extends TextAlert {
     super({ className, message: query });
 
     // remove submitBtn so it can be readded in the correct position + change text to "Submit"
-    this.submitBtn.innerText = submitText ?? 'Submit';
+    this.submitBtn.innerText = submitText ?? translate('buttons.submit');
     this.submitBtn.remove();
 
     this.inputFields = [];
@@ -138,7 +138,7 @@ class TextInput extends TextAlert {
     }
 
     this.abortBtn = document.createElement('button');
-    this.abortBtn.innerText = abortText ?? 'Cancel';
+    this.abortBtn.innerText = abortText ?? translate('buttons.abort');
     this.element.appendChild(this.abortBtn);
 
     // re-add submit button

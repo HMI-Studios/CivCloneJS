@@ -91,11 +91,29 @@ const mod = (a, b) => {
   }
 };
 
+// TODO - load locale here
+let locale = {};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const translate = (path: string) => {
+  let loc = locale;
+  for (const key of path.split('.')) {
+    loc = loc[key];
+    if (!loc) return path;
+  }
+  if (typeof loc === 'string') return loc;
+  else return path;
+};
+
 const main = async () => {
   // const SERVER_IP = '192.168.5.47:8080';
   // const SERVER_IP = '192.168.4.29:8080';
   // const SERVER_IP = 'hmi.dynu.net:8080';
   // const SERVER_IP = 'localhost:8080';
+
+  if (!localStorage.getItem('lang')) localStorage.setItem('lang', prompt('Language?') as string);
+
+  locale = await (await fetch(`locales/${localStorage.getItem('lang')}.json`)).json()
 
   camera = new Camera();
   ui = new UI();
