@@ -5,8 +5,6 @@ interface Leader {
   civID: number;
 }
 
-type Locale = { [key: string]: Locale | any };
-
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
@@ -48,7 +46,6 @@ class UI {
   buttons: { [key: string]: Button };
   textInputs: { [key: string]: TextInput };
   textAlerts: { [key: string]: TextAlert };
-  locale: Locale;
 
   public view: string;
 
