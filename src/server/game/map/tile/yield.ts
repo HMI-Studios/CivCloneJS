@@ -1,8 +1,13 @@
+export type YieldParams = {
+  food?: number,
+  production?: number
+};
+
 export class Yield {
   food: number;
   production: number;
 
-  constructor(params: { food?: number, production?: number }) {
+  constructor(params: YieldParams) {
     this.food = params.food ?? 0;
     this.production = params.production ?? 0;
   }

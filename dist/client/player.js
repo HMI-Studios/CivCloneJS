@@ -306,6 +306,9 @@ class UI {
             tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
             this.elements.tileInfoMenu.appendChild(tileOwner);
         }
+        const tileYield = this.createElement('span', 'infoSpan');
+        tileYield.innerText = `YIELD: ${JSON.stringify(tile.yield)}`;
+        this.elements.tileInfoMenu.appendChild(tileYield);
         this.root.appendChild(this.elements.tileInfoMenu);
     }
     hideTileInfoMenu() {

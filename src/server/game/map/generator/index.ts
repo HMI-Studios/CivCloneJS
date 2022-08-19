@@ -9,33 +9,33 @@ import { Yield } from '../tile/yield';
 const TAU = 2 * Math.PI;
 
 // Tile Types
-const OCEAN = new TileType('ocean', 0, null, true, true);
-const SHALLOW_OCEAN = new TileType('river', 0, null, true, true);
-const RIVER = new TileType('river', 0, null, true);
-const FROZEN_OCEAN = new TileType('frozen_ocean', 0, null, true, true);
-const SHALLOW_FROZEN_OCEAN = new TileType('frozen_ocean', 0, null, true, true);
-const FROZEN_RIVER = new TileType('frozen_river', 0, null, true);
+const OCEAN = new TileType('ocean', 0, {}, null, true, true);
+const SHALLOW_OCEAN = new TileType('river', 0, { food: 2 }, null, true, true);
+const RIVER = new TileType('river', 0, { food: 3 }, null, true);
+const FROZEN_OCEAN = new TileType('frozen_ocean', 0, {}, null, true, true);
+const SHALLOW_FROZEN_OCEAN = new TileType('frozen_ocean', 0, {}, null, true, true);
+const FROZEN_RIVER = new TileType('frozen_river', 0, { food: 1 }, null, true);
 
-const GRASS_LOWLANDS = new TileType('grass_lowlands', 1, [0.25, 'forest']);
-const GRASS_PLAINS = new TileType('plains', 2, [0.5, 'forest']);
-const GRASS_HILLS = new TileType('grass_hills', 3, [0.25, 'forest']);
-const GRASS_MOUNTAINS = new TileType('grass_mountains', 4);
+const GRASS_LOWLANDS = new TileType('grass_lowlands', 1, { food: 5 }, [0.25, 'forest']);
+const GRASS_PLAINS = new TileType('plains', 2, { food: 4 }, [0.5, 'forest']);
+const GRASS_HILLS = new TileType('grass_hills', 3, { food: 4 }, [0.25, 'forest']);
+const GRASS_MOUNTAINS = new TileType('grass_mountains', 4, { food: 2 });
 
-const TEMPERATE_FOREST_LOWLANDS = new TileType('grass_lowlands', 1, [20, 'forest']);
-const TEMPERATE_FOREST_PLAINS = new TileType('plains', 2, [80, 'forest']);
-const TEMPERATE_FOREST_HILLS = new TileType('grass_hills', 3, [50, 'forest']);
-const TEMPERATE_FOREST_MOUNTAINS = new TileType('grass_mountains', 4, [20, 'forest']);
+const TEMPERATE_FOREST_LOWLANDS = new TileType('grass_lowlands', 1, { food: 6 }, [20, 'forest']);
+const TEMPERATE_FOREST_PLAINS = new TileType('plains', 2, { food: 5 }, [80, 'forest']);
+const TEMPERATE_FOREST_HILLS = new TileType('grass_hills', 3, { food: 5 }, [50, 'forest']);
+const TEMPERATE_FOREST_MOUNTAINS = new TileType('grass_mountains', 4, { food: 4 }, [20, 'forest']);
 
-const DESERT_PLAINS = new TileType('desert', 2);
-const DESERT_HILLS = new TileType('desert_hills', 3);
-const DESERT_MOUNTAINS = new TileType('desert_mountains', 4);
+const DESERT_PLAINS = new TileType('desert', 2, { food: 1 });
+const DESERT_HILLS = new TileType('desert_hills', 3, { food: 1 });
+const DESERT_MOUNTAINS = new TileType('desert_mountains', 4, {});
 
-const SNOW_PLAINS = new TileType('snow_plains', 2);
-const SNOW_HILLS = new TileType('snow_hills', 3);
-const SNOW_MOUNTAINS = new TileType('snow_mountains', 4);
+const SNOW_PLAINS = new TileType('snow_plains', 2, { food: 2 });
+const SNOW_HILLS = new TileType('snow_hills', 3, { food: 2 });
+const SNOW_MOUNTAINS = new TileType('snow_mountains', 4, {});
 
-const MOUNTAIN = new TileType('mountain', 5);
-const MOUNTAIN_SPRING = new TileType('mountain', 5, null, false, false, true);
+const MOUNTAIN = new TileType('mountain', 5, {});
+const MOUNTAIN_SPRING = new TileType('mountain', 5, {}, null, false, false, true);
 
 export class PerlinWorldGenerator {
 
@@ -222,7 +222,7 @@ export class PerlinWorldGenerator {
     let i = 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        const tile = new Tile(tileTypeMap[i].type, heightMap[i], new Yield({ food: 1, production: 1 }));
+        const tile = new Tile(tileTypeMap[i].type, heightMap[i], new Yield(tileTypeMap[i].yieldParams));
 
         const vegetation = tileTypeMap[i].getVegetation(this.random);
         if (vegetation) tile.improvement = new Improvement(vegetation);

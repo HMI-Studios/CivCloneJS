@@ -30,12 +30,18 @@ interface Improvement {
   pillaged: boolean;
 }
 
+type Yield = {
+  food: number,
+  production: number,
+};
+
 interface Tile {
   type: string;
   elevation: number;
   improvement: Improvement;
   movementCost: MovementCost;
   unit: Unit;
+  yield: Yield,
   owner?: {
     civID: number,
     name: string,

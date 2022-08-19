@@ -386,6 +386,10 @@ class UI {
       this.elements.tileInfoMenu.appendChild(tileOwner);
     }
 
+    const tileYield = this.createElement('span', 'infoSpan');
+    tileYield.innerText = `YIELD: ${JSON.stringify(tile.yield)}`;
+    this.elements.tileInfoMenu.appendChild(tileYield);
+
     this.root.appendChild(this.elements.tileInfoMenu);
   }
 
