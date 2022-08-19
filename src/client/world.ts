@@ -129,6 +129,35 @@ class World {
     return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
   }
 
+  canBuildOn(tile: Tile): boolean {
+    return (
+      tile.owner?.civID === this.player.civID &&
+      tile.type !== 'ocean' &&
+      tile.type !== 'frozen_ocean' &&
+      tile.type !== 'mountain'
+    );
+  }
+
+  canSettleOn(tile: Tile): boolean {
+    return (
+      !tile.owner &&
+      tile.type !== 'ocean' &&
+      tile.type !== 'frozen_ocean' &&
+      tile.type !== 'mountain' &&
+      tile.type !== 'coastal' &&
+      tile.type !== 'frozen_coastal'
+    );
+  }
+
+  canFarmOn(tile: Tile): boolean {
+    // TODO - put this somewhere better
+    const farmableTiles = {
+      grass_lowlands: true,
+      plains: true,
+    };
+    return farmableTiles[tile.type];
+  }
+
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
   getTilesInRange(srcPos: Coords, range: number, mode = 0): { [key: string]: Coords } {
     // BFS to find all tiles within `range` steps

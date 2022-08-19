@@ -16,11 +16,11 @@ const unitActionsFnTable = {
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
         const tile = world.getTile(pos);
-        return tile.type === 'plains';
+        return world.canSettleOn(tile);
     },
     'buildFarm': (world, pos) => {
         const tile = world.getTile(pos);
-        return tile.type === 'plains';
+        return world.canBuildOn(tile) && world.canFarmOn(tile);
     },
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
