@@ -102,15 +102,18 @@ class Map {
             this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
-        this.buildImprovementAt(coords, 'settlement', civID);
+        this.buildImprovementAt(coords, 'settlement', civID, true);
         return true;
     }
-    buildImprovementAt(coords, type, ownerID) {
+    buildImprovementAt(coords, type, ownerID, instant = false) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
-        tile.improvement = new improvement_1.Improvement(type);
+        if (instant)
+            tile.improvement = new improvement_1.Improvement(type);
+        else
+            tile.improvement = new improvement_1.Improvement('worksite', { constuction: true, type });
         this.tileUpdate(coords);
     }
 }
