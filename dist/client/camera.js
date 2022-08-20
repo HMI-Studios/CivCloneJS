@@ -15,6 +15,8 @@ class Camera {
             throw 'Canvas Context Error';
         this.ctx = ctx;
         this.textures = {
+            missing: this.loadTexture('missing'),
+            missing_overlay: this.loadOverlayTexture('missing'),
             tile: {
                 ocean: this.loadTexture('tile_ocean'),
                 frozen_ocean: this.loadTexture('tile_frozen_ocean'),
@@ -117,7 +119,7 @@ class Camera {
         ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
         ctx.arc((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
         ctx.fill();
-        ctx.drawImage(textures.unit[unit.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
+        ctx.drawImage((textures.unit[unit.type] || textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
     }
     render(world) {
         var _a;
@@ -156,7 +158,7 @@ class Camera {
                 if (tile) {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
-                    ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
+                    ctx.drawImage((textures.tile[tile.type] || textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                     if (tile.owner) {
                         const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
                         const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -241,7 +243,7 @@ class Camera {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     if (tile.improvement) {
-                        const overlay = textures.improvements[tile.improvement.type];
+                        const overlay = textures.improvements[tile.improvement.type] || textures.missing_overlay;
                         ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
                     }
                     ctx.globalAlpha = 1;
