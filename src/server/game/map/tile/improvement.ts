@@ -8,8 +8,8 @@ const improvementYieldTable: { [improvement: string]: Yield } = {
   'forest': new Yield({food: 1}),
 };
 
-const constructionCostTable: { [improvement: string]: YieldParams } = {
-  'farm': {production: 10},
+const constructionCostTable: { [improvement: string]: Yield } = {
+  'farm': new Yield({production: 10}),
 };
 
 export interface ImprovementData {
@@ -22,6 +22,7 @@ export class Improvement {
   type: string;
   pillaged: boolean;
   yield: Yield;
+  storage: Yield;
   metadata: any;
 
   constructor(type: string, metadata?: any) {
@@ -29,6 +30,7 @@ export class Improvement {
     this.pillaged = false;
     this.yield = improvementYieldTable[type] ?? {};
     this.metadata = metadata;
+    this.storage = new Yield({});
   }
 
   getData(): ImprovementData {
@@ -40,15 +42,11 @@ export class Improvement {
 }
 
 export class Worksite extends Improvement {
-  cost: YieldParams;
-  collected: YieldParams;
+  cost: Yield;
 
   constructor(options: { construction: boolean, type: string }) {
     super('worksite', options);
     this.cost = constructionCostTable[options.type];
-    this.collected = Object.keys(this.cost).reduce((acc, key) => acc[key] = 0, {});
-
-    
   }
 
   getData(): ImprovementData {
@@ -57,7 +55,7 @@ export class Worksite extends Improvement {
       pillaged: this.pillaged,
       metadata: {
         type: this.metadata.type,
-        collected: this.collected,
+        storage: this.storage,
       }
     };
   }

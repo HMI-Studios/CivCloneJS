@@ -153,6 +153,10 @@ export class Map {
     this.tileUpdate(coords);
   }
 
+  createTradeRoutes(coords: Coords, sink: Improvement): void {
+    console.log(coords, sink)
+  }
+
   settleCityAt(coords: Coords, name: string, civID: number): boolean {
     const tile = this.getTile(coords);
     if (tile.owner) return false;
@@ -175,7 +179,10 @@ export class Map {
     if (tile.owner?.civID !== ownerID) return;
 
     if (instant) tile.improvement = new Improvement(type);
-    else tile.improvement = new Improvement('worksite', { constuction: true, type });
+    else {
+      tile.improvement = new Improvement('worksite', { constuction: true, type });
+      this.createTradeRoutes(coords, tile.improvement);
+    }
 
     this.tileUpdate(coords);
   }
