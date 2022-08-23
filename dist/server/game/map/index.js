@@ -44,6 +44,32 @@ class Map {
         this.getNeighborsCoordsRecurse(coords, r, tileList);
         return tileList;
     }
+    // mode: 0 = land unit, 1 = sea unit; -1 = air unit
+    getPathTree(srcPos, range, mode = 0) {
+        // BFS to find all tiles within `range` steps
+        const queue = [];
+        queue.push(srcPos);
+        const dst = {};
+        dst[this.pos(srcPos)] = 0;
+        const paths = {};
+        while (queue.length) {
+            const atPos = queue.shift();
+            for (const adjPos of this.getNeighborsCoords(atPos)) {
+                const tile = this.getTile(adjPos);
+                // PATH BLOCKING LOGIC HERE
+                // if (tile.unit && tile.unit.civID === this.player.civID) continue;
+                const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+                if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
+                    dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
+                    if (dst[this.pos(adjPos)] <= range) {
+                        paths[this.pos(adjPos)] = atPos;
+                        queue.push(adjPos);
+                    }
+                }
+            }
+        }
+        return paths;
+    }
     getVisibleTilesCoords(unit) {
         return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
     }
@@ -92,6 +118,9 @@ class Map {
         this.getTile(coords).setUnit(unit);
         this.tileUpdate(coords);
     }
+    createTradeRoutes(coords, sink) {
+        console.log(coords, sink);
+    }
     settleCityAt(coords, name, civID) {
         const tile = this.getTile(coords);
         if (tile.owner)
@@ -112,8 +141,10 @@ class Map {
             return;
         if (instant)
             tile.improvement = new improvement_1.Improvement(type);
-        else
+        else {
             tile.improvement = new improvement_1.Improvement('worksite', { constuction: true, type });
+            this.createTradeRoutes(coords, tile.improvement);
+        }
         this.tileUpdate(coords);
     }
 }

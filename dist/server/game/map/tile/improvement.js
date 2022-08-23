@@ -8,15 +8,16 @@ const improvementYieldTable = {
     'forest': new yield_1.Yield({ food: 1 }),
 };
 const constructionCostTable = {
-    'farm': { production: 10 },
+    'farm': new yield_1.Yield({ production: 10 }),
 };
 class Improvement {
     constructor(type, metadata) {
         var _a;
         this.type = type;
         this.pillaged = false;
-        this.yield = (_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : {};
+        this.yield = (_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({});
         this.metadata = metadata;
+        this.storage = new yield_1.Yield({});
     }
     getData() {
         return {
@@ -30,7 +31,6 @@ class Worksite extends Improvement {
     constructor(options) {
         super('worksite', options);
         this.cost = constructionCostTable[options.type];
-        this.collected = Object.keys(this.cost).reduce((acc, key) => acc[key] = 0, {});
     }
     getData() {
         return {
@@ -38,7 +38,7 @@ class Worksite extends Improvement {
             pillaged: this.pillaged,
             metadata: {
                 type: this.metadata.type,
-                collected: this.collected,
+                storage: this.storage,
             }
         };
     }

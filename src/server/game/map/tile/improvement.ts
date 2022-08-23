@@ -28,7 +28,7 @@ export class Improvement {
   constructor(type: string, metadata?: any) {
     this.type = type;
     this.pillaged = false;
-    this.yield = improvementYieldTable[type] ?? {};
+    this.yield = improvementYieldTable[type] ?? new Yield({});
     this.metadata = metadata;
     this.storage = new Yield({});
   }
