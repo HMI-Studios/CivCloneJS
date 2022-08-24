@@ -32,11 +32,25 @@ class Yield {
     add(other) {
         return this.copy().incr(other);
     }
+    canSupply(requirement) {
+        for (const key in requirement) {
+            if (this[key] > 0)
+                return true;
+        }
+        return false;
+    }
 }
 exports.Yield = Yield;
 class ResourceStore extends Yield {
     constructor(capacity) {
         super({});
+        this.capacity = capacity;
+    }
+    reset() {
+        this.food = 0;
+        this.production = 0;
+    }
+    setCapacity(capacity) {
         this.capacity = capacity;
     }
     cap() {
@@ -45,9 +59,8 @@ class ResourceStore extends Yield {
             food: this.food - ((_a = this.capacity.food) !== null && _a !== void 0 ? _a : 0),
             production: this.production - ((_b = this.capacity.production) !== null && _b !== void 0 ? _b : 0),
         });
-        this.production = Math.min(this.production, (_c = this.capacity.production) !== null && _c !== void 0 ? _c : 0);
-        this.food = Math.min(this.food, (_d = this.capacity.food) !== null && _d !== void 0 ? _d : 0);
-        console.log(this);
+        this.food = Math.min(this.food, (_c = this.capacity.food) !== null && _c !== void 0 ? _c : 0);
+        this.production = Math.min(this.production, (_d = this.capacity.production) !== null && _d !== void 0 ? _d : 0);
         return surplus;
     }
 }

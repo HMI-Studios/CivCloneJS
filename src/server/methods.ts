@@ -410,4 +410,22 @@ const methods: {
       }
     }
   },
+
+  getTraders: (ws: WebSocket) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      game.sendToCiv(civID, {
+        update: [
+          ['tradersList', [map.getCivTraders(civID)]],
+        ],
+      });
+    }
+  }
 };

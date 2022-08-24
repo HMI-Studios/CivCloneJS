@@ -1,7 +1,7 @@
 import { Unit, UnitData } from './unit';
 import { Improvement, ImprovementData } from './improvement';
 import { City, CityData } from './city';
-import { Yield } from './yield';
+import { Yield, YieldParams } from './yield';
 
 const tileMovementCostTable: { [type: string]: [number, number] } = {
   // tile name: [land mp, water mp] (0 = impassable)
@@ -126,5 +126,11 @@ export class Tile {
 
   clearVisibility(civID: number): void {
     this.visibleTo[civID] = 0;
+  }
+
+  canSupply(requirement: YieldParams): boolean {
+    return !!this.improvement && (
+      this.improvement.yield.add(this.baseYield).canSupply(requirement)
+    );
   }
 }

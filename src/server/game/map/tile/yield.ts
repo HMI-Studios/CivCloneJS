@@ -43,6 +43,13 @@ export class Yield {
   add(other: Yield): Yield {
     return this.copy().incr(other);
   }
+
+  canSupply(requirement: YieldParams): boolean {
+    for (const key in requirement) {
+      if (this[key] > 0) return true;
+    }
+    return false;
+  }
 }
 
 export class ResourceStore extends Yield {
@@ -53,15 +60,23 @@ export class ResourceStore extends Yield {
     this.capacity = capacity;
   }
 
+  reset(): void {
+    this.food = 0;
+    this.production = 0;
+  }
+
+  setCapacity(capacity: YieldParams): void {
+    this.capacity = capacity;
+  }
+
   cap(): Yield {
     const surplus = new Yield({
       food: this.food - (this.capacity.food ?? 0),
       production: this.production - (this.capacity.production ?? 0),
     });
 
-    this.production = Math.min(this.production, this.capacity.production ?? 0);
     this.food = Math.min(this.food, this.capacity.food ?? 0);
-    console.log(this);
+    this.production = Math.min(this.production, this.capacity.production ?? 0);
 
     return surplus;
   }

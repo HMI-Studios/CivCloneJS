@@ -9,6 +9,12 @@ const improvementYieldTable: { [improvement: string]: Yield } = {
   'forest': new Yield({food: 1}),
 };
 
+const improvementStoreCapTable: { [improvement: string]: YieldParams } = {
+  'settlement': {food: 20, production: 2},
+
+  'farm': {food: 20},
+}
+
 const constructionCostTable: { [improvement: string]: Yield } = {
   'farm': new Yield({production: 10}),
 };
@@ -34,7 +40,7 @@ export class Improvement {
     this.pillaged = false;
     this.yield = improvementYieldTable[type] ?? new Yield({});
     this.metadata = metadata;
-    this.storage = new ResourceStore({});
+    this.storage = new ResourceStore(improvementStoreCapTable[type] ?? {});
     this.traders = [];
   }
 
@@ -52,7 +58,14 @@ export class Improvement {
     this.storage.cap();
 
     let traderCount = this.traders.length;
-    for (const trader of this.traders) {
+    for (let i = 0; i < this.traders.length; i++) {
+      const trader = this.traders[i];
+      if (trader.expired) {
+        this.traders.splice(i, 1);
+        i--;
+        traderCount--;
+        continue;
+      }
       const traderShare = totalYield.div(traderCount);
       const surplus = trader.store(traderShare);
       totalYield.decr(traderShare.decr(surplus));
@@ -72,11 +85,12 @@ export class Improvement {
 }
 
 export class Worksite extends Improvement {
-  cost: Yield;
+  public cost: Yield;
 
   constructor(options: { construction: boolean, type: string }) {
     super('worksite', options);
     this.cost = constructionCostTable[options.type];
+    this.storage.setCapacity(this.cost);
   }
 
   getData(): ImprovementData {
