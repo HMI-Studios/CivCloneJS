@@ -45,7 +45,7 @@ export class Tile {
   discoveredBy: { [civID: number]: boolean };
   visibleTo: { [civID: number]: number };
 
-  private baseYield: Yield;
+  public baseYield: Yield;
 
   constructor(type: string, tileHeight: number, baseYield: Yield) {
     this.movementCost = tileMovementCostTable[type];

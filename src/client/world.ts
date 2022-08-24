@@ -28,6 +28,7 @@ interface Unit {
 interface Improvement {
   type: string;
   pillaged: boolean;
+  storage: Yield;
 }
 
 type Yield = {

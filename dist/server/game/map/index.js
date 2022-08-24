@@ -10,6 +10,7 @@ class Map {
         this.width = width;
         this.tiles = new Array(height * width);
         this.cities = [];
+        this.traders = [];
         this.updates = [];
     }
     export() {
@@ -146,6 +147,13 @@ class Map {
             this.createTradeRoutes(coords, tile.improvement);
         }
         this.tileUpdate(coords);
+    }
+    turn() {
+        for (const tile of this.tiles) {
+            if (tile.improvement) {
+                tile.improvement.work(tile.baseYield);
+            }
+        }
     }
 }
 exports.Map = Map;

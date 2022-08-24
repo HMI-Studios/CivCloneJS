@@ -241,19 +241,7 @@ const methods = {
         }
         // if so:
         if (finished) {
-            // end all players' turns
-            game.forEachPlayer((player) => {
-                if (!player.isAI) {
-                    game.endTurnForCiv(player.civID);
-                }
-            });
-            // Run AIs
-            // begin all players' turns
-            game.forEachPlayer((player) => {
-                if (!player.isAI) {
-                    game.beginTurnForCiv(player.civID);
-                }
-            });
+            game.endTurn();
         }
     },
     moveUnit: (ws, srcCoords, path, attack) => {

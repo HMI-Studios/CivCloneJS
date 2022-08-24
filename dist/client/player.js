@@ -309,6 +309,11 @@ class UI {
         const tileYield = this.createElement('span', 'infoSpan');
         tileYield.innerText = `YIELD: ${JSON.stringify(tile.yield)}`;
         this.elements.tileInfoMenu.appendChild(tileYield);
+        if (tile.improvement) {
+            const tileStore = this.createElement('span', 'infoSpan');
+            tileStore.innerText = `STORE: ${JSON.stringify(tile.improvement.storage)}`;
+            this.elements.tileInfoMenu.appendChild(tileStore);
+        }
         this.root.appendChild(this.elements.tileInfoMenu);
     }
     hideTileInfoMenu() {

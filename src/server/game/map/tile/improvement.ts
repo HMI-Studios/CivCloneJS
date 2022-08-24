@@ -1,4 +1,5 @@
-import { Yield, YieldParams } from './yield';
+import { Trader } from '../trade';
+import { ResourceStore, Yield, YieldParams } from './yield';
 
 const improvementYieldTable: { [improvement: string]: Yield } = {
   'settlement': new Yield({food: 2, production: 2}),
@@ -15,6 +16,7 @@ const constructionCostTable: { [improvement: string]: Yield } = {
 export interface ImprovementData {
   type: string;
   pillaged: boolean;
+  storage: YieldParams;
   metadata?: any;
 }
 
@@ -22,22 +24,50 @@ export class Improvement {
   type: string;
   pillaged: boolean;
   yield: Yield;
-  storage: Yield;
   metadata: any;
 
+  protected traders: Trader[];
+  protected storage: ResourceStore;
+  
   constructor(type: string, metadata?: any) {
     this.type = type;
     this.pillaged = false;
     this.yield = improvementYieldTable[type] ?? new Yield({});
     this.metadata = metadata;
-    this.storage = new Yield({});
+    this.storage = new ResourceStore({});
+    this.traders = [];
   }
 
   getData(): ImprovementData {
     return {
       type: this.type,
       pillaged: this.pillaged,
+      storage: this.storage,
     };
+  }
+
+  work(baseYield: Yield): void {
+    // TODO - ADD POPULATION/COST CHECK
+    const totalYield = this.yield.add(baseYield);
+    this.storage.cap();
+
+    let traderCount = this.traders.length;
+    for (const trader of this.traders) {
+      const traderShare = totalYield.div(traderCount);
+      const surplus = trader.store(traderShare);
+      totalYield.decr(traderShare.decr(surplus));
+      traderCount--;
+    }
+
+    this.storage.incr(totalYield);
+  }
+
+  store(resources: Yield): void {
+    this.storage.incr(resources);
+  }
+
+  subscribeTrader(trader: Trader): void {
+    this.traders.push(trader);
   }
 }
 
@@ -51,12 +81,15 @@ export class Worksite extends Improvement {
 
   getData(): ImprovementData {
     return {
-      type: this.type,
-      pillaged: this.pillaged,
+      ...super.getData(),
       metadata: {
         type: this.metadata.type,
-        storage: this.storage,
       }
     };
+  }
+
+  work(baseYield: Yield): void {
+    // TODO - ACTUAL WORK HERE
+    super.work(baseYield);
   }
 }

@@ -17,13 +17,34 @@ class Improvement {
         this.pillaged = false;
         this.yield = (_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({});
         this.metadata = metadata;
-        this.storage = new yield_1.Yield({});
+        this.storage = new yield_1.ResourceStore({});
+        this.traders = [];
     }
     getData() {
         return {
             type: this.type,
             pillaged: this.pillaged,
+            storage: this.storage,
         };
+    }
+    work(baseYield) {
+        // TODO - ADD POPULATION/COST CHECK
+        const totalYield = this.yield.add(baseYield);
+        this.storage.cap();
+        let traderCount = this.traders.length;
+        for (const trader of this.traders) {
+            const traderShare = totalYield.div(traderCount);
+            const surplus = trader.store(traderShare);
+            totalYield.decr(traderShare.decr(surplus));
+            traderCount--;
+        }
+        this.storage.incr(totalYield);
+    }
+    store(resources) {
+        this.storage.incr(resources);
+    }
+    subscribeTrader(trader) {
+        this.traders.push(trader);
     }
 }
 exports.Improvement = Improvement;
@@ -33,14 +54,13 @@ class Worksite extends Improvement {
         this.cost = constructionCostTable[options.type];
     }
     getData() {
-        return {
-            type: this.type,
-            pillaged: this.pillaged,
-            metadata: {
+        return Object.assign(Object.assign({}, super.getData()), { metadata: {
                 type: this.metadata.type,
-                storage: this.storage,
-            }
-        };
+            } });
+    }
+    work(baseYield) {
+        // TODO - ACTUAL WORK HERE
+        super.work(baseYield);
     }
 }
 exports.Worksite = Worksite;

@@ -4,6 +4,7 @@ import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement } from './tile/improvement';
 import { getAdjacentCoords, mod, Event } from '../../utils';
+import { Trader } from './trade';
 
 export interface MapOptions {
   width: number;
@@ -15,6 +16,7 @@ export class Map {
   width: number;
   tiles: Tile[];
   cities: City[];
+  traders: Trader[];
   updates: { (civID: number): Event }[];
 
   constructor(height: number, width: number) {
@@ -22,6 +24,7 @@ export class Map {
     this.width = width;
     this.tiles = new Array(height*width);
     this.cities = [];
+    this.traders = [];
     this.updates = [];
   }
 
@@ -185,5 +188,13 @@ export class Map {
     }
 
     this.tileUpdate(coords);
+  }
+
+  turn(): void {
+    for (const tile of this.tiles) {
+      if (tile.improvement) {
+        tile.improvement.work(tile.baseYield);
+      }
+    }
   }
 }
