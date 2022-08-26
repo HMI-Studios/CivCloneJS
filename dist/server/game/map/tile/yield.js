@@ -27,7 +27,7 @@ class Yield {
         return Math.max(...[
             this.food / other.food,
             this.production / other.production,
-        ]);
+        ].map(num => !isNaN(num) && num ? num : 0));
     }
     divNumber(n) {
         return new Yield({

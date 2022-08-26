@@ -99,5 +99,19 @@
       "elevation": "Elevation",
       "owner": "Owner"
     }
+  },
+  "improvement": {
+    "settlement": "Settlement",
+    "worksite": "Worksite",
+    "farm": "Farm",
+    "info": {
+      "yield": "Yield",
+      "storage": "Storage",
+      "turnsToComplete": "Turns until completed"
+    }
+  },
+  "yield": {
+    "food": "Food",
+    "production": "Production"
   }
 }

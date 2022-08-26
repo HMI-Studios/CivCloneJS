@@ -104,12 +104,13 @@ export class Worksite extends Improvement {
   }
 
   getData(): ImprovementData {
+    console.log(this.cost, this.cost.sub(this.storage.sub(this.storedThisTurn)), this.cost.sub(this.storage).div(this.storedThisTurn))
     return {
       ...super.getData(),
       metadata: {
         type: this.metadata.type,
         storedThisTurn: this.storedThisTurn,
-        turnsToCompletion: this.cost.sub(this.storage).div(this.storedThisTurn),
+        turnsToCompletion: this.cost.sub(this.storage.sub(this.storedThisTurn)).div(this.storedThisTurn),
       }
     };
   }

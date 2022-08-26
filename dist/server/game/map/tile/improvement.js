@@ -72,10 +72,11 @@ class Worksite extends Improvement {
         this.completed = false;
     }
     getData() {
+        console.log(this.cost, this.cost.sub(this.storage.sub(this.storedThisTurn)), this.cost.sub(this.storage).div(this.storedThisTurn));
         return Object.assign(Object.assign({}, super.getData()), { metadata: {
                 type: this.metadata.type,
                 storedThisTurn: this.storedThisTurn,
-                turnsToCompletion: this.cost.sub(this.storage).div(this.storedThisTurn),
+                turnsToCompletion: this.cost.sub(this.storage.sub(this.storedThisTurn)).div(this.storedThisTurn),
             } });
     }
     work(baseYield) {

@@ -382,9 +382,6 @@ class World {
                 ui.showUnitActionsMenu(this, coords, unit);
                 ui.showUnitInfoMenu(this, coords, unit);
             };
-            this.on.event.selectTile = (coords, tile) => {
-                ui.showTileInfoMenu(this, coords, tile);
-            };
             this.on.event.deselectUnit = (selectedUnitPos) => {
                 var _a;
                 ui.hideUnitActionsMenu();
@@ -396,8 +393,18 @@ class World {
                     }
                 }
             };
+            this.on.event.selectTile = (coords, tile) => {
+                ui.showTileInfoMenu(this, coords, tile);
+                if (tile.improvement) {
+                    ui.showSidebarMenu(this, coords, tile);
+                }
+                else {
+                    ui.hideSidebarMenu();
+                }
+            };
             this.on.event.deselectTile = () => {
                 ui.hideTileInfoMenu();
+                ui.hideSidebarMenu();
             };
             yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {
                 console.error('Connection Failed. Reload page to retry.');

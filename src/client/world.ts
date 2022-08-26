@@ -28,7 +28,12 @@ interface Unit {
 interface Improvement {
   type: string;
   pillaged: boolean;
-  storage: Yield;
+  storage: ResourceStorage;
+  metadata?: any;
+}
+
+type ResourceStorage = Yield & {
+  capacity: Yield,
 }
 
 type Yield = {
@@ -483,10 +488,6 @@ class World {
       ui.showUnitInfoMenu(this, coords, unit);
     }
 
-    this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
-      ui.showTileInfoMenu(this, coords, tile);
-    }
-
     this.on.event.deselectUnit = (selectedUnitPos: Coords | null): void => {
       ui.hideUnitActionsMenu();
       ui.hideUnitInfoMenu();
@@ -498,8 +499,18 @@ class World {
       }
     }
 
+    this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
+      ui.showTileInfoMenu(this, coords, tile);
+      if (tile.improvement) {
+        ui.showSidebarMenu(this, coords, tile);
+      } else {
+        ui.hideSidebarMenu();
+      }
+    }
+
     this.on.event.deselectTile = (): void => {
       ui.hideTileInfoMenu();
+      ui.hideSidebarMenu();
     }
 
     await this.connect().catch(async () => {
