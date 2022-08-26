@@ -330,7 +330,7 @@ const methods = {
             const tile = map.getTile(coords);
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
-                map.buildImprovementAt(coords, type, civID);
+                map.startConstructionAt(coords, type, civID);
                 game.sendUpdates();
             }
         }

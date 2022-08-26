@@ -4,8 +4,8 @@ import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
 import { getAdjacentCoords, mod, Event } from '../../utils';
-import { Trader } from './trade';
-import { YieldParams } from './tile/yield';
+import { Trader, TraderData } from './trade';
+import { Yield, YieldParams } from './tile/yield';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -141,8 +141,8 @@ export class Map {
     });
   }
 
-  getCivTraders(civID: number): Trader[] {
-    return this.traders.filter((trader) => trader.civID === civID);
+  getCivTraders(civID: number): TraderData[] {
+    return this.traders.filter((trader) => trader.civID === civID).map(trader => trader.getData());
   }
 
   setTileVisibility(civID: number, coords: Coords, visible: boolean) {
@@ -197,7 +197,7 @@ export class Map {
       if (tile.owner?.civID === civID && tile.canSupply(requirement)) {
         const path = this.findPath(pathTree, Number(pos), coords);
         if (!path) continue;
-        this.addTrader(new Trader(civID, [path, dst[pos]], tile.improvement, sink, TRADER_SPEED, TRADER_CAPACITY))
+        this.addTrader(new Trader(civID, [path, dst[pos]], tile.improvement, sink, TRADER_SPEED, Yield.min(TRADER_CAPACITY, requirement)));
       }
     }
   }
@@ -215,19 +215,25 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.buildImprovementAt(coords, 'settlement', civID, true);
+    this.buildImprovementAt(coords, 'settlement', civID);
     return true;
   }
 
-  buildImprovementAt(coords: Coords, type: string, ownerID: number, instant = false): void {
+  startConstructionAt(coords: Coords, type: string, ownerID: number): void {
+    const tile = this.getTile(coords);
+    if (tile.owner?.civID !== ownerID) return;
+    
+    tile.improvement = new Worksite({ construction: true, type });
+    this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).cost);
+
+    this.tileUpdate(coords);
+  }
+
+  buildImprovementAt(coords: Coords, type: string, ownerID: number): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
 
-    if (instant) tile.improvement = new Improvement(type);
-    else {
-      tile.improvement = new Worksite({ construction: true, type });
-      this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).cost);
-    }
+    tile.improvement = new Improvement(type);
 
     this.tileUpdate(coords);
   }
@@ -236,10 +242,20 @@ export class Map {
     for (const tile of this.tiles) {
       if (tile.improvement) {
         tile.improvement.work(tile.baseYield);
+        if (tile.improvement instanceof Worksite && tile.improvement.completed) {
+          const type = tile.improvement.metadata.type;
+          delete tile.improvement;
+          tile.improvement = new Improvement(type);
+        }
       }
     }
-    for (const trader of this.traders) {
+    for (let i = 0; i < this.traders.length; i++) {
+      const trader = this.traders[i];
       trader.shunt();
+      if (trader.expired) {
+        this.traders.splice(i, 1);
+        i--;
+      }
     }
   }
 }

@@ -33,6 +33,7 @@ export class Improvement {
   metadata: any;
 
   protected traders: Trader[];
+  protected suppliers: Trader[];
   protected storage: ResourceStore;
   
   constructor(type: string, metadata?: any) {
@@ -42,6 +43,7 @@ export class Improvement {
     this.metadata = metadata;
     this.storage = new ResourceStore(improvementStoreCapTable[type] ?? {});
     this.traders = [];
+    this.suppliers = [];
   }
 
   getData(): ImprovementData {
@@ -55,7 +57,7 @@ export class Improvement {
   work(baseYield: Yield): void {
     // TODO - ADD POPULATION/COST CHECK
     const totalYield = this.yield.add(baseYield);
-    this.storage.cap();
+    this.storage.incr(totalYield);
 
     let traderCount = this.traders.length;
     for (let i = 0; i < this.traders.length; i++) {
@@ -66,13 +68,13 @@ export class Improvement {
         traderCount--;
         continue;
       }
-      const traderShare = totalYield.div(traderCount);
+      const traderShare = this.storage.divNumber(traderCount);
       const surplus = trader.store(traderShare);
-      totalYield.decr(traderShare.decr(surplus));
+      this.storage.decr(traderShare.decr(surplus));
       traderCount--;
     }
 
-    this.storage.incr(totalYield);
+    this.storage.cap();
   }
 
   store(resources: Yield): void {
@@ -82,15 +84,23 @@ export class Improvement {
   subscribeTrader(trader: Trader): void {
     this.traders.push(trader);
   }
+
+  subscribeSupplier(trader: Trader): void {
+    this.suppliers.push(trader);
+  }
 }
 
 export class Worksite extends Improvement {
   public cost: Yield;
+  public storedThisTurn: ResourceStore;
+  public completed: boolean;
 
   constructor(options: { construction: boolean, type: string }) {
     super('worksite', options);
     this.cost = constructionCostTable[options.type];
+    this.storedThisTurn = new ResourceStore({});
     this.storage.setCapacity(this.cost);
+    this.completed = false;
   }
 
   getData(): ImprovementData {
@@ -98,12 +108,26 @@ export class Worksite extends Improvement {
       ...super.getData(),
       metadata: {
         type: this.metadata.type,
+        storedThisTurn: this.storedThisTurn,
+        turnsToCompletion: this.cost.sub(this.storage).div(this.storedThisTurn),
       }
     };
   }
 
   work(baseYield: Yield): void {
-    // TODO - ACTUAL WORK HERE
+    if (this.storage.fulfills(this.cost)) {
+      this.completed = true;
+      for (const supplier of this.suppliers) {
+        supplier.expire();
+      }
+      return;
+    }
+    this.storedThisTurn.reset();
     super.work(baseYield);
+  }
+
+  store(resources: Yield): void {
+    super.store(resources);
+    this.storedThisTurn.incr(resources);
   }
 }

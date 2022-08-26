@@ -11,17 +11,39 @@ class Trader {
         this.speed = speed;
         this.length = length;
         this.expired = false;
-        const capacityPerTurn = Object.keys(capacity).reduce((acc, key) => (Object.assign(Object.assign({}, acc), { [key]: capacity[key] / (length / speed) })), {});
+        this.turnTime = Math.ceil(length / speed);
+        this.turnsElapsed = 0;
+        const capacityPerTurn = Object.keys(capacity).reduce((acc, key) => { var _a; return (Object.assign(Object.assign({}, acc), { [key]: ((_a = capacity[key]) !== null && _a !== void 0 ? _a : 0) / this.turnTime })); }, {});
         this.storage = new yield_1.ResourceStore(capacityPerTurn);
         this.source.subscribeTrader(this);
+        this.sink.subscribeSupplier(this);
+    }
+    getData() {
+        return {
+            route: this.route,
+            source: this.source.getData(),
+            sink: this.sink.getData(),
+            speed: this.speed,
+            routeLength: this.length,
+            storage: this.storage,
+        };
+    }
+    expire() {
+        this.expired = true;
     }
     store(resources) {
         this.storage.incr(resources);
         return this.storage.cap();
     }
     shunt() {
+        if (this.expired) {
+            this.source.store(this.storage);
+            this.storage.reset();
+            return;
+        }
         this.sink.store(this.storage);
         this.storage.reset();
+        this.turnsElapsed++;
     }
 }
 exports.Trader = Trader;

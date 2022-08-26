@@ -23,6 +23,7 @@ class Improvement {
         this.metadata = metadata;
         this.storage = new yield_1.ResourceStore((_b = improvementStoreCapTable[type]) !== null && _b !== void 0 ? _b : {});
         this.traders = [];
+        this.suppliers = [];
     }
     getData() {
         return {
@@ -34,7 +35,7 @@ class Improvement {
     work(baseYield) {
         // TODO - ADD POPULATION/COST CHECK
         const totalYield = this.yield.add(baseYield);
-        this.storage.cap();
+        this.storage.incr(totalYield);
         let traderCount = this.traders.length;
         for (let i = 0; i < this.traders.length; i++) {
             const trader = this.traders[i];
@@ -44,12 +45,12 @@ class Improvement {
                 traderCount--;
                 continue;
             }
-            const traderShare = totalYield.div(traderCount);
+            const traderShare = this.storage.divNumber(traderCount);
             const surplus = trader.store(traderShare);
-            totalYield.decr(traderShare.decr(surplus));
+            this.storage.decr(traderShare.decr(surplus));
             traderCount--;
         }
-        this.storage.incr(totalYield);
+        this.storage.cap();
     }
     store(resources) {
         this.storage.incr(resources);
@@ -57,22 +58,40 @@ class Improvement {
     subscribeTrader(trader) {
         this.traders.push(trader);
     }
+    subscribeSupplier(trader) {
+        this.suppliers.push(trader);
+    }
 }
 exports.Improvement = Improvement;
 class Worksite extends Improvement {
     constructor(options) {
         super('worksite', options);
         this.cost = constructionCostTable[options.type];
+        this.storedThisTurn = new yield_1.ResourceStore({});
         this.storage.setCapacity(this.cost);
+        this.completed = false;
     }
     getData() {
         return Object.assign(Object.assign({}, super.getData()), { metadata: {
                 type: this.metadata.type,
+                storedThisTurn: this.storedThisTurn,
+                turnsToCompletion: this.cost.sub(this.storage).div(this.storedThisTurn),
             } });
     }
     work(baseYield) {
-        // TODO - ACTUAL WORK HERE
+        if (this.storage.fulfills(this.cost)) {
+            this.completed = true;
+            for (const supplier of this.suppliers) {
+                supplier.expire();
+            }
+            return;
+        }
+        this.storedThisTurn.reset();
         super.work(baseYield);
+    }
+    store(resources) {
+        super.store(resources);
+        this.storedThisTurn.incr(resources);
     }
 }
 exports.Worksite = Worksite;

@@ -5,6 +5,7 @@ const city_1 = require("./tile/city");
 const improvement_1 = require("./tile/improvement");
 const utils_1 = require("../../utils");
 const trade_1 = require("./trade");
+const yield_1 = require("./tile/yield");
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
@@ -108,7 +109,7 @@ class Map {
         });
     }
     getCivTraders(civID) {
-        return this.traders.filter((trader) => trader.civID === civID);
+        return this.traders.filter((trader) => trader.civID === civID).map(trader => trader.getData());
     }
     setTileVisibility(civID, coords, visible) {
         this.getTile(coords).setVisibility(civID, visible);
@@ -163,7 +164,7 @@ class Map {
                 const path = this.findPath(pathTree, Number(pos), coords);
                 if (!path)
                     continue;
-                this.addTrader(new trade_1.Trader(civID, [path, dst[pos]], tile.improvement, sink, TRADER_SPEED, TRADER_CAPACITY));
+                this.addTrader(new trade_1.Trader(civID, [path, dst[pos]], tile.improvement, sink, TRADER_SPEED, yield_1.Yield.min(TRADER_CAPACITY, requirement)));
             }
         }
     }
@@ -177,30 +178,44 @@ class Map {
             this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
-        this.buildImprovementAt(coords, 'settlement', civID, true);
+        this.buildImprovementAt(coords, 'settlement', civID);
         return true;
     }
-    buildImprovementAt(coords, type, ownerID, instant = false) {
+    startConstructionAt(coords, type, ownerID) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
-        if (instant)
-            tile.improvement = new improvement_1.Improvement(type);
-        else {
-            tile.improvement = new improvement_1.Worksite({ construction: true, type });
-            this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.cost);
-        }
+        tile.improvement = new improvement_1.Worksite({ construction: true, type });
+        this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.cost);
+        this.tileUpdate(coords);
+    }
+    buildImprovementAt(coords, type, ownerID) {
+        var _a;
+        const tile = this.getTile(coords);
+        if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
+            return;
+        tile.improvement = new improvement_1.Improvement(type);
         this.tileUpdate(coords);
     }
     turn() {
         for (const tile of this.tiles) {
             if (tile.improvement) {
                 tile.improvement.work(tile.baseYield);
+                if (tile.improvement instanceof improvement_1.Worksite && tile.improvement.completed) {
+                    const type = tile.improvement.metadata.type;
+                    delete tile.improvement;
+                    tile.improvement = new improvement_1.Improvement(type);
+                }
             }
         }
-        for (const trader of this.traders) {
+        for (let i = 0; i < this.traders.length; i++) {
+            const trader = this.traders[i];
             trader.shunt();
+            if (trader.expired) {
+                this.traders.splice(i, 1);
+                i--;
+            }
         }
     }
 }
