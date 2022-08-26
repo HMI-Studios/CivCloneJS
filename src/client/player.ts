@@ -18,7 +18,7 @@ const unitActionsTable: { [unit: string]: string[] } = {
 const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[]] } = {
   'settleCity': (pos: Coords): [string, unknown[]] => {
     // TODO: bring up settle-city menu and ask for city name
-    const name = 'name';
+    const name = prompt(`${translate('menu.city.prompt')}:`);
     return ['settleCity', [pos, name]];
   },
   'buildFarm': (pos: Coords): [string, unknown[]] => {

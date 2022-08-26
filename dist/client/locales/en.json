@@ -61,6 +61,9 @@
     },
     "civ": {
       "selected_by": "Selected by"
+    },
+    "city": {
+      "prompt": "Please enter a name for your new city"
     }
   },
   "error": {

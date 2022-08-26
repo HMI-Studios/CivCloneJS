@@ -6,7 +6,7 @@ const unitActionsTable = {
 const unitActionsFnTable = {
     'settleCity': (pos) => {
         // TODO: bring up settle-city menu and ask for city name
-        const name = 'name';
+        const name = prompt(`${translate('menu.city.prompt')}:`);
         return ['settleCity', [pos, name]];
     },
     'buildFarm': (pos) => {
