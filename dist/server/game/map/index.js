@@ -4,12 +4,21 @@ exports.Map = void 0;
 const city_1 = require("./tile/city");
 const improvement_1 = require("./tile/improvement");
 const utils_1 = require("../../utils");
+const trade_1 = require("./trade");
+const yield_1 = require("./tile/yield");
+// MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
+const TRADER_SPEED = 1;
+const TRADER_CAPACITY = {
+    food: 10,
+    production: 10,
+};
 class Map {
     constructor(height, width) {
         this.height = height;
         this.width = width;
         this.tiles = new Array(height * width);
         this.cities = [];
+        this.traders = [];
         this.updates = [];
     }
     export() {
@@ -44,6 +53,32 @@ class Map {
         this.getNeighborsCoordsRecurse(coords, r, tileList);
         return tileList;
     }
+    // mode: 0 = land unit, 1 = sea unit; -1 = air unit
+    getPathTree(srcPos, range, mode = 0) {
+        // BFS to find all tiles within `range` steps
+        const queue = [];
+        queue.push(srcPos);
+        const dst = {};
+        dst[this.pos(srcPos)] = 0;
+        const paths = {};
+        while (queue.length) {
+            const atPos = queue.shift();
+            for (const adjPos of this.getNeighborsCoords(atPos)) {
+                const tile = this.getTile(adjPos);
+                // PATH BLOCKING LOGIC HERE
+                // if (tile.unit && tile.unit.civID === this.player.civID) continue;
+                const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+                if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
+                    dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
+                    if (dst[this.pos(adjPos)] <= range) {
+                        paths[this.pos(adjPos)] = atPos;
+                        queue.push(adjPos);
+                    }
+                }
+            }
+        }
+        return [paths, dst];
+    }
     getVisibleTilesCoords(unit) {
         return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
     }
@@ -73,6 +108,9 @@ class Map {
             return this.getCivTile(civID, tile);
         });
     }
+    getCivTraders(civID) {
+        return this.traders.filter((trader) => trader.civID === civID).map(trader => trader.getData());
+    }
     setTileVisibility(civID, coords, visible) {
         this.getTile(coords).setVisibility(civID, visible);
         this.tileUpdate(coords);
@@ -92,6 +130,44 @@ class Map {
         this.getTile(coords).setUnit(unit);
         this.tileUpdate(coords);
     }
+    addTrader(trader) {
+        this.traders.push(trader);
+    }
+    findPath(pathTree, srcPosKey, target) {
+        if (srcPosKey in pathTree) {
+            if (this.pos(pathTree[srcPosKey]) === this.pos(target)) {
+                return [target];
+            }
+            else {
+                const subPath = this.findPath(pathTree, this.pos(pathTree[srcPosKey]), target);
+                if (!subPath)
+                    return null;
+                return [pathTree[srcPosKey], ...subPath];
+            }
+        }
+        else {
+            return null;
+        }
+    }
+    createTradeRoutes(civID, coords, sink, requirement, range = 5, mode = 0) {
+        var _a;
+        const [pathTree, dst] = this.getPathTree(coords, range, mode);
+        const posKeys = Object.keys(dst).sort((a, b) => {
+            if (dst[a] > dst[b])
+                return 1;
+            else
+                return -1;
+        });
+        for (const pos of posKeys) {
+            const tile = this.tiles[pos];
+            if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID && tile.canSupply(requirement)) {
+                const path = this.findPath(pathTree, Number(pos), coords);
+                if (!path)
+                    continue;
+                this.addTrader(new trade_1.Trader(civID, [path, dst[pos]], tile.improvement, sink, TRADER_SPEED, yield_1.Yield.min(TRADER_CAPACITY, requirement)));
+            }
+        }
+    }
     settleCityAt(coords, name, civID) {
         const tile = this.getTile(coords);
         if (tile.owner)
@@ -105,6 +181,15 @@ class Map {
         this.buildImprovementAt(coords, 'settlement', civID);
         return true;
     }
+    startConstructionAt(coords, type, ownerID) {
+        var _a;
+        const tile = this.getTile(coords);
+        if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
+            return;
+        tile.improvement = new improvement_1.Worksite({ construction: true, type });
+        this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.cost);
+        this.tileUpdate(coords);
+    }
     buildImprovementAt(coords, type, ownerID) {
         var _a;
         const tile = this.getTile(coords);
@@ -112,6 +197,26 @@ class Map {
             return;
         tile.improvement = new improvement_1.Improvement(type);
         this.tileUpdate(coords);
+    }
+    turn() {
+        for (const tile of this.tiles) {
+            if (tile.improvement) {
+                tile.improvement.work(tile.baseYield);
+                if (tile.improvement instanceof improvement_1.Worksite && tile.improvement.completed) {
+                    const type = tile.improvement.metadata.type;
+                    delete tile.improvement;
+                    tile.improvement = new improvement_1.Improvement(type);
+                }
+            }
+        }
+        for (let i = 0; i < this.traders.length; i++) {
+            const trader = this.traders[i];
+            trader.shunt();
+            if (trader.expired) {
+                this.traders.splice(i, 1);
+                i--;
+            }
+        }
     }
 }
 exports.Map = Map;

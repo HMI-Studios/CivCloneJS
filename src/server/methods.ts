@@ -291,21 +291,7 @@ const methods: {
 
     // if so:
     if (finished) {
-      // end all players' turns
-      game.forEachPlayer((player: Player) => {
-        if (!player.isAI) {
-          game.endTurnForCiv(player.civID);
-        }
-      });
-
-      // Run AIs
-
-      // begin all players' turns
-      game.forEachPlayer((player: Player) => {
-        if (!player.isAI) {
-          game.beginTurnForCiv(player.civID);
-        }
-      });
+      game.endTurn();
     }
   },
 
@@ -419,9 +405,27 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
-        map.buildImprovementAt(coords, type, civID);
+        map.startConstructionAt(coords, type, civID);
         game.sendUpdates();
       }
     }
   },
+
+  getTraders: (ws: WebSocket) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      game.sendToCiv(civID, {
+        update: [
+          ['tradersList', [map.getCivTraders(civID)]],
+        ],
+      });
+    }
+  }
 };

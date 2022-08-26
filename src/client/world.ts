@@ -28,7 +28,18 @@ interface Unit {
 interface Improvement {
   type: string;
   pillaged: boolean;
+  storage: ResourceStorage;
+  metadata?: any;
 }
+
+type ResourceStorage = Yield & {
+  capacity: Yield,
+}
+
+type Yield = {
+  food: number,
+  production: number,
+};
 
 interface Tile {
   type: string;
@@ -36,6 +47,7 @@ interface Tile {
   improvement: Improvement;
   movementCost: MovementCost;
   unit: Unit;
+  yield: Yield,
   owner?: {
     civID: number,
     name: string,
@@ -127,6 +139,35 @@ class World {
   isAdjacent(posA: Coords, posB: Coords): boolean {
     // TODO - possibly optimize this? memoize?
     return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
+  }
+
+  canBuildOn(tile: Tile): boolean {
+    return (
+      tile.owner?.civID === this.player.civID &&
+      tile.type !== 'ocean' &&
+      tile.type !== 'frozen_ocean' &&
+      tile.type !== 'mountain'
+    );
+  }
+
+  canSettleOn(tile: Tile): boolean {
+    return (
+      !tile.owner &&
+      tile.type !== 'ocean' &&
+      tile.type !== 'frozen_ocean' &&
+      tile.type !== 'mountain' &&
+      tile.type !== 'coastal' &&
+      tile.type !== 'frozen_coastal'
+    );
+  }
+
+  canFarmOn(tile: Tile): boolean {
+    // TODO - put this somewhere better
+    const farmableTiles = {
+      grass_lowlands: true,
+      plains: true,
+    };
+    return farmableTiles[tile.type];
   }
 
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
@@ -447,10 +488,6 @@ class World {
       ui.showUnitInfoMenu(this, coords, unit);
     }
 
-    this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
-      ui.showTileInfoMenu(this, coords, tile);
-    }
-
     this.on.event.deselectUnit = (selectedUnitPos: Coords | null): void => {
       ui.hideUnitActionsMenu();
       ui.hideUnitInfoMenu();
@@ -462,8 +499,18 @@ class World {
       }
     }
 
+    this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
+      ui.showTileInfoMenu(this, coords, tile);
+      if (tile.improvement) {
+        ui.showSidebarMenu(this, coords, tile);
+      } else {
+        ui.hideSidebarMenu();
+      }
+    }
+
     this.on.event.deselectTile = (): void => {
       ui.hideTileInfoMenu();
+      ui.hideSidebarMenu();
     }
 
     await this.connect().catch(async () => {

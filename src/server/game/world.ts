@@ -188,4 +188,8 @@ export class World {
     this.map.tileUpdate(attacker.coords);
     this.map.tileUpdate(defender.coords);
   }
+
+  turn(): void {
+    this.map.turn();
+  }
 }

@@ -89,6 +89,23 @@ class Game {
             ],
         });
     }
+    endTurn() {
+        // end all players' turns
+        this.forEachPlayer((player) => {
+            if (!player.isAI) {
+                this.endTurnForCiv(player.civID);
+            }
+        });
+        // Run AIs
+        // Run end-of-turn updates
+        this.world.turn();
+        // begin all players' turns
+        this.forEachPlayer((player) => {
+            if (!player.isAI) {
+                this.beginTurnForCiv(player.civID);
+            }
+        });
+    }
     sendUpdates() {
         const updates = this.world.getUpdates();
         this.forEachCivID((civID) => {

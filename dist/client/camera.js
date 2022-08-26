@@ -15,6 +15,8 @@ class Camera {
             throw 'Canvas Context Error';
         this.ctx = ctx;
         this.textures = {
+            missing: this.loadTexture('missing'),
+            missing_overlay: this.loadOverlayTexture('missing'),
             tile: {
                 ocean: this.loadTexture('tile_ocean'),
                 frozen_ocean: this.loadTexture('tile_frozen_ocean'),
@@ -41,6 +43,7 @@ class Camera {
             },
             improvements: {
                 settlement: this.loadOverlayTexture('improvement_settlement'),
+                worksite: this.loadOverlayTexture('improvement_worksite'),
                 farm: this.loadOverlayTexture('improvement_farm'),
                 forest: this.loadOverlayTexture('improvement_forest'),
             },
@@ -101,6 +104,7 @@ class Camera {
     }
     // The `render` and `renderUnit` methods are exempt from using Coord type, as they must store the `x` and `y` variables separately.
     renderUnit(world, unit, x, y) {
+        var _a;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height, civs } = world;
         const UNIT_WIDTH = (74 * 0.2);
@@ -117,10 +121,10 @@ class Camera {
         ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
         ctx.arc((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
         ctx.fill();
-        ctx.drawImage(textures.unit[unit.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
+        ctx.drawImage(((_a = textures.unit[unit.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
     }
     render(world) {
-        var _a;
+        var _a, _b, _c;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height } = world;
         const [wmX, wmY] = [camX + (mouseX / zoom), camY + (mouseY / zoom)];
@@ -156,7 +160,7 @@ class Camera {
                 if (tile) {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
-                    ctx.drawImage(textures.tile[tile.type], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
+                    ctx.drawImage(((_a = textures.tile[tile.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                     if (tile.owner) {
                         const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
                         const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
@@ -182,7 +186,7 @@ class Camera {
                             const neighbor = world.getTile(neighbors[i]);
                             if (!neighbor)
                                 ctx.moveTo(...positions[i]);
-                            else if (((_a = neighbor.owner) === null || _a === void 0 ? void 0 : _a.civID) === tile.owner.civID)
+                            else if (((_b = neighbor.owner) === null || _b === void 0 ? void 0 : _b.civID) === tile.owner.civID)
                                 ctx.moveTo(...positions[i]);
                             else
                                 ctx.lineTo(...positions[i]);
@@ -241,7 +245,7 @@ class Camera {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     if (tile.improvement) {
-                        const overlay = textures.improvements[tile.improvement.type];
+                        const overlay = (_c = textures.improvements[tile.improvement.type]) !== null && _c !== void 0 ? _c : textures.missing_overlay;
                         ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
                     }
                     ctx.globalAlpha = 1;

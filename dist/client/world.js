@@ -64,6 +64,29 @@ class World {
         // TODO - possibly optimize this? memoize?
         return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
     }
+    canBuildOn(tile) {
+        var _a;
+        return (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === this.player.civID &&
+            tile.type !== 'ocean' &&
+            tile.type !== 'frozen_ocean' &&
+            tile.type !== 'mountain');
+    }
+    canSettleOn(tile) {
+        return (!tile.owner &&
+            tile.type !== 'ocean' &&
+            tile.type !== 'frozen_ocean' &&
+            tile.type !== 'mountain' &&
+            tile.type !== 'coastal' &&
+            tile.type !== 'frozen_coastal');
+    }
+    canFarmOn(tile) {
+        // TODO - put this somewhere better
+        const farmableTiles = {
+            grass_lowlands: true,
+            plains: true,
+        };
+        return farmableTiles[tile.type];
+    }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
     getTilesInRange(srcPos, range, mode = 0) {
         // BFS to find all tiles within `range` steps
@@ -359,9 +382,6 @@ class World {
                 ui.showUnitActionsMenu(this, coords, unit);
                 ui.showUnitInfoMenu(this, coords, unit);
             };
-            this.on.event.selectTile = (coords, tile) => {
-                ui.showTileInfoMenu(this, coords, tile);
-            };
             this.on.event.deselectUnit = (selectedUnitPos) => {
                 var _a;
                 ui.hideUnitActionsMenu();
@@ -373,8 +393,18 @@ class World {
                     }
                 }
             };
+            this.on.event.selectTile = (coords, tile) => {
+                ui.showTileInfoMenu(this, coords, tile);
+                if (tile.improvement) {
+                    ui.showSidebarMenu(this, coords, tile);
+                }
+                else {
+                    ui.hideSidebarMenu();
+                }
+            };
             this.on.event.deselectTile = () => {
                 ui.hideTileInfoMenu();
+                ui.hideSidebarMenu();
             };
             yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {
                 console.error('Connection Failed. Reload page to retry.');

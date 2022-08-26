@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Biome = exports.River = exports.TilePool = exports.TileType = void 0;
 const utils_1 = require("../../../utils");
 class TileType {
-    constructor(type, heightClass, vegetation = null, isWater = false, isOcean = false, isRiverGen = false) {
+    constructor(type, heightClass, yieldParams, vegetation = null, isWater = false, isOcean = false, isRiverGen = false) {
         this.type = type;
         this.vegetation = vegetation !== null && vegetation !== void 0 ? vegetation : [0, null];
         this.isMountain = (heightClass === 5);
@@ -11,6 +11,7 @@ class TileType {
         this.isOcean = isOcean;
         this.isRiverGen = isRiverGen;
         this.heightClass = heightClass;
+        this.yieldParams = yieldParams !== null && yieldParams !== void 0 ? yieldParams : {};
     }
     getVegetation(random) {
         return (random.randFloat(100) < this.vegetation[0]) ? this.vegetation[1] : null;

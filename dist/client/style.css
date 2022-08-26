@@ -109,6 +109,51 @@ canvas {
   padding: 20px;
 }
 
+.sidebarMenu {
+	grid-column: 8 / 12;
+	grid-row: 1 / 8;
+  background-color: gray;
+  border: 2px solid black;
+  padding: 20px;
+  z-index: 3;
+  overflow-y: scroll;
+}
+
+.sidebarTitleDiv {
+  display: flex;
+  background-color: #696969;
+  height: 36px;
+  border-radius: 18px;
+  border-style: inset;
+  justify-content: center;
+  align-items: center;
+}
+
+.sidebarTitle {
+  color: whitesmoke;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.sidebarInfoTable {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+  border: 2px inset black;
+  border-radius: 8px;
+  background-color: #696969;
+}
+
+.sidebarInfoTableRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sidebarInfoSpan {
+  color: lightgray;
+  font-weight: 600;
+}
+
 .infoSpan {
 	display: block;
   margin: 0;

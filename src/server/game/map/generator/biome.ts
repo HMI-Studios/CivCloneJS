@@ -1,5 +1,6 @@
 import { Random } from '../../../utils/random';
 import { getAdjacentCoords } from '../../../utils';
+import { YieldParams } from '../tile/yield';
 
 export class TileType {
   public type: string;
@@ -9,8 +10,14 @@ export class TileType {
   public isOcean: boolean;
   public isRiverGen: boolean;
   public heightClass: number; // 0 = Sea Level, 1 = Lowlands, 2 = Plains, 3 = Highlands, 4 = Mountains, 5 = Mountain Peak
+  public yieldParams: YieldParams;
 
-  constructor(type: string, heightClass: number, vegetation: [number, string] | null = null, isWater = false, isOcean = false, isRiverGen = false) {
+  constructor(
+    type: string, heightClass: number,
+    yieldParams: YieldParams,
+    vegetation: [number, string] | null = null,
+    isWater = false, isOcean = false, isRiverGen = false,
+    ) {
     this.type = type;
     this.vegetation = vegetation ?? [0, null];
     this.isMountain = (heightClass === 5);
@@ -18,6 +25,7 @@ export class TileType {
     this.isOcean = isOcean;
     this.isRiverGen = isRiverGen;
     this.heightClass = heightClass;
+    this.yieldParams = yieldParams ?? {};
   }
 
   getVegetation(random: Random): string | null {

@@ -146,6 +146,9 @@ class World {
         this.map.tileUpdate(attacker.coords);
         this.map.tileUpdate(defender.coords);
     }
+    turn() {
+        this.map.turn();
+    }
 }
 exports.World = World;
 //# sourceMappingURL=world.js.map

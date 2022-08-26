@@ -5,7 +5,9 @@ interface Leader {
   civID: number;
 }
 
-type Locale = { [key: string]: Locale | any };
+type ElementOptions = {
+  innerText: string;
+} | null;
 
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
@@ -16,7 +18,7 @@ const unitActionsTable: { [unit: string]: string[] } = {
 const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[]] } = {
   'settleCity': (pos: Coords): [string, unknown[]] => {
     // TODO: bring up settle-city menu and ask for city name
-    const name = 'name';
+    const name = prompt(`${translate('menu.city.prompt')}:`);
     return ['settleCity', [pos, name]];
   },
   'buildFarm': (pos: Coords): [string, unknown[]] => {
@@ -27,11 +29,11 @@ const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[
 const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
   'settleCity': (world: World, pos: Coords): boolean => {
     const tile = world.getTile(pos);
-    return tile.type === 'plains';
+    return world.canSettleOn(tile);
   },
   'buildFarm': (world: World, pos: Coords): boolean => {
     const tile = world.getTile(pos);
-    return tile.type === 'plains';
+    return world.canBuildOn(tile) && world.canFarmOn(tile);
   },
 };
 
@@ -48,7 +50,6 @@ class UI {
   buttons: { [key: string]: Button };
   textInputs: { [key: string]: TextInput };
   textAlerts: { [key: string]: TextAlert };
-  locale: Locale;
 
   public view: string;
 
@@ -57,14 +58,15 @@ class UI {
     if (!rootElement) throw 'Root UI Element Missing';
     this.root = rootElement;
     this.elements = {
-      readyBtn: this.createElement('button', 'readyBtn'),
-      centerModal: this.createElement('div', 'centerModal'),
-      civPicker: this.createElement('ul', 'civList'),
-      mainMenu: this.createElement('div', 'mainMenu'),
-      gameList: this.createElement('div', 'gameList'),
-      unitActionsMenu: this.createElement('div', 'unitActionsMenu'),
-      unitInfoMenu: this.createElement('div', 'unitInfoMenu'),
-      tileInfoMenu: this.createElement('div', 'tileInfoMenu'),
+      readyBtn: this.createElement('button', {className: 'readyBtn'}),
+      centerModal: this.createElement('div', {className: 'centerModal'}),
+      civPicker: this.createElement('ul', {className: 'civList'}),
+      mainMenu: this.createElement('div', {className: 'mainMenu'}),
+      gameList: this.createElement('div', {className: 'gameList'}),
+      unitActionsMenu: this.createElement('div', {className: 'unitActionsMenu'}),
+      unitInfoMenu: this.createElement('div', {className: 'unitInfoMenu'}),
+      tileInfoMenu: this.createElement('div', {className: 'tileInfoMenu'}),
+      sidebarMenu: this.createElement('div', {className: 'sidebarMenu'}),
     };
     this.leaderPool = [];
     this.takenLeaders = [];
@@ -73,7 +75,7 @@ class UI {
     this.turnActive = false;
 
     this.buttons = {
-      mainBtn: new Button(this.createElement('button', 'mainActionBtn'), {
+      mainBtn: new Button(this.createElement('button', {className: 'mainActionBtn'}), {
         text: 'MainBtn',
       }),
     };
@@ -145,16 +147,26 @@ class UI {
     this.hideMainMenu();
   }
 
-  createElement(type: string, className?: string): HTMLElement {
+  createElement(type: string, options?: { className?: string, attrs?: ElementOptions, children?: HTMLElement[]}): HTMLElement {
     const element = document.createElement(type);
-    if (className) {
-      element.className = className;
+    if (options?.className) {
+      element.className = options.className;
+    }
+    if (options?.attrs) {
+      for (const attr in options?.attrs) {
+        element[attr] = options?.attrs[attr];
+      }
+    }
+    if (options?.children) {
+      for (const child of options.children) {
+        element.appendChild(child);
+      }
     }
     return element;
   }
 
   createCivItem(leader: Leader): HTMLElement {
-    const civItem = this.createElement('li', 'civItem');
+    const civItem = this.createElement('li', {className: 'civItem'});
     civItem.style.backgroundColor = leader.color;
     const nameText = this.createElement('span');
     nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - ${translate('menu.civ.selected_by')} ${this.civs[leader.civID].name}` : '');
@@ -196,7 +208,7 @@ class UI {
 
   showCivPicker(callback: (leaderID: number) => void, self: Player): void {
     this.elements.civPicker.innerHTML = '';
-    const selectedLeaderSlot = this.createElement('div', 'selectedLeader');
+    const selectedLeaderSlot = this.createElement('div', {className: 'selectedLeader'});
     this.elements.civPicker.appendChild(selectedLeaderSlot);
     for (let i = 0; i < this.leaderPool.length; i++) {
       const leader = this.leaderPool[i];
@@ -351,11 +363,11 @@ class UI {
   }
 
   showUnitInfoMenu(world: World, pos: Coords, unit: Unit): void {
-    const unitName = this.createElement('h2', 'infoSpan');
+    const unitName = this.createElement('h2', {className: 'infoSpan'});
     unitName.innerText = translate(`unit.${unit.type}`);
-    const unitHP = this.createElement('span', 'infoSpan');
+    const unitHP = this.createElement('span', {className: 'infoSpan'});
     unitHP.innerText = `${translate('unit.info.hp')}: ${unit.hp}%`;
-    const unitMovement = this.createElement('span', 'infoSpan');
+    const unitMovement = this.createElement('span', {className: 'infoSpan'});
     unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
 
     this.elements.unitInfoMenu.appendChild(unitName);
@@ -372,11 +384,11 @@ class UI {
   showTileInfoMenu(world: World, pos: Coords, tile: Tile): void {
     this.elements.tileInfoMenu.innerHTML = '';
 
-    const tileType = this.createElement('span', 'infoSpan');
+    const tileType = this.createElement('span', {className: 'infoSpan'});
     tileType.innerText = `${translate('tile.info.type')}: ${translate(`tile.${tile.type}`)}`;
-    const tileMovementCost = this.createElement('span', 'infoSpan');
+    const tileMovementCost = this.createElement('span', {className: 'infoSpan'});
     tileMovementCost.innerText = `${translate('tile.info.movement')}: ${tile.movementCost[0]} - ${tile.movementCost[1]}`;
-    const tileElevation = this.createElement('span', 'infoSpan');
+    const tileElevation = this.createElement('span', {className: 'infoSpan'});
     tileElevation.innerText = `${translate('tile.info.elevation')}: ${Math.round(tile.elevation)}`;
 
     this.elements.tileInfoMenu.appendChild(tileType);
@@ -384,7 +396,7 @@ class UI {
     this.elements.tileInfoMenu.appendChild(tileElevation);
 
     if (tile.owner) {
-      const tileOwner = this.createElement('span', 'infoSpan');
+      const tileOwner = this.createElement('span', {className: 'infoSpan'});
       tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
       this.elements.tileInfoMenu.appendChild(tileOwner);
     }
@@ -395,5 +407,56 @@ class UI {
   hideTileInfoMenu(): void {
     this.elements.tileInfoMenu.remove();
     this.elements.tileInfoMenu.innerHTML = '';
+  }
+
+  showSidebarMenu(world: World, pos: Coords, tile: Tile): void {
+    this.elements.sidebarMenu.innerHTML = '';
+
+    const titleText = (tile.improvement.type === 'settlement') ? (
+      tile.owner?.name ?? translate('error.city.orphan')
+    ) : (
+      translate(`improvement.${tile.improvement.type}`)
+    );
+    const title = this.createElement('span', {className: 'sidebarTitleDiv', children: [
+      this.createElement('span', {className: 'sidebarTitle', attrs: { innerText: titleText }}),
+    ]});
+    this.elements.sidebarMenu.appendChild(title);
+    
+    if (tile.improvement.type === 'worksite') {
+      const worksiteProgress = this.createElement('span', {
+        className: 'sidebarInfoSpan',
+        attrs: { innerText: `${translate('improvement.info.turnsToComplete')}: ${tile.improvement.metadata?.turnsToCompletion ?? '-'}` }
+      });
+      this.elements.sidebarMenu.appendChild(worksiteProgress);
+    }
+
+    const tileYield = this.createElement('div', {className: 'sidebarInfoDiv', children: [
+      this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.yield') }}),
+      this.createElement('div', {className: 'sidebarInfoTable', children: Object.keys(tile.yield).map(key => (
+        this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`yield.${key}`) } }),
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: tile.yield[key] } }),
+        ] })
+      ))}),
+    ]});
+    this.elements.sidebarMenu.appendChild(tileYield);
+
+    const tileStore = this.createElement('div', {className: 'sidebarInfoDiv', children: [
+      this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.storage') }}),
+      this.createElement('div', {className: 'sidebarInfoTable', children: Object.keys(tile.improvement.storage.capacity).map(key => (
+        this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`yield.${key}`) } }),
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: tile.improvement.storage[key] } }),
+        ] })
+      ))}),
+    ]});
+    this.elements.sidebarMenu.appendChild(tileStore);
+
+    this.root.appendChild(this.elements.sidebarMenu);
+  }
+
+  hideSidebarMenu(): void {
+    this.elements.sidebarMenu.remove();
+    this.elements.sidebarMenu.innerHTML = '';
   }
 }

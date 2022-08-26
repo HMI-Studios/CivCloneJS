@@ -89,6 +89,9 @@ class Tile {
     clearVisibility(civID) {
         this.visibleTo[civID] = 0;
     }
+    canSupply(requirement) {
+        return !!this.improvement && (this.improvement.yield.add(this.baseYield).canSupply(requirement));
+    }
 }
 exports.Tile = Tile;
 //# sourceMappingURL=index.js.map

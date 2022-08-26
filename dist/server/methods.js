@@ -241,19 +241,7 @@ const methods = {
         }
         // if so:
         if (finished) {
-            // end all players' turns
-            game.forEachPlayer((player) => {
-                if (!player.isAI) {
-                    game.endTurnForCiv(player.civID);
-                }
-            });
-            // Run AIs
-            // begin all players' turns
-            game.forEachPlayer((player) => {
-                if (!player.isAI) {
-                    game.beginTurnForCiv(player.civID);
-                }
-            });
+            game.endTurn();
         }
     },
     moveUnit: (ws, srcCoords, path, attack) => {
@@ -342,10 +330,24 @@ const methods = {
             const tile = map.getTile(coords);
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
-                map.buildImprovementAt(coords, type, civID);
+                map.startConstructionAt(coords, type, civID);
                 game.sendUpdates();
             }
         }
     },
+    getTraders: (ws) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            game.sendToCiv(civID, {
+                update: [
+                    ['tradersList', [map.getCivTraders(civID)]],
+                ],
+            });
+        }
+    }
 };
 //# sourceMappingURL=methods.js.map

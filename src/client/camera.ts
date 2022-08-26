@@ -17,6 +17,8 @@ class Camera {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   textures: {
+    missing: HTMLImageElement,
+    missing_overlay: OverlayTexture,
     tile: { [key: string]: HTMLImageElement },
     selector: HTMLImageElement,
     unit: { [key: string]: HTMLImageElement },
@@ -38,6 +40,8 @@ class Camera {
     this.ctx = ctx;
 
     this.textures = {
+      missing: this.loadTexture('missing'),
+      missing_overlay: this.loadOverlayTexture('missing'),
       tile: {
         ocean: this.loadTexture('tile_ocean'),
         frozen_ocean: this.loadTexture('tile_frozen_ocean'),
@@ -68,6 +72,7 @@ class Camera {
       },
       improvements: {
         settlement: this.loadOverlayTexture('improvement_settlement'),
+        worksite: this.loadOverlayTexture('improvement_worksite'),
 
         farm: this.loadOverlayTexture('improvement_farm'),
 
@@ -181,7 +186,7 @@ class Camera {
     ctx.fill();
 
     ctx.drawImage(
-      textures.unit[unit.type] as CanvasImageSource,
+      (textures.unit[unit.type] ?? textures.missing) as CanvasImageSource,
       (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom,
       (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom,
       UNIT_WIDTH * zoom,
@@ -235,7 +240,7 @@ class Camera {
           if (!tile.visible) ctx.globalAlpha = 0.5;
 
           ctx.drawImage(
-            textures.tile[tile.type] as CanvasImageSource,
+            (textures.tile[tile.type] ?? textures.missing) as CanvasImageSource,
             (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
             (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom,
             TILE_WIDTH * zoom,
@@ -345,7 +350,7 @@ class Camera {
           if (!tile.visible) ctx.globalAlpha = 0.5;
 
           if (tile.improvement) {
-            const overlay = textures.improvements[tile.improvement.type];
+            const overlay = textures.improvements[tile.improvement.type] ?? textures.missing_overlay;
             ctx.drawImage(
               overlay.texture as CanvasImageSource,
               (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
