@@ -56,8 +56,6 @@ export class Improvement {
 
   work(baseYield: Yield): void {
     // TODO - ADD POPULATION/COST CHECK
-    const totalYield = this.yield.add(baseYield);
-    this.storage.incr(totalYield);
 
     let traderCount = this.traders.length;
     for (let i = 0; i < this.traders.length; i++) {
@@ -74,6 +72,8 @@ export class Improvement {
       traderCount--;
     }
 
+    const totalYield = this.yield.add(baseYield);
+    this.storage.incr(totalYield);
     this.storage.cap();
   }
 
@@ -104,7 +104,6 @@ export class Worksite extends Improvement {
   }
 
   getData(): ImprovementData {
-    console.log(this.cost, this.cost.sub(this.storage.sub(this.storedThisTurn)), this.cost.sub(this.storage).div(this.storedThisTurn))
     return {
       ...super.getData(),
       metadata: {

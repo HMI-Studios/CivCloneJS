@@ -34,8 +34,6 @@ class Improvement {
     }
     work(baseYield) {
         // TODO - ADD POPULATION/COST CHECK
-        const totalYield = this.yield.add(baseYield);
-        this.storage.incr(totalYield);
         let traderCount = this.traders.length;
         for (let i = 0; i < this.traders.length; i++) {
             const trader = this.traders[i];
@@ -50,6 +48,8 @@ class Improvement {
             this.storage.decr(traderShare.decr(surplus));
             traderCount--;
         }
+        const totalYield = this.yield.add(baseYield);
+        this.storage.incr(totalYield);
         this.storage.cap();
     }
     store(resources) {
@@ -72,7 +72,6 @@ class Worksite extends Improvement {
         this.completed = false;
     }
     getData() {
-        console.log(this.cost, this.cost.sub(this.storage.sub(this.storedThisTurn)), this.cost.sub(this.storage).div(this.storedThisTurn));
         return Object.assign(Object.assign({}, super.getData()), { metadata: {
                 type: this.metadata.type,
                 storedThisTurn: this.storedThisTurn,
