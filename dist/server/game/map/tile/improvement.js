@@ -15,11 +15,11 @@ const constructionCostTable = {
     'farm': new yield_1.Yield({ production: 10 }),
 };
 class Improvement {
-    constructor(type, metadata) {
+    constructor(type, baseYield, metadata) {
         var _a, _b;
         this.type = type;
         this.pillaged = false;
-        this.yield = (_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({});
+        this.yield = baseYield.add((_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({}));
         this.metadata = metadata;
         this.storage = new yield_1.ResourceStore((_b = improvementStoreCapTable[type]) !== null && _b !== void 0 ? _b : {});
         this.traders = [];
@@ -32,7 +32,7 @@ class Improvement {
             storage: this.storage,
         };
     }
-    work(baseYield) {
+    work() {
         // TODO - ADD POPULATION/COST CHECK
         let traderCount = this.traders.length;
         for (let i = 0; i < this.traders.length; i++) {
@@ -48,8 +48,7 @@ class Improvement {
             this.storage.decr(traderShare.decr(surplus));
             traderCount--;
         }
-        const totalYield = this.yield.add(baseYield);
-        this.storage.incr(totalYield);
+        this.storage.incr(this.yield);
         this.storage.cap();
     }
     store(resources) {
@@ -65,7 +64,7 @@ class Improvement {
 exports.Improvement = Improvement;
 class Worksite extends Improvement {
     constructor(options) {
-        super('worksite', options);
+        super('worksite', new yield_1.Yield({}), options);
         this.cost = constructionCostTable[options.type];
         this.storedThisTurn = new yield_1.ResourceStore({});
         this.storage.setCapacity(this.cost);
@@ -78,7 +77,7 @@ class Worksite extends Improvement {
                 turnsToCompletion: this.cost.sub(this.storage.sub(this.storedThisTurn)).div(this.storedThisTurn),
             } });
     }
-    work(baseYield) {
+    work() {
         if (this.storage.fulfills(this.cost)) {
             this.completed = true;
             for (const supplier of this.suppliers) {
@@ -87,7 +86,7 @@ class Worksite extends Improvement {
             return;
         }
         this.storedThisTurn.reset();
-        super.work(baseYield);
+        super.work();
     }
     store(resources) {
         super.store(resources);

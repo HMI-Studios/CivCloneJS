@@ -233,7 +233,7 @@ export class Map {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
 
-    tile.improvement = new Improvement(type);
+    tile.improvement = new Improvement(type, tile.baseYield);
 
     this.tileUpdate(coords);
   }
@@ -241,11 +241,11 @@ export class Map {
   turn(): void {
     for (const tile of this.tiles) {
       if (tile.improvement) {
-        tile.improvement.work(tile.baseYield);
+        tile.improvement.work();
         if (tile.improvement instanceof Worksite && tile.improvement.completed) {
           const type = tile.improvement.metadata.type;
           delete tile.improvement;
-          tile.improvement = new Improvement(type);
+          tile.improvement = new Improvement(type, tile.baseYield);
         }
       }
     }

@@ -195,17 +195,17 @@ class Map {
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
-        tile.improvement = new improvement_1.Improvement(type);
+        tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
         this.tileUpdate(coords);
     }
     turn() {
         for (const tile of this.tiles) {
             if (tile.improvement) {
-                tile.improvement.work(tile.baseYield);
+                tile.improvement.work();
                 if (tile.improvement instanceof improvement_1.Worksite && tile.improvement.completed) {
                     const type = tile.improvement.metadata.type;
                     delete tile.improvement;
-                    tile.improvement = new improvement_1.Improvement(type);
+                    tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
                 }
             }
         }

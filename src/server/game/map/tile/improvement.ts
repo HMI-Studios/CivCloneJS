@@ -36,10 +36,10 @@ export class Improvement {
   protected suppliers: Trader[];
   protected storage: ResourceStore;
   
-  constructor(type: string, metadata?: any) {
+  constructor(type: string, baseYield: Yield, metadata?: any) {
     this.type = type;
     this.pillaged = false;
-    this.yield = improvementYieldTable[type] ?? new Yield({});
+    this.yield = baseYield.add(improvementYieldTable[type] ?? new Yield({}));
     this.metadata = metadata;
     this.storage = new ResourceStore(improvementStoreCapTable[type] ?? {});
     this.traders = [];
@@ -54,7 +54,7 @@ export class Improvement {
     };
   }
 
-  work(baseYield: Yield): void {
+  work(): void {
     // TODO - ADD POPULATION/COST CHECK
 
     let traderCount = this.traders.length;
@@ -72,8 +72,7 @@ export class Improvement {
       traderCount--;
     }
 
-    const totalYield = this.yield.add(baseYield);
-    this.storage.incr(totalYield);
+    this.storage.incr(this.yield);
     this.storage.cap();
   }
 
@@ -96,7 +95,7 @@ export class Worksite extends Improvement {
   public completed: boolean;
 
   constructor(options: { construction: boolean, type: string }) {
-    super('worksite', options);
+    super('worksite', new Yield({}), options);
     this.cost = constructionCostTable[options.type];
     this.storedThisTurn = new ResourceStore({});
     this.storage.setCapacity(this.cost);
@@ -114,7 +113,7 @@ export class Worksite extends Improvement {
     };
   }
 
-  work(baseYield: Yield): void {
+  work(): void {
     if (this.storage.fulfills(this.cost)) {
       this.completed = true;
       for (const supplier of this.suppliers) {
@@ -123,7 +122,7 @@ export class Worksite extends Improvement {
       return;
     }
     this.storedThisTurn.reset();
-    super.work(baseYield);
+    super.work();
   }
 
   store(resources: Yield): void {

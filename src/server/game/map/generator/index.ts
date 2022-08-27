@@ -225,7 +225,7 @@ export class PerlinWorldGenerator {
         const tile = new Tile(tileTypeMap[i].type, heightMap[i], new Yield(tileTypeMap[i].yieldParams));
 
         const vegetation = tileTypeMap[i].getVegetation(this.random);
-        if (vegetation) tile.improvement = new Improvement(vegetation);
+        if (vegetation) tile.improvement = new Improvement(vegetation, tile.baseYield);
 
         map.setTile({ x, y }, tile);
         i++;
