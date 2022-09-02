@@ -38,7 +38,7 @@ class World {
                 }
             }
             if (!start_location_successful) {
-                console.error("Error: coudln't find legal start location! (gave up after 1000 tries)");
+                console.error("Error: couldn't find legal start location! (gave up after 1000 tries)");
             }
             this.updateCivTileVisibility(civID);
         }
