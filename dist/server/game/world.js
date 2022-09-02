@@ -39,7 +39,6 @@ class World {
             }
             if (!start_location_successful) {
                 console.error("Error: coudln't find legal start location! (gave up after 1000 tries)");
-                this.addUnit(new unit_1.Unit('settler', civID, { x: 0, y: 0 }));
             }
             this.updateCivTileVisibility(civID);
         }
