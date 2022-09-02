@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.World = void 0;
 const unit_1 = require("./map/tile/unit");
 const civilization_1 = require("./civilization");
+const random_1 = require("../utils/random");
 const leader_1 = require("./leader");
 class World {
     constructor(map, civsCount) {
@@ -10,12 +11,37 @@ class World {
         this.civsCount = civsCount;
         this.civs = {};
         this.leaderPool = {};
-        for (let i = 0; i < this.civsCount; i++) {
-            this.civs[i] = new civilization_1.Civilization();
-            this.addUnit(new unit_1.Unit('settler', i, { x: (i + 1) * 1, y: (i + 1) * 1 + 1 })); // REMOVE THESE
-            this.addUnit(new unit_1.Unit('builder', i, { x: (i + 1) * 3, y: (i + 1) * 3 + 1 })); // REMOVE THESE
-            this.addUnit(new unit_1.Unit('scout', i, { x: (i + 1) * 4, y: (i + 1) * 4 + 1 })); // REMOVE THESE
-            this.updateCivTileVisibility(i);
+        for (let civID = 0; civID < this.civsCount; civID++) {
+            this.civs[civID] = new civilization_1.Civilization();
+            const random = new random_1.Random(42);
+            let start_location_successful = false;
+            for (let i = 0; i < 1000; i++) {
+                const x = random.randInt(0, map.width - 1);
+                const y = random.randInt(0, map.height - 1);
+                const settler_coords = { x, y };
+                const builder_coords = { x: x + 1, y: y + 1 };
+                const scout_coords = { x: x - 1, y: y + 1 };
+                let legal_start_location = true;
+                for (const coords of [settler_coords, builder_coords, scout_coords]) {
+                    const tile = this.map.getTile(coords);
+                    if (!tile || tile.unit || !this.map.canSettleOn(tile)) {
+                        legal_start_location = false;
+                        break;
+                    }
+                }
+                if (legal_start_location) {
+                    this.addUnit(new unit_1.Unit('settler', civID, settler_coords));
+                    this.addUnit(new unit_1.Unit('builder', civID, builder_coords));
+                    this.addUnit(new unit_1.Unit('scout', civID, scout_coords));
+                    start_location_successful = true;
+                    break;
+                }
+            }
+            if (!start_location_successful) {
+                console.error("Error: coudln't find legal start location! (gave up after 1000 tries)");
+                this.addUnit(new unit_1.Unit('settler', civID, { x: 0, y: 0 }));
+            }
+            this.updateCivTileVisibility(civID);
         }
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
             this.leaderPool[i] = new leader_1.Leader(i);

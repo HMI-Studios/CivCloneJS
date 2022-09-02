@@ -168,9 +168,18 @@ class Map {
             }
         }
     }
+    canSettleOn(tile) {
+        return (!tile.owner &&
+            tile.type !== 'ocean' &&
+            tile.type !== 'frozen_ocean' &&
+            tile.type !== 'mountain' &&
+            tile.type !== 'coastal' &&
+            tile.type !== 'frozen_coastal' &&
+            tile.type !== 'river');
+    }
     settleCityAt(coords, name, civID) {
         const tile = this.getTile(coords);
-        if (tile.owner)
+        if (!this.canSettleOn(tile))
             return false;
         const city = new city_1.City(coords, name, civID);
         this.cities.push(city);
@@ -190,10 +199,17 @@ class Map {
         this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.cost);
         this.tileUpdate(coords);
     }
+    canBuildOn(tile) {
+        return (tile.type !== 'ocean' &&
+            tile.type !== 'frozen_ocean' &&
+            tile.type !== 'mountain');
+    }
     buildImprovementAt(coords, type, ownerID) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
+            return;
+        if (!this.canBuildOn(tile))
             return;
         tile.improvement = new improvement_1.Improvement(type);
         this.tileUpdate(coords);
