@@ -209,7 +209,8 @@ export class Map {
       tile.type !== 'frozen_ocean' &&
       tile.type !== 'mountain' &&
       tile.type !== 'coastal' &&
-      tile.type !== 'frozen_coastal'
+      tile.type !== 'frozen_coastal' &&
+      tile.type !== 'river'
     );
   }
 
@@ -240,9 +241,8 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  canBuildOn(tile: Tile, ownerID: number): boolean {
+  canBuildOn(tile: Tile): boolean {
     return (
-      tile.owner?.civID === ownerID &&
       tile.type !== 'ocean' &&
       tile.type !== 'frozen_ocean' &&
       tile.type !== 'mountain'
@@ -251,7 +251,8 @@ export class Map {
 
   buildImprovementAt(coords: Coords, type: string, ownerID: number): void {
     const tile = this.getTile(coords);
-    if (!this.canBuildOn(tile, ownerID)) return;
+    if (tile.owner?.civID !== ownerID) return;
+    if (!this.canBuildOn(tile)) return;
 
     tile.improvement = new Improvement(type);
 
