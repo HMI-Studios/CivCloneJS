@@ -157,7 +157,8 @@ class World {
       tile.type !== 'frozen_ocean' &&
       tile.type !== 'mountain' &&
       tile.type !== 'coastal' &&
-      tile.type !== 'frozen_coastal'
+      tile.type !== 'frozen_coastal' &&
+      tile.type !== 'river'
     );
   }
 
