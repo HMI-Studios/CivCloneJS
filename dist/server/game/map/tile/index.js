@@ -47,7 +47,7 @@ class Tile {
     }
     getTileYield() {
         if (this.improvement) {
-            return this.baseYield.add(this.improvement.yield);
+            return this.improvement.yield;
         }
         else {
             return this.baseYield;
@@ -90,7 +90,7 @@ class Tile {
         this.visibleTo[civID] = 0;
     }
     canSupply(requirement) {
-        return !!this.improvement && (this.improvement.yield.add(this.baseYield).canSupply(requirement));
+        return !!this.improvement && (this.improvement.yield.canSupply(requirement));
     }
 }
 exports.Tile = Tile;

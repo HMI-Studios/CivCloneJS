@@ -235,8 +235,13 @@ export class Map {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
-    tile.improvement = new Worksite({ construction: true, type });
-    this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).cost);
+    tile.improvement = new Improvement('worksite', tile.baseYield, { 
+      type, onCompletion: (improvement: Improvement) => {
+        delete tile.improvement;
+        tile.improvement = new Improvement(type, tile.baseYield);
+      } 
+    });
+    this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
 
     this.tileUpdate(coords);
   }
@@ -254,7 +259,7 @@ export class Map {
     if (tile.owner?.civID !== ownerID) return;
     if (!this.canBuildOn(tile)) return;
 
-    tile.improvement = new Improvement(type);
+    tile.improvement = new Improvement(type, tile.baseYield);
 
     this.tileUpdate(coords);
   }
@@ -262,12 +267,7 @@ export class Map {
   turn(): void {
     for (const tile of this.tiles) {
       if (tile.improvement) {
-        tile.improvement.work(tile.baseYield);
-        if (tile.improvement instanceof Worksite && tile.improvement.completed) {
-          const type = tile.improvement.metadata.type;
-          delete tile.improvement;
-          tile.improvement = new Improvement(type);
-        }
+        tile.improvement.work();
       }
     }
     for (let i = 0; i < this.traders.length; i++) {
