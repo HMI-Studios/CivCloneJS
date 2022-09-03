@@ -1,6 +1,8 @@
 interface Leader {
   id: number;
   color: string;
+  textColor: string;
+  secondaryColor: string;
   name: string;
   civID: number;
 }
@@ -168,6 +170,7 @@ class UI {
   createCivItem(leader: Leader): HTMLElement {
     const civItem = this.createElement('li', {className: 'civItem'});
     civItem.style.backgroundColor = leader.color;
+    civItem.style.color = leader.textColor;
     const nameText = this.createElement('span');
     nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - ${translate('menu.civ.selected_by')} ${this.civs[leader.civID].name}` : '');
     civItem.appendChild(nameText);
