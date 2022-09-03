@@ -425,7 +425,7 @@ class UI {
     if (tile.improvement.type === 'worksite') {
       const worksiteProgress = this.createElement('span', {
         className: 'sidebarInfoSpan',
-        attrs: { innerText: `${translate('improvement.info.turnsToComplete')}: ${tile.improvement.metadata?.turnsToCompletion ?? '-'}` }
+        attrs: { innerText: `${translate('improvement.info.turnsToComplete')}: ${tile.improvement.errand?.turnsToCompletion ?? '-'}` }
       });
       this.elements.sidebarMenu.appendChild(worksiteProgress);
     }

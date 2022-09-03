@@ -78,7 +78,7 @@ export class Tile {
 
   getTileYield(): Yield {
     if (this.improvement) {
-      return this.baseYield.add(this.improvement.yield);
+      return this.improvement.yield;
     } else {
       return this.baseYield;
     }
@@ -130,7 +130,7 @@ export class Tile {
 
   canSupply(requirement: YieldParams): boolean {
     return !!this.improvement && (
-      this.improvement.yield.add(this.baseYield).canSupply(requirement)
+      this.improvement.yield.canSupply(requirement)
     );
   }
 }

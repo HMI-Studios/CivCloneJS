@@ -334,7 +334,7 @@ class UI {
         if (tile.improvement.type === 'worksite') {
             const worksiteProgress = this.createElement('span', {
                 className: 'sidebarInfoSpan',
-                attrs: { innerText: `${translate('improvement.info.turnsToComplete')}: ${(_d = (_c = tile.improvement.metadata) === null || _c === void 0 ? void 0 : _c.turnsToCompletion) !== null && _d !== void 0 ? _d : '-'}` }
+                attrs: { innerText: `${translate('improvement.info.turnsToComplete')}: ${(_d = (_c = tile.improvement.errand) === null || _c === void 0 ? void 0 : _c.turnsToCompletion) !== null && _d !== void 0 ? _d : '-'}` }
             });
             this.elements.sidebarMenu.appendChild(worksiteProgress);
         }

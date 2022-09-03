@@ -29,8 +29,14 @@ interface Improvement {
   type: string;
   pillaged: boolean;
   storage: ResourceStorage;
+  errand?: Errand;
   metadata?: any;
 }
+
+type Errand = {
+  storedThisTurn: Yield;
+  turnsToCompletion: number;
+};
 
 type ResourceStorage = Yield & {
   capacity: Yield,

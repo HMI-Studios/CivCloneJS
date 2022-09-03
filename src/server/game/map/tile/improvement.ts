@@ -13,23 +13,35 @@ const improvementStoreCapTable: { [improvement: string]: YieldParams } = {
   'settlement': {food: 20, production: 2},
 
   'farm': {food: 20},
-}
+};
 
 const constructionCostTable: { [improvement: string]: Yield } = {
   'farm': new Yield({production: 10}),
 };
 
-export interface ImprovementData {
+const naturalImprovementTable: { [improvement: string]: boolean } = {
+  'forest': true,
+};
+
+export type ImprovementData = {
   type: string;
   pillaged: boolean;
   storage: YieldParams;
+  errand?: ErrandData;
   metadata?: any;
-}
+};
+
+export type ErrandData = {
+  storedThisTurn: YieldParams;
+  turnsToCompletion: number;
+};
 
 export class Improvement {
   type: string;
   pillaged: boolean;
   yield: Yield;
+  isNatural: boolean;
+  errand?: WorkErrand;
   metadata: any;
 
   protected traders: Trader[];
@@ -39,11 +51,18 @@ export class Improvement {
   constructor(type: string, baseYield: Yield, metadata?: any) {
     this.type = type;
     this.pillaged = false;
+    this.isNatural = naturalImprovementTable[type];
     this.yield = baseYield.add(improvementYieldTable[type] ?? new Yield({}));
     this.metadata = metadata;
     this.storage = new ResourceStore(improvementStoreCapTable[type] ?? {});
     this.traders = [];
     this.suppliers = [];
+    if (this.isNatural) {
+      this.yield = new Yield({});
+    } else if (type === 'worksite') {
+      this.yield = new Yield({});
+      this.errand = new WorkErrand(constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
+    }
   }
 
   getData(): ImprovementData {
@@ -51,11 +70,27 @@ export class Improvement {
       type: this.type,
       pillaged: this.pillaged,
       storage: this.storage,
+      errand: this.errand?.getData(),
     };
   }
 
   work(): void {
     // TODO - ADD POPULATION/COST CHECK
+
+    // if (type === 'farm') {
+
+    // }
+
+    if (this.errand) {
+      if (this.storage.fulfills(this.errand.cost)) {
+        this.errand.completed = true;
+        for (const supplier of this.suppliers) {
+          supplier.expire();
+        }
+        this.errand.onCompletion(this);
+      }
+      this.errand.storedThisTurn.reset();
+    }
 
     let traderCount = this.traders.length;
     for (let i = 0; i < this.traders.length; i++) {
@@ -78,6 +113,7 @@ export class Improvement {
 
   store(resources: Yield): void {
     this.storage.incr(resources);
+    this.errand?.storedThisTurn.incr(resources);
   }
 
   subscribeTrader(trader: Trader): void {
@@ -89,44 +125,30 @@ export class Improvement {
   }
 }
 
-export class Worksite extends Improvement {
+export class WorkErrand {
   public cost: Yield;
   public storedThisTurn: ResourceStore;
   public completed: boolean;
+  public parentStorage: ResourceStore; // Specifically, this is a REFERENCE to the ResourceStore of an Improvement
+  public onCompletion: (improvement: Improvement) => void;
 
-  constructor(options: { construction: boolean, type: string }) {
-    super('worksite', new Yield({}), options);
-    this.cost = constructionCostTable[options.type];
+  constructor(cost: Yield, parentStorage: ResourceStore, onCompletion: () => void) {
+    this.cost = cost;
+    this.parentStorage = parentStorage;
     this.storedThisTurn = new ResourceStore({});
-    this.storage.setCapacity(this.cost);
+    this.parentStorage.setCapacity(this.cost);
     this.completed = false;
+    this.onCompletion = onCompletion;
   }
 
-  getData(): ImprovementData {
+  getData(): ErrandData {
     return {
-      ...super.getData(),
-      metadata: {
-        type: this.metadata.type,
-        storedThisTurn: this.storedThisTurn,
-        turnsToCompletion: this.cost.sub(this.storage.sub(this.storedThisTurn)).div(this.storedThisTurn),
-      }
+      storedThisTurn: this.storedThisTurn,
+      turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
     };
   }
+}
 
-  work(): void {
-    if (this.storage.fulfills(this.cost)) {
-      this.completed = true;
-      for (const supplier of this.suppliers) {
-        supplier.expire();
-      }
-      return;
-    }
-    this.storedThisTurn.reset();
-    super.work();
-  }
-
-  store(resources: Yield): void {
-    super.store(resources);
-    this.storedThisTurn.incr(resources);
-  }
+export interface Worksite extends Improvement {
+  errand: WorkErrand;
 }
