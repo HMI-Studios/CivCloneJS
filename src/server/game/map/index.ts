@@ -202,9 +202,21 @@ export class Map {
     }
   }
 
+  canSettleOn(tile: Tile): boolean {
+    return (
+      !tile.owner &&
+      tile.type !== 'ocean' &&
+      tile.type !== 'frozen_ocean' &&
+      tile.type !== 'mountain' &&
+      tile.type !== 'coastal' &&
+      tile.type !== 'frozen_coastal' &&
+      tile.type !== 'river'
+    );
+  }
+
   settleCityAt(coords: Coords, name: string, civID: number): boolean {
     const tile = this.getTile(coords);
-    if (tile.owner) return false;
+    if (!this.canSettleOn(tile)) return false;
 
     const city: City = new City(coords, name, civID);
     this.cities.push(city);
@@ -234,9 +246,18 @@ export class Map {
     this.tileUpdate(coords);
   }
 
+  canBuildOn(tile: Tile): boolean {
+    return (
+      tile.type !== 'ocean' &&
+      tile.type !== 'frozen_ocean' &&
+      tile.type !== 'mountain'
+    );
+  }
+
   buildImprovementAt(coords: Coords, type: string, ownerID: number): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
+    if (!this.canBuildOn(tile)) return;
 
     tile.improvement = new Improvement(type, tile.baseYield);
 

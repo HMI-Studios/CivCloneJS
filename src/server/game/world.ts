@@ -2,6 +2,7 @@ import { Map } from './map';
 import { Unit } from './map/tile/unit';
 import { Civilization, CivilizationData } from './civilization';
 import { Event } from '../utils';
+import { Random } from '../utils/random';
 import { Leader, LeaderData, leaderTemplates } from './leader';
 
 export interface Coords {
@@ -23,14 +24,42 @@ export class World {
     this.civs = {};
     this.leaderPool = {};
 
-    for (let i = 0; i < this.civsCount; i++) {
-      this.civs[i] = new Civilization();
+    for (let civID = 0; civID < this.civsCount; civID++) {
+      this.civs[civID] = new Civilization();
 
-      this.addUnit(new Unit('settler', i, { x: (i+1)*1, y: (i+1)*1+1 })); // REMOVE THESE
-      this.addUnit(new Unit('builder', i, { x: (i+1)*3, y: (i+1)*3+1 })); // REMOVE THESE
-      this.addUnit(new Unit('scout', i, { x: (i+1)*4, y: (i+1)*4+1 })); // REMOVE THESE
+      const random = new Random(42);
+      let start_location_successful = false;
+      for (let i = 0; i < 1000; i++) {
+        const x = random.randInt(0, map.width-1);
+        const y = random.randInt(0, map.height-1);
 
-      this.updateCivTileVisibility(i);
+        const settler_coords = { x, y };
+        const builder_coords = { x: x + 1, y: y + 1 };
+        const   scout_coords = { x: x - 1, y: y + 1 };
+
+        let legal_start_location = true;
+        for (const coords of [settler_coords, builder_coords, scout_coords]) {
+          const tile = this.map.getTile(coords);
+          if (!tile || tile.unit || !this.map.canSettleOn(tile)) {
+            legal_start_location = false;
+            break;
+          }
+        }
+
+        if (legal_start_location) {
+          this.addUnit(new Unit('settler', civID, settler_coords));
+          this.addUnit(new Unit('builder', civID, builder_coords));
+          this.addUnit(new Unit('scout', civID, scout_coords));
+          start_location_successful = true;
+          break;
+        }
+      }
+
+      if (!start_location_successful) {
+        console.error("Error: couldn't find legal start location! (gave up after 1000 tries)");
+      }
+
+      this.updateCivTileVisibility(civID);
     }
 
     for (let i = 0; i < leaderTemplates.length; i++) {
