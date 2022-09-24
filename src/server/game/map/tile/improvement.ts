@@ -1,5 +1,7 @@
 import { Trader } from '../trade';
+import { UnitTypeCost } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
+
 
 const improvementYieldTable: { [improvement: string]: Yield } = {
   'settlement': new Yield({food: 2, production: 2}),
@@ -75,6 +77,15 @@ export class Improvement {
       storage: this.storage,
       errand: this.errand?.getData(),
     };
+  }
+
+  // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+  getUnitCatalog(): UnitTypeCost[] | null {
+    if (this.type === 'settlement') {
+      return [{type: 'builder', cost: new Yield({production: 10})}];
+    } else {
+      return null;
+    }
   }
 
   work(): void {

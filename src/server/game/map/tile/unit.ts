@@ -1,5 +1,6 @@
 import { getAdjacentCoords } from '../../../utils';
 import { Coords } from '../../world';
+import { Yield } from './yield';
 
 const unitMovementTable: { [unit: string]: number } = {
   'settler': 3,
@@ -18,6 +19,11 @@ const unitCombatStatsTable: { [unit: string]: [number, number, number] } = {
   'settler': [0, 1, 0],
   'scout': [5, 3, 20],
   'builder': [0, 1, 0],
+}
+
+export interface UnitTypeCost {
+  type: string;
+  cost: Yield;
 }
 
 export interface UnitData {

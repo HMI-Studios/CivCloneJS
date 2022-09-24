@@ -427,5 +427,26 @@ const methods: {
         ],
       });
     }
-  }
+  },
+
+  // The list of units the given improvement is able to build
+  getUnitCatalog: (ws: WebSocket, coords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+      const tile = map.getTile(coords);
+      if (tile.owner?.civID === civID && tile.improvement) {
+        game.sendToCiv(civID, {
+          update: [
+            ['unitCatalog', [tile.improvement.getUnitCatalog()]],
+          ],
+        });
+      }
+    }
+  },
 };

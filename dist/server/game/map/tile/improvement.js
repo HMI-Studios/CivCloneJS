@@ -48,6 +48,15 @@ class Improvement {
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
         };
     }
+    // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+    getUnitCatalog() {
+        if (this.type === 'settlement') {
+            return [{ type: 'builder', cost: new yield_1.Yield({ production: 10 }) }];
+        }
+        else {
+            return null;
+        }
+    }
     work() {
         // TODO - ADD POPULATION/COST CHECK
         // if (type === 'farm') {
