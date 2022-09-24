@@ -3,6 +3,7 @@ import { ResourceStore, Yield, YieldParams } from './yield';
 
 const improvementYieldTable: { [improvement: string]: Yield } = {
   'settlement': new Yield({food: 2, production: 2}),
+  'encampment': new Yield({production: 1}),
 
   'farm': new Yield({food: 1}),
 
@@ -11,11 +12,13 @@ const improvementYieldTable: { [improvement: string]: Yield } = {
 
 const improvementStoreCapTable: { [improvement: string]: YieldParams } = {
   'settlement': {food: 20, production: 2},
+  'encampment': {food: 10, production: 1},
 
   'farm': {food: 20},
 };
 
 const constructionCostTable: { [improvement: string]: Yield } = {
+  'encampment': new Yield({production: 2}),
   'farm': new Yield({production: 10}),
 };
 

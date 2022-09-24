@@ -14,7 +14,7 @@ type ElementOptions = {
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
-  'builder': ['buildFarm'],
+  'builder': ['buildFarm', 'buildEncampment'],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[]] } = {
@@ -26,6 +26,9 @@ const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[
   'buildFarm': (pos: Coords): [string, unknown[]] => {
     return ['buildImprovement', [pos, 'farm']];
   },
+  'buildEncampment': (pos: Coords): [string, unknown[]] => {
+    return ['buildImprovement', [pos, 'encampment']];
+  },
 };
 
 const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
@@ -36,6 +39,10 @@ const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coor
   'buildFarm': (world: World, pos: Coords): boolean => {
     const tile = world.getTile(pos);
     return world.canBuildOn(tile) && world.canFarmOn(tile);
+  },
+  'buildEncampment': (world: World, pos: Coords): boolean => {
+    const tile = world.getTile(pos);
+    return world.canBuildOn(tile) && !world.isRiver(tile);
   },
 };
 

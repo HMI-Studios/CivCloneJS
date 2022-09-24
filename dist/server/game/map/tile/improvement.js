@@ -4,14 +4,17 @@ exports.WorkErrand = exports.Improvement = void 0;
 const yield_1 = require("./yield");
 const improvementYieldTable = {
     'settlement': new yield_1.Yield({ food: 2, production: 2 }),
+    'encampment': new yield_1.Yield({ production: 1 }),
     'farm': new yield_1.Yield({ food: 1 }),
     'forest': new yield_1.Yield({ food: 1 }),
 };
 const improvementStoreCapTable = {
     'settlement': { food: 20, production: 2 },
+    'encampment': { food: 10, production: 1 },
     'farm': { food: 20 },
 };
 const constructionCostTable = {
+    'encampment': new yield_1.Yield({ production: 2 }),
     'farm': new yield_1.Yield({ production: 10 }),
 };
 const naturalImprovementTable = {

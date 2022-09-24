@@ -1,7 +1,7 @@
 const unitActionsTable = {
     'settler': ['settleCity'],
     'scout': [],
-    'builder': ['buildFarm'],
+    'builder': ['buildFarm', 'buildEncampment'],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
@@ -12,6 +12,9 @@ const unitActionsFnTable = {
     'buildFarm': (pos) => {
         return ['buildImprovement', [pos, 'farm']];
     },
+    'buildEncampment': (pos) => {
+        return ['buildImprovement', [pos, 'encampment']];
+    },
 };
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
@@ -21,6 +24,10 @@ const unitActionsAvailabilityTable = {
     'buildFarm': (world, pos) => {
         const tile = world.getTile(pos);
         return world.canBuildOn(tile) && world.canFarmOn(tile);
+    },
+    'buildEncampment': (world, pos) => {
+        const tile = world.getTile(pos);
+        return world.canBuildOn(tile) && !world.isRiver(tile);
     },
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
