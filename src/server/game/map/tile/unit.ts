@@ -2,25 +2,6 @@ import { getAdjacentCoords } from '../../../utils';
 import { Coords } from '../../world';
 import { Yield } from './yield';
 
-const unitMovementTable: { [unit: string]: number } = {
-  'settler': 3,
-  'scout': 5,
-  'builder': 3,
-};
-
-const unitMovementClassTable: { [unit: string]: number } = {
-  'settler': 0,
-  'scout': 0,
-  'builder': 0,
-};
-
-const unitCombatStatsTable: { [unit: string]: [number, number, number] } = {
-  // 'unit': [offense, defense, awareness],
-  'settler': [0, 1, 0],
-  'scout': [5, 3, 20],
-  'builder': [0, 1, 0],
-}
-
 export interface UnitTypeCost {
   type: string;
   cost: Yield;
@@ -34,6 +15,32 @@ export interface UnitData {
 }
 
 export class Unit {
+  static movementTable: { [unitType: string]: number } = {
+    'settler': 3,
+    'scout': 5,
+    'builder': 3,
+  };
+  
+  static movementClassTable: { [unitType: string]: number } = {
+    'settler': 0,
+    'scout': 0,
+    'builder': 0,
+  };
+  
+  static combatStatsTable: { [unitType: string]: [number, number, number] } = {
+    // 'unitType': [offense, defense, awareness],
+    'settler': [0, 1, 0],
+    'scout': [5, 3, 20],
+    'builder': [0, 1, 0],
+  }
+  
+  static costTable: { [unitType: string]: Yield } = {
+    // 'unitType': [offense, defense, awareness],
+    'settler': new Yield({production: 10}),
+    'scout': new Yield({production: 10}),
+    'builder': new Yield({production: 5}),
+  }
+
   type: string;
   hp: number; // this should never be allowed to be outside the range 0 - 100
   movement: number;
@@ -43,12 +50,18 @@ export class Unit {
   coords: Coords;
   alive: boolean;
 
+  static makeCatalog(types: string[]): UnitTypeCost[] {
+    return types.map(type => (
+      { type, cost: Unit.costTable[type] }
+    ));
+  }
+
   constructor(type: string, civID: number, coords: Coords) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
-    this.movementClass = unitMovementClassTable[type];
-    this.combatStats = unitCombatStatsTable[type];
+    this.movementClass = Unit.movementClassTable[type];
+    this.combatStats = Unit.combatStatsTable[type];
     this.civID = civID;
     this.coords = coords;
     this.alive = true;
@@ -97,7 +110,7 @@ export class Unit {
   }
 
   newTurn() {
-    this.movement = unitMovementTable[this.type];
+    this.movement = Unit.movementTable[this.type];
   }
 
   isAdjacentTo(dst?: Coords): boolean {

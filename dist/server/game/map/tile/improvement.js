@@ -1,34 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkErrand = exports.Improvement = void 0;
+const unit_1 = require("./unit");
 const yield_1 = require("./yield");
-const improvementYieldTable = {
-    'settlement': new yield_1.Yield({ food: 2, production: 2 }),
-    'encampment': new yield_1.Yield({ production: 1 }),
-    'farm': new yield_1.Yield({ food: 1 }),
-    'forest': new yield_1.Yield({ food: 1 }),
-};
-const improvementStoreCapTable = {
-    'settlement': { food: 20, production: 2 },
-    'encampment': { food: 10, production: 1 },
-    'farm': { food: 20 },
-};
-const constructionCostTable = {
-    'encampment': new yield_1.Yield({ production: 2 }),
-    'farm': new yield_1.Yield({ production: 10 }),
-};
-const naturalImprovementTable = {
-    'forest': true,
-};
 class Improvement {
     constructor(type, baseYield, metadata) {
         var _a, _b;
         this.type = type;
         this.pillaged = false;
-        this.isNatural = naturalImprovementTable[type];
-        this.yield = baseYield.add((_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({}));
+        this.isNatural = Improvement.naturalImprovementTable[type];
+        this.yield = baseYield.add((_a = Improvement.yieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({}));
         this.metadata = metadata;
-        this.storage = new yield_1.ResourceStore((_b = improvementStoreCapTable[type]) !== null && _b !== void 0 ? _b : {});
+        this.storage = new yield_1.ResourceStore((_b = Improvement.storeCapTable[type]) !== null && _b !== void 0 ? _b : {});
         this.traders = [];
         this.suppliers = [];
         if (this.isNatural) {
@@ -36,7 +19,7 @@ class Improvement {
         }
         else if (type === 'worksite') {
             this.yield = new yield_1.Yield({});
-            this.errand = new WorkErrand(constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
+            this.errand = new WorkErrand(Improvement.constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
         }
     }
     getData() {
@@ -51,7 +34,10 @@ class Improvement {
     // Return type and cost of units this improvement knows how to train, or null if it cannot train units
     getUnitCatalog() {
         if (this.type === 'settlement') {
-            return [{ type: 'builder', cost: new yield_1.Yield({ production: 10 }) }];
+            return unit_1.Unit.makeCatalog(['settler', 'builder']);
+        }
+        else if (this.type === 'encampment') {
+            return unit_1.Unit.makeCatalog(['scout']);
         }
         else {
             return null;
@@ -101,6 +87,24 @@ class Improvement {
     }
 }
 exports.Improvement = Improvement;
+Improvement.yieldTable = {
+    'settlement': new yield_1.Yield({ food: 2, production: 2 }),
+    'encampment': new yield_1.Yield({ production: 1 }),
+    'farm': new yield_1.Yield({ food: 1 }),
+    'forest': new yield_1.Yield({ food: 1 }),
+};
+Improvement.storeCapTable = {
+    'settlement': { food: 20, production: 2 },
+    'encampment': { food: 10, production: 1 },
+    'farm': { food: 20 },
+};
+Improvement.constructionCostTable = {
+    'encampment': new yield_1.Yield({ production: 2 }),
+    'farm': new yield_1.Yield({ production: 10 }),
+};
+Improvement.naturalImprovementTable = {
+    'forest': true,
+};
 class WorkErrand {
     constructor(cost, parentStorage, onCompletion) {
         this.cost = cost;

@@ -1,27 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
-const tileMovementCostTable = {
-    // tile name: [land mp, water mp] (0 = impassable)
-    'ocean': [0, 1],
-    'frozen_ocean': [0, 0],
-    'river': [4, 1],
-    'frozen_river': [3, 0],
-    'grass_lowlands': [1, 0],
-    'plains': [1, 0],
-    'grass_hills': [2, 0],
-    'grass_mountains': [4, 0],
-    'desert': [1, 0],
-    'desert_hills': [3, 0],
-    'desert_mountains': [4, 0],
-    'snow_plains': [2, 0],
-    'snow_hills': [3, 0],
-    'snow_mountains': [5, 0],
-    'mountain': [0, 0],
-};
 class Tile {
     constructor(type, tileHeight, baseYield) {
-        this.movementCost = tileMovementCostTable[type];
+        this.movementCost = Tile.movementCostTable[type];
         this.type = type;
         this.elevation = tileHeight;
         this.unit = undefined;
@@ -94,4 +76,22 @@ class Tile {
     }
 }
 exports.Tile = Tile;
+Tile.movementCostTable = {
+    // tile name: [land mp, water mp] (0 = impassable)
+    'ocean': [0, 1],
+    'frozen_ocean': [0, 0],
+    'river': [4, 1],
+    'frozen_river': [3, 0],
+    'grass_lowlands': [1, 0],
+    'plains': [1, 0],
+    'grass_hills': [2, 0],
+    'grass_mountains': [4, 0],
+    'desert': [1, 0],
+    'desert_hills': [3, 0],
+    'desert_mountains': [4, 0],
+    'snow_plains': [2, 0],
+    'snow_hills': [3, 0],
+    'snow_mountains': [5, 0],
+    'mountain': [0, 0],
+};
 //# sourceMappingURL=index.js.map

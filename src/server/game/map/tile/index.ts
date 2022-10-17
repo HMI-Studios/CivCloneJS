@@ -3,25 +3,6 @@ import { Improvement, ImprovementData } from './improvement';
 import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
 
-const tileMovementCostTable: { [type: string]: [number, number] } = {
-  // tile name: [land mp, water mp] (0 = impassable)
-  'ocean': [0, 1],
-  'frozen_ocean': [0, 0],
-  'river': [4, 1],
-  'frozen_river': [3, 0],
-  'grass_lowlands': [1, 0],
-  'plains': [1, 0],
-  'grass_hills': [2, 0],
-  'grass_mountains': [4, 0],
-  'desert': [1, 0],
-  'desert_hills': [3, 0],
-  'desert_mountains': [4, 0],
-  'snow_plains': [2, 0],
-  'snow_hills': [3, 0],
-  'snow_mountains': [5, 0],
-  'mountain': [0, 0],
-};
-
 export interface TileData {
   type: string;
   elevation: number;
@@ -34,6 +15,25 @@ export interface TileData {
 }
 
 export class Tile {
+  static movementCostTable: { [type: string]: [number, number] } = {
+    // tile name: [land mp, water mp] (0 = impassable)
+    'ocean': [0, 1],
+    'frozen_ocean': [0, 0],
+    'river': [4, 1],
+    'frozen_river': [3, 0],
+    'grass_lowlands': [1, 0],
+    'plains': [1, 0],
+    'grass_hills': [2, 0],
+    'grass_mountains': [4, 0],
+    'desert': [1, 0],
+    'desert_hills': [3, 0],
+    'desert_mountains': [4, 0],
+    'snow_plains': [2, 0],
+    'snow_hills': [3, 0],
+    'snow_mountains': [5, 0],
+    'mountain': [0, 0],
+  };
+
   movementCost: [number, number];
   type: string;
   elevation: number;
@@ -48,7 +48,7 @@ export class Tile {
   public baseYield: Yield;
 
   constructor(type: string, tileHeight: number, baseYield: Yield) {
-    this.movementCost = tileMovementCostTable[type];
+    this.movementCost = Tile.movementCostTable[type];
     this.type = type;
     this.elevation = tileHeight;
 
