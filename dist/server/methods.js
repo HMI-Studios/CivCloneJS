@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeAction = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
 const player_1 = require("./game/player");
@@ -14,17 +23,34 @@ exports.games = {
     // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
     new generator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
-        gameName: 'singleplayer test',
+        gameName: 'singleplayer unsaved test',
         playerCount: 1,
     }),
-    1: new game_1.Game(
-    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new generator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
-        gameName: 'multiplayer test',
-        playerCount: 2,
-    }),
+    // 1: new Game(
+    //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+    //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
+    //   {
+    //     gameName: 'singleplayer unsaved test',
+    //     playerCount: 1,
+    //   }
+    // ),
+    // 2: new Game(
+    //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+    //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+    //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
+    //   {
+    //     gameName: 'multiplayer test',
+    //     playerCount: 2,
+    //   }
+    // ),
 };
+// games[1].save();
+// games[2].save();
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    exports.games[1] = yield game_1.Game.load('singleplayer test');
+    // games[2] = await Game.load('multiplayer test')
+}))();
 const createGame = (username, playerCount, mapOptions, options) => {
     var _a;
     const newID = Object.keys(exports.games)[Object.keys(exports.games).length - 1] + 1;
@@ -89,6 +115,8 @@ const methods = {
             sendTo(ws, { update: [
                     ['gameExportData', [JSON.stringify(game.export())]],
                 ] });
+            // TODO REMOVE ME
+            game.save();
         }
     },
     createGame: (ws, playerCount, mapOptions, options) => {

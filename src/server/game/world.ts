@@ -14,10 +14,15 @@ export class World {
   map: Map;
   civs: { [civID: number]: Civilization };
   civsCount: number;
-  leaderPool: { [name: string]: Leader };
+  leaderPool: { [leaderID: number]: Leader };
   updates: { (civID: number): Event }[];
 
-  constructor(map: Map, civsCount: number) {
+  constructor(map?: Map, civsCount?: number) {
+    this.updates = [];
+
+    if (!(map && civsCount)) {
+      return
+    }
     this.map = map;
 
     this.civsCount = civsCount;
@@ -67,11 +72,7 @@ export class World {
     }
 
 
-
-
     // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
-
-    this.updates = [];
   }
 
   export() {
@@ -87,6 +88,32 @@ export class World {
       civsCount: this.civsCount,
       leaderPool: this.leaderPool,
     };
+  }
+
+  static import(data: any): World {
+    console.log(Object.keys(data))
+    const world = new World();
+    world.map = Map.import(data.map);
+    world.civs = {};
+    for (const civID in data.civs) {
+      const civData = data.civs[civID];
+      world.civs[civID] = Civilization.import(civData);
+      const units = civData.units.map(unitData => Unit.import(unitData));
+      for (const unit of units) {
+        world.addUnit(unit);
+      }
+      world.updateCivTileVisibility(Number(civID));
+    }
+    world.civsCount = data.civsCount;
+    world.leaderPool = {};
+    for (const leaderID in data.leaderPool) {
+      const leaderData = data.leaderPool[leaderID];
+      world.leaderPool[leaderID] = Leader.import(leaderData);
+      if (leaderData.civID !== null) {
+        world.setCivLeader(leaderData.civID, Number(leaderID));
+      }
+    }
+    return world;
   }
 
   getUpdates(): { (civID: number): Event }[] {
@@ -113,6 +140,7 @@ export class World {
 
   // leaders, civs
   setCivLeader(civID: number, leaderID: number): boolean {
+    console.log(civID, leaderID);
     const leader = this.leaderPool[leaderID];
     if (leader && !leader.isTaken()) {
       if (this.civs[civID].leader) {
@@ -120,6 +148,7 @@ export class World {
       }
       this.civs[civID].leader = leader;
       leader.select(civID);
+      console.log(leader, this.civs[civID])
       return true;
     } else {
       return false;

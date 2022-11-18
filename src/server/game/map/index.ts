@@ -42,7 +42,16 @@ export class Map {
       width: this.width,
       tiles: this.tiles.map(tile => tile.export()),
       cities: this.cities.map(city => city.export()),
+      // traders: this.traders.map(trader => trader.export()),
     };
+  }
+
+  static import(data: any): Map {
+    const map = new Map(data.height, data.width);
+    map.tiles = data.tiles.map(tileData => Tile.import(tileData));
+    map.cities = data.cities.map(cityData => City.import(cityData));
+    // map.traders = data.traders.map(traderData => Trader.import(traderData));
+    return map;
   }
 
   pos({ x, y }: Coords): number {

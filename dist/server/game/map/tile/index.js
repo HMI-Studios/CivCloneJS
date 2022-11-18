@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
+const improvement_1 = require("./improvement");
+const yield_1 = require("./yield");
 class Tile {
     constructor(type, tileHeight, baseYield) {
         this.movementCost = Tile.movementCostTable[type];
@@ -19,13 +21,21 @@ class Tile {
             // movementCost: this.movementCost,
             type: this.type,
             elevation: this.elevation,
-            unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.export(),
-            improvement: this.improvement,
+            // unit: this.unit?.export(),
+            improvement: (_a = this.improvement) === null || _a === void 0 ? void 0 : _a.export(),
             // owner: this.owner?,
             discoveredBy: this.discoveredBy,
             // visibleTo: { [civID: number]: number },
             baseYield: this.baseYield,
         };
+    }
+    static import(data) {
+        const tile = new Tile(data.type, data.elevation, new yield_1.Yield(data.baseYield));
+        // tile.unit = Unit.import(data.unit);
+        if (data.improvement)
+            tile.improvement = improvement_1.Improvement.import(data.improvement);
+        tile.discoveredBy = data.discoveredBy;
+        return tile;
     }
     getTileYield() {
         if (this.improvement) {

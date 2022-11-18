@@ -25,8 +25,18 @@ class Unit {
             movementClass: this.movementClass,
             combatStats: this.combatStats,
             civID: this.civID,
+            coords: this.coords,
             alive: this.alive,
         };
+    }
+    static import(data) {
+        const unit = new Unit(data.type, data.civID, data.coords);
+        unit.hp = data.hp;
+        unit.movement = data.movement;
+        unit.movementClass = data.movementClass;
+        unit.combatStats = data.combatStats;
+        unit.alive = data.alive;
+        return unit;
     }
     getData() {
         return {

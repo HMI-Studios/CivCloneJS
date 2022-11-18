@@ -17,6 +17,11 @@ class City {
             tiles: this.tiles,
         };
     }
+    static import(data) {
+        const city = new City(data.center, data.name, data.civID);
+        city.tiles = data.tiles;
+        return city;
+    }
     getData() {
         return {
             name: this.name,

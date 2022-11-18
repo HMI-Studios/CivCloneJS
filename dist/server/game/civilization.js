@@ -9,9 +9,17 @@ class Civilization {
     }
     export() {
         return {
+            units: this.units.map(unit => unit.export()),
             turnActive: this.turnActive,
             turnFinished: this.turnFinished,
         };
+    }
+    static import(data) {
+        const civ = new Civilization();
+        // civ.units = data.units.map(unitData => Unit.import(unitData));
+        civ.turnActive = data.turnActive;
+        civ.turnFinished = data.turnFinished;
+        return civ;
     }
     getData() {
         var _a;

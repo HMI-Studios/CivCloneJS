@@ -6,6 +6,8 @@ const yield_1 = require("./yield");
 class Improvement {
     constructor(type, baseYield, metadata) {
         var _a, _b;
+        if (!(type && baseYield))
+            return;
         this.type = type;
         this.pillaged = false;
         this.isNatural = Improvement.naturalImprovementTable[type];
@@ -21,6 +23,29 @@ class Improvement {
             this.yield = new yield_1.Yield({});
             this.errand = new WorkErrand(Improvement.constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
         }
+    }
+    export() {
+        return {
+            type: this.type,
+            pillaged: this.pillaged,
+            isNatural: this.isNatural,
+            yield: this.yield,
+            storage: this.storage,
+            errand: this.errand,
+        };
+    }
+    static import(data) {
+        const improvement = new Improvement();
+        improvement.type = data.type;
+        improvement.pillaged = data.pillaged;
+        improvement.isNatural = data.isNatural;
+        improvement.yield = new yield_1.Yield(data.yield);
+        const storageCap = data.storage.capacity;
+        delete data.storage.capacity;
+        improvement.storage = new yield_1.ResourceStore(storageCap).incr(data.storage);
+        improvement.traders = [];
+        improvement.suppliers = [];
+        return improvement;
     }
     getData() {
         var _a;

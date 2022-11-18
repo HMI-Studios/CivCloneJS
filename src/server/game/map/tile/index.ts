@@ -67,13 +67,21 @@ export class Tile {
       // movementCost: this.movementCost,
       type: this.type,
       elevation: this.elevation,
-      unit: this.unit?.export(),
-      improvement: this.improvement,
+      // unit: this.unit?.export(),
+      improvement: this.improvement?.export(),
       // owner: this.owner?,
       discoveredBy: this.discoveredBy,
       // visibleTo: { [civID: number]: number },
       baseYield: this.baseYield,
     };
+  }
+
+  static import(data: any): Tile {
+    const tile = new Tile(data.type, data.elevation, new Yield(data.baseYield));
+    // tile.unit = Unit.import(data.unit);
+    if (data.improvement) tile.improvement = Improvement.import(data.improvement);
+    tile.discoveredBy = data.discoveredBy;
+    return tile;
   }
 
   getTileYield(): Yield {

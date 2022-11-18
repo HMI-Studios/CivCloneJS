@@ -24,20 +24,35 @@ export const games: { [gameID: number] : Game } = {
     // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
     new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
     {
-      gameName: 'singleplayer test',
+      gameName: 'singleplayer unsaved test',
       playerCount: 1,
     }
   ),
-  1: new Game(
-    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
-    {
-      gameName: 'multiplayer test',
-      playerCount: 2,
-    }
-  ),
+  // 1: new Game(
+  //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+  //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+  //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
+  //   {
+  //     gameName: 'singleplayer unsaved test',
+  //     playerCount: 1,
+  //   }
+  // ),
+  // 2: new Game(
+  //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
+  //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
+  //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
+  //   {
+  //     gameName: 'multiplayer test',
+  //     playerCount: 2,
+  //   }
+  // ),
 };
+// games[1].save();
+// games[2].save();
+(async () => {
+  games[1] = await Game.load('singleplayer test')
+  // games[2] = await Game.load('multiplayer test')
+})()
 
 const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
   const newID = Object.keys(games)[Object.keys(games).length - 1] + 1;
@@ -108,6 +123,9 @@ const methods: {
       sendTo(ws, { update: [
         ['gameExportData', [JSON.stringify(game.export())]],
       ] });
+
+      // TODO REMOVE ME
+      game.save();
     }
   },
 

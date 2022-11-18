@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
 const city_1 = require("./tile/city");
+const tile_1 = require("./tile");
 const improvement_1 = require("./tile/improvement");
 const utils_1 = require("../../utils");
 const trade_1 = require("./trade");
@@ -27,7 +28,15 @@ class Map {
             width: this.width,
             tiles: this.tiles.map(tile => tile.export()),
             cities: this.cities.map(city => city.export()),
+            // traders: this.traders.map(trader => trader.export()),
         };
+    }
+    static import(data) {
+        const map = new Map(data.height, data.width);
+        map.tiles = data.tiles.map(tileData => tile_1.Tile.import(tileData));
+        map.cities = data.cities.map(cityData => city_1.City.import(cityData));
+        // map.traders = data.traders.map(traderData => Trader.import(traderData));
+        return map;
     }
     pos({ x, y }) {
         return (y * this.width) + (0, utils_1.mod)(x, this.width);

@@ -52,7 +52,8 @@ export class Improvement {
   protected suppliers: Trader[];
   protected storage: ResourceStore;
   
-  constructor(type: string, baseYield: Yield, metadata?: any) {
+  constructor(type?: string, baseYield?: Yield, metadata?: any) {
+    if (!(type && baseYield)) return;
     this.type = type;
     this.pillaged = false;
     this.isNatural = Improvement.naturalImprovementTable[type];
@@ -67,6 +68,31 @@ export class Improvement {
       this.yield = new Yield({});
       this.errand = new WorkErrand(Improvement.constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
     }
+  }
+
+  export() {
+    return {
+      type: this.type,
+      pillaged: this.pillaged,
+      isNatural: this.isNatural,
+      yield: this.yield,
+      storage: this.storage,
+      errand: this.errand,
+    };
+  }
+
+  static import(data: any): Improvement {
+    const improvement = new Improvement();
+    improvement.type = data.type;
+    improvement.pillaged = data.pillaged;
+    improvement.isNatural = data.isNatural;
+    improvement.yield = new Yield(data.yield);
+    const storageCap = data.storage.capacity;
+    delete data.storage.capacity;
+    improvement.storage = new ResourceStore(storageCap).incr(data.storage) as ResourceStore;
+    improvement.traders = [];
+    improvement.suppliers = [];
+    return improvement;
   }
 
   getData(): ImprovementData {

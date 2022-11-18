@@ -1,12 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.World = void 0;
+const map_1 = require("./map");
 const unit_1 = require("./map/tile/unit");
 const civilization_1 = require("./civilization");
 const random_1 = require("../utils/random");
 const leader_1 = require("./leader");
 class World {
     constructor(map, civsCount) {
+        this.updates = [];
+        if (!(map && civsCount)) {
+            return;
+        }
         this.map = map;
         this.civsCount = civsCount;
         this.civs = {};
@@ -46,7 +51,6 @@ class World {
             this.leaderPool[i] = new leader_1.Leader(i);
         }
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
-        this.updates = [];
     }
     export() {
         const exportedCivs = {};
@@ -60,6 +64,31 @@ class World {
             civsCount: this.civsCount,
             leaderPool: this.leaderPool,
         };
+    }
+    static import(data) {
+        console.log(Object.keys(data));
+        const world = new World();
+        world.map = map_1.Map.import(data.map);
+        world.civs = {};
+        for (const civID in data.civs) {
+            const civData = data.civs[civID];
+            world.civs[civID] = civilization_1.Civilization.import(civData);
+            const units = civData.units.map(unitData => unit_1.Unit.import(unitData));
+            for (const unit of units) {
+                world.addUnit(unit);
+            }
+            world.updateCivTileVisibility(Number(civID));
+        }
+        world.civsCount = data.civsCount;
+        world.leaderPool = {};
+        for (const leaderID in data.leaderPool) {
+            const leaderData = data.leaderPool[leaderID];
+            world.leaderPool[leaderID] = leader_1.Leader.import(leaderData);
+            if (leaderData.civID !== null) {
+                world.setCivLeader(leaderData.civID, Number(leaderID));
+            }
+        }
+        return world;
     }
     getUpdates() {
         // TODO: more updates?
@@ -83,6 +112,7 @@ class World {
     // leaders, civs
     setCivLeader(civID, leaderID) {
         var _a;
+        console.log(civID, leaderID);
         const leader = this.leaderPool[leaderID];
         if (leader && !leader.isTaken()) {
             if (this.civs[civID].leader) {
@@ -90,6 +120,7 @@ class World {
             }
             this.civs[civID].leader = leader;
             leader.select(civID);
+            console.log(leader, this.civs[civID]);
             return true;
         }
         else {

@@ -1,3 +1,8 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'path';
+
+import { SAVE_LOCATION } from '../config';
+
 import { World } from './world';
 import { Player } from './player';
 import { Map } from './map';
@@ -17,7 +22,11 @@ export class Game {
   metaData: MetaData;
   hasStarted: boolean;
 
-  constructor(map: Map, options: { playerCount: number, ownerName?: string, gameName?: string }) {
+  constructor(map?: Map, options?: { playerCount: number, ownerName?: string, gameName?: string }) {
+    if (!(map && options)) {
+      // If no arguments are provided, this is part of a call to Game.import
+      return
+    }
     const { playerCount, ownerName } = options;
     let { gameName } = options;
     if (!gameName) gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
@@ -51,6 +60,30 @@ export class Game {
       metaData: this.metaData,
       hasStarted: this.hasStarted,
     };
+  }
+
+  static import(data: any): Game {
+    console.log(Object.keys(data))
+    const game = new Game();
+    game.world = World.import(data.world);
+    game.players = {};
+    for (const playerName in data.players) {
+      const playerData = data.players[playerName];
+      game.players[playerName] = Player.import(playerData);
+    }
+    game.playerCount = data.playerCount;
+    game.metaData = data.metaData;
+    game.hasStarted = data.hasStarted;
+    return game;
+  }
+
+  async save() {
+    await fs.writeFile(path.join(SAVE_LOCATION, `${this.metaData.gameName}.json`), JSON.stringify(this.export()));
+  }
+
+  static async load(saveFile): Promise<Game> {
+    const data = await fs.readFile(path.join(SAVE_LOCATION, `${saveFile}.json`), { encoding: 'utf8' });
+    return Game.import(JSON.parse(data));
   }
 
   connectPlayer(username: string, player: Player) {
@@ -118,7 +151,7 @@ export class Game {
   endTurn(): void {
     // end all players' turns
     this.forEachPlayer((player: Player) => {
-      if (!player.isAI) {
+      if (!player.isAI()) {
         this.endTurnForCiv(player.civID);
       }
     });
@@ -130,7 +163,7 @@ export class Game {
 
     // begin all players' turns
     this.forEachPlayer((player: Player) => {
-      if (!player.isAI) {
+      if (!player.isAI()) {
         this.beginTurnForCiv(player.civID);
       }
     });
@@ -164,12 +197,7 @@ export class Game {
   sendToAll(msg: EventMsg): void {
     for (const playerName in this.players) {
       const player = this.players[playerName];
-
-      if (player.isAI) {
-        continue;
-      } else {
-        player.connection.send(JSON.stringify(msg));
-      }
+      player.send(JSON.stringify(msg));
     }
   }
 
@@ -181,11 +209,7 @@ export class Game {
       return;
     }
 
-    if (player.isAI) {
-      return;
-    } else {
-       player.connection.send(JSON.stringify(msg));
-    }
+    player.send(JSON.stringify(msg));
   }
 
   forEachPlayer(callback: (player: Player) => void): void {

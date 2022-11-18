@@ -28,6 +28,12 @@ export class City {
     };
   }
 
+  static import(data: any): City {
+    const city = new City(data.center, data.name, data.civID);
+    city.tiles = data.tiles;
+    return city;
+  }
+
   getData(): CityData {
     return {
       name: this.name,
