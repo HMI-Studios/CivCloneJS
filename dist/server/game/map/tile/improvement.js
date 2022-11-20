@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorkErrand = exports.Improvement = void 0;
+exports.Improvement = void 0;
+const errand_1 = require("./errand");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
-    constructor(type, baseYield, metadata) {
+    constructor(type, baseYield, metadata, errand) {
         var _a, _b;
         if (!(type && baseYield))
             return;
@@ -19,19 +20,20 @@ class Improvement {
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
         }
-        else if (type === 'worksite') {
+        else if (type === 'worksite' && errand) {
             this.yield = new yield_1.Yield({});
-            this.errand = new WorkErrand(Improvement.constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
+            this.errand = new errand_1.WorkErrand(this.storage, errand);
         }
     }
     export() {
+        var _a;
         return {
             type: this.type,
             pillaged: this.pillaged,
             isNatural: this.isNatural,
             yield: this.yield,
             storage: this.storage,
-            errand: this.errand,
+            errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.export(),
         };
     }
     static import(data) {
@@ -43,6 +45,8 @@ class Improvement {
         const storageCap = data.storage.capacity;
         delete data.storage.capacity;
         improvement.storage = new yield_1.ResourceStore(storageCap).incr(data.storage);
+        if (data.errand)
+            improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];
         improvement.suppliers = [];
         return improvement;
@@ -78,7 +82,6 @@ class Improvement {
                 for (const supplier of this.suppliers) {
                     supplier.expire();
                 }
-                this.errand.onCompletion(this);
             }
             this.errand.storedThisTurn.reset();
         }
@@ -123,28 +126,7 @@ Improvement.storeCapTable = {
     'encampment': { food: 10, production: 1 },
     'farm': { food: 20 },
 };
-Improvement.constructionCostTable = {
-    'encampment': new yield_1.Yield({ production: 2 }),
-    'farm': new yield_1.Yield({ production: 10 }),
-};
 Improvement.naturalImprovementTable = {
     'forest': true,
 };
-class WorkErrand {
-    constructor(cost, parentStorage, onCompletion) {
-        this.cost = cost;
-        this.parentStorage = parentStorage;
-        this.storedThisTurn = new yield_1.ResourceStore({});
-        this.parentStorage.setCapacity(this.cost);
-        this.completed = false;
-        this.onCompletion = onCompletion;
-    }
-    getData() {
-        return {
-            storedThisTurn: this.storedThisTurn,
-            turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
-        };
-    }
-}
-exports.WorkErrand = WorkErrand;
 //# sourceMappingURL=improvement.js.map

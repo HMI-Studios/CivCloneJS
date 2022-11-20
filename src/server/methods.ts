@@ -33,7 +33,7 @@ export const games: { [gameID: number] : Game } = {
   //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
   //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
   //   {
-  //     gameName: 'singleplayer unsaved test',
+  //     gameName: 'singleplayer test',
   //     playerCount: 1,
   //   }
   // ),

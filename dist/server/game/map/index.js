@@ -7,6 +7,7 @@ const improvement_1 = require("./tile/improvement");
 const utils_1 = require("../../utils");
 const trade_1 = require("./trade");
 const yield_1 = require("./tile/yield");
+const errand_1 = require("./tile/errand");
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
@@ -199,16 +200,14 @@ class Map {
         this.buildImprovementAt(coords, 'settlement', civID);
         return true;
     }
-    startConstructionAt(coords, type, ownerID) {
+    startConstructionAt(coords, improvementType, ownerID) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
-        tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield, {
-            type, onCompletion: (improvement) => {
-                delete tile.improvement;
-                tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
-            }
+        tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield, undefined, {
+            type: errand_1.ErrandType.CONSTRUCTION,
+            option: improvementType,
         });
         this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.errand.cost);
         this.tileUpdate(coords);
@@ -229,9 +228,13 @@ class Map {
         this.tileUpdate(coords);
     }
     turn() {
+        var _a;
         for (const tile of this.tiles) {
             if (tile.improvement) {
                 tile.improvement.work();
+                if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
+                    tile.improvement.errand.complete(tile);
+                }
             }
         }
         for (let i = 0; i < this.traders.length; i++) {

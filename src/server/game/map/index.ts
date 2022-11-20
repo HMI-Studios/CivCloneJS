@@ -6,6 +6,7 @@ import { Improvement, Worksite } from './tile/improvement';
 import { getAdjacentCoords, mod, Event } from '../../utils';
 import { Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
+import { ErrandType } from './tile/errand';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -240,15 +241,13 @@ export class Map {
     return true;
   }
 
-  startConstructionAt(coords: Coords, type: string, ownerID: number): void {
+  startConstructionAt(coords: Coords, improvementType: string, ownerID: number): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
-    tile.improvement = new Improvement('worksite', tile.baseYield, { 
-      type, onCompletion: (improvement: Improvement) => {
-        delete tile.improvement;
-        tile.improvement = new Improvement(type, tile.baseYield);
-      } 
+    tile.improvement = new Improvement('worksite', tile.baseYield, undefined, {
+      type: ErrandType.CONSTRUCTION,
+      option: improvementType,
     });
     this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
 
@@ -277,6 +276,9 @@ export class Map {
     for (const tile of this.tiles) {
       if (tile.improvement) {
         tile.improvement.work();
+        if (tile.improvement.errand?.completed) {
+          tile.improvement.errand.complete(tile);
+        }
       }
     }
     for (let i = 0; i < this.traders.length; i++) {
