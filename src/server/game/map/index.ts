@@ -167,8 +167,8 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  isInBounds(coords: Coords): boolean {
-    return coords.x >= 0 && coords.x < this.width && coords.y >= 0 && coords.y < this.height;
+  isInBounds({ x, y }: Coords): boolean {
+    return mod(x, this.width) >= 0 && mod(x, this.width) < this.width && y >= 0 && y < this.height;
   }
 
   tileUpdate(coords: Coords) {
