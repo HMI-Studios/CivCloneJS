@@ -74,7 +74,6 @@ class Game {
         };
     }
     static import(data) {
-        console.log(Object.keys(data));
         const game = new Game();
         game.world = world_1.World.import(data.world);
         game.players = {};

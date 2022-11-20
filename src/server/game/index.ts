@@ -63,7 +63,6 @@ export class Game {
   }
 
   static import(data: any): Game {
-    console.log(Object.keys(data))
     const game = new Game();
     game.world = World.import(data.world);
     game.players = {};

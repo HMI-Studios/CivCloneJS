@@ -91,7 +91,6 @@ export class World {
   }
 
   static import(data: any): World {
-    console.log(Object.keys(data))
     const world = new World();
     world.map = Map.import(data.map);
     world.civs = {};
@@ -140,7 +139,6 @@ export class World {
 
   // leaders, civs
   setCivLeader(civID: number, leaderID: number): boolean {
-    console.log(civID, leaderID);
     const leader = this.leaderPool[leaderID];
     if (leader && !leader.isTaken()) {
       if (this.civs[civID].leader) {
@@ -148,7 +146,6 @@ export class World {
       }
       this.civs[civID].leader = leader;
       leader.select(civID);
-      console.log(leader, this.civs[civID])
       return true;
     } else {
       return false;

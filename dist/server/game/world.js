@@ -66,7 +66,6 @@ class World {
         };
     }
     static import(data) {
-        console.log(Object.keys(data));
         const world = new World();
         world.map = map_1.Map.import(data.map);
         world.civs = {};
@@ -112,7 +111,6 @@ class World {
     // leaders, civs
     setCivLeader(civID, leaderID) {
         var _a;
-        console.log(civID, leaderID);
         const leader = this.leaderPool[leaderID];
         if (leader && !leader.isTaken()) {
             if (this.civs[civID].leader) {
@@ -120,7 +118,6 @@ class World {
             }
             this.civs[civID].leader = leader;
             leader.select(civID);
-            console.log(leader, this.civs[civID]);
             return true;
         }
         else {
