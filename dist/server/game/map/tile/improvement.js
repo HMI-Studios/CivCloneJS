@@ -44,7 +44,7 @@ class Improvement {
         improvement.yield = new yield_1.Yield(data.yield);
         const storageCap = data.storage.capacity;
         delete data.storage.capacity;
-        improvement.storage = new yield_1.ResourceStore(storageCap).incr(data.storage);
+        improvement.storage = new yield_1.ResourceStore(storageCap).incr(new yield_1.Yield(data.storage));
         if (data.errand)
             improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];

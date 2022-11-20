@@ -80,7 +80,7 @@ export class Improvement {
     improvement.yield = new Yield(data.yield);
     const storageCap = data.storage.capacity;
     delete data.storage.capacity;
-    improvement.storage = new ResourceStore(storageCap).incr(data.storage) as ResourceStore;
+    improvement.storage = new ResourceStore(storageCap).incr(new Yield(data.storage)) as ResourceStore;
     if (data.errand) improvement.errand = WorkErrand.import(improvement.storage, data.errand);
     improvement.traders = [];
     improvement.suppliers = [];
