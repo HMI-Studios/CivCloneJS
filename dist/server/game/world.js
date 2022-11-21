@@ -200,7 +200,7 @@ class World {
         this.map.tileUpdate(defender.coords);
     }
     turn() {
-        this.map.turn();
+        this.map.turn(this);
     }
 }
 exports.World = World;

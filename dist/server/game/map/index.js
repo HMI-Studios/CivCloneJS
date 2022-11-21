@@ -234,7 +234,8 @@ class Map {
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
-        tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield, undefined, {
+        tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield);
+        tile.improvement.startErrand({
             type: errand_1.ErrandType.CONSTRUCTION,
             option: improvementType,
         });
@@ -256,13 +257,34 @@ class Map {
         tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
         this.tileUpdate(coords);
     }
-    turn() {
+    trainUnitAt(coords, unitType, ownerID) {
+        var _a;
+        const tile = this.getTile(coords);
+        if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === ownerID && tile.improvement) {
+            if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
+                console.log(`Train ${unitType} at ${JSON.stringify(coords)}`);
+                if (!tile.improvement.errand) {
+                    // TODO - maybe change this in the future, to where new training errands overwrite old ones?
+                    // That would require gracefully closing the previous errands though, so that is for later.
+                    tile.improvement.startErrand({
+                        type: errand_1.ErrandType.UNIT_TRAINING,
+                        option: unitType,
+                        location: coords,
+                    });
+                    this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.errand.cost);
+                }
+            }
+        }
+        this.tileUpdate(coords);
+    }
+    turn(world) {
         var _a;
         for (const tile of this.tiles) {
             if (tile.improvement) {
                 tile.improvement.work();
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
-                    tile.improvement.errand.complete(tile);
+                    tile.improvement.errand.complete(world, this, tile);
+                    delete tile.improvement.errand;
                 }
             }
         }

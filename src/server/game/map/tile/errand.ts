@@ -1,6 +1,8 @@
-import { Coords } from '../../world';
+import { Coords, World } from '../../world';
+import { Map } from '../index';
 import { Improvement } from './improvement';
 import { Tile } from './index';
+import { Unit } from './unit';
 import { Yield, ResourceStore, YieldParams } from "./yield";
 
 export type ErrandData = {
@@ -10,8 +12,7 @@ export type ErrandData = {
 
 export enum ErrandType {
   CONSTRUCTION,
-  // MILITARY,
-  // CIVILLIAN,
+  UNIT_TRAINING,
   // RESEARCH,
   // CULTURE,
 }
@@ -26,16 +27,26 @@ export type ErrandAction = {
 export class WorkErrand {
   static errandCostTable: Record<ErrandType, { [option: string]: Yield }> = {
     [ErrandType.CONSTRUCTION]: {
-      'encampment': new Yield({production: 2}),
+      'encampment': new Yield({production: 50}),
       'farm': new Yield({production: 10}),
     },
+    [ErrandType.UNIT_TRAINING]: Unit.costTable,
   };
 
-  static errandActionEffects: Record<ErrandType, (tile: Tile, action: ErrandAction) => void> = {
-    [ErrandType.CONSTRUCTION]: (tile, action) => {
+  static errandActionEffects: Record<ErrandType, (world: World, map: Map, tile: Tile, action: ErrandAction) => void> = {
+    [ErrandType.CONSTRUCTION]: (world, map, tile, action) => {
       delete tile.improvement;
       tile.improvement = new Improvement(action.option, tile.baseYield);
-    }
+    },
+    [ErrandType.UNIT_TRAINING]: (world, map, tile, action) => {
+      if (!(tile.owner && action.location)) return;
+      const newUnit = new Unit(action.option, tile.owner.civID, action.location);
+      if (tile.unit) {
+        // if there is already a unit on this tile, we must figure something else out
+      } else {
+        world.addUnit(newUnit)
+      }
+    },
   }
 
   public cost: Yield;
@@ -48,7 +59,7 @@ export class WorkErrand {
     this.cost = WorkErrand.errandCostTable[action.type][action.option];
     this.parentStorage = parentStorage;
     this.storedThisTurn = new ResourceStore({});
-    this.parentStorage.setCapacity(this.cost);
+    this.parentStorage.setCapacity(Yield.max(this.cost, this.parentStorage.capacity));
     this.completed = false;
     this.action = action;
   }
@@ -78,7 +89,7 @@ export class WorkErrand {
     };
   }
 
-  complete(tile: Tile): void {
-    WorkErrand.errandActionEffects[this.action.type](tile, this.action);
+  complete(world: World, map: Map, tile: Tile): void {
+    WorkErrand.errandActionEffects[this.action.type](world, map, tile, this.action);
   }
 }

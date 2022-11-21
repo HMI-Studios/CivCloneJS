@@ -1,4 +1,4 @@
-import { Coords } from '../world';
+import { Coords, World } from '../world';
 import { Unit } from './tile/unit';
 import { City } from './tile/city';
 import { Tile, TileData } from './tile';
@@ -276,7 +276,8 @@ export class Map {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
-    tile.improvement = new Improvement('worksite', tile.baseYield, undefined, {
+    tile.improvement = new Improvement('worksite', tile.baseYield);
+    tile.improvement.startErrand({
       type: ErrandType.CONSTRUCTION,
       option: improvementType,
     });
@@ -303,12 +304,37 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  turn(): void {
+  trainUnitAt(coords: Coords, unitType: string, ownerID: number): void {
+    const tile = this.getTile(coords);
+
+    if (tile.owner?.civID === ownerID && tile.improvement) {
+      if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
+        console.log(`Train ${unitType} at ${JSON.stringify(coords)}`);
+        if (!tile.improvement.errand) {
+          // TODO - maybe change this in the future, to where new training errands overwrite old ones?
+          // That would require gracefully closing the previous errands though, so that is for later.
+          tile.improvement.startErrand({
+            type: ErrandType.UNIT_TRAINING,
+            option: unitType,
+            location: coords,
+          })
+          this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+        }
+      }
+    }
+    
+    
+
+    this.tileUpdate(coords);
+  }
+
+  turn(world: World): void {
     for (const tile of this.tiles) {
       if (tile.improvement) {
         tile.improvement.work();
         if (tile.improvement.errand?.completed) {
-          tile.improvement.errand.complete(tile);
+          tile.improvement.errand.complete(world, this, tile);
+          delete tile.improvement.errand;
         }
       }
     }

@@ -5,7 +5,7 @@ const errand_1 = require("./errand");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
-    constructor(type, baseYield, metadata, errand) {
+    constructor(type, baseYield, metadata) {
         var _a, _b;
         if (!(type && baseYield))
             return;
@@ -19,11 +19,9 @@ class Improvement {
         this.suppliers = [];
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
-        }
-        else if (type === 'worksite' && errand) {
-            this.yield = new yield_1.Yield({});
-            this.errand = new errand_1.WorkErrand(this.storage, errand);
-        }
+        } // else if (type === 'worksite') {
+        //   this.yield = new Yield({});
+        // }
     }
     export() {
         var _a;
@@ -79,6 +77,9 @@ class Improvement {
             return null;
         return catalog;
     }
+    startErrand(errand) {
+        this.errand = new errand_1.WorkErrand(this.storage, errand);
+    }
     work() {
         // TODO - ADD POPULATION/COST CHECK
         // if (type === 'farm') {
@@ -89,6 +90,8 @@ class Improvement {
                 for (const supplier of this.suppliers) {
                     supplier.expire();
                 }
+                this.storage.decr(this.errand.cost);
+                this.storage.setCapacity(Improvement.storeCapTable[this.type]);
             }
             this.errand.storedThisTurn.reset();
         }

@@ -1,8 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Unit = void 0;
+exports.Unit = exports.MovementClass = void 0;
 const utils_1 = require("../../../utils");
 const yield_1 = require("./yield");
+var MovementClass;
+(function (MovementClass) {
+    MovementClass[MovementClass["LAND"] = 0] = "LAND";
+    MovementClass[MovementClass["WATER"] = 1] = "WATER";
+    MovementClass[MovementClass["AIR"] = 2] = "AIR";
+})(MovementClass = exports.MovementClass || (exports.MovementClass = {}));
 class Unit {
     constructor(type, civID, coords) {
         this.type = type;
@@ -77,9 +83,9 @@ Unit.movementTable = {
     'builder': 3,
 };
 Unit.movementClassTable = {
-    'settler': 0,
-    'scout': 0,
-    'builder': 0,
+    'settler': MovementClass.LAND,
+    'scout': MovementClass.LAND,
+    'builder': MovementClass.LAND,
 };
 Unit.combatStatsTable = {
     // 'unitType': [offense, defense, awareness],

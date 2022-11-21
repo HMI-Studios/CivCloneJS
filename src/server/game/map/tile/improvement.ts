@@ -43,7 +43,7 @@ export class Improvement {
   protected suppliers: Trader[];
   protected storage: ResourceStore;
   
-  constructor(type?: string, baseYield?: Yield, metadata?: any, errand?: ErrandAction) {
+  constructor(type?: string, baseYield?: Yield, metadata?: any) {
     if (!(type && baseYield)) return;
     this.type = type;
     this.pillaged = false;
@@ -55,10 +55,10 @@ export class Improvement {
     this.suppliers = [];
     if (this.isNatural) {
       this.yield = new Yield({});
-    } else if (type === 'worksite' && errand) {
-      this.yield = new Yield({});
-      this.errand = new WorkErrand(this.storage, errand);
-    }
+    }// else if (type === 'worksite') {
+    //   this.yield = new Yield({});
+      
+    // }
   }
 
   export() {
@@ -114,6 +114,10 @@ export class Improvement {
     return catalog;
   }
 
+  startErrand(errand: ErrandAction) {
+    this.errand = new WorkErrand(this.storage, errand);
+  }
+
   work(): void {
     // TODO - ADD POPULATION/COST CHECK
 
@@ -127,6 +131,8 @@ export class Improvement {
         for (const supplier of this.suppliers) {
           supplier.expire();
         }
+        this.storage.decr(this.errand.cost);
+        this.storage.setCapacity(Improvement.storeCapTable[this.type]);
       }
       this.errand.storedThisTurn.reset();
     }

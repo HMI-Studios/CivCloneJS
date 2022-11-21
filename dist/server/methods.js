@@ -397,7 +397,6 @@ const methods = {
         }
     },
     trainUnit: (ws, coords, type) => {
-        var _a;
         const username = getUsername(ws);
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
@@ -405,11 +404,7 @@ const methods = {
         if (game) {
             const map = game.world.map;
             const tile = map.getTile(coords);
-            if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID && tile.improvement) {
-                if (tile.improvement.getTrainableUnitTypes().includes(type)) {
-                    console.log(`Train ${type} at ${JSON.stringify(coords)}`);
-                }
-            }
+            map.trainUnitAt(coords, type, civID);
         }
     },
 };

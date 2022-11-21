@@ -245,6 +245,6 @@ export class World {
   }
 
   turn(): void {
-    this.map.turn();
+    this.map.turn(this);
   }
 }

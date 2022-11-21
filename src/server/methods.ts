@@ -480,11 +480,7 @@ const methods: {
 
       const tile = map.getTile(coords);
 
-      if (tile.owner?.civID === civID && tile.improvement) {
-        if (tile.improvement.getTrainableUnitTypes().includes(type)) {
-          console.log(`Train ${type} at ${JSON.stringify(coords)}`);
-        }
-      }
+      map.trainUnitAt(coords, type, civID);
     }
   },
 };
