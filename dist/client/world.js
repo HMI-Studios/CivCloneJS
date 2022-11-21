@@ -64,21 +64,25 @@ class World {
         // TODO - possibly optimize this? memoize?
         return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
     }
+    isOcean(tile) {
+        return (tile.type === 'ocean' ||
+            tile.type === 'frozen_ocean');
+    }
+    isRiver(tile) {
+        return (tile.type === 'river' ||
+            tile.type === 'frozen_river');
+    }
     canBuildOn(tile) {
         var _a;
         return (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === this.player.civID &&
-            tile.type !== 'ocean' &&
-            tile.type !== 'frozen_ocean' &&
+            !this.isOcean(tile) &&
             tile.type !== 'mountain');
     }
     canSettleOn(tile) {
         return (!tile.owner &&
-            tile.type !== 'ocean' &&
-            tile.type !== 'frozen_ocean' &&
-            tile.type !== 'mountain' &&
-            tile.type !== 'coastal' &&
-            tile.type !== 'frozen_coastal' &&
-            tile.type !== 'river');
+            !this.isOcean(tile) &&
+            !this.isRiver(tile) &&
+            tile.type !== 'mountain');
     }
     canFarmOn(tile) {
         // TODO - put this somewhere better
@@ -397,6 +401,10 @@ class World {
             this.on.event.selectTile = (coords, tile) => {
                 ui.showTileInfoMenu(this, coords, tile);
                 if (tile.improvement) {
+                    if (tile.improvement.type === 'encampment') {
+                        // change this check later, to be more general
+                        this.sendActions([['getUnitCatalog', [coords]]]);
+                    }
                     ui.showSidebarMenu(this, coords, tile);
                 }
                 else {

@@ -1,11 +1,12 @@
 import { Coords } from "../world";
+import { Map } from "./index";
 import { Improvement, ImprovementData } from "./tile/improvement";
 import { ResourceStore, Yield, YieldParams } from "./tile/yield";
 
 export type Route = [Coords[], number];
 
 export type TraderData = {
-  route: Coords[];
+  path: Coords[];
   source: ImprovementData;
   sink: ImprovementData;
   speed: number;
@@ -15,7 +16,7 @@ export type TraderData = {
 
 export class Trader {
   civID: number;
-  route: Coords[];
+  path: Coords[];
   source: Improvement;
   sink: Improvement;
   speed: number;
@@ -28,7 +29,7 @@ export class Trader {
 
   constructor(civID: number, [path, length]: Route, source: Improvement, sink: Improvement, speed: number, capacity: YieldParams) {
     this.civID = civID;
-    this.route = path;
+    this.path = path;
     this.source = source;
     this.sink = sink;
     this.speed = speed;
@@ -44,9 +45,42 @@ export class Trader {
     this.sink.subscribeSupplier(this);
   }
 
+  export() {
+    return {
+      civID: this.civID,
+      path: this.path,
+      speed: this.speed,
+      length: this.length,
+      expired: this.expired,
+      turnsElapsed: this.turnsElapsed,
+      storage: this.storage,
+    };
+  }
+
+  /***
+   * import() needs a reference to the Map in order to get references to the source and sink Improvements
+   */
+  static import(map: Map, {civID, path, speed, length, expired, turnsElapsed, storage}: any): Trader {
+    // This is safe, since a Route is guaranteed to always start at the source and end at the sink.
+    const source = map.getTile(path[0]);
+    const sink = map.getTile(path[path.length - 1]);
+    if (source.improvement && sink.improvement) {
+      const capacity = storage.capacity;
+      delete storage.capacity;
+      const trader = new Trader(civID, [path, length], source.improvement, sink.improvement, speed, capacity);
+      trader.storage.incr(new Yield(storage));
+      trader.expired = expired;
+      trader.turnsElapsed = turnsElapsed;
+      return trader;
+    } else {
+      // The supplied data is broken - the trader can not possibly be created.
+      throw 'Error importing Trader: Invalid source or sink.';
+    }
+  }
+
   getData(): TraderData {
     return {
-      route: this.route,
+      path: this.path,
       source: this.source.getData(),
       sink: this.sink.getData(),
       speed: this.speed,

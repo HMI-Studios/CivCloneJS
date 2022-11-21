@@ -4,8 +4,9 @@ import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
 import { getAdjacentCoords, mod, Event } from '../../utils';
-import { Trader, TraderData } from './trade';
+import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
+import { ErrandType } from './tile/errand';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -42,11 +43,34 @@ export class Map {
       width: this.width,
       tiles: this.tiles.map(tile => tile.export()),
       cities: this.cities.map(city => city.export()),
+      traders: this.traders.map(trader => trader.export()),
     };
   }
 
-  pos({ x, y }: Coords): number {
-    return (y * this.width) + mod(x, this.width)
+  static import(data: any): Map {
+    const map = new Map(data.height, data.width);
+    map.tiles = data.tiles.map(tileData => Tile.import(tileData));
+    map.cities = data.cities.map(cityData => {
+      const city = City.import(cityData);
+      const set = city.getTiles();
+      for (const coords of set) {
+        map.setTileOwner(coords, city, false);
+      }
+      return city;
+    });
+    map.traders = data.traders.map(traderData => Trader.import(map, traderData));
+    return map;
+  }
+
+  private pos({ x, y }: Coords): number {
+    return (y * this.width) + mod(x, this.width);
+  }
+
+  private coords(pos: number): Coords {
+    return {
+      x: mod(pos, this.width),
+		  y: Math.floor(pos / this.width),
+    };
   }
 
   getUpdates(): { (civID: number): Event }[] {
@@ -150,8 +174,8 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  isInBounds(coords: Coords): boolean {
-    return coords.x >= 0 && coords.x < this.width && coords.y >= 0 && coords.y < this.height;
+  isInBounds({ x, y }: Coords): boolean {
+    return mod(x, this.width) >= 0 && mod(x, this.width) < this.width && y >= 0 && y < this.height;
   }
 
   tileUpdate(coords: Coords) {
@@ -186,6 +210,23 @@ export class Map {
     }
   }
 
+  findRoute(pathTree: {[key: string]: Coords}, dst: {[key: string]: number}, srcPosKey: number, target: Coords): Route | null {
+    const srcCoords = this.coords(srcPosKey);
+    const path = this.findPath(pathTree, srcPosKey, target);
+    if (!path) return null;
+    const fullPath = [srcCoords].concat(path);
+
+    /***
+     * Routes *must* guarantee that *both* the source and target tiles are included within the path,
+     * unlike normal paths which only include the target. To guarantee this, the Route cannot be
+     * returned if the expected source and target tiles are not the same as those on the path.
+     */
+    const [srcTile, targetTile] = [this.getTile(srcCoords), this.getTile(target)];
+    if (!(srcTile === this.getTile(fullPath[0]) && targetTile === this.getTile(path[path.length - 1]))) return null;
+    
+    return [fullPath, dst[srcPosKey]];
+  }
+
   createTradeRoutes(civID: number, coords: Coords, sink: Improvement, requirement: YieldParams, range = 5, mode = 0): void {
     const [pathTree, dst] = this.getPathTree(coords, range, mode);
     const posKeys = Object.keys(dst).sort((a, b) => {
@@ -195,9 +236,9 @@ export class Map {
     for (const pos of posKeys) {
       const tile = this.tiles[pos];
       if (tile.owner?.civID === civID && tile.canSupply(requirement)) {
-        const path = this.findPath(pathTree, Number(pos), coords);
-        if (!path) continue;
-        this.addTrader(new Trader(civID, [path, dst[pos]], tile.improvement, sink, TRADER_SPEED, Yield.min(TRADER_CAPACITY, requirement)));
+        const route = this.findRoute(pathTree, dst, Number(pos), coords);
+        if (!route) continue;
+        this.addTrader(new Trader(civID, route, tile.improvement, sink, TRADER_SPEED, Yield.min(TRADER_CAPACITY, requirement)));
       }
     }
   }
@@ -231,15 +272,13 @@ export class Map {
     return true;
   }
 
-  startConstructionAt(coords: Coords, type: string, ownerID: number): void {
+  startConstructionAt(coords: Coords, improvementType: string, ownerID: number): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
-    tile.improvement = new Improvement('worksite', tile.baseYield, { 
-      type, onCompletion: (improvement: Improvement) => {
-        delete tile.improvement;
-        tile.improvement = new Improvement(type, tile.baseYield);
-      } 
+    tile.improvement = new Improvement('worksite', tile.baseYield, undefined, {
+      type: ErrandType.CONSTRUCTION,
+      option: improvementType,
     });
     this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
 
@@ -268,6 +307,9 @@ export class Map {
     for (const tile of this.tiles) {
       if (tile.improvement) {
         tile.improvement.work();
+        if (tile.improvement.errand?.completed) {
+          tile.improvement.errand.complete(tile);
+        }
       }
     }
     for (let i = 0; i < this.traders.length; i++) {

@@ -10,18 +10,33 @@ class City {
         this.tiles.add(center);
     }
     export() {
+        const tiles = [];
+        for (const coords of this.tiles) {
+            tiles.push(coords);
+        }
         return {
             center: this.center,
             name: this.name,
             civID: this.civID,
-            tiles: this.tiles,
+            tiles,
         };
+    }
+    static import(data) {
+        const city = new City(data.center, data.name, data.civID);
+        city.tiles = new Set();
+        for (const coords of data.tiles) {
+            city.addTile(coords);
+        }
+        return city;
     }
     getData() {
         return {
             name: this.name,
             civID: this.civID,
         };
+    }
+    getTiles() {
+        return this.tiles;
     }
     addTile(coords) {
         this.tiles.add(coords);

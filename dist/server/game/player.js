@@ -5,13 +5,18 @@ class Player {
     constructor(civID, connection) {
         this.civID = civID;
         this.ready = false;
-        this.isAI = !connection;
         this.connection = connection;
     }
     export() {
         return {
             civID: this.civID,
         };
+    }
+    static import(data) {
+        return new Player(data.civID, null);
+    }
+    isAI() {
+        return this.connection === null;
     }
     getData() {
         return {
@@ -20,8 +25,16 @@ class Player {
     }
     reset(connection) {
         this.ready = false;
-        this.isAI = !connection;
         this.connection = connection;
+    }
+    send(msg) {
+        if (!this.connection) {
+            // TODO - do AI things
+            return;
+        }
+        else {
+            this.connection.send(msg);
+        }
     }
 }
 exports.Player = Player;

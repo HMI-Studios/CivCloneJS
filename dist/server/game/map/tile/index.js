@@ -1,27 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
-const tileMovementCostTable = {
-    // tile name: [land mp, water mp] (0 = impassable)
-    'ocean': [0, 1],
-    'frozen_ocean': [0, 0],
-    'river': [4, 1],
-    'frozen_river': [3, 0],
-    'grass_lowlands': [1, 0],
-    'plains': [1, 0],
-    'grass_hills': [2, 0],
-    'grass_mountains': [4, 0],
-    'desert': [1, 0],
-    'desert_hills': [3, 0],
-    'desert_mountains': [4, 0],
-    'snow_plains': [2, 0],
-    'snow_hills': [3, 0],
-    'snow_mountains': [5, 0],
-    'mountain': [0, 0],
-};
+const improvement_1 = require("./improvement");
+const yield_1 = require("./yield");
 class Tile {
     constructor(type, tileHeight, baseYield) {
-        this.movementCost = tileMovementCostTable[type];
+        this.movementCost = Tile.movementCostTable[type];
         this.type = type;
         this.elevation = tileHeight;
         this.unit = undefined;
@@ -37,13 +21,21 @@ class Tile {
             // movementCost: this.movementCost,
             type: this.type,
             elevation: this.elevation,
-            unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.export(),
-            improvement: this.improvement,
+            // unit: this.unit?.export(),
+            improvement: (_a = this.improvement) === null || _a === void 0 ? void 0 : _a.export(),
             // owner: this.owner?,
             discoveredBy: this.discoveredBy,
             // visibleTo: { [civID: number]: number },
             baseYield: this.baseYield,
         };
+    }
+    static import(data) {
+        const tile = new Tile(data.type, data.elevation, new yield_1.Yield(data.baseYield));
+        // tile.unit = Unit.import(data.unit);
+        if (data.improvement)
+            tile.improvement = improvement_1.Improvement.import(data.improvement);
+        tile.discoveredBy = data.discoveredBy;
+        return tile;
     }
     getTileYield() {
         if (this.improvement) {
@@ -66,7 +58,7 @@ class Tile {
     }
     getVisibleData() {
         var _a;
-        return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(), visible: true });
+        return Object.assign(Object.assign({}, this.getDiscoveredData()), { knowledges: this.knowledges, unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(), visible: true });
     }
     getMovementCost(unit) {
         const mode = unit.getMovementClass();
@@ -94,4 +86,22 @@ class Tile {
     }
 }
 exports.Tile = Tile;
+Tile.movementCostTable = {
+    // tile name: [land mp, water mp] (0 = impassable)
+    'ocean': [0, 1],
+    'frozen_ocean': [0, 0],
+    'river': [4, 1],
+    'frozen_river': [3, 0],
+    'grass_lowlands': [1, 0],
+    'plains': [1, 0],
+    'grass_hills': [2, 0],
+    'grass_mountains': [4, 0],
+    'desert': [1, 0],
+    'desert_hills': [3, 0],
+    'desert_mountains': [4, 0],
+    'snow_plains': [2, 0],
+    'snow_hills': [3, 0],
+    'snow_mountains': [5, 0],
+    'mountain': [0, 0],
+};
 //# sourceMappingURL=index.js.map

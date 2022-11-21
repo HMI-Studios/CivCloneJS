@@ -8,13 +8,15 @@ interface Leader {
 }
 
 type ElementOptions = {
-  innerText: string;
+  innerText?: string;
+  src?: string;
+  onclick?: () => void;
 } | null;
 
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
-  'builder': ['buildFarm'],
+  'builder': ['buildFarm', 'buildEncampment'],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[]] } = {
@@ -25,6 +27,9 @@ const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[
   },
   'buildFarm': (pos: Coords): [string, unknown[]] => {
     return ['buildImprovement', [pos, 'farm']];
+  },
+  'buildEncampment': (pos: Coords): [string, unknown[]] => {
+    return ['buildImprovement', [pos, 'encampment']];
   },
 };
 
@@ -37,7 +42,17 @@ const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coor
     const tile = world.getTile(pos);
     return world.canBuildOn(tile) && world.canFarmOn(tile);
   },
+  'buildEncampment': (world: World, pos: Coords): boolean => {
+    const tile = world.getTile(pos);
+    return world.canBuildOn(tile) && !world.isRiver(tile);
+  },
 };
+
+const iconPathTable: { [icon: string]: string } = {
+  'food': 'assets/icons/food.png',
+  'production': 'assets/icons/production.png',
+};
+const MISSING_ICON_PATH = 'assets/missing.png';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class UI {
@@ -175,6 +190,17 @@ class UI {
     nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - ${translate('menu.civ.selected_by')} ${this.civs[leader.civID].name}` : '');
     civItem.appendChild(nameText);
     return civItem;
+  }
+
+  createYieldDisplay(yieldData: Yield): HTMLElement {
+    // for (const key in yieldData) {}
+    return this.createElement('div', { className: 'yieldDisplayDiv', children: Object.keys(yieldData).map(key => (
+      this.createElement('div', { className: 'yieldDisplay tooltip', children: [
+        this.createElement('img', { className: 'icon', attrs: { src: iconPathTable[key] ?? MISSING_ICON_PATH } }),
+        this.createElement('span', { className: 'yieldCount', attrs: { innerText: yieldData[key] } }),
+        this.createElement('span', { className: 'tooltipText', attrs: { innerText: translate(`yield.${key}`) } }),
+      ]})
+    ))});
   }
 
   setTurnState(world: World, state: boolean) {
@@ -433,27 +459,44 @@ class UI {
       this.elements.sidebarMenu.appendChild(worksiteProgress);
     }
 
-    const tileYield = this.createElement('div', {className: 'sidebarInfoDiv', children: [
-      this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.yield') }}),
-      this.createElement('div', {className: 'sidebarInfoTable', children: Object.keys(tile.yield).map(key => (
-        this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`yield.${key}`) } }),
-          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: tile.yield[key] } }),
-        ] })
-      ))}),
-    ]});
-    this.elements.sidebarMenu.appendChild(tileYield);
+    const storage: any = { ...tile.improvement.storage };
+    const capacity = storage.capacity;
+    delete storage.capacity;
 
-    const tileStore = this.createElement('div', {className: 'sidebarInfoDiv', children: [
-      this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.storage') }}),
-      this.createElement('div', {className: 'sidebarInfoTable', children: Object.keys(tile.improvement.storage.capacity).map(key => (
+    const tileInfo = this.createElement('div', {className: 'sidebarInfoDiv', children: [
+      this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.resources') }}),
+      this.createElement('div', {className: 'sidebarInfoTable', children: [
         this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`yield.${key}`) } }),
-          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: tile.improvement.storage[key] } }),
-        ] })
-      ))}),
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.yield') } }),
+          this.createElement('span', { className: 'sidebarInfoSpan', children: [ this.createYieldDisplay(tile.yield) ] }),
+        ]}),
+        this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.storage') } }),
+          this.createElement('span', { className: 'sidebarInfoSpan', children: [ this.createYieldDisplay(storage) ] }),
+        ]}),
+        this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+          this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.capacity') } }),
+          this.createElement('span', { className: 'sidebarInfoSpan', children: [ this.createYieldDisplay(capacity) ] }),
+        ]}),
+      ]}),
     ]});
-    this.elements.sidebarMenu.appendChild(tileStore);
+    this.elements.sidebarMenu.appendChild(tileInfo);
+
+    world.on.update.unitCatalog = (catalogPos: Coords, catalog: {type: string, cost: Yield }[]) => {
+      if (!(pos.x === catalogPos.x && pos.y === catalogPos.y)) return;
+      const tileUnitCatalog = this.createElement('div', {className: 'unitCatalogDiv', children: [
+        this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') }}),
+        this.createElement('div', {className: 'sidebarInfoTable', children: catalog.map(unit => (
+          this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+            this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
+              world.sendActions([[ 'trainUnit', [pos, unit.type] ]])
+            }}}),
+            this.createElement('span', { className: 'sidebarInfoSpan', children: [ this.createYieldDisplay(unit.cost) ] }),
+          ] })
+        ))}),
+      ]});
+      this.elements.sidebarMenu.appendChild(tileUnitCatalog);
+    };
 
     this.root.appendChild(this.elements.sidebarMenu);
   }
@@ -461,5 +504,6 @@ class UI {
   hideSidebarMenu(): void {
     this.elements.sidebarMenu.remove();
     this.elements.sidebarMenu.innerHTML = '';
+    delete world.on.update.unitCatalog;
   }
 }

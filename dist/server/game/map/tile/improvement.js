@@ -1,40 +1,55 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorkErrand = exports.Improvement = void 0;
+exports.Improvement = void 0;
+const errand_1 = require("./errand");
+const unit_1 = require("./unit");
 const yield_1 = require("./yield");
-const improvementYieldTable = {
-    'settlement': new yield_1.Yield({ food: 2, production: 2 }),
-    'farm': new yield_1.Yield({ food: 1 }),
-    'forest': new yield_1.Yield({ food: 1 }),
-};
-const improvementStoreCapTable = {
-    'settlement': { food: 20, production: 2 },
-    'farm': { food: 20 },
-};
-const constructionCostTable = {
-    'farm': new yield_1.Yield({ production: 10 }),
-};
-const naturalImprovementTable = {
-    'forest': true,
-};
 class Improvement {
-    constructor(type, baseYield, metadata) {
+    constructor(type, baseYield, metadata, errand) {
         var _a, _b;
+        if (!(type && baseYield))
+            return;
         this.type = type;
         this.pillaged = false;
-        this.isNatural = naturalImprovementTable[type];
-        this.yield = baseYield.add((_a = improvementYieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({}));
+        this.isNatural = Improvement.naturalImprovementTable[type];
+        this.yield = baseYield.add((_a = Improvement.yieldTable[type]) !== null && _a !== void 0 ? _a : new yield_1.Yield({}));
         this.metadata = metadata;
-        this.storage = new yield_1.ResourceStore((_b = improvementStoreCapTable[type]) !== null && _b !== void 0 ? _b : {});
+        this.storage = new yield_1.ResourceStore((_b = Improvement.storeCapTable[type]) !== null && _b !== void 0 ? _b : {});
         this.traders = [];
         this.suppliers = [];
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
         }
-        else if (type === 'worksite') {
+        else if (type === 'worksite' && errand) {
             this.yield = new yield_1.Yield({});
-            this.errand = new WorkErrand(constructionCostTable[metadata.type], this.storage, metadata.onCompletion);
+            this.errand = new errand_1.WorkErrand(this.storage, errand);
         }
+    }
+    export() {
+        var _a;
+        return {
+            type: this.type,
+            pillaged: this.pillaged,
+            isNatural: this.isNatural,
+            yield: this.yield,
+            storage: this.storage,
+            errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.export(),
+        };
+    }
+    static import(data) {
+        const improvement = new Improvement();
+        improvement.type = data.type;
+        improvement.pillaged = data.pillaged;
+        improvement.isNatural = data.isNatural;
+        improvement.yield = new yield_1.Yield(data.yield);
+        const storageCap = data.storage.capacity;
+        delete data.storage.capacity;
+        improvement.storage = new yield_1.ResourceStore(storageCap).incr(new yield_1.Yield(data.storage));
+        if (data.errand)
+            improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
+        improvement.traders = [];
+        improvement.suppliers = [];
+        return improvement;
     }
     getData() {
         var _a;
@@ -44,6 +59,25 @@ class Improvement {
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
         };
+    }
+    // Return list of unites this improvement knows how to train
+    getTrainableUnitTypes() {
+        if (this.type === 'settlement') {
+            return ['settler', 'builder'];
+        }
+        else if (this.type === 'encampment') {
+            return ['scout'];
+        }
+        else {
+            return [];
+        }
+    }
+    // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+    getUnitCatalog() {
+        const catalog = unit_1.Unit.makeCatalog(this.getTrainableUnitTypes());
+        if (catalog.length === 0)
+            return null;
+        return catalog;
     }
     work() {
         // TODO - ADD POPULATION/COST CHECK
@@ -55,7 +89,6 @@ class Improvement {
                 for (const supplier of this.suppliers) {
                     supplier.expire();
                 }
-                this.errand.onCompletion(this);
             }
             this.errand.storedThisTurn.reset();
         }
@@ -89,21 +122,18 @@ class Improvement {
     }
 }
 exports.Improvement = Improvement;
-class WorkErrand {
-    constructor(cost, parentStorage, onCompletion) {
-        this.cost = cost;
-        this.parentStorage = parentStorage;
-        this.storedThisTurn = new yield_1.ResourceStore({});
-        this.parentStorage.setCapacity(this.cost);
-        this.completed = false;
-        this.onCompletion = onCompletion;
-    }
-    getData() {
-        return {
-            storedThisTurn: this.storedThisTurn,
-            turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
-        };
-    }
-}
-exports.WorkErrand = WorkErrand;
+Improvement.yieldTable = {
+    'settlement': new yield_1.Yield({ food: 2, production: 2 }),
+    'encampment': new yield_1.Yield({ production: 1 }),
+    'farm': new yield_1.Yield({ food: 1 }),
+    'forest': new yield_1.Yield({ food: 1 }),
+};
+Improvement.storeCapTable = {
+    'settlement': { food: 20, production: 2 },
+    'encampment': { food: 10, production: 1 },
+    'farm': { food: 20 },
+};
+Improvement.naturalImprovementTable = {
+    'forest': true,
+};
 //# sourceMappingURL=improvement.js.map

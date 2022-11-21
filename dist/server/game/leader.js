@@ -19,6 +19,15 @@ class Leader {
         this.name = name;
         this.civID = null;
     }
+    static import(data) {
+        const leader = new Leader(data.id);
+        leader.color = data.color;
+        leader.textColor = data.textColor;
+        leader.secondaryColor = data.secondaryColor;
+        leader.name = data.name;
+        leader.civID = null;
+        return leader;
+    }
     select(civID) {
         this.civID = civID;
     }

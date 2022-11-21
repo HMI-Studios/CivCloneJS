@@ -106,11 +106,15 @@
   "improvement": {
     "settlement": "Settlement",
     "worksite": "Worksite",
+    "encampment": "Encampment",
     "farm": "Farm",
     "info": {
+      "resources": "Resources",
       "yield": "Yield",
       "storage": "Storage",
-      "turnsToComplete": "Turns until completed"
+      "capacity": "Capacity",
+      "turnsToComplete": "Turns until completed",
+      "unitCatalog": "Unit Catalog"
     }
   },
   "yield": {
