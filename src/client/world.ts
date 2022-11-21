@@ -535,15 +535,21 @@ class World {
     const mainMenuFns = {
       createGame: async () => {
         ui.hideMainMenu();
-        const [gameName, playerCount, width, height, seed] = await ui.textInputs.createGame.prompt(ui.root, true);
-        this.sendActions([['createGame', [Number(playerCount), {
-          width: Number(width),
-          height: Number(height),
-        }, {
-          gameName,
-          seed: Number(seed),
-        }]]])
-        ui.setView('gameList');
+
+        try {
+          const [gameName, playerCount, width, height, seed] = await ui.textInputs.createGame.prompt(ui.root, true);
+          this.sendActions([['createGame', [Number(playerCount), {
+            width: Number(width),
+            height: Number(height),
+          }, {
+            gameName,
+            seed: Number(seed),
+          }]]])
+          ui.setView('gameList');
+        } catch {
+          ui.setView('mainMenu');
+          ui.showMainMenu(mainMenuFns);
+        }
       },
       listGames: () => {
         this.sendActions([
