@@ -48,10 +48,6 @@ class Camera {
                 farm: this.loadOverlayTexture('improvement_farm'),
                 forest: this.loadOverlayTexture('improvement_forest'),
             },
-            icons: {
-                food: this.loadTexture('icon_food'),
-                // production: this.loadTexture('icon_production'),
-            },
         };
         this.interval;
         this.mouseDownTime = 0;
