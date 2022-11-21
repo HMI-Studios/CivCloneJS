@@ -20,17 +20,24 @@ export class City {
   }
 
   export() {
+    const tiles: Coords[] = [];
+    for (const coords of this.tiles) {
+      tiles.push(coords)
+    }
     return {
       center: this.center,
       name: this.name,
       civID: this.civID,
-      tiles: this.tiles,
+      tiles,
     };
   }
 
   static import(data: any): City {
     const city = new City(data.center, data.name, data.civID);
-    city.tiles = data.tiles;
+    city.tiles = new Set();
+    for (const coords of data.tiles) {
+      city.addTile(coords);
+    }
     return city;
   }
 
@@ -39,6 +46,10 @@ export class City {
       name: this.name,
       civID: this.civID,
     };
+  }
+
+  getTiles(): Set<Coords> {
+    return this.tiles;
   }
 
   addTile(coords: Coords) {

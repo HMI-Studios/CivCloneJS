@@ -35,7 +35,14 @@ class Map {
     static import(data) {
         const map = new Map(data.height, data.width);
         map.tiles = data.tiles.map(tileData => tile_1.Tile.import(tileData));
-        map.cities = data.cities.map(cityData => city_1.City.import(cityData));
+        map.cities = data.cities.map(cityData => {
+            const city = city_1.City.import(cityData);
+            const set = city.getTiles();
+            for (const coords of set) {
+                map.setTileOwner(coords, city, false);
+            }
+            return city;
+        });
         map.traders = data.traders.map(traderData => trade_1.Trader.import(map, traderData));
         return map;
     }

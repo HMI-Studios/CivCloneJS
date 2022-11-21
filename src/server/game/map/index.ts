@@ -50,7 +50,14 @@ export class Map {
   static import(data: any): Map {
     const map = new Map(data.height, data.width);
     map.tiles = data.tiles.map(tileData => Tile.import(tileData));
-    map.cities = data.cities.map(cityData => City.import(cityData));
+    map.cities = data.cities.map(cityData => {
+      const city = City.import(cityData);
+      const set = city.getTiles();
+      for (const coords of set) {
+        map.setTileOwner(coords, city, false);
+      }
+      return city;
+    });
     map.traders = data.traders.map(traderData => Trader.import(map, traderData));
     return map;
   }
