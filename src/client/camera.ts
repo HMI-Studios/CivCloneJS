@@ -23,6 +23,7 @@ class Camera {
     selector: HTMLImageElement,
     unit: { [key: string]: HTMLImageElement },
     improvements: { [key: string]: OverlayTexture },
+    icons: { [key: string]: HTMLImageElement },
   };
   interval?: NodeJS.Timer;
   mouseDownTime: number;
@@ -79,6 +80,10 @@ class Camera {
         farm: this.loadOverlayTexture('improvement_farm'),
 
         forest: this.loadOverlayTexture('improvement_forest'),
+      },
+      icons: {
+        food: this.loadTexture('icon_food'),
+        // production: this.loadTexture('icon_production'),
       },
     };
     this.interval;

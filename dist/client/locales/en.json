@@ -111,6 +111,7 @@
     "info": {
       "yield": "Yield",
       "storage": "Storage",
+      "capacity": "Capacity",
       "turnsToComplete": "Turns until completed",
       "unitCatalog": "Unit Catalog"
     }
