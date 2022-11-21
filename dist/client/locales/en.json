@@ -106,6 +106,7 @@
   "improvement": {
     "settlement": "Settlement",
     "worksite": "Worksite",
+    "encampment": "Encampment",
     "farm": "Farm",
     "info": {
       "yield": "Yield",
