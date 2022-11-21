@@ -32,6 +32,7 @@ const unitActionsAvailabilityTable = {
 };
 const iconPathTable = {
     'food': 'assets/icons/food.png',
+    'production': 'assets/icons/production.png',
 };
 const MISSING_ICON_PATH = 'assets/missing.png';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

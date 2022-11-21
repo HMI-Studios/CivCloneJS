@@ -50,6 +50,7 @@ const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coor
 
 const iconPathTable: { [icon: string]: string } = {
   'food': 'assets/icons/food.png',
+  'production': 'assets/icons/production.png',
 };
 const MISSING_ICON_PATH = 'assets/missing.png';
 
