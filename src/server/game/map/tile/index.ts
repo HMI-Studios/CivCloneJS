@@ -27,6 +27,7 @@ export interface TileData {
   elevation: number;
   movementCost: [number, number];
   yield: Yield;
+  knowledges?: { [name: string]: number };
   unit?: UnitData;
   improvement?: ImprovementData;
   owner?: CityData;
@@ -37,6 +38,8 @@ export class Tile {
   movementCost: [number, number];
   type: string;
   elevation: number;
+
+  knowledges: { [name: string]: number };
 
   unit?: Unit;
   improvement?: Improvement;
@@ -98,6 +101,7 @@ export class Tile {
   getVisibleData(): TileData {
     return {
       ...this.getDiscoveredData(),
+      knowledges: this.knowledges,
       unit: this.unit?.getData(),
       visible: true,
     }
