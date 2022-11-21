@@ -2,6 +2,7 @@ import { Unit, UnitData } from './unit';
 import { Improvement, ImprovementData } from './improvement';
 import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
+import { Knowledge } from './knowledge';
 
 export interface TileData {
   type: string;
@@ -39,7 +40,7 @@ export class Tile {
   type: string;
   elevation: number;
 
-  knowledges: { [name: string]: number };
+  private knowledges: { [name: string]: number };
 
   unit?: Unit;
   improvement?: Improvement;
@@ -144,5 +145,27 @@ export class Tile {
     return !!this.improvement && (
       this.improvement.yield.canSupply(requirement)
     );
+  }
+
+  /**
+   * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
+   * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
+   */
+  hasKnowledges(knowledgeNames: string[]): boolean {
+    for (const name of knowledgeNames) {
+      if (this.knowledges[name] < 100) return false;
+    }
+    return true;
+  }
+
+  /**
+   * 
+   * @param knowledge The knowledge instance to be added.
+   * @param amount The amount of the knowledge to be added. (0 - 100)
+   * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
+   */
+  addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number): void {
+    if (this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
+    this.knowledges[knowledge.name] = Math.max(this.knowledges[knowledge.name] + amount, 100);
   }
 }

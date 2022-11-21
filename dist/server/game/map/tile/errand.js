@@ -2,13 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkErrand = exports.ErrandType = void 0;
 const improvement_1 = require("./improvement");
+const knowledge_1 = require("./knowledge");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 var ErrandType;
 (function (ErrandType) {
     ErrandType[ErrandType["CONSTRUCTION"] = 0] = "CONSTRUCTION";
     ErrandType[ErrandType["UNIT_TRAINING"] = 1] = "UNIT_TRAINING";
-    // RESEARCH,
+    ErrandType[ErrandType["RESEARCH"] = 2] = "RESEARCH";
     // CULTURE,
 })(ErrandType = exports.ErrandType || (exports.ErrandType = {}));
 class WorkErrand {
@@ -50,9 +51,11 @@ exports.WorkErrand = WorkErrand;
 WorkErrand.errandCostTable = {
     [ErrandType.CONSTRUCTION]: {
         'encampment': new yield_1.Yield({ production: 50 }),
+        'campus': new yield_1.Yield({ production: 50 }),
         'farm': new yield_1.Yield({ production: 10 }),
     },
     [ErrandType.UNIT_TRAINING]: unit_1.Unit.costTable,
+    [ErrandType.RESEARCH]: knowledge_1.Knowledge.getCosts(),
 };
 WorkErrand.errandActionEffects = {
     [ErrandType.CONSTRUCTION]: (world, map, tile, action) => {
@@ -69,6 +72,9 @@ WorkErrand.errandActionEffects = {
         else {
             world.addUnit(newUnit);
         }
+    },
+    [ErrandType.RESEARCH]: (world, map, tile, action) => {
+        tile.addKnowledge(knowledge_1.Knowledge.knowledgeTree[action.option], 100, 0);
     },
 };
 //# sourceMappingURL=errand.js.map

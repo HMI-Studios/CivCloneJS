@@ -2,6 +2,7 @@ import { Coords, World } from '../../world';
 import { Map } from '../index';
 import { Improvement } from './improvement';
 import { Tile } from './index';
+import { Knowledge } from './knowledge';
 import { Unit } from './unit';
 import { Yield, ResourceStore, YieldParams } from "./yield";
 
@@ -13,7 +14,7 @@ export type ErrandData = {
 export enum ErrandType {
   CONSTRUCTION,
   UNIT_TRAINING,
-  // RESEARCH,
+  RESEARCH,
   // CULTURE,
 }
 
@@ -28,9 +29,11 @@ export class WorkErrand {
   static errandCostTable: Record<ErrandType, { [option: string]: Yield }> = {
     [ErrandType.CONSTRUCTION]: {
       'encampment': new Yield({production: 50}),
+      'campus': new Yield({production: 50}),
       'farm': new Yield({production: 10}),
     },
     [ErrandType.UNIT_TRAINING]: Unit.costTable,
+    [ErrandType.RESEARCH]: Knowledge.getCosts(),
   };
 
   static errandActionEffects: Record<ErrandType, (world: World, map: Map, tile: Tile, action: ErrandAction) => void> = {
@@ -46,6 +49,9 @@ export class WorkErrand {
       } else {
         world.addUnit(newUnit)
       }
+    },
+    [ErrandType.RESEARCH]: (world, map, tile, action) => {
+      tile.addKnowledge(Knowledge.knowledgeTree[action.option], 100, 0);
     },
   }
 

@@ -84,6 +84,28 @@ class Tile {
     canSupply(requirement) {
         return !!this.improvement && (this.improvement.yield.canSupply(requirement));
     }
+    /**
+     * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
+     * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
+     */
+    hasKnowledges(knowledgeNames) {
+        for (const name of knowledgeNames) {
+            if (this.knowledges[name] < 100)
+                return false;
+        }
+        return true;
+    }
+    /**
+     *
+     * @param knowledge The knowledge instance to be added.
+     * @param amount The amount of the knowledge to be added. (0 - 100)
+     * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
+     */
+    addKnowledge(knowledge, amount, requirementPenalty) {
+        if (this.hasKnowledges(knowledge.prerequisites))
+            amount *= requirementPenalty;
+        this.knowledges[knowledge.name] = Math.max(this.knowledges[knowledge.name] + amount, 100);
+    }
 }
 exports.Tile = Tile;
 Tile.movementCostTable = {
