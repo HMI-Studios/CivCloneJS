@@ -520,6 +520,10 @@ class World {
     this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
       ui.showTileInfoMenu(this, coords, tile);
       if (tile.improvement) {
+        if (tile.improvement.type === 'encampment') {
+          // change this check later, to be more general
+          this.sendActions([[ 'getUnitCatalog', [coords] ]])
+        }
         ui.showSidebarMenu(this, coords, tile);
       } else {
         ui.hideSidebarMenu();

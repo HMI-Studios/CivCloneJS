@@ -111,7 +111,8 @@
     "info": {
       "yield": "Yield",
       "storage": "Storage",
-      "turnsToComplete": "Turns until completed"
+      "turnsToComplete": "Turns until completed",
+      "unitCatalog": "Unit Catalog"
     }
   },
   "yield": {

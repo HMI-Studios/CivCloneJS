@@ -362,11 +362,24 @@ class UI {
                         ] }))) }),
             ] });
         this.elements.sidebarMenu.appendChild(tileStore);
+        world.on.update.unitCatalog = (catalogPos, catalog) => {
+            if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
+                return;
+            const tileUnitCatalog = this.createElement('div', { className: 'unitCatalogDiv', children: [
+                    this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                                this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`unit.${unit.type}`) } }),
+                                this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: JSON.stringify(unit.cost) } }),
+                            ] }))) }),
+                ] });
+            this.elements.sidebarMenu.appendChild(tileUnitCatalog);
+        };
         this.root.appendChild(this.elements.sidebarMenu);
     }
     hideSidebarMenu() {
         this.elements.sidebarMenu.remove();
         this.elements.sidebarMenu.innerHTML = '';
+        delete world.on.update.unitCatalog;
     }
 }
 //# sourceMappingURL=player.js.map

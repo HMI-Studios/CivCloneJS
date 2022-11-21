@@ -461,7 +461,7 @@ const methods: {
       if (tile.owner?.civID === civID && tile.improvement) {
         game.sendToCiv(civID, {
           update: [
-            ['unitCatalog', [tile.improvement.getUnitCatalog()]],
+            ['unitCatalog', [coords, tile.improvement.getUnitCatalog()]],
           ],
         });
       }
