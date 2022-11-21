@@ -5,3 +5,5 @@ dist/server/config.js
 dist/server/config.js.map
 dist/server/saves
 src/server/config.ts
+
+*.js.map
