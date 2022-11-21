@@ -14,6 +14,12 @@ export interface UnitData {
   civID: number,
 }
 
+export enum MovementClass {
+  LAND,
+  WATER,
+  AIR,
+}
+
 export class Unit {
   static movementTable: { [unitType: string]: number } = {
     'settler': 3,
@@ -22,9 +28,9 @@ export class Unit {
   };
   
   static movementClassTable: { [unitType: string]: number } = {
-    'settler': 0,
-    'scout': 0,
-    'builder': 0,
+    'settler': MovementClass.LAND,
+    'scout': MovementClass.LAND,
+    'builder': MovementClass.LAND,
   };
   
   static combatStatsTable: { [unitType: string]: [number, number, number] } = {
