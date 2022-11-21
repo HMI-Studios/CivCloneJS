@@ -96,15 +96,22 @@ export class Improvement {
     };
   }
 
+  // Return list of unites this improvement knows how to train
+  getTrainableUnitTypes(): string[] {
+    if (this.type === 'settlement') {
+      return ['settler', 'builder'];
+    } else if (this.type === 'encampment') {
+      return ['scout'];
+    } else {
+      return [];
+    }
+  }
+
   // Return type and cost of units this improvement knows how to train, or null if it cannot train units
   getUnitCatalog(): UnitTypeCost[] | null {
-    if (this.type === 'settlement') {
-      return Unit.makeCatalog(['settler', 'builder']);
-    } else if (this.type === 'encampment') {
-      return Unit.makeCatalog(['scout']);
-    } else {
-      return null;
-    }
+    const catalog = Unit.makeCatalog(this.getTrainableUnitTypes());
+    if (catalog.length === 0) return null;
+    return catalog;
   }
 
   work(): void {

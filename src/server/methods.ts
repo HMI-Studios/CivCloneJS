@@ -467,4 +467,24 @@ const methods: {
       }
     }
   },
+
+  trainUnit: (ws: WebSocket, coords: Coords, type: string) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+
+      if (tile.owner?.civID === civID && tile.improvement) {
+        if (tile.improvement.getTrainableUnitTypes().includes(type)) {
+          console.log(`Train ${type} at ${JSON.stringify(coords)}`);
+        }
+      }
+    }
+  },
 };

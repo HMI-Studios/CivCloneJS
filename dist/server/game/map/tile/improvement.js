@@ -60,17 +60,24 @@ class Improvement {
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
         };
     }
-    // Return type and cost of units this improvement knows how to train, or null if it cannot train units
-    getUnitCatalog() {
+    // Return list of unites this improvement knows how to train
+    getTrainableUnitTypes() {
         if (this.type === 'settlement') {
-            return unit_1.Unit.makeCatalog(['settler', 'builder']);
+            return ['settler', 'builder'];
         }
         else if (this.type === 'encampment') {
-            return unit_1.Unit.makeCatalog(['scout']);
+            return ['scout'];
         }
         else {
-            return null;
+            return [];
         }
+    }
+    // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+    getUnitCatalog() {
+        const catalog = unit_1.Unit.makeCatalog(this.getTrainableUnitTypes());
+        if (catalog.length === 0)
+            return null;
+        return catalog;
     }
     work() {
         // TODO - ADD POPULATION/COST CHECK

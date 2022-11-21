@@ -109,6 +109,7 @@
     "encampment": "Encampment",
     "farm": "Farm",
     "info": {
+      "resources": "Resources",
       "yield": "Yield",
       "storage": "Storage",
       "capacity": "Capacity",

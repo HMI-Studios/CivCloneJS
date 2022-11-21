@@ -365,7 +365,7 @@ class UI {
         const capacity = storage.capacity;
         delete storage.capacity;
         const tileInfo = this.createElement('div', { className: 'sidebarInfoDiv', children: [
-                // this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.yield') }}),
+                this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.resources') } }),
                 this.createElement('div', { className: 'sidebarInfoTable', children: [
                         this.createElement('div', { className: 'sidebarInfoTableRow', children: [
                                 this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.yield') } }),
@@ -388,7 +388,9 @@ class UI {
             const tileUnitCatalog = this.createElement('div', { className: 'unitCatalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
                     this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-                                this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`unit.${unit.type}`) } }),
+                                this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
+                                            world.sendActions([['trainUnit', [pos, unit.type]]]);
+                                        } } }),
                                 this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(unit.cost)] }),
                             ] }))) }),
                 ] });
