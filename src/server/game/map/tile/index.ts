@@ -56,6 +56,8 @@ export class Tile {
     this.type = type;
     this.elevation = tileHeight;
 
+    this.knowledges = {};
+
     this.unit = undefined;
     this.improvement = undefined;
     this.owner = undefined;
@@ -166,7 +168,7 @@ export class Tile {
    */
   addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number): void {
     if (this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
-    this.knowledges[knowledge.name] = Math.max(this.knowledges[knowledge.name] + amount, 100);
+    this.knowledges[knowledge.name] = Math.max((this.knowledges[knowledge.name] ?? 0) + amount, 100);
   }
 
   /**
@@ -176,10 +178,9 @@ export class Tile {
   getKnowledgeCatalog(): Knowledge[] | null {
     if (!this.improvement) return null;
     const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => ({ ...obj, [name]: true }), {});
-    const completedKnowledges = this.knowledges ? Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100)) : [];
+    const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
     const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);
-    const knowledgeCatalog = reachableKnowledges.filter(({ name }) => researchableKnowledges[name]);
-    console.log(researchableKnowledges, completedKnowledges, reachableKnowledges, knowledgeCatalog);
+    const knowledgeCatalog = reachableKnowledges.filter(({ name }) => (researchableKnowledges[name] && ((this.knowledges[name] ?? 0) < 100)));
     return knowledgeCatalog;
   }
 }

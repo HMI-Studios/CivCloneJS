@@ -523,7 +523,7 @@ const methods: {
 
       const tile = map.getTile(coords);
 
-      console.log(`Research ${name}`)
+      map.researchKnowledgeAt(coords, name, civID);
     }
   },
 };

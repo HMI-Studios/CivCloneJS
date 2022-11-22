@@ -440,7 +440,7 @@ const methods = {
         if (game) {
             const map = game.world.map;
             const tile = map.getTile(coords);
-            console.log(`Research ${name}`);
+            map.researchKnowledgeAt(coords, name, civID);
         }
     },
 };

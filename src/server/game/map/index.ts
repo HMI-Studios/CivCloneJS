@@ -309,7 +309,6 @@ export class Map {
 
     if (tile.owner?.civID === ownerID && tile.improvement) {
       if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
-        console.log(`Train ${unitType} at ${JSON.stringify(coords)}`);
         if (!tile.improvement.errand) {
           // TODO - maybe change this in the future, to where new training errands overwrite old ones?
           // That would require gracefully closing the previous errands though, so that is for later.
@@ -322,8 +321,31 @@ export class Map {
         }
       }
     }
-    
-    
+
+    this.tileUpdate(coords);
+  }
+
+  researchKnowledgeAt(coords: Coords, knowledgeName: string, ownerID: number): void {
+    const tile = this.getTile(coords);
+
+    if (tile.owner?.civID === ownerID && tile.improvement) {
+
+      // Note that this check technically allows the client to "cheat": research errands can begin without
+      // the prerequesites having been fulfilled. These errands will simply do nothing when completed.
+      if (tile.improvement.getResearchableKnowledges().includes(knowledgeName)) {
+
+        // TODO - change this in the future, to where new research errands overwrite old ones?
+        // That would require gracefully closing the previous errands though, so that is for later.
+        if (!tile.improvement.errand) {
+          tile.improvement.startErrand({
+            type: ErrandType.RESEARCH,
+            option: knowledgeName,
+            location: coords,
+          })
+          this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+        }
+      }
+    }
 
     this.tileUpdate(coords);
   }

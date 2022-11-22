@@ -9,6 +9,7 @@ class Tile {
         this.movementCost = Tile.movementCostTable[type];
         this.type = type;
         this.elevation = tileHeight;
+        this.knowledges = {};
         this.unit = undefined;
         this.improvement = undefined;
         this.owner = undefined;
@@ -103,9 +104,10 @@ class Tile {
      * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
      */
     addKnowledge(knowledge, amount, requirementPenalty) {
+        var _a;
         if (this.hasKnowledges(knowledge.prerequisites))
             amount *= requirementPenalty;
-        this.knowledges[knowledge.name] = Math.max(this.knowledges[knowledge.name] + amount, 100);
+        this.knowledges[knowledge.name] = Math.max(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, 100);
     }
     /**
      *
@@ -115,10 +117,9 @@ class Tile {
         if (!this.improvement)
             return null;
         const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
-        const completedKnowledges = this.knowledges ? Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100)) : [];
+        const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
-        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => researchableKnowledges[name]);
-        console.log(researchableKnowledges, completedKnowledges, reachableKnowledges, knowledgeCatalog);
+        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => { var _a; return (researchableKnowledges[name] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
         return knowledgeCatalog;
     }
 }
