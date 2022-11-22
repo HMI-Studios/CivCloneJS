@@ -386,7 +386,7 @@ class UI {
         world.on.update.unitCatalog = (catalogPos, catalog) => {
             if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
                 return;
-            const tileUnitCatalog = this.createElement('div', { className: 'unitCatalogDiv', children: [
+            const tileUnitCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
                     this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
                                 this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
@@ -397,12 +397,27 @@ class UI {
                 ] });
             this.elements.sidebarMenu.appendChild(tileUnitCatalog);
         };
+        world.on.update.knowledgeCatalog = (catalogPos, catalog) => {
+            if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
+                return;
+            const tileKnowledgeCatalog = this.createElement('div', { className: 'catalogDiv', children: [
+                    this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.knowledgeCatalog') } }),
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(knowledge => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                                this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
+                                            world.sendActions([['researchKnowledge', [pos, knowledge.name]]]);
+                                        } } }),
+                                this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(knowledge.cost)] }),
+                            ] }))) }),
+                ] });
+            this.elements.sidebarMenu.appendChild(tileKnowledgeCatalog);
+        };
         this.root.appendChild(this.elements.sidebarMenu);
     }
     hideSidebarMenu() {
         this.elements.sidebarMenu.remove();
         this.elements.sidebarMenu.innerHTML = '';
         delete world.on.update.unitCatalog;
+        delete world.on.update.knowledgeCatalog;
     }
 }
 //# sourceMappingURL=player.js.map
