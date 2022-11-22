@@ -109,8 +109,8 @@ export class ResourceStore extends Yield {
     this.science = 0;
   }
 
-  setCapacity(capacity: YieldParams): void {
-    this.capacity = capacity;
+  setCapacity(capacity?: YieldParams): void {
+    this.capacity = capacity ?? {};
   }
 
   cap(): Yield {

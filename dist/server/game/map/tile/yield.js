@@ -88,7 +88,7 @@ class ResourceStore extends Yield {
         this.science = 0;
     }
     setCapacity(capacity) {
-        this.capacity = capacity;
+        this.capacity = capacity !== null && capacity !== void 0 ? capacity : {};
     }
     cap() {
         var _a, _b, _c, _d, _e, _f;
