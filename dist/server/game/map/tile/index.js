@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
 const improvement_1 = require("./improvement");
 const yield_1 = require("./yield");
+const knowledge_1 = require("./knowledge");
 class Tile {
     constructor(type, tileHeight, baseYield) {
         this.movementCost = Tile.movementCostTable[type];
@@ -105,6 +106,20 @@ class Tile {
         if (this.hasKnowledges(knowledge.prerequisites))
             amount *= requirementPenalty;
         this.knowledges[knowledge.name] = Math.max(this.knowledges[knowledge.name] + amount, 100);
+    }
+    /**
+     *
+     * @returns type and cost of knowledges this tile knows how to research, or null if it cannot research
+     */
+    getKnowledgeCatalog() {
+        if (!this.improvement)
+            return null;
+        const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
+        const completedKnowledges = this.knowledges ? Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100)) : [];
+        const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
+        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => researchableKnowledges[name]);
+        console.log(researchableKnowledges, completedKnowledges, reachableKnowledges, knowledgeCatalog);
+        return knowledgeCatalog;
     }
 }
 exports.Tile = Tile;

@@ -58,24 +58,31 @@ class Improvement {
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
         };
     }
-    // Return list of unites this improvement knows how to train
+    /**
+     *
+     * @returns list of units this improvement knows how to train
+     */
     getTrainableUnitTypes() {
-        if (this.type === 'settlement') {
-            return ['settler', 'builder'];
-        }
-        else if (this.type === 'encampment') {
-            return ['scout'];
-        }
-        else {
-            return [];
-        }
+        var _a;
+        return (_a = Improvement.trainableUnitTable[this.type]) !== null && _a !== void 0 ? _a : [];
     }
-    // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+    /**
+     *
+     * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+     */
     getUnitCatalog() {
         const catalog = unit_1.Unit.makeCatalog(this.getTrainableUnitTypes());
         if (catalog.length === 0)
             return null;
         return catalog;
+    }
+    /**
+     *
+     * @returns list of knowledges this improvement knows how to research
+     */
+    getResearchableKnowledges() {
+        var _a;
+        return (_a = Improvement.researchableKnowledgeTable[this.type]) !== null && _a !== void 0 ? _a : [];
     }
     startErrand(errand) {
         this.errand = new errand_1.WorkErrand(this.storage, errand);
@@ -138,5 +145,12 @@ Improvement.storeCapTable = {
 };
 Improvement.naturalImprovementTable = {
     'forest': true,
+};
+Improvement.trainableUnitTable = {
+    'settlement': ['settler', 'builder'],
+    'encampment': ['scout'],
+};
+Improvement.researchableKnowledgeTable = {
+    'campus': ['scout'],
 };
 //# sourceMappingURL=improvement.js.map

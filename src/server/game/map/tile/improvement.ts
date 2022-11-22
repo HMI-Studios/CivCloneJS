@@ -32,6 +32,15 @@ export class Improvement {
     'forest': true,
   };
 
+  static trainableUnitTable: { [improvement: string]: string[] } = {
+    'settlement': ['settler', 'builder'],
+    'encampment': ['scout'],
+  };
+
+  static researchableKnowledgeTable: { [improvement: string]: string[] } = {
+    'campus': ['scout'],
+  };
+
   type: string;
   pillaged: boolean;
   yield: Yield;
@@ -96,22 +105,30 @@ export class Improvement {
     };
   }
 
-  // Return list of unites this improvement knows how to train
+  /**
+   * 
+   * @returns list of units this improvement knows how to train
+   */
   getTrainableUnitTypes(): string[] {
-    if (this.type === 'settlement') {
-      return ['settler', 'builder'];
-    } else if (this.type === 'encampment') {
-      return ['scout'];
-    } else {
-      return [];
-    }
+    return Improvement.trainableUnitTable[this.type] ?? [];
   }
 
-  // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+  /**
+   * 
+   * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+   */
   getUnitCatalog(): UnitTypeCost[] | null {
     const catalog = Unit.makeCatalog(this.getTrainableUnitTypes());
     if (catalog.length === 0) return null;
     return catalog;
+  }
+
+  /**
+   * 
+   * @returns list of knowledges this improvement knows how to research
+   */
+  getResearchableKnowledges(): string[] {
+    return Improvement.researchableKnowledgeTable[this.type] ?? [];
   }
 
   startErrand(errand: ErrandAction) {

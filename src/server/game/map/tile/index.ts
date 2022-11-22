@@ -168,4 +168,18 @@ export class Tile {
     if (this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
     this.knowledges[knowledge.name] = Math.max(this.knowledges[knowledge.name] + amount, 100);
   }
+
+  /**
+   * 
+   * @returns type and cost of knowledges this tile knows how to research, or null if it cannot research
+   */
+  getKnowledgeCatalog(): Knowledge[] | null {
+    if (!this.improvement) return null;
+    const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => ({ ...obj, [name]: true }), {});
+    const completedKnowledges = this.knowledges ? Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100)) : [];
+    const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);
+    const knowledgeCatalog = reachableKnowledges.filter(({ name }) => researchableKnowledges[name]);
+    console.log(researchableKnowledges, completedKnowledges, reachableKnowledges, knowledgeCatalog);
+    return knowledgeCatalog;
+  }
 }
