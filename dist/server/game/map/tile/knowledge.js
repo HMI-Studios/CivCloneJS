@@ -26,7 +26,7 @@ class Knowledge {
         return reachableMap;
     }
     static getReachableKnowledges(completedPrerequisites) {
-        const completedMap = completedPrerequisites.reduce((map, name) => (Object.assign(Object.assign({}, map), { name: true })), {});
+        const completedMap = completedPrerequisites.reduce((map, name) => (Object.assign(Object.assign({}, map), { [name]: true })), {});
         let reachable = {};
         for (const name in Knowledge.knowledgeTree) {
             const knowledge = Knowledge.knowledgeTree[name];
@@ -57,6 +57,11 @@ class Knowledge {
 }
 exports.Knowledge = Knowledge;
 Knowledge.knowledgeTree = {
-    'scout': new Knowledge('scout', new yield_1.Yield({ production: 6, science: 10 }), [])
+    'scout': new Knowledge('scout', new yield_1.Yield({ production: 6, science: 10 }), []),
+    'r1': new Knowledge('r1', new yield_1.Yield({ science: 1 }), []),
+    'r2': new Knowledge('r2', new yield_1.Yield({ science: 1 }), []),
+    'r3': new Knowledge('r3', new yield_1.Yield({ science: 1 }), ['r1', 'r2']),
+    'r4': new Knowledge('r4', new yield_1.Yield({ science: 1 }), ['scout']),
+    'r5': new Knowledge('r5', new yield_1.Yield({ science: 1 }), ['r3', 'r4']),
 };
 //# sourceMappingURL=knowledge.js.map

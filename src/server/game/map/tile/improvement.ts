@@ -38,7 +38,7 @@ export class Improvement {
   };
 
   static researchableKnowledgeTable: { [improvement: string]: string[] } = {
-    'campus': ['scout'],
+    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
   };
 
   type: string;

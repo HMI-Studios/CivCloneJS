@@ -151,6 +151,6 @@ Improvement.trainableUnitTable = {
     'encampment': ['scout'],
 };
 Improvement.researchableKnowledgeTable = {
-    'campus': ['scout'],
+    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
 };
 //# sourceMappingURL=improvement.js.map
