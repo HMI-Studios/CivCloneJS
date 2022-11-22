@@ -1,5 +1,5 @@
 import { Coords, World } from '../world';
-import { Unit } from './tile/unit';
+import { MovementClass, Unit } from './tile/unit';
 import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
@@ -100,8 +100,7 @@ export class Map {
     return tileList;
   }
 
-  // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-  getPathTree(srcPos: Coords, range: number, mode = 0): [{[key: string]: Coords}, {[key: string]: number}] {
+  getPathTree(srcPos: Coords, range: number, mode: MovementClass): [{[key: string]: Coords}, {[key: string]: number}] {
     // BFS to find all tiles within `range` steps
 
     const queue: Coords[] = [];
@@ -121,7 +120,7 @@ export class Map {
         // PATH BLOCKING LOGIC HERE
         // if (tile.unit && tile.unit.civID === this.player.civID) continue;
 
-        const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+        const movementCost = mode !== MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
           dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
 

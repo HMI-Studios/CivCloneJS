@@ -120,7 +120,6 @@ class Tile {
         const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
         const knowledgeCatalog = reachableKnowledges.filter(({ name }) => { var _a; return (researchableKnowledges[name] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
-        console.log(researchableKnowledges, completedKnowledges, reachableKnowledges, knowledgeCatalog);
         return knowledgeCatalog;
     }
 }
