@@ -105,15 +105,26 @@ const translate = (path: string) => {
   else return path;
 };
 
+const loadLocale = async () => {
+  if (!localStorage.getItem('lang')) localStorage.setItem('lang', prompt('Language? (en)') as string);
+
+  try {
+    const localeResponse = await fetch(`locales/${localStorage.getItem('lang')}.json`)
+    locale = await localeResponse.json()
+  } catch (err) {
+    // something went wrong, try again
+    localStorage.removeItem('lang');
+    await loadLocale();
+  }
+};
+
 const main = async () => {
   // const SERVER_IP = '192.168.5.47:8080';
   // const SERVER_IP = '192.168.4.29:8080';
   // const SERVER_IP = 'hmi.dynu.net:8080';
   // const SERVER_IP = 'localhost:8080';
 
-  if (!localStorage.getItem('lang')) localStorage.setItem('lang', prompt('Language?') as string);
-
-  locale = await (await fetch(`locales/${localStorage.getItem('lang')}.json`)).json()
+  await loadLocale();
 
   camera = new Camera();
   ui = new UI();
