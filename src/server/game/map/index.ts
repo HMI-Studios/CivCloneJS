@@ -1,5 +1,5 @@
-import { Coords } from '../world';
-import { Unit } from './tile/unit';
+import { Coords, World } from '../world';
+import { MovementClass, Unit } from './tile/unit';
 import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
@@ -100,8 +100,7 @@ export class Map {
     return tileList;
   }
 
-  // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-  getPathTree(srcPos: Coords, range: number, mode = 0): [{[key: string]: Coords}, {[key: string]: number}] {
+  getPathTree(srcPos: Coords, range: number, mode: MovementClass): [{[key: string]: Coords}, {[key: string]: number}] {
     // BFS to find all tiles within `range` steps
 
     const queue: Coords[] = [];
@@ -121,7 +120,7 @@ export class Map {
         // PATH BLOCKING LOGIC HERE
         // if (tile.unit && tile.unit.civID === this.player.civID) continue;
 
-        const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+        const movementCost = mode !== MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
           dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
 
@@ -276,7 +275,8 @@ export class Map {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
-    tile.improvement = new Improvement('worksite', tile.baseYield, undefined, {
+    tile.improvement = new Improvement('worksite', tile.baseYield);
+    tile.improvement.startErrand({
       type: ErrandType.CONSTRUCTION,
       option: improvementType,
     });
@@ -303,12 +303,59 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  turn(): void {
+  trainUnitAt(coords: Coords, unitType: string, ownerID: number): void {
+    const tile = this.getTile(coords);
+
+    if (tile.owner?.civID === ownerID && tile.improvement) {
+      if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
+        if (!tile.improvement.errand) {
+          // TODO - maybe change this in the future, to where new training errands overwrite old ones?
+          // That would require gracefully closing the previous errands though, so that is for later.
+          tile.improvement.startErrand({
+            type: ErrandType.UNIT_TRAINING,
+            option: unitType,
+            location: coords,
+          })
+          this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+        }
+      }
+    }
+
+    this.tileUpdate(coords);
+  }
+
+  researchKnowledgeAt(coords: Coords, knowledgeName: string, ownerID: number): void {
+    const tile = this.getTile(coords);
+
+    if (tile.owner?.civID === ownerID && tile.improvement) {
+
+      // Note that this check technically allows the client to "cheat": research errands can begin without
+      // the prerequesites having been fulfilled. These errands will simply do nothing when completed.
+      if (tile.improvement.getResearchableKnowledges().includes(knowledgeName)) {
+
+        // TODO - change this in the future, to where new research errands overwrite old ones?
+        // That would require gracefully closing the previous errands though, so that is for later.
+        if (!tile.improvement.errand) {
+          tile.improvement.startErrand({
+            type: ErrandType.RESEARCH,
+            option: knowledgeName,
+            location: coords,
+          })
+          this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+        }
+      }
+    }
+
+    this.tileUpdate(coords);
+  }
+
+  turn(world: World): void {
     for (const tile of this.tiles) {
       if (tile.improvement) {
         tile.improvement.work();
         if (tile.improvement.errand?.completed) {
-          tile.improvement.errand.complete(tile);
+          tile.improvement.errand.complete(world, this, tile);
+          delete tile.improvement.errand;
         }
       }
     }

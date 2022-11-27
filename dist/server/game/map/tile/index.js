@@ -3,11 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
 const improvement_1 = require("./improvement");
 const yield_1 = require("./yield");
+const knowledge_1 = require("./knowledge");
 class Tile {
     constructor(type, tileHeight, baseYield) {
         this.movementCost = Tile.movementCostTable[type];
         this.type = type;
         this.elevation = tileHeight;
+        this.knowledges = {};
         this.unit = undefined;
         this.improvement = undefined;
         this.owner = undefined;
@@ -83,6 +85,42 @@ class Tile {
     }
     canSupply(requirement) {
         return !!this.improvement && (this.improvement.yield.canSupply(requirement));
+    }
+    /**
+     * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
+     * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
+     */
+    hasKnowledges(knowledgeNames) {
+        for (const name of knowledgeNames) {
+            if (this.knowledges[name] < 100)
+                return false;
+        }
+        return true;
+    }
+    /**
+     *
+     * @param knowledge The knowledge instance to be added.
+     * @param amount The amount of the knowledge to be added. (0 - 100)
+     * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
+     */
+    addKnowledge(knowledge, amount, requirementPenalty) {
+        var _a;
+        if (this.hasKnowledges(knowledge.prerequisites))
+            amount *= requirementPenalty;
+        this.knowledges[knowledge.name] = Math.max(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, 100);
+    }
+    /**
+     *
+     * @returns type and cost of knowledges this tile knows how to research, or null if it cannot research
+     */
+    getKnowledgeCatalog() {
+        if (!this.improvement)
+            return null;
+        const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
+        const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
+        const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
+        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => { var _a; return (researchableKnowledges[name] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
+        return knowledgeCatalog;
     }
 }
 exports.Tile = Tile;

@@ -75,6 +75,7 @@ class Camera {
         worksite: this.loadOverlayTexture('improvement_worksite'),
 
         encampment: this.loadOverlayTexture('improvement_encampment'),
+        campus: this.loadOverlayTexture('improvement_campus'),
 
         farm: this.loadOverlayTexture('improvement_farm'),
 

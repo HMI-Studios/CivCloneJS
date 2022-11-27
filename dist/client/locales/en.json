@@ -107,6 +107,7 @@
     "settlement": "Settlement",
     "worksite": "Worksite",
     "encampment": "Encampment",
+    "campus": "Campus",
     "farm": "Farm",
     "info": {
       "resources": "Resources",
@@ -114,11 +115,13 @@
       "storage": "Storage",
       "capacity": "Capacity",
       "turnsToComplete": "Turns until completed",
-      "unitCatalog": "Unit Catalog"
+      "unitCatalog": "Train Unit:",
+      "knowledgeCatalog": "Select Research Focus:"
     }
   },
   "yield": {
     "food": "Food",
-    "production": "Production"
+    "production": "Production",
+    "science": "Science"
   }
 }

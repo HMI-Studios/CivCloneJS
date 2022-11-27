@@ -32,6 +32,15 @@ export class Improvement {
     'forest': true,
   };
 
+  static trainableUnitTable: { [improvement: string]: string[] } = {
+    'settlement': ['settler', 'builder'],
+    'encampment': ['scout'],
+  };
+
+  static researchableKnowledgeTable: { [improvement: string]: string[] } = {
+    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
+  };
+
   type: string;
   pillaged: boolean;
   yield: Yield;
@@ -43,7 +52,7 @@ export class Improvement {
   protected suppliers: Trader[];
   protected storage: ResourceStore;
   
-  constructor(type?: string, baseYield?: Yield, metadata?: any, errand?: ErrandAction) {
+  constructor(type?: string, baseYield?: Yield, metadata?: any) {
     if (!(type && baseYield)) return;
     this.type = type;
     this.pillaged = false;
@@ -55,10 +64,10 @@ export class Improvement {
     this.suppliers = [];
     if (this.isNatural) {
       this.yield = new Yield({});
-    } else if (type === 'worksite' && errand) {
-      this.yield = new Yield({});
-      this.errand = new WorkErrand(this.storage, errand);
-    }
+    }// else if (type === 'worksite') {
+    //   this.yield = new Yield({});
+      
+    // }
   }
 
   export() {
@@ -96,22 +105,34 @@ export class Improvement {
     };
   }
 
-  // Return list of unites this improvement knows how to train
+  /**
+   * 
+   * @returns list of units this improvement knows how to train
+   */
   getTrainableUnitTypes(): string[] {
-    if (this.type === 'settlement') {
-      return ['settler', 'builder'];
-    } else if (this.type === 'encampment') {
-      return ['scout'];
-    } else {
-      return [];
-    }
+    return Improvement.trainableUnitTable[this.type] ?? [];
   }
 
-  // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+  /**
+   * 
+   * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+   */
   getUnitCatalog(): UnitTypeCost[] | null {
     const catalog = Unit.makeCatalog(this.getTrainableUnitTypes());
     if (catalog.length === 0) return null;
     return catalog;
+  }
+
+  /**
+   * 
+   * @returns list of knowledges this improvement knows how to research
+   */
+  getResearchableKnowledges(): string[] {
+    return Improvement.researchableKnowledgeTable[this.type] ?? [];
+  }
+
+  startErrand(errand: ErrandAction) {
+    this.errand = new WorkErrand(this.storage, errand);
   }
 
   work(): void {
@@ -127,6 +148,8 @@ export class Improvement {
         for (const supplier of this.suppliers) {
           supplier.expire();
         }
+        this.storage.decr(this.errand.cost);
+        this.storage.setCapacity(Improvement.storeCapTable[this.type]);
       }
       this.errand.storedThisTurn.reset();
     }

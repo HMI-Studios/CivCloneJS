@@ -5,7 +5,7 @@ const errand_1 = require("./errand");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
-    constructor(type, baseYield, metadata, errand) {
+    constructor(type, baseYield, metadata) {
         var _a, _b;
         if (!(type && baseYield))
             return;
@@ -19,11 +19,9 @@ class Improvement {
         this.suppliers = [];
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
-        }
-        else if (type === 'worksite' && errand) {
-            this.yield = new yield_1.Yield({});
-            this.errand = new errand_1.WorkErrand(this.storage, errand);
-        }
+        } // else if (type === 'worksite') {
+        //   this.yield = new Yield({});
+        // }
     }
     export() {
         var _a;
@@ -60,24 +58,34 @@ class Improvement {
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
         };
     }
-    // Return list of unites this improvement knows how to train
+    /**
+     *
+     * @returns list of units this improvement knows how to train
+     */
     getTrainableUnitTypes() {
-        if (this.type === 'settlement') {
-            return ['settler', 'builder'];
-        }
-        else if (this.type === 'encampment') {
-            return ['scout'];
-        }
-        else {
-            return [];
-        }
+        var _a;
+        return (_a = Improvement.trainableUnitTable[this.type]) !== null && _a !== void 0 ? _a : [];
     }
-    // Return type and cost of units this improvement knows how to train, or null if it cannot train units
+    /**
+     *
+     * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+     */
     getUnitCatalog() {
         const catalog = unit_1.Unit.makeCatalog(this.getTrainableUnitTypes());
         if (catalog.length === 0)
             return null;
         return catalog;
+    }
+    /**
+     *
+     * @returns list of knowledges this improvement knows how to research
+     */
+    getResearchableKnowledges() {
+        var _a;
+        return (_a = Improvement.researchableKnowledgeTable[this.type]) !== null && _a !== void 0 ? _a : [];
+    }
+    startErrand(errand) {
+        this.errand = new errand_1.WorkErrand(this.storage, errand);
     }
     work() {
         // TODO - ADD POPULATION/COST CHECK
@@ -89,6 +97,8 @@ class Improvement {
                 for (const supplier of this.suppliers) {
                     supplier.expire();
                 }
+                this.storage.decr(this.errand.cost);
+                this.storage.setCapacity(Improvement.storeCapTable[this.type]);
             }
             this.errand.storedThisTurn.reset();
         }
@@ -135,5 +145,12 @@ Improvement.storeCapTable = {
 };
 Improvement.naturalImprovementTable = {
     'forest': true,
+};
+Improvement.trainableUnitTable = {
+    'settlement': ['settler', 'builder'],
+    'encampment': ['scout'],
+};
+Improvement.researchableKnowledgeTable = {
+    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
 };
 //# sourceMappingURL=improvement.js.map

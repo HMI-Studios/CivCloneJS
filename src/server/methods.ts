@@ -447,7 +447,10 @@ const methods: {
     }
   },
 
-  // The list of units the given improvement is able to build
+  /**
+   * The list of units the given improvement is able to build
+   * @param coords 
+   */
   getUnitCatalog: (ws: WebSocket, coords: Coords) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
@@ -480,11 +483,47 @@ const methods: {
 
       const tile = map.getTile(coords);
 
+      map.trainUnitAt(coords, type, civID);
+    }
+  },
+
+  /**
+   * The list of units the given improvement is able to build
+   * @param coords 
+   */
+  getKnowledgeCatalog: (ws: WebSocket, coords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+      const tile = map.getTile(coords);
       if (tile.owner?.civID === civID && tile.improvement) {
-        if (tile.improvement.getTrainableUnitTypes().includes(type)) {
-          console.log(`Train ${type} at ${JSON.stringify(coords)}`);
-        }
+        game.sendToCiv(civID, {
+          update: [
+            ['knowledgeCatalog', [coords, tile.getKnowledgeCatalog()]],
+          ],
+        });
       }
+    }
+  },
+
+  researchKnowledge: (ws: WebSocket, coords: Coords, name: string) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+
+      map.researchKnowledgeAt(coords, name, civID);
     }
   },
 };

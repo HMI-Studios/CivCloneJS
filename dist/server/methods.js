@@ -377,7 +377,10 @@ const methods = {
             });
         }
     },
-    // The list of units the given improvement is able to build
+    /**
+     * The list of units the given improvement is able to build
+     * @param coords
+     */
     getUnitCatalog: (ws, coords) => {
         var _a;
         const username = getUsername(ws);
@@ -397,6 +400,21 @@ const methods = {
         }
     },
     trainUnit: (ws, coords, type) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            map.trainUnitAt(coords, type, civID);
+        }
+    },
+    /**
+     * The list of units the given improvement is able to build
+     * @param coords
+     */
+    getKnowledgeCatalog: (ws, coords) => {
         var _a;
         const username = getUsername(ws);
         const gameID = getGameID(ws);
@@ -406,10 +424,23 @@ const methods = {
             const map = game.world.map;
             const tile = map.getTile(coords);
             if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID && tile.improvement) {
-                if (tile.improvement.getTrainableUnitTypes().includes(type)) {
-                    console.log(`Train ${type} at ${JSON.stringify(coords)}`);
-                }
+                game.sendToCiv(civID, {
+                    update: [
+                        ['knowledgeCatalog', [coords, tile.getKnowledgeCatalog()]],
+                    ],
+                });
             }
+        }
+    },
+    researchKnowledge: (ws, coords, name) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            map.researchKnowledgeAt(coords, name, civID);
         }
     },
 };

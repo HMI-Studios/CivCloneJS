@@ -2,6 +2,7 @@ import { Unit, UnitData } from './unit';
 import { Improvement, ImprovementData } from './improvement';
 import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
+import { Knowledge } from './knowledge';
 
 export interface TileData {
   type: string;
@@ -39,7 +40,7 @@ export class Tile {
   type: string;
   elevation: number;
 
-  knowledges: { [name: string]: number };
+  private knowledges: { [name: string]: number };
 
   unit?: Unit;
   improvement?: Improvement;
@@ -54,6 +55,8 @@ export class Tile {
     this.movementCost = Tile.movementCostTable[type];
     this.type = type;
     this.elevation = tileHeight;
+
+    this.knowledges = {};
 
     this.unit = undefined;
     this.improvement = undefined;
@@ -144,5 +147,40 @@ export class Tile {
     return !!this.improvement && (
       this.improvement.yield.canSupply(requirement)
     );
+  }
+
+  /**
+   * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
+   * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
+   */
+  hasKnowledges(knowledgeNames: string[]): boolean {
+    for (const name of knowledgeNames) {
+      if (this.knowledges[name] < 100) return false;
+    }
+    return true;
+  }
+
+  /**
+   * 
+   * @param knowledge The knowledge instance to be added.
+   * @param amount The amount of the knowledge to be added. (0 - 100)
+   * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
+   */
+  addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number): void {
+    if (this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
+    this.knowledges[knowledge.name] = Math.max((this.knowledges[knowledge.name] ?? 0) + amount, 100);
+  }
+
+  /**
+   * 
+   * @returns type and cost of knowledges this tile knows how to research, or null if it cannot research
+   */
+  getKnowledgeCatalog(): Knowledge[] | null {
+    if (!this.improvement) return null;
+    const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => ({ ...obj, [name]: true }), {});
+    const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
+    const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);
+    const knowledgeCatalog = reachableKnowledges.filter(({ name }) => (researchableKnowledges[name] && ((this.knowledges[name] ?? 0) < 100)));
+    return knowledgeCatalog;
   }
 }

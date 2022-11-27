@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Map = void 0;
+const unit_1 = require("./tile/unit");
 const city_1 = require("./tile/city");
 const tile_1 = require("./tile");
 const improvement_1 = require("./tile/improvement");
@@ -76,8 +77,7 @@ class Map {
         this.getNeighborsCoordsRecurse(coords, r, tileList);
         return tileList;
     }
-    // mode: 0 = land unit, 1 = sea unit; -1 = air unit
-    getPathTree(srcPos, range, mode = 0) {
+    getPathTree(srcPos, range, mode) {
         // BFS to find all tiles within `range` steps
         const queue = [];
         queue.push(srcPos);
@@ -90,7 +90,7 @@ class Map {
                 const tile = this.getTile(adjPos);
                 // PATH BLOCKING LOGIC HERE
                 // if (tile.unit && tile.unit.civID === this.player.civID) continue;
-                const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
+                const movementCost = mode !== unit_1.MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
                 if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
                     dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
                     if (dst[this.pos(adjPos)] <= range) {
@@ -234,7 +234,8 @@ class Map {
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
-        tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield, undefined, {
+        tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield);
+        tile.improvement.startErrand({
             type: errand_1.ErrandType.CONSTRUCTION,
             option: improvementType,
         });
@@ -256,13 +257,54 @@ class Map {
         tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
         this.tileUpdate(coords);
     }
-    turn() {
+    trainUnitAt(coords, unitType, ownerID) {
+        var _a;
+        const tile = this.getTile(coords);
+        if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === ownerID && tile.improvement) {
+            if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
+                if (!tile.improvement.errand) {
+                    // TODO - maybe change this in the future, to where new training errands overwrite old ones?
+                    // That would require gracefully closing the previous errands though, so that is for later.
+                    tile.improvement.startErrand({
+                        type: errand_1.ErrandType.UNIT_TRAINING,
+                        option: unitType,
+                        location: coords,
+                    });
+                    this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.errand.cost);
+                }
+            }
+        }
+        this.tileUpdate(coords);
+    }
+    researchKnowledgeAt(coords, knowledgeName, ownerID) {
+        var _a;
+        const tile = this.getTile(coords);
+        if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === ownerID && tile.improvement) {
+            // Note that this check technically allows the client to "cheat": research errands can begin without
+            // the prerequesites having been fulfilled. These errands will simply do nothing when completed.
+            if (tile.improvement.getResearchableKnowledges().includes(knowledgeName)) {
+                // TODO - change this in the future, to where new research errands overwrite old ones?
+                // That would require gracefully closing the previous errands though, so that is for later.
+                if (!tile.improvement.errand) {
+                    tile.improvement.startErrand({
+                        type: errand_1.ErrandType.RESEARCH,
+                        option: knowledgeName,
+                        location: coords,
+                    });
+                    this.createTradeRoutes(ownerID, coords, tile.improvement, tile.improvement.errand.cost);
+                }
+            }
+        }
+        this.tileUpdate(coords);
+    }
+    turn(world) {
         var _a;
         for (const tile of this.tiles) {
             if (tile.improvement) {
                 tile.improvement.work();
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
-                    tile.improvement.errand.complete(tile);
+                    tile.improvement.errand.complete(world, this, tile);
+                    delete tile.improvement.errand;
                 }
             }
         }

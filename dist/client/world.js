@@ -405,6 +405,10 @@ class World {
                         // change this check later, to be more general
                         this.sendActions([['getUnitCatalog', [coords]]]);
                     }
+                    else if (tile.improvement.type === 'campus') {
+                        // change this check later, to be more general
+                        this.sendActions([['getKnowledgeCatalog', [coords]]]);
+                    }
                     ui.showSidebarMenu(this, coords, tile);
                 }
                 else {
