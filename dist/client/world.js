@@ -314,6 +314,8 @@ class World {
             };
             this.on.update.beginTurn = () => {
                 ui.setTurnState(this, true);
+                if (this.unitPositions.length === 0)
+                    return; // there are no units to for the camera to focus on, return
                 const unitPos = this.unitPositions[this.unitIndex];
                 camera.setPos(camera.toCameraPos(this, unitPos));
             };
