@@ -114,6 +114,20 @@ const methods: {
 } = {
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
+    sendTo(ws, { update: [
+      ['currentUser', [username]],
+    ] });
+  },
+
+  verifyPlayer: (ws: WebSocket) => {
+    try {
+      const username = getUsername(ws);
+      sendTo(ws, { update: [
+        ['currentUser', [username]],
+      ] });
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   exportGame: (ws: WebSocket) => {

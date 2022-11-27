@@ -107,6 +107,20 @@ exports.executeAction = executeAction;
 const methods = {
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
+        sendTo(ws, { update: [
+                ['currentUser', [username]],
+            ] });
+    },
+    verifyPlayer: (ws) => {
+        try {
+            const username = getUsername(ws);
+            sendTo(ws, { update: [
+                    ['currentUser', [username]],
+                ] });
+        }
+        catch (err) {
+            console.error(err);
+        }
     },
     exportGame: (ws) => {
         const gameID = getGameID(ws);

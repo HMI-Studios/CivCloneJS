@@ -294,6 +294,12 @@ class World {
     }
   }
 
+  verifyPlayer() {
+    this.sendActions([
+      ['verifyPlayer', []],
+    ]);
+  }
+
   async login(): Promise<void> {
     let username = localStorage.getItem('username');
     if (!username) {
@@ -494,11 +500,19 @@ class World {
       try {
         await ui.textInputs.reconnectMenu.prompt(ui.root, true);
         await this.connect();
+        this.verifyPlayer();
         ui.showMainMenu(mainMenuFns);
       } catch (err) {
         await this.askConnect();
+        this.verifyPlayer();
         ui.showMainMenu(mainMenuFns);
       }
+    };
+
+    this.on.error.invalidUsername = async () => {
+      ui.hideAll();
+      await this.login();
+      ui.showMainMenu(mainMenuFns);
     };
 
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
@@ -546,10 +560,6 @@ class World {
 
     await this.login();
 
-    this.sendActions([
-      ['setPlayer', [world.player.name]],
-    ]);
-
     const mainMenuFns = {
       createGame: async () => {
         ui.hideMainMenu();
@@ -584,6 +594,7 @@ class World {
       changeServer:async () => {
         ui.hideMainMenu();
         await this.askConnect();
+        this.verifyPlayer();
         ui.showMainMenu(mainMenuFns);
       },
     };

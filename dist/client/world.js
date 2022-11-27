@@ -183,6 +183,11 @@ class World {
             }
         }
     }
+    verifyPlayer() {
+        this.sendActions([
+            ['verifyPlayer', []],
+        ]);
+    }
     login() {
         return __awaiter(this, void 0, void 0, function* () {
             let username = localStorage.getItem('username');
@@ -376,12 +381,19 @@ class World {
                 try {
                     yield ui.textInputs.reconnectMenu.prompt(ui.root, true);
                     yield this.connect();
+                    this.verifyPlayer();
                     ui.showMainMenu(mainMenuFns);
                 }
                 catch (err) {
                     yield this.askConnect();
+                    this.verifyPlayer();
                     ui.showMainMenu(mainMenuFns);
                 }
+            });
+            this.on.error.invalidUsername = () => __awaiter(this, void 0, void 0, function* () {
+                ui.hideAll();
+                yield this.login();
+                ui.showMainMenu(mainMenuFns);
             });
             this.on.event.selectUnit = (coords, unit) => {
                 ui.showUnitActionsMenu(this, coords, unit);
@@ -425,9 +437,6 @@ class World {
                 location.reload();
             }));
             yield this.login();
-            this.sendActions([
-                ['setPlayer', [world.player.name]],
-            ]);
             const mainMenuFns = {
                 createGame: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
@@ -462,6 +471,7 @@ class World {
                 changeServer: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
                     yield this.askConnect();
+                    this.verifyPlayer();
                     ui.showMainMenu(mainMenuFns);
                 }),
             };
