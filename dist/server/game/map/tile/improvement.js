@@ -148,7 +148,7 @@ Improvement.naturalImprovementTable = {
 };
 Improvement.trainableUnitTable = {
     'settlement': ['settler', 'builder'],
-    'encampment': ['scout'],
+    'encampment': ['scout', 'warrior', 'slinger', 'spy'],
 };
 Improvement.researchableKnowledgeTable = {
     'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],

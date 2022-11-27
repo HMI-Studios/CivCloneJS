@@ -3,11 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Knowledge = void 0;
 const yield_1 = require("./yield");
 class Knowledge {
-    constructor(name, cost, prerequisites) {
-        this.name = name;
-        this.cost = cost;
-        this.prerequisites = prerequisites;
-    }
     static getCosts() {
         const costs = {};
         for (const name in Knowledge.knowledgeTree) {
@@ -46,6 +41,11 @@ class Knowledge {
             }
         }
         return Knowledge.getKnowledgeList().filter(({ name }) => reachable[name]);
+    }
+    constructor(name, cost, prerequisites) {
+        this.name = name;
+        this.cost = cost;
+        this.prerequisites = prerequisites;
     }
     getData() {
         return {

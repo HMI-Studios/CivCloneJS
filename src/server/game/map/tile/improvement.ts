@@ -34,7 +34,7 @@ export class Improvement {
 
   static trainableUnitTable: { [improvement: string]: string[] } = {
     'settlement': ['settler', 'builder'],
-    'encampment': ['scout'],
+    'encampment': ['scout', 'warrior', 'slinger', 'spy'],
   };
 
   static researchableKnowledgeTable: { [improvement: string]: string[] } = {

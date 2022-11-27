@@ -23,28 +23,39 @@ export enum MovementClass {
 export class Unit {
   static movementTable: { [unitType: string]: number } = {
     'settler': 3,
-    'scout': 5,
     'builder': 3,
+    'scout': 5,
+    'warrior': 3,
+    'slinger': 3,
+    'spy': 5,
   };
   
   static movementClassTable: { [unitType: string]: number } = {
     'settler': MovementClass.LAND,
-    'scout': MovementClass.LAND,
     'builder': MovementClass.LAND,
+    'scout': MovementClass.LAND,
+    'warrior': MovementClass.LAND,
+    'slinger': MovementClass.LAND,
+    'spy': MovementClass.LAND,
   };
   
   static combatStatsTable: { [unitType: string]: [number, number, number] } = {
     // 'unitType': [offense, defense, awareness],
     'settler': [0, 1, 0],
-    'scout': [5, 3, 20],
     'builder': [0, 1, 0],
+    'scout': [5, 3, 20],
+    'warrior': [10, 8, 10],
+    'slinger': [10, 5, 10],
+    'spy': [5, 3, 20],
   }
   
   static costTable: { [unitType: string]: Yield } = {
-    // 'unitType': [offense, defense, awareness],
     'settler': new Yield({production: 10}),
-    'scout': new Yield({production: 10}),
     'builder': new Yield({production: 5}),
+    'scout': new Yield({production: 10}),
+    'warrior': new Yield({production: 15}),
+    'slinger': new Yield({production: 15}),
+    'spy': new Yield({production: 20}),
   }
 
   type: string;

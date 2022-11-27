@@ -10,6 +10,9 @@ var MovementClass;
     MovementClass[MovementClass["AIR"] = 2] = "AIR";
 })(MovementClass = exports.MovementClass || (exports.MovementClass = {}));
 class Unit {
+    static makeCatalog(types) {
+        return types.map(type => ({ type, cost: Unit.costTable[type] }));
+    }
     constructor(type, civID, coords) {
         this.type = type;
         this.hp = 100;
@@ -19,9 +22,6 @@ class Unit {
         this.civID = civID;
         this.coords = coords;
         this.alive = true;
-    }
-    static makeCatalog(types) {
-        return types.map(type => ({ type, cost: Unit.costTable[type] }));
     }
     export() {
         return {
@@ -79,24 +79,35 @@ class Unit {
 exports.Unit = Unit;
 Unit.movementTable = {
     'settler': 3,
-    'scout': 5,
     'builder': 3,
+    'scout': 5,
+    'warrior': 3,
+    'slinger': 3,
+    'spy': 5,
 };
 Unit.movementClassTable = {
     'settler': MovementClass.LAND,
-    'scout': MovementClass.LAND,
     'builder': MovementClass.LAND,
+    'scout': MovementClass.LAND,
+    'warrior': MovementClass.LAND,
+    'slinger': MovementClass.LAND,
+    'spy': MovementClass.LAND,
 };
 Unit.combatStatsTable = {
     // 'unitType': [offense, defense, awareness],
     'settler': [0, 1, 0],
-    'scout': [5, 3, 20],
     'builder': [0, 1, 0],
+    'scout': [5, 3, 20],
+    'warrior': [10, 8, 10],
+    'slinger': [10, 5, 10],
+    'spy': [5, 3, 20],
 };
 Unit.costTable = {
-    // 'unitType': [offense, defense, awareness],
     'settler': new yield_1.Yield({ production: 10 }),
-    'scout': new yield_1.Yield({ production: 10 }),
     'builder': new yield_1.Yield({ production: 5 }),
+    'scout': new yield_1.Yield({ production: 10 }),
+    'warrior': new yield_1.Yield({ production: 15 }),
+    'slinger': new yield_1.Yield({ production: 15 }),
+    'spy': new yield_1.Yield({ production: 20 }),
 };
 //# sourceMappingURL=unit.js.map
