@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'path';
 
-import { SAVE_LOCATION } from '../config';
+import { SAVE_LOCATION, MOD_FOLDER } from '../config';
 
 import { World } from './world';
 import { Player } from './player';
@@ -83,6 +83,15 @@ export class Game {
   static async load(saveFile): Promise<Game> {
     const data = await fs.readFile(path.join(SAVE_LOCATION, `${saveFile}.json`), { encoding: 'utf8' });
     return Game.import(JSON.parse(data));
+  }
+
+  loadMod(modData: string): void {
+
+  }
+
+  async loadModFromFile(modFile: string): Promise<void> {
+    const data = await fs.readFile(path.join(MOD_FOLDER, `${modFile}.json`), { encoding: 'utf8' });
+    this.loadMod(data);
   }
 
   connectPlayer(username: string, player: Player) {

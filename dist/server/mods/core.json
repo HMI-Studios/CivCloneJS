@@ -1,0 +1,11 @@
+{
+  "units": {
+    "scout": {
+      "promotionClass": "recon",
+      "movement": 5,
+      "movementClass": 0,
+      "combatStats": [5, 3, 20],
+      "cost": {"production": 10}
+    }
+  }
+}
