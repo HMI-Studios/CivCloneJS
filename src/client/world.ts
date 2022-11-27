@@ -487,6 +487,7 @@ class World {
     };
 
     this.on.error.kicked = async (reason) => {
+      camera.stop();
       console.error('Kicked:', reason);
       ui.hideAll();
       await ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
@@ -496,6 +497,10 @@ class World {
     };
 
     this.on.error.disconnect = async () => {
+      camera.stop();
+      ui.hideUnitActionsMenu();
+      ui.hideUnitInfoMenu();
+      ui.hideTileInfoMenu() 
       ui.hideMainMenu();
       try {
         await ui.textInputs.reconnectMenu.prompt(ui.root, true);

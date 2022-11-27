@@ -369,6 +369,7 @@ class World {
                 ui.showReadyBtn(readyFn);
             };
             this.on.error.kicked = (reason) => __awaiter(this, void 0, void 0, function* () {
+                camera.stop();
                 console.error('Kicked:', reason);
                 ui.hideAll();
                 yield ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
@@ -377,6 +378,10 @@ class World {
                 ]);
             });
             this.on.error.disconnect = () => __awaiter(this, void 0, void 0, function* () {
+                camera.stop();
+                ui.hideUnitActionsMenu();
+                ui.hideUnitInfoMenu();
+                ui.hideTileInfoMenu();
                 ui.hideMainMenu();
                 try {
                     yield ui.textInputs.reconnectMenu.prompt(ui.root, true);
