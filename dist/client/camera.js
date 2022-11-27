@@ -71,6 +71,8 @@ class Camera {
         };
     }
     start(world, FPS) {
+        if (this.interval)
+            throw 'Camera already started!';
         [selectorXOffset, selectorYOffset] = [
             world.width * 0.5 + -0.6951295757078696,
             world.height * 0.4614 + 0.5038168562195441,
@@ -80,6 +82,8 @@ class Camera {
     stop() {
         if (this.interval !== undefined)
             clearInterval(this.interval);
+        delete this.interval;
+        this.clear();
     }
     clear() {
         this.ctx.clearRect(-this.canvas.width / 2, -this.canvas.height / 2, this.canvas.width, this.canvas.height);

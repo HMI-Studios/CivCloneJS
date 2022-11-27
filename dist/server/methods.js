@@ -49,6 +49,7 @@ exports.games = {
 // games[2].save();
 (() => __awaiter(void 0, void 0, void 0, function* () {
     exports.games[1] = yield game_1.Game.load('singleplayer test');
+    exports.games[2] = yield game_1.Game.load('no units test');
     // games[2] = await Game.load('multiplayer test')
 }))();
 const createGame = (username, playerCount, mapOptions, options) => {
@@ -107,6 +108,20 @@ exports.executeAction = executeAction;
 const methods = {
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
+        sendTo(ws, { update: [
+                ['currentUser', [username]],
+            ] });
+    },
+    verifyPlayer: (ws) => {
+        try {
+            const username = getUsername(ws);
+            sendTo(ws, { update: [
+                    ['currentUser', [username]],
+                ] });
+        }
+        catch (err) {
+            console.error(err);
+        }
     },
     exportGame: (ws) => {
         const gameID = getGameID(ws);

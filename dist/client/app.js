@@ -112,14 +112,25 @@ const translate = (path) => {
     else
         return path;
 };
+const loadLocale = () => __awaiter(this, void 0, void 0, function* () {
+    if (!localStorage.getItem('lang'))
+        localStorage.setItem('lang', prompt('Language? (en)'));
+    try {
+        const localeResponse = yield fetch(`locales/${localStorage.getItem('lang')}.json`);
+        locale = yield localeResponse.json();
+    }
+    catch (err) {
+        // something went wrong, try again
+        localStorage.removeItem('lang');
+        yield loadLocale();
+    }
+});
 const main = () => __awaiter(this, void 0, void 0, function* () {
     // const SERVER_IP = '192.168.5.47:8080';
     // const SERVER_IP = '192.168.4.29:8080';
     // const SERVER_IP = 'hmi.dynu.net:8080';
     // const SERVER_IP = 'localhost:8080';
-    if (!localStorage.getItem('lang'))
-        localStorage.setItem('lang', prompt('Language?'));
-    locale = yield (yield fetch(`locales/${localStorage.getItem('lang')}.json`)).json();
+    yield loadLocale();
     camera = new Camera();
     ui = new UI();
     world = new World();

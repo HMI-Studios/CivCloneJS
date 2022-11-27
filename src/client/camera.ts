@@ -107,6 +107,7 @@ class Camera {
   }
 
   start(world: World, FPS: number): void {
+    if (this.interval) throw 'Camera already started!';
     [selectorXOffset, selectorYOffset] = [
       world.width * 0.5 + -0.6951295757078696,
       world.height * 0.4614 + 0.5038168562195441,
@@ -116,6 +117,8 @@ class Camera {
 
   stop(): void {
     if (this.interval !== undefined) clearInterval(this.interval);
+    delete this.interval;
+    this.clear();
   }
 
   clear(): void {

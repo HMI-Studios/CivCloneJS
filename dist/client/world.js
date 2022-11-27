@@ -183,6 +183,11 @@ class World {
             }
         }
     }
+    verifyPlayer() {
+        this.sendActions([
+            ['verifyPlayer', []],
+        ]);
+    }
     login() {
         return __awaiter(this, void 0, void 0, function* () {
             let username = localStorage.getItem('username');
@@ -309,6 +314,8 @@ class World {
             };
             this.on.update.beginTurn = () => {
                 ui.setTurnState(this, true);
+                if (this.unitPositions.length === 0)
+                    return; // there are no units to for the camera to focus on, return
                 const unitPos = this.unitPositions[this.unitIndex];
                 camera.setPos(camera.toCameraPos(this, unitPos));
             };
@@ -364,6 +371,7 @@ class World {
                 ui.showReadyBtn(readyFn);
             };
             this.on.error.kicked = (reason) => __awaiter(this, void 0, void 0, function* () {
+                camera.stop();
                 console.error('Kicked:', reason);
                 ui.hideAll();
                 yield ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
@@ -372,16 +380,27 @@ class World {
                 ]);
             });
             this.on.error.disconnect = () => __awaiter(this, void 0, void 0, function* () {
+                camera.stop();
+                ui.hideUnitActionsMenu();
+                ui.hideUnitInfoMenu();
+                ui.hideTileInfoMenu();
                 ui.hideMainMenu();
                 try {
                     yield ui.textInputs.reconnectMenu.prompt(ui.root, true);
                     yield this.connect();
+                    this.verifyPlayer();
                     ui.showMainMenu(mainMenuFns);
                 }
                 catch (err) {
                     yield this.askConnect();
+                    this.verifyPlayer();
                     ui.showMainMenu(mainMenuFns);
                 }
+            });
+            this.on.error.invalidUsername = () => __awaiter(this, void 0, void 0, function* () {
+                ui.hideAll();
+                yield this.login();
+                ui.showMainMenu(mainMenuFns);
             });
             this.on.event.selectUnit = (coords, unit) => {
                 ui.showUnitActionsMenu(this, coords, unit);
@@ -425,9 +444,6 @@ class World {
                 location.reload();
             }));
             yield this.login();
-            this.sendActions([
-                ['setPlayer', [world.player.name]],
-            ]);
             const mainMenuFns = {
                 createGame: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
@@ -462,6 +478,7 @@ class World {
                 changeServer: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();
                     yield this.askConnect();
+                    this.verifyPlayer();
                     ui.showMainMenu(mainMenuFns);
                 }),
             };

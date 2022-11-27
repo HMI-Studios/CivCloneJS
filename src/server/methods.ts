@@ -51,6 +51,7 @@ export const games: { [gameID: number] : Game } = {
 // games[2].save();
 (async () => {
   games[1] = await Game.load('singleplayer test')
+  games[2] = await Game.load('no units test')
   // games[2] = await Game.load('multiplayer test')
 })()
 
@@ -114,6 +115,20 @@ const methods: {
 } = {
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
+    sendTo(ws, { update: [
+      ['currentUser', [username]],
+    ] });
+  },
+
+  verifyPlayer: (ws: WebSocket) => {
+    try {
+      const username = getUsername(ws);
+      sendTo(ws, { update: [
+        ['currentUser', [username]],
+      ] });
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   exportGame: (ws: WebSocket) => {

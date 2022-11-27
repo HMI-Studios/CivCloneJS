@@ -294,6 +294,12 @@ class World {
     }
   }
 
+  verifyPlayer() {
+    this.sendActions([
+      ['verifyPlayer', []],
+    ]);
+  }
+
   async login(): Promise<void> {
     let username = localStorage.getItem('username');
     if (!username) {
@@ -418,6 +424,7 @@ class World {
 
     this.on.update.beginTurn = (): void => {
       ui.setTurnState(this, true);
+      if (this.unitPositions.length === 0) return; // there are no units to for the camera to focus on, return
       const unitPos = this.unitPositions[this.unitIndex];
       camera.setPos(camera.toCameraPos(this, unitPos));
     };
@@ -481,6 +488,7 @@ class World {
     };
 
     this.on.error.kicked = async (reason) => {
+      camera.stop();
       console.error('Kicked:', reason);
       ui.hideAll();
       await ui.textAlerts.errorAlert.alert(ui.root, `Kicked: ${reason}`);
@@ -490,15 +498,27 @@ class World {
     };
 
     this.on.error.disconnect = async () => {
+      camera.stop();
+      ui.hideUnitActionsMenu();
+      ui.hideUnitInfoMenu();
+      ui.hideTileInfoMenu() 
       ui.hideMainMenu();
       try {
         await ui.textInputs.reconnectMenu.prompt(ui.root, true);
         await this.connect();
+        this.verifyPlayer();
         ui.showMainMenu(mainMenuFns);
       } catch (err) {
         await this.askConnect();
+        this.verifyPlayer();
         ui.showMainMenu(mainMenuFns);
       }
+    };
+
+    this.on.error.invalidUsername = async () => {
+      ui.hideAll();
+      await this.login();
+      ui.showMainMenu(mainMenuFns);
     };
 
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
@@ -546,10 +566,6 @@ class World {
 
     await this.login();
 
-    this.sendActions([
-      ['setPlayer', [world.player.name]],
-    ]);
-
     const mainMenuFns = {
       createGame: async () => {
         ui.hideMainMenu();
@@ -584,6 +600,7 @@ class World {
       changeServer:async () => {
         ui.hideMainMenu();
         await this.askConnect();
+        this.verifyPlayer();
         ui.showMainMenu(mainMenuFns);
       },
     };
