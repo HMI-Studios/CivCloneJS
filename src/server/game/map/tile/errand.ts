@@ -28,8 +28,8 @@ export type ErrandAction = {
 export class WorkErrand {
   static errandCostTable: Record<ErrandType, { [option: string]: Yield }> = {
     [ErrandType.CONSTRUCTION]: {
-      'encampment': new Yield({production: 50}),
-      'campus': new Yield({production: 50}),
+      'encampment': new Yield({production: 1}),
+      'campus': new Yield({production: 1}),
       'farm': new Yield({production: 10}),
     },
     [ErrandType.UNIT_TRAINING]: Unit.costTable,

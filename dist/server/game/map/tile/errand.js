@@ -50,8 +50,8 @@ class WorkErrand {
 exports.WorkErrand = WorkErrand;
 WorkErrand.errandCostTable = {
     [ErrandType.CONSTRUCTION]: {
-        'encampment': new yield_1.Yield({ production: 50 }),
-        'campus': new yield_1.Yield({ production: 50 }),
+        'encampment': new yield_1.Yield({ production: 1 }),
+        'campus': new yield_1.Yield({ production: 1 }),
         'farm': new yield_1.Yield({ production: 10 }),
     },
     [ErrandType.UNIT_TRAINING]: unit_1.Unit.costTable,
