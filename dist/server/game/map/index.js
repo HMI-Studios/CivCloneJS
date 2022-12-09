@@ -261,7 +261,7 @@ class Map {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === ownerID && tile.improvement) {
-            if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
+            if (tile.getTrainableUnitTypes().includes(unitType)) {
                 if (!tile.improvement.errand) {
                     // TODO - maybe change this in the future, to where new training errands overwrite old ones?
                     // That would require gracefully closing the previous errands though, so that is for later.

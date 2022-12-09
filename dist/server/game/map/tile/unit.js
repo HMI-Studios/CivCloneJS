@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Unit = exports.MovementClass = void 0;
+exports.Unit = exports.PromotionClass = exports.MovementClass = void 0;
 const utils_1 = require("../../../utils");
 const yield_1 = require("./yield");
 var MovementClass;
@@ -9,10 +9,14 @@ var MovementClass;
     MovementClass[MovementClass["WATER"] = 1] = "WATER";
     MovementClass[MovementClass["AIR"] = 2] = "AIR";
 })(MovementClass = exports.MovementClass || (exports.MovementClass = {}));
+var PromotionClass;
+(function (PromotionClass) {
+    PromotionClass[PromotionClass["CIVILLIAN"] = 0] = "CIVILLIAN";
+    PromotionClass[PromotionClass["MELEE"] = 1] = "MELEE";
+    PromotionClass[PromotionClass["RANGED"] = 2] = "RANGED";
+    PromotionClass[PromotionClass["RECON"] = 3] = "RECON";
+})(PromotionClass = exports.PromotionClass || (exports.PromotionClass = {}));
 class Unit {
-    static makeCatalog(types) {
-        return types.map(type => ({ type, cost: Unit.costTable[type] }));
-    }
     constructor(type, civID, coords) {
         this.type = type;
         this.hp = 100;
@@ -22,6 +26,9 @@ class Unit {
         this.civID = civID;
         this.coords = coords;
         this.alive = true;
+    }
+    static makeCatalog(types) {
+        return types.map(type => ({ type, cost: Unit.costTable[type] }));
     }
     export() {
         return {
@@ -92,6 +99,14 @@ Unit.movementClassTable = {
     'warrior': MovementClass.LAND,
     'slinger': MovementClass.LAND,
     'spy': MovementClass.LAND,
+};
+Unit.promotionClassTable = {
+    'settler': PromotionClass.CIVILLIAN,
+    'builder': PromotionClass.CIVILLIAN,
+    'scout': PromotionClass.RECON,
+    'warrior': PromotionClass.MELEE,
+    'slinger': PromotionClass.RANGED,
+    'spy': PromotionClass.RECON,
 };
 Unit.combatStatsTable = {
     // 'unitType': [offense, defense, awareness],

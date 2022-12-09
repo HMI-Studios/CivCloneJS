@@ -1,4 +1,4 @@
-import { Unit, UnitData } from './unit';
+import { Unit, UnitData, UnitTypeCost } from './unit';
 import { Improvement, ImprovementData } from './improvement';
 import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
@@ -79,6 +79,7 @@ export class Tile {
       discoveredBy: this.discoveredBy,
       // visibleTo: { [civID: number]: number },
       baseYield: this.baseYield,
+      knowledges: this.knowledges,
     };
   }
 
@@ -87,6 +88,7 @@ export class Tile {
     // tile.unit = Unit.import(data.unit);
     if (data.improvement) tile.improvement = Improvement.import(data.improvement);
     tile.discoveredBy = data.discoveredBy;
+    tile.knowledges = data.knowledges;
     return tile;
   }
 
@@ -169,6 +171,30 @@ export class Tile {
   addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number): void {
     if (this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
     this.knowledges[knowledge.name] = Math.max((this.knowledges[knowledge.name] ?? 0) + amount, 100);
+  }
+
+  /**
+   * 
+   * @returns list of units classes this improvement knows how to train
+   */
+   getTrainableUnitTypes(): string[] {
+    if (!this.improvement) return [];
+    const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => ({ ...obj, [name]: true }), {});
+    console.log(trainableUnitClasses, Object.keys(this.knowledges), Knowledge.getTrainableUnits(Object.keys(this.knowledges)))
+    return Knowledge.getTrainableUnits(Object.keys(this.knowledges))
+      .filter(unitType => trainableUnitClasses[Unit.promotionClassTable[unitType]]);
+  }
+
+  /**
+   * 
+   * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+   */
+  getUnitCatalog(): UnitTypeCost[] | null {
+    const trainableUnits = this.getTrainableUnitTypes();
+    console.log(trainableUnits)
+    const catalog = Unit.makeCatalog(trainableUnits);
+    if (catalog.length === 0) return null;
+    return catalog;
   }
 
   /**

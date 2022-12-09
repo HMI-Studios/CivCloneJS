@@ -1,6 +1,6 @@
 import { Trader } from '../trade';
 import { ErrandAction, ErrandData, WorkErrand } from './errand';
-import { Unit, UnitTypeCost } from './unit';
+import { PromotionClass } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
 
 export type ImprovementData = {
@@ -32,9 +32,9 @@ export class Improvement {
     'forest': true,
   };
 
-  static trainableUnitTable: { [improvement: string]: string[] } = {
-    'settlement': ['settler', 'builder'],
-    'encampment': ['scout', 'warrior', 'slinger', 'spy'],
+  static trainableUnitClassTable: { [improvement: string]: PromotionClass[] } = {
+    'settlement': [PromotionClass.CIVILLIAN],
+    'encampment': [PromotionClass.MELEE, PromotionClass.RANGED, PromotionClass.RECON],
   };
 
   static researchableKnowledgeTable: { [improvement: string]: string[] } = {
@@ -107,20 +107,10 @@ export class Improvement {
 
   /**
    * 
-   * @returns list of units this improvement knows how to train
+   * @returns list of units classes this improvement knows how to train
    */
-  getTrainableUnitTypes(): string[] {
-    return Improvement.trainableUnitTable[this.type] ?? [];
-  }
-
-  /**
-   * 
-   * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
-   */
-  getUnitCatalog(): UnitTypeCost[] | null {
-    const catalog = Unit.makeCatalog(this.getTrainableUnitTypes());
-    if (catalog.length === 0) return null;
-    return catalog;
+  getTrainableUnitClasses(): PromotionClass[] {
+    return Improvement.trainableUnitClassTable[this.type] ?? [];
   }
 
   /**

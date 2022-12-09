@@ -50,7 +50,7 @@ export const games: { [gameID: number] : Game } = {
 // games[1].save();
 // games[2].save();
 (async () => {
-  // games[1] = await Game.load('singleplayer test')
+  games[1] = await Game.load('singleplayer test')
   // games[2] = await Game.load('no units test')
   // games[2] = await Game.load('multiplayer test')
 })()
@@ -479,7 +479,7 @@ const methods: {
       if (tile.owner?.civID === civID && tile.improvement) {
         game.sendToCiv(civID, {
           update: [
-            ['unitCatalog', [coords, tile.improvement.getUnitCatalog()]],
+            ['unitCatalog', [coords, tile.getUnitCatalog()]],
           ],
         });
       }

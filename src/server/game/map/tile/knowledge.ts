@@ -14,7 +14,7 @@ export class Knowledge {
   improvements: string[];
 
   public static knowledgeTree: { [name: string]: Knowledge } = {
-    'scout': new Knowledge('scout', new Yield({ production: 6, science: 10 }), [], {units: ['scout']}),
+    'recon_1': new Knowledge('recon_1', new Yield({ production: 6, science: 10 }), [], {units: ['scout']}),
 
   }
 

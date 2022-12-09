@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
+const unit_1 = require("./unit");
 const improvement_1 = require("./improvement");
 const yield_1 = require("./yield");
 const knowledge_1 = require("./knowledge");
@@ -29,6 +30,7 @@ class Tile {
             discoveredBy: this.discoveredBy,
             // visibleTo: { [civID: number]: number },
             baseYield: this.baseYield,
+            knowledges: this.knowledges,
         };
     }
     static import(data) {
@@ -37,6 +39,7 @@ class Tile {
         if (data.improvement)
             tile.improvement = improvement_1.Improvement.import(data.improvement);
         tile.discoveredBy = data.discoveredBy;
+        tile.knowledges = data.knowledges;
         return tile;
     }
     getTileYield() {
@@ -108,6 +111,30 @@ class Tile {
         if (this.hasKnowledges(knowledge.prerequisites))
             amount *= requirementPenalty;
         this.knowledges[knowledge.name] = Math.max(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, 100);
+    }
+    /**
+     *
+     * @returns list of units classes this improvement knows how to train
+     */
+    getTrainableUnitTypes() {
+        if (!this.improvement)
+            return [];
+        const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
+        console.log(trainableUnitClasses, Object.keys(this.knowledges), knowledge_1.Knowledge.getTrainableUnits(Object.keys(this.knowledges)));
+        return knowledge_1.Knowledge.getTrainableUnits(Object.keys(this.knowledges))
+            .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
+    }
+    /**
+     *
+     * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+     */
+    getUnitCatalog() {
+        const trainableUnits = this.getTrainableUnitTypes();
+        console.log(trainableUnits);
+        const catalog = unit_1.Unit.makeCatalog(trainableUnits);
+        if (catalog.length === 0)
+            return null;
+        return catalog;
     }
     /**
      *

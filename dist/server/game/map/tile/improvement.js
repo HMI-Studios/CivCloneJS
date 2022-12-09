@@ -60,21 +60,11 @@ class Improvement {
     }
     /**
      *
-     * @returns list of units this improvement knows how to train
+     * @returns list of units classes this improvement knows how to train
      */
-    getTrainableUnitTypes() {
+    getTrainableUnitClasses() {
         var _a;
-        return (_a = Improvement.trainableUnitTable[this.type]) !== null && _a !== void 0 ? _a : [];
-    }
-    /**
-     *
-     * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
-     */
-    getUnitCatalog() {
-        const catalog = unit_1.Unit.makeCatalog(this.getTrainableUnitTypes());
-        if (catalog.length === 0)
-            return null;
-        return catalog;
+        return (_a = Improvement.trainableUnitClassTable[this.type]) !== null && _a !== void 0 ? _a : [];
     }
     /**
      *
@@ -146,9 +136,9 @@ Improvement.storeCapTable = {
 Improvement.naturalImprovementTable = {
     'forest': true,
 };
-Improvement.trainableUnitTable = {
-    'settlement': ['settler', 'builder'],
-    'encampment': ['scout', 'warrior', 'slinger', 'spy'],
+Improvement.trainableUnitClassTable = {
+    'settlement': [unit_1.PromotionClass.CIVILLIAN],
+    'encampment': [unit_1.PromotionClass.MELEE, unit_1.PromotionClass.RANGED, unit_1.PromotionClass.RECON],
 };
 Improvement.researchableKnowledgeTable = {
     'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],

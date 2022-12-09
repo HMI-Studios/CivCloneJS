@@ -20,6 +20,13 @@ export enum MovementClass {
   AIR,
 }
 
+export enum PromotionClass {
+  CIVILLIAN,
+  MELEE,
+  RANGED,
+  RECON,
+}
+
 export class Unit {
   static movementTable: { [unitType: string]: number } = {
     'settler': 3,
@@ -30,13 +37,22 @@ export class Unit {
     'spy': 5,
   };
   
-  static movementClassTable: { [unitType: string]: number } = {
+  static movementClassTable: { [unitType: string]: MovementClass } = {
     'settler': MovementClass.LAND,
     'builder': MovementClass.LAND,
     'scout': MovementClass.LAND,
     'warrior': MovementClass.LAND,
     'slinger': MovementClass.LAND,
     'spy': MovementClass.LAND,
+  };
+  
+  static promotionClassTable: { [unitType: string]: PromotionClass } = {
+    'settler': PromotionClass.CIVILLIAN,
+    'builder': PromotionClass.CIVILLIAN,
+    'scout': PromotionClass.RECON,
+    'warrior': PromotionClass.MELEE,
+    'slinger': PromotionClass.RANGED,
+    'spy': PromotionClass.RECON,
   };
   
   static combatStatsTable: { [unitType: string]: [number, number, number] } = {
