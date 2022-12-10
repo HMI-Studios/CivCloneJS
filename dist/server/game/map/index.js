@@ -9,6 +9,7 @@ const utils_1 = require("../../utils");
 const trade_1 = require("./trade");
 const yield_1 = require("./tile/yield");
 const errand_1 = require("./tile/errand");
+const knowledge_1 = require("./tile/knowledge");
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
@@ -299,7 +300,10 @@ class Map {
     }
     turn(world) {
         var _a;
-        for (const tile of this.tiles) {
+        // Tiles
+        for (let pos = 0; pos < this.tiles.length; pos++) {
+            const tile = this.tiles[pos];
+            const coords = this.coords(pos);
             if (tile.improvement) {
                 tile.improvement.work();
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
@@ -307,7 +311,18 @@ class Map {
                     delete tile.improvement.errand;
                 }
             }
+            const knowledges = tile.getKnowledges(false);
+            if (knowledges.length > 0) {
+                const spillover = tile.getKnowledgeSpillover();
+                for (const name in spillover) {
+                    const [spilloverPoints, maxPoints] = spillover[name];
+                    for (const neighborCoords of this.getNeighborsCoords(coords)) {
+                        this.getTile(neighborCoords).addKnowledge(knowledge_1.Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
+                    }
+                }
+            }
         }
+        // Traders
         for (let i = 0; i < this.traders.length; i++) {
             const trader = this.traders[i];
             trader.shunt();

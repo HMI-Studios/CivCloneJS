@@ -152,12 +152,38 @@ export class Tile {
   }
 
   /**
+   * @param completed whether the knowledge must have 100 points to be included
+   * @returns list of knowledge names
+   */
+  getKnowledges(completed: boolean): string[] {
+    const knowledges = Object.keys(this.knowledges);
+    if (!completed) return knowledges;
+    return knowledges.filter(name => !(this.knowledges[name] < 100));
+  }
+
+  /**
+   * 
+   * @returns Map between knowledge name and [spilloverPoints, maxPoints]
+   */
+  getKnowledgeSpillover(): { [name: string]: [number, number] } {
+    const KNOWLEDGE_SPREAD_DENOM = 10;
+
+    const knowledgeSpillover = {};
+    for (const name in this.knowledges) {
+      const knowledgePoints = this.knowledges[name];
+      const spillover = Math.ceil((knowledgePoints / 6) / KNOWLEDGE_SPREAD_DENOM);
+      knowledgeSpillover[name] = [spillover, knowledgePoints];
+    }
+    return knowledgeSpillover;
+  }
+
+  /**
    * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
    * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
    */
   hasKnowledges(knowledgeNames: string[]): boolean {
     for (const name of knowledgeNames) {
-      if (this.knowledges[name] < 100) return false;
+      if ((this.knowledges[name] ?? 0) < 100) return false;
     }
     return true;
   }
@@ -168,9 +194,13 @@ export class Tile {
    * @param amount The amount of the knowledge to be added. (0 - 100)
    * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
    */
-  addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number): void {
-    if (this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
-    this.knowledges[knowledge.name] = Math.max((this.knowledges[knowledge.name] ?? 0) + amount, 100);
+  addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number, maxPoints = 100): void {
+    if (maxPoints > 100 || maxPoints < 0) throw 'Invalid Knowledge Cap!';
+    if (!this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
+    this.knowledges[knowledge.name] = Math.min(
+      (this.knowledges[knowledge.name] ?? 0) + amount,
+      Math.max(this.knowledges[knowledge.name] ?? 0, maxPoints)
+    );
   }
 
   /**
@@ -180,7 +210,7 @@ export class Tile {
    getTrainableUnitTypes(): string[] {
     if (!this.improvement) return [];
     const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => ({ ...obj, [name]: true }), {});
-    return Knowledge.getTrainableUnits(Object.keys(this.knowledges))
+    return Knowledge.getTrainableUnits(this.getKnowledges(true))
       .filter(unitType => trainableUnitClasses[Unit.promotionClassTable[unitType]]);
   }
 
@@ -202,7 +232,7 @@ export class Tile {
   getKnowledgeCatalog(): Knowledge[] | null {
     if (!this.improvement) return null;
     const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
-    const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
+    const completedKnowledges = this.getKnowledges(true).filter(key => !(this.knowledges[key] < 100));
     const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);
     const knowledgeCatalog = reachableKnowledges.filter(
       ({ name, branch }) => (knowledgeBranches[branch] && ((this.knowledges[name] ?? 0) < 100))
