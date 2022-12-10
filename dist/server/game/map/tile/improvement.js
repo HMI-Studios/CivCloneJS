@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Improvement = void 0;
 const errand_1 = require("./errand");
+const knowledge_1 = require("./knowledge");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
@@ -68,11 +69,19 @@ class Improvement {
     }
     /**
      *
+     * @returns list of knowledge branches this improvement knows how to research
+     */
+    getResearchableKnowledgeBranches() {
+        var _a;
+        return (_a = Improvement.researchableKnowledgeBranchTable[this.type]) !== null && _a !== void 0 ? _a : [];
+    }
+    /**
+     *
      * @returns list of knowledges this improvement knows how to research
      */
-    getResearchableKnowledges() {
-        var _a;
-        return (_a = Improvement.researchableKnowledgeTable[this.type]) !== null && _a !== void 0 ? _a : [];
+    getResearchableKnowledgeNames() {
+        const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
+        return knowledge_1.Knowledge.getKnowledgeList().filter(({ branch }) => researchableBranches[branch]).map(({ name }) => name);
     }
     startErrand(errand) {
         this.errand = new errand_1.WorkErrand(this.storage, errand);
@@ -140,7 +149,7 @@ Improvement.trainableUnitClassTable = {
     'settlement': [unit_1.PromotionClass.CIVILLIAN],
     'encampment': [unit_1.PromotionClass.MELEE, unit_1.PromotionClass.RANGED, unit_1.PromotionClass.RECON],
 };
-Improvement.researchableKnowledgeTable = {
-    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
+Improvement.researchableKnowledgeBranchTable = {
+    'campus': [knowledge_1.KnowledgeBranch.OFFENSE, knowledge_1.KnowledgeBranch.DEFESNSE, knowledge_1.KnowledgeBranch.CIVICS, knowledge_1.KnowledgeBranch.DEVELOPMENT],
 };
 //# sourceMappingURL=improvement.js.map

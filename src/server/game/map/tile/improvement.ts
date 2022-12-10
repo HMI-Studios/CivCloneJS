@@ -1,5 +1,6 @@
 import { Trader } from '../trade';
 import { ErrandAction, ErrandData, WorkErrand } from './errand';
+import { Knowledge, KnowledgeBranch } from './knowledge';
 import { PromotionClass } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
 
@@ -37,8 +38,8 @@ export class Improvement {
     'encampment': [PromotionClass.MELEE, PromotionClass.RANGED, PromotionClass.RECON],
   };
 
-  static researchableKnowledgeTable: { [improvement: string]: string[] } = {
-    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
+  static researchableKnowledgeBranchTable: { [improvement: string]: KnowledgeBranch[] } = {
+    'campus': [KnowledgeBranch.OFFENSE, KnowledgeBranch.DEFESNSE, KnowledgeBranch.CIVICS, KnowledgeBranch.DEVELOPMENT],
   };
 
   type: string;
@@ -115,10 +116,19 @@ export class Improvement {
 
   /**
    * 
+   * @returns list of knowledge branches this improvement knows how to research
+   */
+  getResearchableKnowledgeBranches(): KnowledgeBranch[] {
+    return Improvement.researchableKnowledgeBranchTable[this.type] ?? [];
+  }
+
+  /**
+   * 
    * @returns list of knowledges this improvement knows how to research
    */
-  getResearchableKnowledges(): string[] {
-    return Improvement.researchableKnowledgeTable[this.type] ?? [];
+  getResearchableKnowledgeNames(): string[] {
+    const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
+    return Knowledge.getKnowledgeList().filter(({ branch }) => researchableBranches[branch]).map(({ name }) => name);
   }
 
   startErrand(errand: ErrandAction) {

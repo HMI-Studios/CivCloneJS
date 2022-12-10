@@ -120,7 +120,6 @@ class Tile {
         if (!this.improvement)
             return [];
         const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
-        console.log(trainableUnitClasses, Object.keys(this.knowledges), knowledge_1.Knowledge.getTrainableUnits(Object.keys(this.knowledges)));
         return knowledge_1.Knowledge.getTrainableUnits(Object.keys(this.knowledges))
             .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
     }
@@ -130,7 +129,6 @@ class Tile {
      */
     getUnitCatalog() {
         const trainableUnits = this.getTrainableUnitTypes();
-        console.log(trainableUnits);
         const catalog = unit_1.Unit.makeCatalog(trainableUnits);
         if (catalog.length === 0)
             return null;
@@ -143,10 +141,10 @@ class Tile {
     getKnowledgeCatalog() {
         if (!this.improvement)
             return null;
-        const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
+        const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
         const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
-        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => { var _a; return (researchableKnowledges[name] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
+        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => { var _a; return (knowledgeBranches[branch] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
         return knowledgeCatalog;
     }
 }

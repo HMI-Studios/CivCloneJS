@@ -90,6 +90,7 @@ Unit.movementTable = {
     'scout': 5,
     'warrior': 3,
     'slinger': 3,
+    'archer': 3,
     'spy': 5,
 };
 Unit.movementClassTable = {
@@ -98,6 +99,7 @@ Unit.movementClassTable = {
     'scout': MovementClass.LAND,
     'warrior': MovementClass.LAND,
     'slinger': MovementClass.LAND,
+    'archer': MovementClass.LAND,
     'spy': MovementClass.LAND,
 };
 Unit.promotionClassTable = {
@@ -106,6 +108,7 @@ Unit.promotionClassTable = {
     'scout': PromotionClass.RECON,
     'warrior': PromotionClass.MELEE,
     'slinger': PromotionClass.RANGED,
+    'archer': PromotionClass.RANGED,
     'spy': PromotionClass.RECON,
 };
 Unit.combatStatsTable = {
@@ -113,8 +116,9 @@ Unit.combatStatsTable = {
     'settler': [0, 1, 0],
     'builder': [0, 1, 0],
     'scout': [5, 3, 20],
-    'warrior': [10, 8, 10],
-    'slinger': [10, 5, 10],
+    'warrior': [12, 8, 10],
+    'slinger': [10, 5, 12],
+    'archer': [15, 5, 12],
     'spy': [5, 3, 20],
 };
 Unit.costTable = {

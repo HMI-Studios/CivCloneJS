@@ -331,7 +331,7 @@ export class Map {
 
       // Note that this check technically allows the client to "cheat": research errands can begin without
       // the prerequesites having been fulfilled. These errands will simply do nothing when completed.
-      if (tile.improvement.getResearchableKnowledges().includes(knowledgeName)) {
+      if (tile.improvement.getResearchableKnowledgeNames().includes(knowledgeName)) {
 
         // TODO - change this in the future, to where new research errands overwrite old ones?
         // That would require gracefully closing the previous errands though, so that is for later.
