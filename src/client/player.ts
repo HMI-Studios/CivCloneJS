@@ -489,7 +489,7 @@ class UI {
       if (!(pos.x === catalogPos.x && pos.y === catalogPos.y)) return;
       const tileUnitCatalog = this.createElement('div', {className: 'catalogDiv', children: [
         this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') }}),
-        this.createElement('div', {className: 'sidebarInfoTable', children: catalog.map(unit => (
+        this.createElement('div', {className: 'sidebarInfoTable', children: catalog && catalog.map(unit => (
           this.createElement('div', { className: 'sidebarInfoTableRow', children: [
             this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
               world.sendActions([[ 'trainUnit', [pos, unit.type] ]])
