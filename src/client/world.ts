@@ -50,6 +50,9 @@ type Yield = {
 interface Tile {
   type: string;
   elevation: number;
+  knowledges: {
+    [name: string]: number,
+  },
   improvement: Improvement;
   movementCost: MovementCost;
   unit: Unit;

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tile = void 0;
+const unit_1 = require("./unit");
 const improvement_1 = require("./improvement");
 const yield_1 = require("./yield");
 const knowledge_1 = require("./knowledge");
@@ -29,6 +30,7 @@ class Tile {
             discoveredBy: this.discoveredBy,
             // visibleTo: { [civID: number]: number },
             baseYield: this.baseYield,
+            knowledges: this.knowledges,
         };
     }
     static import(data) {
@@ -37,6 +39,7 @@ class Tile {
         if (data.improvement)
             tile.improvement = improvement_1.Improvement.import(data.improvement);
         tile.discoveredBy = data.discoveredBy;
+        tile.knowledges = data.knowledges;
         return tile;
     }
     getTileYield() {
@@ -87,12 +90,37 @@ class Tile {
         return !!this.improvement && (this.improvement.yield.canSupply(requirement));
     }
     /**
+     * @param completed whether the knowledge must have 100 points to be included
+     * @returns list of knowledge names
+     */
+    getKnowledges(completed) {
+        const knowledges = Object.keys(this.knowledges);
+        if (!completed)
+            return knowledges;
+        return knowledges.filter(name => !(this.knowledges[name] < 100));
+    }
+    /**
+     *
+     * @returns Map between knowledge name and [spilloverPoints, maxPoints]
+     */
+    getKnowledgeSpillover() {
+        const KNOWLEDGE_SPREAD_DENOM = 10;
+        const knowledgeSpillover = {};
+        for (const name in this.knowledges) {
+            const knowledgePoints = this.knowledges[name];
+            const spillover = Math.ceil((knowledgePoints / 6) / KNOWLEDGE_SPREAD_DENOM);
+            knowledgeSpillover[name] = [spillover, knowledgePoints];
+        }
+        return knowledgeSpillover;
+    }
+    /**
      * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
      * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
      */
     hasKnowledges(knowledgeNames) {
+        var _a;
         for (const name of knowledgeNames) {
-            if (this.knowledges[name] < 100)
+            if (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)
                 return false;
         }
         return true;
@@ -103,11 +131,35 @@ class Tile {
      * @param amount The amount of the knowledge to be added. (0 - 100)
      * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
      */
-    addKnowledge(knowledge, amount, requirementPenalty) {
-        var _a;
-        if (this.hasKnowledges(knowledge.prerequisites))
+    addKnowledge(knowledge, amount, requirementPenalty, maxPoints = 100) {
+        var _a, _b;
+        if (maxPoints > 100 || maxPoints < 0)
+            throw 'Invalid Knowledge Cap!';
+        if (!this.hasKnowledges(knowledge.prerequisites))
             amount *= requirementPenalty;
-        this.knowledges[knowledge.name] = Math.max(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, 100);
+        this.knowledges[knowledge.name] = Math.min(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, Math.max((_b = this.knowledges[knowledge.name]) !== null && _b !== void 0 ? _b : 0, maxPoints));
+    }
+    /**
+     *
+     * @returns list of units classes this improvement knows how to train
+     */
+    getTrainableUnitTypes() {
+        if (!this.improvement)
+            return [];
+        const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
+        return knowledge_1.Knowledge.getTrainableUnits(this.getKnowledges(true))
+            .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
+    }
+    /**
+     *
+     * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+     */
+    getUnitCatalog() {
+        const trainableUnits = this.getTrainableUnitTypes();
+        const catalog = unit_1.Unit.makeCatalog(trainableUnits);
+        if (catalog.length === 0)
+            return null;
+        return catalog;
     }
     /**
      *
@@ -116,10 +168,10 @@ class Tile {
     getKnowledgeCatalog() {
         if (!this.improvement)
             return null;
-        const researchableKnowledges = this.improvement.getResearchableKnowledges().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
-        const completedKnowledges = Object.keys(this.knowledges).filter(key => !(this.knowledges[key] < 100));
+        const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
+        const completedKnowledges = this.getKnowledges(true).filter(key => !(this.knowledges[key] < 100));
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
-        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => { var _a; return (researchableKnowledges[name] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
+        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => { var _a; return (knowledgeBranches[branch] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
         return knowledgeCatalog;
     }
 }

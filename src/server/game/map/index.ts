@@ -7,6 +7,7 @@ import { getAdjacentCoords, mod, Event } from '../../utils';
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
+import { Knowledge } from './tile/knowledge';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -307,7 +308,7 @@ export class Map {
     const tile = this.getTile(coords);
 
     if (tile.owner?.civID === ownerID && tile.improvement) {
-      if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
+      if (tile.getTrainableUnitTypes().includes(unitType)) {
         if (!tile.improvement.errand) {
           // TODO - maybe change this in the future, to where new training errands overwrite old ones?
           // That would require gracefully closing the previous errands though, so that is for later.
@@ -331,7 +332,7 @@ export class Map {
 
       // Note that this check technically allows the client to "cheat": research errands can begin without
       // the prerequesites having been fulfilled. These errands will simply do nothing when completed.
-      if (tile.improvement.getResearchableKnowledges().includes(knowledgeName)) {
+      if (tile.improvement.getResearchableKnowledgeNames().includes(knowledgeName)) {
 
         // TODO - change this in the future, to where new research errands overwrite old ones?
         // That would require gracefully closing the previous errands though, so that is for later.
@@ -350,7 +351,11 @@ export class Map {
   }
 
   turn(world: World): void {
-    for (const tile of this.tiles) {
+    // Tiles
+    for (let pos = 0; pos < this.tiles.length; pos++) {
+      const tile = this.tiles[pos];
+      const coords = this.coords(pos);
+
       if (tile.improvement) {
         tile.improvement.work();
         if (tile.improvement.errand?.completed) {
@@ -358,7 +363,20 @@ export class Map {
           delete tile.improvement.errand;
         }
       }
+
+      const knowledges = tile.getKnowledges(false);
+      if (knowledges.length > 0) {
+        const spillover = tile.getKnowledgeSpillover();
+        for (const name in spillover) {
+          const [spilloverPoints, maxPoints] = spillover[name];
+          for (const neighborCoords of this.getNeighborsCoords(coords)) {
+            this.getTile(neighborCoords).addKnowledge(Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
+          }
+        }
+      }
     }
+
+    // Traders
     for (let i = 0; i < this.traders.length; i++) {
       const trader = this.traders[i];
       trader.shunt();

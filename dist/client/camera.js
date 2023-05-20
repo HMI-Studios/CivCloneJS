@@ -39,6 +39,9 @@ class Camera {
             unit: {
                 settler: this.loadTexture('unit_settler'),
                 scout: this.loadTexture('unit_scout'),
+                warrior: this.loadTexture('unit_warrior'),
+                slinger: this.loadTexture('unit_slinger'),
+                archer: this.loadTexture('unit_archer'),
                 builder: this.loadTexture('unit_builder'),
             },
             improvements: {

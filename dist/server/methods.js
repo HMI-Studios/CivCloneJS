@@ -49,7 +49,7 @@ exports.games = {
 // games[2].save();
 (() => __awaiter(void 0, void 0, void 0, function* () {
     exports.games[1] = yield game_1.Game.load('singleplayer test');
-    exports.games[2] = yield game_1.Game.load('no units test');
+    // games[2] = await Game.load('no units test')
     // games[2] = await Game.load('multiplayer test')
 }))();
 const createGame = (username, playerCount, mapOptions, options) => {
@@ -408,7 +408,7 @@ const methods = {
             if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID && tile.improvement) {
                 game.sendToCiv(civID, {
                     update: [
-                        ['unitCatalog', [coords, tile.improvement.getUnitCatalog()]],
+                        ['unitCatalog', [coords, tile.getUnitCatalog()]],
                     ],
                 });
             }

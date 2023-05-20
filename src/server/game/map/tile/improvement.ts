@@ -1,6 +1,7 @@
 import { Trader } from '../trade';
 import { ErrandAction, ErrandData, WorkErrand } from './errand';
-import { Unit, UnitTypeCost } from './unit';
+import { Knowledge, KnowledgeBranch } from './knowledge';
+import { PromotionClass } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
 
 export type ImprovementData = {
@@ -32,13 +33,13 @@ export class Improvement {
     'forest': true,
   };
 
-  static trainableUnitTable: { [improvement: string]: string[] } = {
-    'settlement': ['settler', 'builder'],
-    'encampment': ['scout'],
+  static trainableUnitClassTable: { [improvement: string]: PromotionClass[] } = {
+    'settlement': [PromotionClass.CIVILLIAN],
+    'encampment': [PromotionClass.MELEE, PromotionClass.RANGED, PromotionClass.RECON],
   };
 
-  static researchableKnowledgeTable: { [improvement: string]: string[] } = {
-    'campus': ['scout', 'r1', 'r2', 'r3', 'r4', 'r5'],
+  static researchableKnowledgeBranchTable: { [improvement: string]: KnowledgeBranch[] } = {
+    'campus': [KnowledgeBranch.OFFENSE, KnowledgeBranch.DEFESNSE, KnowledgeBranch.CIVICS, KnowledgeBranch.DEVELOPMENT],
   };
 
   type: string;
@@ -107,28 +108,27 @@ export class Improvement {
 
   /**
    * 
-   * @returns list of units this improvement knows how to train
+   * @returns list of units classes this improvement knows how to train
    */
-  getTrainableUnitTypes(): string[] {
-    return Improvement.trainableUnitTable[this.type] ?? [];
+  getTrainableUnitClasses(): PromotionClass[] {
+    return Improvement.trainableUnitClassTable[this.type] ?? [];
   }
 
   /**
    * 
-   * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
+   * @returns list of knowledge branches this improvement knows how to research
    */
-  getUnitCatalog(): UnitTypeCost[] | null {
-    const catalog = Unit.makeCatalog(this.getTrainableUnitTypes());
-    if (catalog.length === 0) return null;
-    return catalog;
+  getResearchableKnowledgeBranches(): KnowledgeBranch[] {
+    return Improvement.researchableKnowledgeBranchTable[this.type] ?? [];
   }
 
   /**
    * 
    * @returns list of knowledges this improvement knows how to research
    */
-  getResearchableKnowledges(): string[] {
-    return Improvement.researchableKnowledgeTable[this.type] ?? [];
+  getResearchableKnowledgeNames(): string[] {
+    const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
+    return Knowledge.getKnowledgeList().filter(({ branch }) => researchableBranches[branch]).map(({ name }) => name);
   }
 
   startErrand(errand: ErrandAction) {

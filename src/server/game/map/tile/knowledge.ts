@@ -6,26 +6,51 @@ export type KnowledgeData = {
   prerequisites: string[];
 };
 
+export enum KnowledgeBranch {
+  OFFENSE,
+  DEFESNSE,
+  CIVICS,
+  DEVELOPMENT,
+}
+
 export class Knowledge {
   name: string;
+  branch: KnowledgeBranch;
   cost: Yield;
   prerequisites: string[];
+  units: string[];
+  improvements: string[];
 
   public static knowledgeTree: { [name: string]: Knowledge } = {
-    'scout': new Knowledge('scout', new Yield({ production: 6, science: 10 }), []),
-    'r1': new Knowledge('r1', new Yield({ science: 1 }), []),
-    'r2': new Knowledge('r2', new Yield({ science: 1 }), []),
-    'r3': new Knowledge('r3', new Yield({ science: 1 }), ['r1', 'r2']),
-    'r4': new Knowledge('r4', new Yield({ science: 1 }), ['scout']),
-    'r5': new Knowledge('r5', new Yield({ science: 1 }), ['r3', 'r4']),
+    'military_0': new Knowledge('military_0', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), [], {units: ['warrior', 'slinger']}),
+    'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), [], {units: ['scout']}),
+    'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), ['military_0'], {units: ['archer']}),
+    'science_1': new Knowledge('science_1', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 10 }), [], {improvements: ['campus']}),
+    'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), ['recon_0', 'science_1'], {units: ['spy']}),
   }
 
   public static getCosts(): { [name: string]: Yield } {
     const costs = {};
     for (const name in Knowledge.knowledgeTree) {
-      costs[name] = this.knowledgeTree[name].cost;
+      costs[name] = Knowledge.knowledgeTree[name].cost;
     }
     return costs;
+  }
+
+  public static getTrainableUnits(knowledgeNames: string[]): string[] {
+    let units: string[] = [];
+    for (const name of knowledgeNames) {
+      units = [ ...units, ...Knowledge.knowledgeTree[name].units ];
+    }
+    return units;
+  }
+
+  public static getBuildableImprovements(knowledgeNames: string[]): string[] {
+    let improvements: string[] = [];
+    for (const name of knowledgeNames) {
+      improvements = [ ...improvements, ...Knowledge.knowledgeTree[name].improvements ];
+    }
+    return improvements;
   }
 
   public static getKnowledgeList(): Knowledge[] {
@@ -62,10 +87,19 @@ export class Knowledge {
     return Knowledge.getKnowledgeList().filter(({ name }) => reachable[name]);
   }
 
-  constructor(name: string, cost: Yield, prerequisites: string[]) {
+  constructor(
+    name: string,
+    branch: KnowledgeBranch,
+    cost: Yield,
+    prerequisites: string[],
+    unlocks: { units?: string[], improvements?: string[] }
+  ) {
     this.name = name;
+    this.branch = branch;
     this.cost = cost;
     this.prerequisites = prerequisites;
+    this.units = unlocks.units ?? [];
+    this.improvements = unlocks.improvements ?? [];
   }
 
   getData(): KnowledgeData {

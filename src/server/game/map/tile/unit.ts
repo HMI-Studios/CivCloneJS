@@ -20,31 +20,62 @@ export enum MovementClass {
   AIR,
 }
 
+export enum PromotionClass {
+  CIVILLIAN,
+  MELEE,
+  RANGED,
+  RECON,
+}
+
 export class Unit {
   static movementTable: { [unitType: string]: number } = {
     'settler': 3,
-    'scout': 5,
     'builder': 3,
+    'scout': 5,
+    'warrior': 3,
+    'slinger': 3,
+    'archer': 3,
+    'spy': 5,
   };
   
-  static movementClassTable: { [unitType: string]: number } = {
+  static movementClassTable: { [unitType: string]: MovementClass } = {
     'settler': MovementClass.LAND,
-    'scout': MovementClass.LAND,
     'builder': MovementClass.LAND,
+    'scout': MovementClass.LAND,
+    'warrior': MovementClass.LAND,
+    'slinger': MovementClass.LAND,
+    'archer': MovementClass.LAND,
+    'spy': MovementClass.LAND,
+  };
+  
+  static promotionClassTable: { [unitType: string]: PromotionClass } = {
+    'settler': PromotionClass.CIVILLIAN,
+    'builder': PromotionClass.CIVILLIAN,
+    'scout': PromotionClass.RECON,
+    'warrior': PromotionClass.MELEE,
+    'slinger': PromotionClass.RANGED,
+    'archer': PromotionClass.RANGED,
+    'spy': PromotionClass.RECON,
   };
   
   static combatStatsTable: { [unitType: string]: [number, number, number] } = {
     // 'unitType': [offense, defense, awareness],
     'settler': [0, 1, 0],
-    'scout': [5, 3, 20],
     'builder': [0, 1, 0],
+    'scout': [5, 3, 20],
+    'warrior': [12, 8, 10],
+    'slinger': [10, 5, 12],
+    'archer': [15, 5, 12],
+    'spy': [5, 3, 20],
   }
   
   static costTable: { [unitType: string]: Yield } = {
-    // 'unitType': [offense, defense, awareness],
     'settler': new Yield({production: 10}),
-    'scout': new Yield({production: 10}),
     'builder': new Yield({production: 5}),
+    'scout': new Yield({production: 10}),
+    'warrior': new Yield({production: 15}),
+    'slinger': new Yield({production: 15}),
+    'spy': new Yield({production: 20}),
   }
 
   type: string;

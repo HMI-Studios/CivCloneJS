@@ -333,9 +333,12 @@ class UI {
         tileMovementCost.innerText = `${translate('tile.info.movement')}: ${tile.movementCost[0]} - ${tile.movementCost[1]}`;
         const tileElevation = this.createElement('span', { className: 'infoSpan' });
         tileElevation.innerText = `${translate('tile.info.elevation')}: ${Math.round(tile.elevation)}`;
+        const tileKnowledge = this.createElement('span', { className: 'infoSpan' });
+        tileKnowledge.innerText = JSON.stringify(tile.knowledges);
         this.elements.tileInfoMenu.appendChild(tileType);
         this.elements.tileInfoMenu.appendChild(tileMovementCost);
         this.elements.tileInfoMenu.appendChild(tileElevation);
+        this.elements.tileInfoMenu.appendChild(tileKnowledge);
         if (tile.owner) {
             const tileOwner = this.createElement('span', { className: 'infoSpan' });
             tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
@@ -388,7 +391,7 @@ class UI {
                 return;
             const tileUnitCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
-                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
                                 this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
                                             world.sendActions([['trainUnit', [pos, unit.type]]]);
                                         } } }),
