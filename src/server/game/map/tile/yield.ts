@@ -93,6 +93,13 @@ export class Yield {
       this.science >= other.science
     );
   }
+
+  fulfillProgress(other: Yield): number {
+    return (
+      (this.food + this.production + this.science) /
+      (other.food + other.production + other.science)
+    )
+  }
 }
 
 export class ResourceStore extends Yield {

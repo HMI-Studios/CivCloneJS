@@ -75,6 +75,10 @@ class Yield {
             this.production >= other.production &&
             this.science >= other.science);
     }
+    fulfillProgress(other) {
+        return ((this.food + this.production + this.science) /
+            (other.food + other.production + other.science));
+    }
 }
 exports.Yield = Yield;
 class ResourceStore extends Yield {

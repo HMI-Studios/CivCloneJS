@@ -9,6 +9,7 @@ import { Yield, ResourceStore, YieldParams } from "./yield";
 export type ErrandData = {
   storedThisTurn: YieldParams;
   turnsToCompletion: number;
+  progress: number;
 };
 
 export enum ErrandType {
@@ -92,6 +93,7 @@ export class WorkErrand {
     return {
       storedThisTurn: this.storedThisTurn,
       turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
+      progress: this.parentStorage.fulfillProgress(this.cost),
     };
   }
 
