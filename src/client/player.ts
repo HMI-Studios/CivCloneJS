@@ -164,7 +164,7 @@ class UI {
     this.hideMainMenu();
   }
 
-  createElement(type: string, options?: { className?: string, attrs?: ElementOptions, children?: HTMLElement[]}): HTMLElement {
+  createElement(type: string, options?: { className?: string, attrs?: ElementOptions, children?: HTMLElement[] }): HTMLElement {
     const element = document.createElement(type);
     if (options?.className) {
       element.className = options.className;
@@ -172,6 +172,24 @@ class UI {
     if (options?.attrs) {
       for (const attr in options?.attrs) {
         element[attr] = options?.attrs[attr];
+      }
+    }
+    if (options?.children) {
+      for (const child of options.children) {
+        element.appendChild(child);
+      }
+    }
+    return element;
+  }
+  
+  createSVGElement(type: string, options?: { className?: string, attrs?: any, children?: SVGElement[] }): SVGElement {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', type);
+    if (options?.className) {
+      element.classList.add(options.className)
+    }
+    if (options?.attrs) {
+      for (const attr in options?.attrs) {
+        element.setAttribute(attr, options?.attrs[attr]);
       }
     }
     if (options?.children) {
@@ -201,6 +219,32 @@ class UI {
         this.createElement('span', { className: 'tooltipText', attrs: { innerText: translate(`yield.${key}`) } }),
       ]})
     ))});
+  }
+
+  createProgressBar(progress: number): HTMLElement {
+    const element = this.createSVGElement('svg', { className: 'progressBar', attrs: { width: "100%", height: 16 }, children: [
+      this.createSVGElement('defs', { children: [
+        this.createSVGElement('linearGradient', { attrs: {
+          id: 'progressGrad',
+          x1: '0%',
+          y1: '0%',
+          x2: `${100 / progress}%`,
+          y2: '0%',
+        }, children: [
+          this.createSVGElement('stop', { attrs: { offset: '0%', style: 'stop-color:rgb(255,0,0);stop-opacity:1' } }),
+          this.createSVGElement('stop', { attrs: { offset: '50%', style: 'stop-color:rgb(255,255,0);stop-opacity:1' } }),
+          this.createSVGElement('stop', { attrs: { offset: '100%', style: 'stop-color:rgb(0,255,0);stop-opacity:1' } }),
+        ]})
+      ]}),
+      this.createSVGElement('rect', { attrs: {
+        width: `${Math.min(progress, 1) * 100}%`,
+        height: 16,
+        fill: 'url(#progressGrad)',
+      }})
+    ]});
+    const div = this.createElement('div');
+    div.appendChild(element)
+    return div
   }
 
   setTurnState(world: World, state: boolean) {
@@ -467,8 +511,8 @@ class UI {
     delete storage.capacity;
 
     const tileInfo = this.createElement('div', {className: 'sidebarInfoDiv', children: [
-      this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.resources') }}),
-      this.createElement('div', {className: 'sidebarInfoTable', children: [
+      this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.resources') } }),
+      this.createElement('div', { className: 'sidebarInfoTable', children: [
         this.createElement('div', { className: 'sidebarInfoTableRow', children: [
           this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.yield') } }),
           this.createElement('span', { className: 'sidebarInfoSpan', children: [ this.createYieldDisplay(tile.yield) ] }),
@@ -484,6 +528,30 @@ class UI {
       ]}),
     ]});
     this.elements.sidebarMenu.appendChild(tileInfo);
+    
+    if (tile.improvement.errand) {
+      const progressBar = this.createElement('div', { className: 'errandProgress', children: [
+        this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.errand.current') } }),
+        this.createElement('div', { className: 'sidebarInfoTable', children: [
+          this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.errand.type') } }),
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`errand.type.${tile.improvement.errand.action.type}`) } }),
+          ]}),
+          this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.errand.option') } }),
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: {
+              innerText: translate(`errand.option.${tile.improvement.errand.action.type}.${tile.improvement.errand.action.option}`)
+            }}),
+          ]}),
+          this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.errand.progress') } }),
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`${Math.round(tile.improvement.errand.progress * 100)}%`) } }),
+          ]}),
+          this.createProgressBar(tile.improvement.errand.progress),
+        ]}),
+      ]});
+      this.elements.sidebarMenu.appendChild(progressBar);
+    }
 
     world.on.update.unitCatalog = (catalogPos: Coords, catalog: { type: string, cost: Yield }[]) => {
       if (!(pos.x === catalogPos.x && pos.y === catalogPos.y)) return;

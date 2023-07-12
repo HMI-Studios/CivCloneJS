@@ -116,12 +116,36 @@
       "capacity": "Capacity",
       "turnsToComplete": "Turns until completed",
       "unitCatalog": "Train Unit:",
-      "knowledgeCatalog": "Select Research Focus:"
+      "knowledgeCatalog": "Select Research Focus:",
+      "errand": {
+        "current": "Current Errand",
+        "type": "Type: ",
+        "option": "Option: ",
+        "progress": "Progress: "
+      }
     }
   },
   "yield": {
     "food": "Food",
     "production": "Production",
     "science": "Science"
+  },
+  "errand": {
+    "type": {
+      "0": "Construction",
+      "1": "Unit Training",
+      "2": "Research",
+      "3": "Civics"
+    },
+    "option": {
+      
+      "0": {},
+      "1": {},
+      "2": {
+        "military_0": "Early Warfare",
+        "recon_0": "Scouting"
+      },
+      "3": {}
+    }
   }
 }

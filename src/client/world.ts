@@ -33,9 +33,25 @@ interface Improvement {
   metadata?: any;
 }
 
+enum ErrandType {
+  CONSTRUCTION,
+  UNIT_TRAINING,
+  RESEARCH,
+  // CULTURE,
+}
+
+type ErrandAction = {
+  type: ErrandType;
+  option: string;
+  location?: Coords;
+  metaData?: any;
+};
+
 type Errand = {
   storedThisTurn: Yield;
   turnsToCompletion: number;
+  progress: number;
+  action: ErrandAction;
 };
 
 type ResourceStorage = Yield & {

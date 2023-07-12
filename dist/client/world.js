@@ -7,6 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var ErrandType;
+(function (ErrandType) {
+    ErrandType[ErrandType["CONSTRUCTION"] = 0] = "CONSTRUCTION";
+    ErrandType[ErrandType["UNIT_TRAINING"] = 1] = "UNIT_TRAINING";
+    ErrandType[ErrandType["RESEARCH"] = 2] = "RESEARCH";
+    // CULTURE,
+})(ErrandType || (ErrandType = {}));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
     constructor() {
