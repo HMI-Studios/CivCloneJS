@@ -13,6 +13,13 @@ type ElementOptions = {
   onclick?: () => void;
 } | null;
 
+const errandTypeTable: { [type: number]: string } = {
+  0: 'improvement',
+  1: 'unit',
+  2: 'knowledge',
+  3: 'civic',
+}
+
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
@@ -540,7 +547,7 @@ class UI {
           this.createElement('div', { className: 'sidebarInfoTableRow', children: [
             this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.errand.option') } }),
             this.createElement('span', { className: 'sidebarInfoSpan', attrs: {
-              innerText: translate(`errand.option.${tile.improvement.errand.action.type}.${tile.improvement.errand.action.option}`)
+              innerText: translate(`${errandTypeTable[tile.improvement.errand.action.type]}.${tile.improvement.errand.action.option}`)
             }}),
           ]}),
           this.createElement('div', { className: 'sidebarInfoTableRow', children: [

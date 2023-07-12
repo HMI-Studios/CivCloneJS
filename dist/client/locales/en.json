@@ -125,6 +125,10 @@
       }
     }
   },
+  "knowledge": {
+    "military_0": "Early Warfare",
+    "recon_0": "Scouting"
+  },
   "yield": {
     "food": "Food",
     "production": "Production",
@@ -136,16 +140,6 @@
       "1": "Unit Training",
       "2": "Research",
       "3": "Civics"
-    },
-    "option": {
-      
-      "0": {},
-      "1": {},
-      "2": {
-        "military_0": "Early Warfare",
-        "recon_0": "Scouting"
-      },
-      "3": {}
     }
   }
 }
