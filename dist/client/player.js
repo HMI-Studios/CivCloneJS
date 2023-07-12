@@ -457,10 +457,14 @@ class UI {
                 ] });
             this.elements.sidebarMenu.appendChild(progressBar);
         }
+        let tileUnitCatalog;
+        let tileKnowledgeCatalog;
         world.on.update.unitCatalog = (catalogPos, catalog) => {
             if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
                 return;
-            const tileUnitCatalog = this.createElement('div', { className: 'catalogDiv', children: [
+            if (tileUnitCatalog)
+                tileKnowledgeCatalog.remove();
+            tileUnitCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
                     this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
                                 this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
@@ -474,7 +478,9 @@ class UI {
         world.on.update.knowledgeCatalog = (catalogPos, catalog) => {
             if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
                 return;
-            const tileKnowledgeCatalog = this.createElement('div', { className: 'catalogDiv', children: [
+            if (tileKnowledgeCatalog)
+                tileKnowledgeCatalog.remove();
+            tileKnowledgeCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.knowledgeCatalog') } }),
                     this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(knowledge => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
                                 this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
