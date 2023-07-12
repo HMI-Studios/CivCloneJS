@@ -96,7 +96,7 @@ export class Yield {
 
   fulfillProgress(other: Yield): number {
     return (
-      (this.food + this.production + this.science) /
+      (Math.min(this.food, other.food) + Math.min(this.production, other.production) + Math.min(this.science, other.science)) /
       (other.food + other.production + other.science)
     )
   }

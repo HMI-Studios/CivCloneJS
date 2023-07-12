@@ -76,7 +76,7 @@ class Yield {
             this.science >= other.science);
     }
     fulfillProgress(other) {
-        return ((this.food + this.production + this.science) /
+        return ((Math.min(this.food, other.food) + Math.min(this.production, other.production) + Math.min(this.science, other.science)) /
             (other.food + other.production + other.science));
     }
 }
