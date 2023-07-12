@@ -17,6 +17,7 @@ class WorkErrand {
         this.cost = WorkErrand.errandCostTable[action.type][action.option];
         this.parentStorage = parentStorage;
         this.storedThisTurn = new yield_1.ResourceStore({});
+        this.storedThisTurn.incr(this.parentStorage);
         this.parentStorage.setCapacity(yield_1.Yield.max(this.cost, this.parentStorage.capacity));
         this.completed = false;
         this.action = action;
