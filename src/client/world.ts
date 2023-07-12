@@ -467,9 +467,9 @@ class World {
     this.on.update.tileUpdate = (pos: Coords, tile: Tile): void => {
       this.tiles[this.posIndex(pos)] = tile;
       if (this.selectedPos && pos.x === this.selectedPos.x && pos.y === this.selectedPos.y) {
-        ui.hideSidebarMenu();
-        ui.showSidebarMenu(this, pos, tile);
         if (tile.improvement) {
+          ui.hideSidebarMenu();
+          ui.showSidebarMenu(this, pos, tile);
           this.fetchImprovementCatalogs(tile.improvement, pos);
         }
       }
