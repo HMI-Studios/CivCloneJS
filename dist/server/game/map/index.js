@@ -230,13 +230,17 @@ class Map {
         this.buildImprovementAt(coords, 'settlement', civID);
         return true;
     }
+    startErrandAt(coords, improvement, errand) {
+        improvement.startErrand(errand);
+        this.tileUpdate(coords);
+    }
     startConstructionAt(coords, improvementType, ownerID) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
         tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield);
-        tile.improvement.startErrand({
+        this.startErrandAt(coords, tile.improvement, {
             type: errand_1.ErrandType.CONSTRUCTION,
             option: improvementType,
         });
@@ -266,7 +270,7 @@ class Map {
                 if (!tile.improvement.errand) {
                     // TODO - maybe change this in the future, to where new training errands overwrite old ones?
                     // That would require gracefully closing the previous errands though, so that is for later.
-                    tile.improvement.startErrand({
+                    this.startErrandAt(coords, tile.improvement, {
                         type: errand_1.ErrandType.UNIT_TRAINING,
                         option: unitType,
                         location: coords,
@@ -287,7 +291,7 @@ class Map {
                 // TODO - change this in the future, to where new research errands overwrite old ones?
                 // That would require gracefully closing the previous errands though, so that is for later.
                 if (!tile.improvement.errand) {
-                    tile.improvement.startErrand({
+                    this.startErrandAt(coords, tile.improvement, {
                         type: errand_1.ErrandType.RESEARCH,
                         option: knowledgeName,
                         location: coords,

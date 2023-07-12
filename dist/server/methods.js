@@ -423,6 +423,7 @@ const methods = {
             const map = game.world.map;
             const tile = map.getTile(coords);
             map.trainUnitAt(coords, type, civID);
+            game.sendUpdates();
         }
     },
     /**
@@ -456,6 +457,7 @@ const methods = {
             const map = game.world.map;
             const tile = map.getTile(coords);
             map.researchKnowledgeAt(coords, name, civID);
+            game.sendUpdates();
         }
     },
 };
