@@ -42,6 +42,7 @@ class WorkErrand {
             storedThisTurn: this.storedThisTurn,
             turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
             progress: this.parentStorage.fulfillProgress(this.cost),
+            action: this.action,
         };
     }
     complete(world, map, tile) {

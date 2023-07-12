@@ -10,6 +10,7 @@ export type ErrandData = {
   storedThisTurn: YieldParams;
   turnsToCompletion: number;
   progress: number;
+  action: ErrandAction;
 };
 
 export enum ErrandType {
@@ -94,6 +95,7 @@ export class WorkErrand {
       storedThisTurn: this.storedThisTurn,
       turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
       progress: this.parentStorage.fulfillProgress(this.cost),
+      action: this.action,
     };
   }
 
