@@ -118,6 +118,7 @@
       "unitCatalog": "Train Unit:",
       "knowledgeCatalog": "Select Research Focus:",
       "errand": {
+        "turns": "Turns Remaining: ",
         "current": "Current Errand",
         "type": "Type: ",
         "option": "Option: ",
@@ -141,5 +142,8 @@
       "2": "Research",
       "3": "Civics"
     }
+  },
+  "misc": {
+    "turns": "turns"
   }
 }

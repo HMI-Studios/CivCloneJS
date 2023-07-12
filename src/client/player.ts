@@ -537,7 +537,7 @@ class UI {
     this.elements.sidebarMenu.appendChild(tileInfo);
     
     if (tile.improvement.errand) {
-      const progressBar = this.createElement('div', { className: 'errandProgress', children: [
+      const errandInfo = this.createElement('div', { className: 'errandInfo', children: [
         this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.errand.current') } }),
         this.createElement('div', { className: 'sidebarInfoTable', children: [
           this.createElement('div', { className: 'sidebarInfoTableRow', children: [
@@ -555,13 +555,19 @@ class UI {
             this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate(`${Math.round(tile.improvement.errand.progress * 100)}%`) } }),
           ]}),
           this.createProgressBar(tile.improvement.errand.progress),
+          this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: { innerText: translate('improvement.info.errand.turns') } }),
+            this.createElement('span', { className: 'sidebarInfoSpan', attrs: {
+              innerText: formatTurnsRemaining(tile.improvement.errand.turnsToCompletion)
+            }}),
+          ]}),
         ]}),
       ]});
-      this.elements.sidebarMenu.appendChild(progressBar);
+      this.elements.sidebarMenu.appendChild(errandInfo);
     }
 
-    let tileUnitCatalog;
-    let tileKnowledgeCatalog;
+    let tileUnitCatalog: HTMLElement;
+    let tileKnowledgeCatalog: HTMLElement;
     
     world.on.update.unitCatalog = (catalogPos: Coords, catalog: { type: string, cost: Yield }[]) => {
       if (!(pos.x === catalogPos.x && pos.y === catalogPos.y)) return;
@@ -607,3 +613,9 @@ class UI {
     delete world.on.update.knowledgeCatalog;
   }
 }
+
+const formatTurnsRemaining = (turnsRemaining: number): string => (
+  turnsRemaining === null ?
+    ' - ' :
+    `${Math.ceil(turnsRemaining)} ${translate('misc.turns')}`
+)
