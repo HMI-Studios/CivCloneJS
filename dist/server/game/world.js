@@ -139,10 +139,15 @@ class World {
     }
     // map, civs
     updateCivTileVisibility(civID) {
+        var _a;
         for (const tile of this.map.tiles) {
             tile.clearVisibility(civID);
+            if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID) {
+                tile.setVisibility(civID, true);
+            }
         }
-        for (const unit of this.civs[civID].units) {
+        const civ = this.civs[civID];
+        for (const unit of civ.units) {
             for (const coords of this.map.getVisibleTilesCoords(unit)) {
                 const tile = this.map.getTile(coords);
                 tile.setVisibility(civID, true);

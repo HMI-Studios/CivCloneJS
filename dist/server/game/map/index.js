@@ -108,10 +108,15 @@ class Map {
     }
     setTileOwner(coords, owner, overwrite) {
         var _a;
-        if (!overwrite && this.getTile(coords).owner)
-            return;
-        (_a = this.getTile(coords).owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
-        this.getTile(coords).owner = owner;
+        const tile = this.getTile(coords);
+        if (tile.owner) {
+            if (!overwrite)
+                return;
+            (_a = tile.owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
+            tile.setVisibility(tile.owner.civID, false);
+        }
+        tile.owner = owner;
+        tile.setVisibility(owner.civID, true);
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {

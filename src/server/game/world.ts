@@ -173,8 +173,12 @@ export class World {
   updateCivTileVisibility(civID: number): void {
     for (const tile of this.map.tiles) {
       tile.clearVisibility(civID);
+      if (tile.owner?.civID === civID) {
+        tile.setVisibility(civID, true);
+      }
     }
-    for (const unit of this.civs[civID].units) {
+    const civ = this.civs[civID];
+    for (const unit of civ.units) {
       for (const coords of this.map.getVisibleTilesCoords(unit)) {
         const tile = this.map.getTile(coords);
         tile.setVisibility(civID, true);

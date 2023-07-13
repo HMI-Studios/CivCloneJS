@@ -141,9 +141,14 @@ export class Map {
   }
 
   setTileOwner(coords: Coords, owner: City, overwrite: boolean): void {
-    if (!overwrite && this.getTile(coords).owner) return;
-    this.getTile(coords).owner?.removeTile(coords);
-    this.getTile(coords).owner = owner;
+    const tile = this.getTile(coords);
+    if (tile.owner) {
+      if (!overwrite) return;
+      tile.owner?.removeTile(coords);
+      tile.setVisibility(tile.owner.civID, false);
+    }
+    tile.owner = owner;
+    tile.setVisibility(owner.civID, true);
     owner.addTile(coords);
   }
 

@@ -16,7 +16,7 @@ export class City {
     this.civID = civID;
 
     this.tiles = new Set();
-    this.tiles.add(center);
+    this.addTile(center);
   }
 
   export() {
