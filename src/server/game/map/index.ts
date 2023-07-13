@@ -24,10 +24,11 @@ export interface MapOptions {
 export class Map {
   height: number;
   width: number;
-  tiles: Tile[];
   cities: City[];
   traders: Trader[];
   updates: { (civID: number): Event }[];
+
+  private tiles: Tile[];
 
   constructor(height: number, width: number) {
     this.height = height;
@@ -84,6 +85,15 @@ export class Map {
 
   setTile(coords: Coords, tile: Tile): void {
     this.tiles[this.pos(coords)] = tile;
+  }
+
+  public forEachTile(callback: (tile: Tile, coords: Coords) => void): void {
+    for (let pos = 0; pos < this.tiles.length; pos++) {
+      const tile = this.tiles[pos];
+      const coords = this.coords(pos);
+
+      callback(tile, coords)
+    }
   }
 
   private getNeighborsCoordsRecurse({ x, y }: Coords, r: number, tileList: Coords[]): void {
@@ -362,10 +372,7 @@ export class Map {
 
   turn(world: World): void {
     // Tiles
-    for (let pos = 0; pos < this.tiles.length; pos++) {
-      const tile = this.tiles[pos];
-      const coords = this.coords(pos);
-
+    this.forEachTile((tile, coords) => {
       if (tile.improvement) {
         tile.improvement.work();
         if (tile.improvement.errand?.completed) {
@@ -384,7 +391,7 @@ export class Map {
           }
         }
       }
-    }
+    });
 
     // Traders
     for (let i = 0; i < this.traders.length; i++) {

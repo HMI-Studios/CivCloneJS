@@ -66,6 +66,13 @@ class Map {
     setTile(coords, tile) {
         this.tiles[this.pos(coords)] = tile;
     }
+    forEachTile(callback) {
+        for (let pos = 0; pos < this.tiles.length; pos++) {
+            const tile = this.tiles[pos];
+            const coords = this.coords(pos);
+            callback(tile, coords);
+        }
+    }
     getNeighborsCoordsRecurse({ x, y }, r, tileList) {
         if (r >= 0 && this.getTile({ x, y })) {
             tileList.push({ x, y });
@@ -308,11 +315,9 @@ class Map {
         this.tileUpdate(coords);
     }
     turn(world) {
-        var _a;
         // Tiles
-        for (let pos = 0; pos < this.tiles.length; pos++) {
-            const tile = this.tiles[pos];
-            const coords = this.coords(pos);
+        this.forEachTile((tile, coords) => {
+            var _a;
             if (tile.improvement) {
                 tile.improvement.work();
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
@@ -330,7 +335,7 @@ class Map {
                     }
                 }
             }
-        }
+        });
         // Traders
         for (let i = 0; i < this.traders.length; i++) {
             const trader = this.traders[i];
