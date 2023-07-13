@@ -171,12 +171,21 @@ export class World {
 
   // map, civs
   updateCivTileVisibility(civID: number): void {
+    const cityTiles: Coords[] = [];
     this.map.forEachTile((tile, coords) => {
       tile.clearVisibility(civID);
       if (tile.owner?.civID === civID) {
         tile.setVisibility(civID, true);
+        cityTiles.push(coords)
       }
     });
+    for (const coords of cityTiles) {
+      for (const neighbor of this.map.getNeighborsCoords(coords)) {
+        const tile = this.map.getTile(neighbor);
+        if (tile.owner?.civID === civID) continue;
+        tile.setVisibility(civID, true);
+      }
+    }
     const civ = this.civs[civID];
     for (const unit of civ.units) {
       for (const coords of this.map.getVisibleTilesCoords(unit)) {
