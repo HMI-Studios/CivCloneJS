@@ -180,9 +180,10 @@ export class World {
       }
     });
     for (const coords of cityTiles) {
-      for (const neighbor of this.map.getNeighborsCoords(coords)) {
+      for (const neighbor of this.map.getNeighborsCoords(coords, 1, { filter: (tile) => {
+        return tile.owner?.civID !== civID;
+      } })) {
         const tile = this.map.getTile(neighbor);
-        if (tile.owner?.civID === civID) continue;
         tile.setVisibility(civID, true);
       }
     }

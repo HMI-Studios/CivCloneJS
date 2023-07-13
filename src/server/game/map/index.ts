@@ -96,19 +96,32 @@ export class Map {
     }
   }
 
-  private getNeighborsCoordsRecurse({ x, y }: Coords, r: number, tileList: Coords[]): void {
-    if (r >= 0 && this.getTile({x, y})) {
-      tileList.push({x, y});
-      for (const coord of getAdjacentCoords({x, y})) {
-        this.getNeighborsCoordsRecurse(coord, r-1, tileList);
+  private getNeighborsRecurse(
+    coords: Coords,
+    r: number,
+    tileSet: Set<Tile>,
+    coordList: Coords[],
+    filter?: (tile?: Tile, coords?: Coords) => boolean,
+  ): void {
+    const tile = this.getTile(coords);
+    if (r >= 0 && tile && !tileSet.has(tile)) {
+      if (!filter || filter(tile, coords)) {
+        tileSet.add(tile);
+        coordList.push(coords);
+      }
+      for (const coord of getAdjacentCoords(coords)) {
+        this.getNeighborsRecurse(coord, r-1, tileSet, coordList);
       }
     }
   }
 
-  getNeighborsCoords(coords: Coords, r = 1, tileList: Coords[] = []): Coords[] {
-    this.getNeighborsCoordsRecurse(coords, r, tileList);
+  getNeighborsCoords(coords: Coords, r = 1, options?: {
+    filter?: (tile: Tile, coords: Coords) => boolean,
+  }): Coords[] {
+    const coordList: Coords[] = [];
+    this.getNeighborsRecurse(coords, r, new Set(), coordList, options?.filter);
 
-    return tileList;
+    return coordList;
   }
 
   getPathTree(srcPos: Coords, range: number, mode: MovementClass): [{[key: string]: Coords}, {[key: string]: number}] {

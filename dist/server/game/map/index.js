@@ -73,17 +73,22 @@ class Map {
             callback(tile, coords);
         }
     }
-    getNeighborsCoordsRecurse({ x, y }, r, tileList) {
-        if (r >= 0 && this.getTile({ x, y })) {
-            tileList.push({ x, y });
-            for (const coord of (0, utils_1.getAdjacentCoords)({ x, y })) {
-                this.getNeighborsCoordsRecurse(coord, r - 1, tileList);
+    getNeighborsRecurse(coords, r, tileSet, coordList, filter) {
+        const tile = this.getTile(coords);
+        if (r >= 0 && tile && !tileSet.has(tile)) {
+            if (!filter || filter(tile, coords)) {
+                tileSet.add(tile);
+                coordList.push(coords);
+            }
+            for (const coord of (0, utils_1.getAdjacentCoords)(coords)) {
+                this.getNeighborsRecurse(coord, r - 1, tileSet, coordList);
             }
         }
     }
-    getNeighborsCoords(coords, r = 1, tileList = []) {
-        this.getNeighborsCoordsRecurse(coords, r, tileList);
-        return tileList;
+    getNeighborsCoords(coords, r = 1, options) {
+        const coordList = [];
+        this.getNeighborsRecurse(coords, r, new Set(), coordList, options === null || options === void 0 ? void 0 : options.filter);
+        return coordList;
     }
     getPathTree(srcPos, range, mode) {
         // BFS to find all tiles within `range` steps

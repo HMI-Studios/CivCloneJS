@@ -139,7 +139,6 @@ class World {
     }
     // map, civs
     updateCivTileVisibility(civID) {
-        var _a;
         const cityTiles = [];
         this.map.forEachTile((tile, coords) => {
             var _a;
@@ -150,10 +149,11 @@ class World {
             }
         });
         for (const coords of cityTiles) {
-            for (const neighbor of this.map.getNeighborsCoords(coords)) {
+            for (const neighbor of this.map.getNeighborsCoords(coords, 1, { filter: (tile) => {
+                    var _a;
+                    return ((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== civID;
+                } })) {
                 const tile = this.map.getTile(neighbor);
-                if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID)
-                    continue;
                 tile.setVisibility(civID, true);
             }
         }
