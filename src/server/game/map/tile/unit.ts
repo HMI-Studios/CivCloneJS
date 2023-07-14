@@ -12,6 +12,8 @@ export interface UnitData {
   hp: number,
   movement: number,
   civID: number,
+  promotionClass: PromotionClass,
+  attackRange?: number,
 }
 
 export enum MovementClass {
@@ -68,6 +70,11 @@ export class Unit {
     'archer': [15, 5, 12],
     'spy': [5, 3, 20],
   }
+
+  static attackRangeTable: { [unitType: string]: number } = {
+    'slinger': 2,
+    'archer': 3,
+  }
   
   static costTable: { [unitType: string]: Yield } = {
     'settler': new Yield({production: 10}),
@@ -84,6 +91,7 @@ export class Unit {
   promotionClass: PromotionClass;
   movementClass: MovementClass;
   combatStats: [number, number, number];
+  attackRange?: number;
   civID: number;
   coords: Coords;
   alive: boolean;
@@ -101,6 +109,9 @@ export class Unit {
     this.promotionClass = Unit.promotionClassTable[type];
     this.movementClass = Unit.movementClassTable[type];
     this.combatStats = Unit.combatStatsTable[type];
+    if (this.promotionClass === PromotionClass.RANGED) {
+      this.attackRange = Unit.attackRangeTable[type];
+    }
     this.civID = civID;
     this.coords = coords;
     this.alive = true;
@@ -111,9 +122,6 @@ export class Unit {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
-      promotionClass: this.promotionClass,
-      movementClass: this.movementClass,
-      combatStats: this.combatStats,
       civID: this.civID,
       coords: this.coords,
       alive: this.alive,
@@ -124,9 +132,12 @@ export class Unit {
     const unit = new Unit(data.type, data.civID, data.coords);
     unit.hp = data.hp;
     unit.movement = data.movement;
-    unit.promotionClass = data.promotionClass;
-    unit.movementClass = data.movementClass;
-    unit.combatStats = data.combatStats;
+    unit.promotionClass = Unit.promotionClassTable[unit.type];
+    unit.movementClass = Unit.movementClassTable[unit.type];
+    unit.combatStats = Unit.combatStatsTable[unit.type];
+    if (unit.promotionClass === PromotionClass.RANGED) {
+      unit.attackRange = Unit.attackRangeTable[unit.type];
+    }
     unit.alive = data.alive;
     return unit;
   }
@@ -137,6 +148,8 @@ export class Unit {
       hp: this.hp,
       movement: this.movement,
       civID: this.civID,
+      promotionClass: this.promotionClass,
+      attackRange: this.attackRange,
     };
   }
   

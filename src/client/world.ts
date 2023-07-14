@@ -23,6 +23,18 @@ interface Unit {
   hp: number;
   movement: number;
   civID: number;
+  promotionClass: PromotionClass;
+}
+
+interface RangedUnit extends Unit {
+  attackRange: number;
+}
+
+enum PromotionClass {
+  CIVILLIAN,
+  MELEE,
+  RANGED,
+  RECON,
 }
 
 interface Improvement {
@@ -244,8 +256,7 @@ class World {
     return paths;
   }
 
-  moveUnit(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attack: boolean): void {
-    console.log(srcPos, dstPos, pathMap);
+  findPath(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }): Coords[] {
     let curPos: Coords = dstPos;
     const path: Coords[] = [];
     while (this.posIndex(srcPos) !== this.posIndex(curPos)) {
@@ -254,6 +265,21 @@ class World {
       curPos = pathMap[this.posIndex(curPos)];
     }
     path.reverse();
+    return path;
+  }
+
+  attack(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attacker: RangedUnit) {
+    const path = this.findPath(srcPos, dstPos, pathMap);
+    if (path.length <= attacker.attackRange) {
+      this.sendActions([
+        ['attack', [ srcPos, dstPos ]]
+      ]);
+    }
+  }
+
+  moveUnit(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attack: boolean): void {
+    console.log(srcPos, dstPos, pathMap);
+    const path = this.findPath(srcPos, dstPos, pathMap);
     this.sendActions([
       ['moveUnit', [ srcPos, path, attack ]]
     ]);

@@ -24,6 +24,9 @@ class Unit {
         this.promotionClass = Unit.promotionClassTable[type];
         this.movementClass = Unit.movementClassTable[type];
         this.combatStats = Unit.combatStatsTable[type];
+        if (this.promotionClass === PromotionClass.RANGED) {
+            this.attackRange = Unit.attackRangeTable[type];
+        }
         this.civID = civID;
         this.coords = coords;
         this.alive = true;
@@ -36,9 +39,6 @@ class Unit {
             type: this.type,
             hp: this.hp,
             movement: this.movement,
-            promotionClass: this.promotionClass,
-            movementClass: this.movementClass,
-            combatStats: this.combatStats,
             civID: this.civID,
             coords: this.coords,
             alive: this.alive,
@@ -48,9 +48,12 @@ class Unit {
         const unit = new Unit(data.type, data.civID, data.coords);
         unit.hp = data.hp;
         unit.movement = data.movement;
-        unit.promotionClass = data.promotionClass;
-        unit.movementClass = data.movementClass;
-        unit.combatStats = data.combatStats;
+        unit.promotionClass = Unit.promotionClassTable[unit.type];
+        unit.movementClass = Unit.movementClassTable[unit.type];
+        unit.combatStats = Unit.combatStatsTable[unit.type];
+        if (unit.promotionClass === PromotionClass.RANGED) {
+            unit.attackRange = Unit.attackRangeTable[unit.type];
+        }
         unit.alive = data.alive;
         return unit;
     }
@@ -60,6 +63,8 @@ class Unit {
             hp: this.hp,
             movement: this.movement,
             civID: this.civID,
+            promotionClass: this.promotionClass,
+            attackRange: this.attackRange,
         };
     }
     getMovementClass() {
@@ -123,6 +128,10 @@ Unit.combatStatsTable = {
     'slinger': [10, 5, 12],
     'archer': [15, 5, 12],
     'spy': [5, 3, 20],
+};
+Unit.attackRangeTable = {
+    'slinger': 2,
+    'archer': 3,
 };
 Unit.costTable = {
     'settler': new yield_1.Yield({ production: 10 }),

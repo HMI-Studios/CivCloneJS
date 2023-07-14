@@ -7,6 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var PromotionClass;
+(function (PromotionClass) {
+    PromotionClass[PromotionClass["CIVILLIAN"] = 0] = "CIVILLIAN";
+    PromotionClass[PromotionClass["MELEE"] = 1] = "MELEE";
+    PromotionClass[PromotionClass["RANGED"] = 2] = "RANGED";
+    PromotionClass[PromotionClass["RECON"] = 3] = "RECON";
+})(PromotionClass || (PromotionClass = {}));
 var ErrandType;
 (function (ErrandType) {
     ErrandType[ErrandType["CONSTRUCTION"] = 0] = "CONSTRUCTION";
@@ -126,8 +133,7 @@ class World {
         }
         return paths;
     }
-    moveUnit(srcPos, dstPos, pathMap, attack) {
-        console.log(srcPos, dstPos, pathMap);
+    findPath(srcPos, dstPos, pathMap) {
         let curPos = dstPos;
         const path = [];
         while (this.posIndex(srcPos) !== this.posIndex(curPos)) {
@@ -136,6 +142,19 @@ class World {
             curPos = pathMap[this.posIndex(curPos)];
         }
         path.reverse();
+        return path;
+    }
+    attack(srcPos, dstPos, pathMap, attacker) {
+        const path = this.findPath(srcPos, dstPos, pathMap);
+        if (path.length <= attacker.attackRange) {
+            this.sendActions([
+                ['attack', [srcPos, dstPos]]
+            ]);
+        }
+    }
+    moveUnit(srcPos, dstPos, pathMap, attack) {
+        console.log(srcPos, dstPos, pathMap);
+        const path = this.findPath(srcPos, dstPos, pathMap);
         this.sendActions([
             ['moveUnit', [srcPos, path, attack]]
         ]);

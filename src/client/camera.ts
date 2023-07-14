@@ -336,7 +336,12 @@ class Camera {
               console.log(x, y);
 
               if (this.selectedUnitPos && world.posIndex({x, y}) in this.highlightedTiles) {
-                world.moveUnit(this.selectedUnitPos, {x, y}, this.highlightedTiles, !!tile.unit);
+                const selectedUnit = world.getTile(this.selectedUnitPos).unit;
+                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED) {
+                  world.attack(this.selectedUnitPos, {x, y}, this.highlightedTiles, selectedUnit as RangedUnit);
+                } else {
+                  world.moveUnit(this.selectedUnitPos, {x, y}, this.highlightedTiles, !!tile.unit);
+                }
               }
 
               this.deselectUnit(world);
