@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAdjacentCoords = exports.mod = void 0;
+exports.arrayIncludesCoords = exports.getAdjacentCoords = exports.mod = void 0;
 const mod = (a, b) => {
     if (a >= 0) {
         return a % b;
@@ -31,4 +31,12 @@ const getAdjacentCoords = ({ x, y }) => {
     return coordArray;
 };
 exports.getAdjacentCoords = getAdjacentCoords;
+const arrayIncludesCoords = (array, { x, y }) => {
+    for (const coords of array) {
+        if (coords.x === x && coords.y === y)
+            return true;
+    }
+    return false;
+};
+exports.arrayIncludesCoords = arrayIncludesCoords;
 //# sourceMappingURL=index.js.map

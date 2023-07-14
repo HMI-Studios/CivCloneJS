@@ -18,7 +18,7 @@ export const mod = (a: number, b: number): number => {
   } else {
     return ((a % b) + b) % b;
   }
-}
+};
 
 export const getAdjacentCoords = ({x, y}: Coords): Coords[] => {
   const coordArray: Coords[] = [];
@@ -39,4 +39,11 @@ export const getAdjacentCoords = ({x, y}: Coords): Coords[] => {
   }
 
   return coordArray;
-}
+};
+
+export const arrayIncludesCoords = (array: Coords[], {x, y}: Coords): boolean => {
+  for (const coords of array) {
+    if (coords.x === x && coords.y === y) return true;
+  }
+  return false;
+};
