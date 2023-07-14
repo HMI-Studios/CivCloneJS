@@ -9,6 +9,8 @@ import { Yield, ResourceStore, YieldParams } from "./yield";
 export type ErrandData = {
   storedThisTurn: YieldParams;
   turnsToCompletion: number;
+  progress: number;
+  action: ErrandAction;
 };
 
 export enum ErrandType {
@@ -65,6 +67,7 @@ export class WorkErrand {
     this.cost = WorkErrand.errandCostTable[action.type][action.option];
     this.parentStorage = parentStorage;
     this.storedThisTurn = new ResourceStore({});
+    this.storedThisTurn.incr(this.parentStorage)
     this.parentStorage.setCapacity(Yield.max(this.cost, this.parentStorage.capacity));
     this.completed = false;
     this.action = action;
@@ -92,6 +95,8 @@ export class WorkErrand {
     return {
       storedThisTurn: this.storedThisTurn,
       turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
+      progress: Math.min(this.parentStorage.fulfillProgress(this.cost), 1),
+      action: this.action,
     };
   }
 

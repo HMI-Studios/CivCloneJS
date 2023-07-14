@@ -24,10 +24,11 @@ export interface MapOptions {
 export class Map {
   height: number;
   width: number;
-  tiles: Tile[];
   cities: City[];
   traders: Trader[];
   updates: { (civID: number): Event }[];
+
+  private tiles: Tile[];
 
   constructor(height: number, width: number) {
     this.height = height;
@@ -86,19 +87,41 @@ export class Map {
     this.tiles[this.pos(coords)] = tile;
   }
 
-  private getNeighborsCoordsRecurse({ x, y }: Coords, r: number, tileList: Coords[]): void {
-    if (r >= 0 && this.getTile({x, y})) {
-      tileList.push({x, y});
-      for (const coord of getAdjacentCoords({x, y})) {
-        this.getNeighborsCoordsRecurse(coord, r-1, tileList);
+  public forEachTile(callback: (tile: Tile, coords: Coords) => void): void {
+    for (let pos = 0; pos < this.tiles.length; pos++) {
+      const tile = this.tiles[pos];
+      const coords = this.coords(pos);
+
+      callback(tile, coords)
+    }
+  }
+
+  private getNeighborsRecurse(
+    coords: Coords,
+    r: number,
+    tileSet: Set<Tile>,
+    coordList: Coords[],
+    filter?: (tile?: Tile, coords?: Coords) => boolean,
+  ): void {
+    const tile = this.getTile(coords);
+    if (r >= 0 && tile && !tileSet.has(tile)) {
+      if (!filter || filter(tile, coords)) {
+        tileSet.add(tile);
+        coordList.push(coords);
+      }
+      for (const coord of getAdjacentCoords(coords)) {
+        this.getNeighborsRecurse(coord, r-1, tileSet, coordList);
       }
     }
   }
 
-  getNeighborsCoords(coords: Coords, r = 1, tileList: Coords[] = []): Coords[] {
-    this.getNeighborsCoordsRecurse(coords, r, tileList);
+  getNeighborsCoords(coords: Coords, r = 1, options?: {
+    filter?: (tile: Tile, coords: Coords) => boolean,
+  }): Coords[] {
+    const coordList: Coords[] = [];
+    this.getNeighborsRecurse(coords, r, new Set(), coordList, options?.filter);
 
-    return tileList;
+    return coordList;
   }
 
   getPathTree(srcPos: Coords, range: number, mode: MovementClass): [{[key: string]: Coords}, {[key: string]: number}] {
@@ -141,9 +164,14 @@ export class Map {
   }
 
   setTileOwner(coords: Coords, owner: City, overwrite: boolean): void {
-    if (!overwrite && this.getTile(coords).owner) return;
-    this.getTile(coords).owner?.removeTile(coords);
-    this.getTile(coords).owner = owner;
+    const tile = this.getTile(coords);
+    if (tile.owner) {
+      if (!overwrite) return;
+      tile.owner?.removeTile(coords);
+      tile.setVisibility(tile.owner.civID, false);
+    }
+    tile.owner = owner;
+    tile.setVisibility(owner.civID, true);
     owner.addTile(coords);
   }
 
@@ -272,12 +300,17 @@ export class Map {
     return true;
   }
 
+  startErrandAt(coords: Coords, improvement: Improvement, errand: ErrandAction): void {
+    improvement.startErrand(errand);
+    this.tileUpdate(coords);
+  }
+
   startConstructionAt(coords: Coords, improvementType: string, ownerID: number): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
     tile.improvement = new Improvement('worksite', tile.baseYield);
-    tile.improvement.startErrand({
+    this.startErrandAt(coords, tile.improvement, {
       type: ErrandType.CONSTRUCTION,
       option: improvementType,
     });
@@ -312,7 +345,7 @@ export class Map {
         if (!tile.improvement.errand) {
           // TODO - maybe change this in the future, to where new training errands overwrite old ones?
           // That would require gracefully closing the previous errands though, so that is for later.
-          tile.improvement.startErrand({
+          this.startErrandAt(coords, tile.improvement, {
             type: ErrandType.UNIT_TRAINING,
             option: unitType,
             location: coords,
@@ -337,7 +370,7 @@ export class Map {
         // TODO - change this in the future, to where new research errands overwrite old ones?
         // That would require gracefully closing the previous errands though, so that is for later.
         if (!tile.improvement.errand) {
-          tile.improvement.startErrand({
+          this.startErrandAt(coords, tile.improvement, {
             type: ErrandType.RESEARCH,
             option: knowledgeName,
             location: coords,
@@ -352,10 +385,7 @@ export class Map {
 
   turn(world: World): void {
     // Tiles
-    for (let pos = 0; pos < this.tiles.length; pos++) {
-      const tile = this.tiles[pos];
-      const coords = this.coords(pos);
-
+    this.forEachTile((tile, coords) => {
       if (tile.improvement) {
         tile.improvement.work();
         if (tile.improvement.errand?.completed) {
@@ -374,7 +404,7 @@ export class Map {
           }
         }
       }
-    }
+    });
 
     // Traders
     for (let i = 0; i < this.traders.length; i++) {

@@ -17,6 +17,7 @@ class WorkErrand {
         this.cost = WorkErrand.errandCostTable[action.type][action.option];
         this.parentStorage = parentStorage;
         this.storedThisTurn = new yield_1.ResourceStore({});
+        this.storedThisTurn.incr(this.parentStorage);
         this.parentStorage.setCapacity(yield_1.Yield.max(this.cost, this.parentStorage.capacity));
         this.completed = false;
         this.action = action;
@@ -41,6 +42,8 @@ class WorkErrand {
         return {
             storedThisTurn: this.storedThisTurn,
             turnsToCompletion: this.cost.sub(this.parentStorage.sub(this.storedThisTurn)).div(this.storedThisTurn),
+            progress: Math.min(this.parentStorage.fulfillProgress(this.cost), 1),
+            action: this.action,
         };
     }
     complete(world, map, tile) {

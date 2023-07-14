@@ -66,17 +66,29 @@ class Map {
     setTile(coords, tile) {
         this.tiles[this.pos(coords)] = tile;
     }
-    getNeighborsCoordsRecurse({ x, y }, r, tileList) {
-        if (r >= 0 && this.getTile({ x, y })) {
-            tileList.push({ x, y });
-            for (const coord of (0, utils_1.getAdjacentCoords)({ x, y })) {
-                this.getNeighborsCoordsRecurse(coord, r - 1, tileList);
+    forEachTile(callback) {
+        for (let pos = 0; pos < this.tiles.length; pos++) {
+            const tile = this.tiles[pos];
+            const coords = this.coords(pos);
+            callback(tile, coords);
+        }
+    }
+    getNeighborsRecurse(coords, r, tileSet, coordList, filter) {
+        const tile = this.getTile(coords);
+        if (r >= 0 && tile && !tileSet.has(tile)) {
+            if (!filter || filter(tile, coords)) {
+                tileSet.add(tile);
+                coordList.push(coords);
+            }
+            for (const coord of (0, utils_1.getAdjacentCoords)(coords)) {
+                this.getNeighborsRecurse(coord, r - 1, tileSet, coordList);
             }
         }
     }
-    getNeighborsCoords(coords, r = 1, tileList = []) {
-        this.getNeighborsCoordsRecurse(coords, r, tileList);
-        return tileList;
+    getNeighborsCoords(coords, r = 1, options) {
+        const coordList = [];
+        this.getNeighborsRecurse(coords, r, new Set(), coordList, options === null || options === void 0 ? void 0 : options.filter);
+        return coordList;
     }
     getPathTree(srcPos, range, mode) {
         // BFS to find all tiles within `range` steps
@@ -108,10 +120,15 @@ class Map {
     }
     setTileOwner(coords, owner, overwrite) {
         var _a;
-        if (!overwrite && this.getTile(coords).owner)
-            return;
-        (_a = this.getTile(coords).owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
-        this.getTile(coords).owner = owner;
+        const tile = this.getTile(coords);
+        if (tile.owner) {
+            if (!overwrite)
+                return;
+            (_a = tile.owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
+            tile.setVisibility(tile.owner.civID, false);
+        }
+        tile.owner = owner;
+        tile.setVisibility(owner.civID, true);
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {
@@ -230,13 +247,17 @@ class Map {
         this.buildImprovementAt(coords, 'settlement', civID);
         return true;
     }
+    startErrandAt(coords, improvement, errand) {
+        improvement.startErrand(errand);
+        this.tileUpdate(coords);
+    }
     startConstructionAt(coords, improvementType, ownerID) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
         tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield);
-        tile.improvement.startErrand({
+        this.startErrandAt(coords, tile.improvement, {
             type: errand_1.ErrandType.CONSTRUCTION,
             option: improvementType,
         });
@@ -266,7 +287,7 @@ class Map {
                 if (!tile.improvement.errand) {
                     // TODO - maybe change this in the future, to where new training errands overwrite old ones?
                     // That would require gracefully closing the previous errands though, so that is for later.
-                    tile.improvement.startErrand({
+                    this.startErrandAt(coords, tile.improvement, {
                         type: errand_1.ErrandType.UNIT_TRAINING,
                         option: unitType,
                         location: coords,
@@ -287,7 +308,7 @@ class Map {
                 // TODO - change this in the future, to where new research errands overwrite old ones?
                 // That would require gracefully closing the previous errands though, so that is for later.
                 if (!tile.improvement.errand) {
-                    tile.improvement.startErrand({
+                    this.startErrandAt(coords, tile.improvement, {
                         type: errand_1.ErrandType.RESEARCH,
                         option: knowledgeName,
                         location: coords,
@@ -299,11 +320,9 @@ class Map {
         this.tileUpdate(coords);
     }
     turn(world) {
-        var _a;
         // Tiles
-        for (let pos = 0; pos < this.tiles.length; pos++) {
-            const tile = this.tiles[pos];
-            const coords = this.coords(pos);
+        this.forEachTile((tile, coords) => {
+            var _a;
             if (tile.improvement) {
                 tile.improvement.work();
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
@@ -321,7 +340,7 @@ class Map {
                     }
                 }
             }
-        }
+        });
         // Traders
         for (let i = 0; i < this.traders.length; i++) {
             const trader = this.traders[i];

@@ -231,3 +231,9 @@ canvas {
   grid-column: 1;
   grid-row: 1;
 }
+
+.progressBar {
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 2px inset black;
+}

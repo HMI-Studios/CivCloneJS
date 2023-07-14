@@ -7,6 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var ErrandType;
+(function (ErrandType) {
+    ErrandType[ErrandType["CONSTRUCTION"] = 0] = "CONSTRUCTION";
+    ErrandType[ErrandType["UNIT_TRAINING"] = 1] = "UNIT_TRAINING";
+    ErrandType[ErrandType["RESEARCH"] = 2] = "RESEARCH";
+    // CULTURE,
+})(ErrandType || (ErrandType = {}));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
     constructor() {
@@ -14,6 +21,7 @@ class World {
         this.unitPositions = [];
         this.unitIndex = 0;
         this.unusedUnits = [];
+        this.selectedPos = null;
         this.width;
         this.socket;
         this.socketDidOpen = false;
@@ -155,6 +163,16 @@ class World {
             }
         }
         return null;
+    }
+    fetchImprovementCatalogs(improvement, coords) {
+        if (improvement.type === 'encampment') {
+            // change this check later, to be more general
+            this.sendActions([['getUnitCatalog', [coords]]]);
+        }
+        else if (improvement.type === 'campus') {
+            // change this check later, to be more general
+            this.sendActions([['getKnowledgeCatalog', [coords]]]);
+        }
     }
     sendJSON(data) {
         this.socket.send(JSON.stringify(data));
@@ -324,6 +342,13 @@ class World {
             };
             this.on.update.tileUpdate = (pos, tile) => {
                 this.tiles[this.posIndex(pos)] = tile;
+                if (this.selectedPos && pos.x === this.selectedPos.x && pos.y === this.selectedPos.y) {
+                    if (tile.improvement) {
+                        ui.hideSidebarMenu();
+                        ui.showSidebarMenu(this, pos, tile);
+                        this.fetchImprovementCatalogs(tile.improvement, pos);
+                    }
+                }
             };
             this.on.update.unitPositions = (unitPositions) => {
                 this.unitPositions = unitPositions;
@@ -418,16 +443,10 @@ class World {
                 }
             };
             this.on.event.selectTile = (coords, tile) => {
+                this.selectedPos = coords;
                 ui.showTileInfoMenu(this, coords, tile);
                 if (tile.improvement) {
-                    if (tile.improvement.type === 'encampment') {
-                        // change this check later, to be more general
-                        this.sendActions([['getUnitCatalog', [coords]]]);
-                    }
-                    else if (tile.improvement.type === 'campus') {
-                        // change this check later, to be more general
-                        this.sendActions([['getKnowledgeCatalog', [coords]]]);
-                    }
+                    this.fetchImprovementCatalogs(tile.improvement, coords);
                     ui.showSidebarMenu(this, coords, tile);
                 }
                 else {
@@ -435,6 +454,7 @@ class World {
                 }
             };
             this.on.event.deselectTile = () => {
+                this.selectedPos = null;
                 ui.hideTileInfoMenu();
                 ui.hideSidebarMenu();
             };

@@ -33,9 +33,25 @@ interface Improvement {
   metadata?: any;
 }
 
+enum ErrandType {
+  CONSTRUCTION,
+  UNIT_TRAINING,
+  RESEARCH,
+  // CULTURE,
+}
+
+type ErrandAction = {
+  type: ErrandType;
+  option: string;
+  location?: Coords;
+  metaData?: any;
+};
+
 type Errand = {
   storedThisTurn: Yield;
   turnsToCompletion: number;
+  progress: number;
+  action: ErrandAction;
 };
 
 type ResourceStorage = Yield & {
@@ -83,6 +99,7 @@ class World {
   unitPositions: Coords[];
   unitIndex: number;
   unusedUnits: number[];
+  selectedPos: Coords | null;
   height: number;
   width: number;
   socket: WebSocket;
@@ -95,6 +112,7 @@ class World {
     this.unitPositions = [];
     this.unitIndex = 0;
     this.unusedUnits = [];
+    this.selectedPos = null;
     this.width;
     this.socket;
     this.socketDidOpen = false;
@@ -268,6 +286,16 @@ class World {
     return null;
   }
 
+  fetchImprovementCatalogs(improvement: Improvement, coords: Coords): void {
+    if (improvement.type === 'encampment') {
+      // change this check later, to be more general
+      this.sendActions([[ 'getUnitCatalog', [coords] ]])
+    } else if (improvement.type === 'campus') {
+      // change this check later, to be more general
+      this.sendActions([[ 'getKnowledgeCatalog', [coords] ]])
+    }
+  }
+
   sendJSON(data: EventMsg): void {
     this.socket.send(JSON.stringify(data));
   }
@@ -438,6 +466,14 @@ class World {
 
     this.on.update.tileUpdate = (pos: Coords, tile: Tile): void => {
       this.tiles[this.posIndex(pos)] = tile;
+      if (this.selectedPos && pos.x === this.selectedPos.x && pos.y === this.selectedPos.y) {
+        if (tile.improvement) {
+          ui.hideSidebarMenu();
+          ui.showSidebarMenu(this, pos, tile);
+          this.fetchImprovementCatalogs(tile.improvement, pos);
+        }
+      }
+      
     };
 
     this.on.update.unitPositions = (unitPositions: Coords[]): void => {
@@ -541,15 +577,10 @@ class World {
     }
 
     this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
+      this.selectedPos = coords;
       ui.showTileInfoMenu(this, coords, tile);
       if (tile.improvement) {
-        if (tile.improvement.type === 'encampment') {
-          // change this check later, to be more general
-          this.sendActions([[ 'getUnitCatalog', [coords] ]])
-        } else if (tile.improvement.type === 'campus') {
-          // change this check later, to be more general
-          this.sendActions([[ 'getKnowledgeCatalog', [coords] ]])
-        }
+        this.fetchImprovementCatalogs(tile.improvement, coords);
         ui.showSidebarMenu(this, coords, tile);
       } else {
         ui.hideSidebarMenu();
@@ -557,6 +588,7 @@ class World {
     }
 
     this.on.event.deselectTile = (): void => {
+      this.selectedPos = null;
       ui.hideTileInfoMenu();
       ui.hideSidebarMenu();
     }

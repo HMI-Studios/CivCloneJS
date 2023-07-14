@@ -499,6 +499,7 @@ const methods: {
       const tile = map.getTile(coords);
 
       map.trainUnitAt(coords, type, civID);
+      game.sendUpdates();
     }
   },
 
@@ -539,6 +540,7 @@ const methods: {
       const tile = map.getTile(coords);
 
       map.researchKnowledgeAt(coords, name, civID);
+      game.sendUpdates();
     }
   },
 };

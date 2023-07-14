@@ -139,10 +139,26 @@ class World {
     }
     // map, civs
     updateCivTileVisibility(civID) {
-        for (const tile of this.map.tiles) {
+        const cityTiles = [];
+        this.map.forEachTile((tile, coords) => {
+            var _a;
             tile.clearVisibility(civID);
+            if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID) {
+                tile.setVisibility(civID, true);
+                cityTiles.push(coords);
+            }
+        });
+        for (const coords of cityTiles) {
+            for (const neighbor of this.map.getNeighborsCoords(coords, 1, { filter: (tile) => {
+                    var _a;
+                    return ((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== civID;
+                } })) {
+                const tile = this.map.getTile(neighbor);
+                tile.setVisibility(civID, true);
+            }
         }
-        for (const unit of this.civs[civID].units) {
+        const civ = this.civs[civID];
+        for (const unit of civ.units) {
             for (const coords of this.map.getVisibleTilesCoords(unit)) {
                 const tile = this.map.getTile(coords);
                 tile.setVisibility(civID, true);

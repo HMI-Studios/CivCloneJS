@@ -169,7 +169,7 @@ export class Improvement {
       traderCount--;
     }
 
-    this.storage.incr(this.yield);
+    this.store(this.yield);
     this.storage.cap();
   }
 
