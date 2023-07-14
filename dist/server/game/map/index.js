@@ -73,21 +73,27 @@ class Map {
             callback(tile, coords);
         }
     }
-    getNeighborsRecurse(coords, r, tileSet, coordList, filter) {
+    getNeighborsRecurse(coords, r, tileSet, coordList, rangeMap, filter) {
         const tile = this.getTile(coords);
-        if (r >= 0 && tile && !tileSet.has(tile)) {
-            if (!filter || filter(tile, coords)) {
-                tileSet.add(tile);
-                coordList.push(coords);
+        if (r >= 0 && tile) {
+            if (!tileSet.has(tile)) {
+                if (!filter || filter(tile, coords)) {
+                    tileSet.add(tile);
+                    coordList.push(coords);
+                    rangeMap[this.pos(coords)] = r;
+                }
             }
             for (const coord of (0, utils_1.getAdjacentCoords)(coords)) {
-                this.getNeighborsRecurse(coord, r - 1, tileSet, coordList);
+                const pos = this.pos(coord);
+                if (!rangeMap[pos] || rangeMap[pos] < r - 1) {
+                    this.getNeighborsRecurse(coord, r - 1, tileSet, coordList, rangeMap, filter);
+                }
             }
         }
     }
     getNeighborsCoords(coords, r = 1, options) {
         const coordList = [];
-        this.getNeighborsRecurse(coords, r, new Set(), coordList, options === null || options === void 0 ? void 0 : options.filter);
+        this.getNeighborsRecurse(coords, r, new Set(), coordList, {}, options === null || options === void 0 ? void 0 : options.filter);
         return coordList;
     }
     getPathTree(srcPos, range, mode) {
@@ -165,11 +171,21 @@ class Map {
         this.updates.push((civID) => ['tileUpdate', [coords, this.getCivTile(civID, tile)]]);
     }
     moveUnitTo(unit, coords) {
+        // mark tiles currently visible by unit as unseen
+        const srcVisible = this.getVisibleTilesCoords(unit);
+        for (const visibleCoords of srcVisible) {
+            this.setTileVisibility(unit.civID, visibleCoords, false);
+        }
         this.getTile(unit.coords).setUnit(undefined);
         this.tileUpdate(unit.coords);
         unit.coords = coords;
         this.getTile(coords).setUnit(unit);
         this.tileUpdate(coords);
+        // mark tiles now visible by unit as seen
+        const newVisible = this.getVisibleTilesCoords(unit);
+        for (const visibleCoords of newVisible) {
+            this.setTileVisibility(unit.civID, visibleCoords, true);
+        }
     }
     addTrader(trader) {
         this.traders.push(trader);

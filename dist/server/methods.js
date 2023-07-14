@@ -308,18 +308,8 @@ const methods = {
                 if (dst.unit) {
                     break;
                 }
-                // mark tiles currently visible by unit as unseen
-                const srcVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of srcVisible) {
-                    map.setTileVisibility(civID, coords, false);
-                }
                 unit.movement -= dst.getMovementCost(unit);
                 map.moveUnitTo(unit, dstCoords);
-                // mark tiles now visible by unit as seen
-                const newVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of newVisible) {
-                    map.setTileVisibility(civID, coords, true);
-                }
                 src = dst;
                 finalCoords = dstCoords;
             }
