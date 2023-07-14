@@ -52,7 +52,7 @@ export const games: { [gameID: number] : Game } = {
 (async () => {
   games[1] = await Game.load('singleplayer test')
   // games[2] = await Game.load('no units test')
-  // games[2] = await Game.load('multiplayer test')
+  games[2] = await Game.load('multiplayer test')
 })()
 
 const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {

@@ -81,7 +81,8 @@ export class Unit {
   type: string;
   hp: number; // this should never be allowed to be outside the range 0 - 100
   movement: number;
-  movementClass: number;
+  promotionClass: PromotionClass;
+  movementClass: MovementClass;
   combatStats: [number, number, number];
   civID: number;
   coords: Coords;
@@ -97,6 +98,7 @@ export class Unit {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
+    this.promotionClass = Unit.promotionClassTable[type];
     this.movementClass = Unit.movementClassTable[type];
     this.combatStats = Unit.combatStatsTable[type];
     this.civID = civID;
@@ -109,6 +111,7 @@ export class Unit {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
+      promotionClass: this.promotionClass,
       movementClass: this.movementClass,
       combatStats: this.combatStats,
       civID: this.civID,
@@ -121,6 +124,7 @@ export class Unit {
     const unit = new Unit(data.type, data.civID, data.coords);
     unit.hp = data.hp;
     unit.movement = data.movement;
+    unit.promotionClass = data.promotionClass;
     unit.movementClass = data.movementClass;
     unit.combatStats = data.combatStats;
     unit.alive = data.alive;

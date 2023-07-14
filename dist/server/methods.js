@@ -50,7 +50,7 @@ exports.games = {
 (() => __awaiter(void 0, void 0, void 0, function* () {
     exports.games[1] = yield game_1.Game.load('singleplayer test');
     // games[2] = await Game.load('no units test')
-    // games[2] = await Game.load('multiplayer test')
+    exports.games[2] = yield game_1.Game.load('multiplayer test');
 }))();
 const createGame = (username, playerCount, mapOptions, options) => {
     var _a;
