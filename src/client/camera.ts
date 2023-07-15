@@ -337,7 +337,7 @@ class Camera {
 
               if (this.selectedUnitPos) {
                 const selectedUnit = world.getTile(this.selectedUnitPos).unit;
-                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED) {
+                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && tile.unit.civID !== world.player.civID) {
                   world.attack(this.selectedUnitPos, {x, y}, selectedUnit as RangedUnit);
                 } else if (world.posIndex({x, y}) in this.highlightedTiles) {
                   world.moveUnit(this.selectedUnitPos, {x, y}, this.highlightedTiles, !!tile.unit);
