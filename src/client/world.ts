@@ -268,10 +268,9 @@ class World {
     return path;
   }
 
-  attack(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attacker: RangedUnit) {
-    const path = this.findPath(srcPos, dstPos, pathMap);
-    // TODO - this is NOT robust!
-    if (path.length <= attacker.attackRange) {
+  attack(srcPos: Coords, dstPos: Coords, attacker: RangedUnit) {
+    const reachableTiles = this.getTilesInRange(srcPos, attacker.attackRange)
+    if (Object.keys(reachableTiles).includes(this.posIndex(dstPos).toString())) {
       this.sendActions([
         ['attack', [ srcPos, dstPos ]]
       ]);

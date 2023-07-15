@@ -144,10 +144,9 @@ class World {
         path.reverse();
         return path;
     }
-    attack(srcPos, dstPos, pathMap, attacker) {
-        const path = this.findPath(srcPos, dstPos, pathMap);
-        // TODO - this is NOT robust!
-        if (path.length <= attacker.attackRange) {
+    attack(srcPos, dstPos, attacker) {
+        const reachableTiles = this.getTilesInRange(srcPos, attacker.attackRange);
+        if (Object.keys(reachableTiles).includes(this.posIndex(dstPos).toString())) {
             this.sendActions([
                 ['attack', [srcPos, dstPos]]
             ]);

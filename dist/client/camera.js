@@ -240,12 +240,12 @@ class Camera {
                             mapClicked = true;
                             world.on.event.selectTile({ x, y }, tile);
                             console.log(x, y);
-                            if (this.selectedUnitPos && world.posIndex({ x, y }) in this.highlightedTiles) {
+                            if (this.selectedUnitPos) {
                                 const selectedUnit = world.getTile(this.selectedUnitPos).unit;
                                 if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED) {
-                                    world.attack(this.selectedUnitPos, { x, y }, this.highlightedTiles, selectedUnit);
+                                    world.attack(this.selectedUnitPos, { x, y }, selectedUnit);
                                 }
-                                else {
+                                else if (world.posIndex({ x, y }) in this.highlightedTiles) {
                                     world.moveUnit(this.selectedUnitPos, { x, y }, this.highlightedTiles, !!tile.unit);
                                 }
                             }
