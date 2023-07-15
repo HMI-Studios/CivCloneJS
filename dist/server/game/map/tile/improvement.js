@@ -24,6 +24,9 @@ class Improvement {
         //   this.yield = new Yield({});
         // }
     }
+    static makeCatalog(types) {
+        return types.map(type => ({ type, cost: errand_1.WorkErrand.errandCostTable[errand_1.ErrandType.CONSTRUCTION][type] }));
+    }
     export() {
         var _a;
         return {

@@ -385,6 +385,28 @@ const methods = {
             }
         }
     },
+    /**
+     * The list of improvements the builder on the given coords is able to build
+     * @param coords
+     */
+    getImprovementCatalog: (ws, coords) => {
+        var _a;
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID && tile.unit) {
+                game.sendToCiv(civID, {
+                    update: [
+                        ['improvementCatalog', [coords, tile.getImprovementCatalog()]],
+                    ],
+                });
+            }
+        }
+    },
     buildImprovement: (ws, coords, type) => {
         const username = getUsername(ws);
         const gameID = getGameID(ws);

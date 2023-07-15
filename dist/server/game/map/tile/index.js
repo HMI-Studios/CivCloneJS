@@ -141,6 +141,15 @@ class Tile {
     }
     /**
      *
+     * @returns list of improvements the builder on this tile knows how to build
+     */
+    getBuildableImprovements() {
+        if (!(this.unit))
+            return [];
+        return knowledge_1.Knowledge.getBuildableImprovements(this.getKnowledges(true));
+    }
+    /**
+     *
      * @returns list of units classes this improvement knows how to train
      */
     getTrainableUnitTypes() {
@@ -149,6 +158,17 @@ class Tile {
         const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
         return knowledge_1.Knowledge.getTrainableUnits(this.getKnowledges(true))
             .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
+    }
+    /**
+     *
+     * @returns type and cost of improvements the builder on this tile knows how to build, or null if it cannot build improvements
+     */
+    getImprovementCatalog() {
+        const buildableImprovements = this.getBuildableImprovements();
+        const catalog = improvement_1.Improvement.makeCatalog(buildableImprovements);
+        if (catalog.length === 0)
+            return null;
+        return catalog;
     }
     /**
      *

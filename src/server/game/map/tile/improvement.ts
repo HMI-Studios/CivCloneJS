@@ -1,5 +1,5 @@
 import { Trader } from '../trade';
-import { ErrandAction, ErrandData, WorkErrand } from './errand';
+import { ErrandAction, ErrandData, ErrandType, WorkErrand } from './errand';
 import { Knowledge, KnowledgeBranch } from './knowledge';
 import { PromotionClass } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
@@ -12,6 +12,11 @@ export type ImprovementData = {
   metadata?: any;
   isNatural: boolean;
 };
+
+export interface ImprovementConstructionCost {
+  type: string;
+  cost: Yield;
+}
 
 export class Improvement {
   static yieldTable: { [improvement: string]: Yield } = {
@@ -53,6 +58,12 @@ export class Improvement {
   protected traders: Trader[];
   protected suppliers: Trader[];
   protected storage: ResourceStore;
+
+  static makeCatalog(types: string[]): ImprovementConstructionCost[] {
+    return types.map(type => (
+      { type, cost: WorkErrand.errandCostTable[ErrandType.CONSTRUCTION][type] }
+    ));
+  }
   
   constructor(type?: string, baseYield?: Yield, metadata?: any) {
     if (!(type && baseYield)) return;

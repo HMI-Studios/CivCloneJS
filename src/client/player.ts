@@ -23,20 +23,17 @@ const errandTypeTable: { [type: number]: string } = {
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
-  'builder': ['buildFarm', 'buildEncampment'],
+  'builder': ['build'],
 };
 
-const unitActionsFnTable: { [action: string]: (pos: Coords) => [string, unknown[]] } = {
+const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [string, unknown[]] } = {
   'settleCity': (pos: Coords): [string, unknown[]] => {
     // TODO: bring up settle-city menu and ask for city name
     const name = prompt(`${translate('menu.city.prompt')}:`);
     return ['settleCity', [pos, name]];
   },
-  'buildFarm': (pos: Coords): [string, unknown[]] => {
-    return ['buildImprovement', [pos, 'farm']];
-  },
-  'buildEncampment': (pos: Coords): [string, unknown[]] => {
-    return ['buildImprovement', [pos, 'encampment']];
+  'build': (pos: Coords, improvement: string): [string, unknown[]] => {
+    return ['buildImprovement', [pos, improvement]];
   },
 };
 
@@ -44,14 +41,6 @@ const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coor
   'settleCity': (world: World, pos: Coords): boolean => {
     const tile = world.getTile(pos);
     return world.canSettleOn(tile);
-  },
-  'buildFarm': (world: World, pos: Coords): boolean => {
-    const tile = world.getTile(pos);
-    return world.canBuildOn(tile) && world.canFarmOn(tile);
-  },
-  'buildEncampment': (world: World, pos: Coords): boolean => {
-    const tile = world.getTile(pos);
-    return world.canBuildOn(tile) && !world.isRiver(tile);
   },
 };
 
@@ -417,6 +406,30 @@ class UI {
 
   showUnitActionsMenu(world: World, pos: Coords, unit: Unit): void {
     for (const action of unitActionsTable[unit.type]) {
+      if (action === 'build') {
+        world.sendActions([['getImprovementCatalog', [pos]]]);
+
+        world.on.update.improvementCatalog = (catalogPos: Coords, catalog: { type: string, cost: Yield }[]) => {
+          if (!(pos.x === catalogPos.x && pos.y === catalogPos.y)) return;
+          for (const item of catalog) {
+            const actionBtn = new Button(
+              this.createElement('button'),
+              {
+                // Note that we have the cost info here, we are for now choosing not to display it.
+                text: `${translate(`unit.action.${action}`)} ${translate(`improvement.${item.type}`)}`,
+              }
+            );
+            actionBtn.bindCallback(() => {
+              world.sendActions([unitActionsFnTable[action](pos, item.type)]);
+            });
+      
+            this.elements.unitActionsMenu.appendChild(actionBtn.element);
+          }
+        };
+
+        continue;
+      }
+
       if (!unitActionsAvailabilityTable[action](world, pos)) {
         continue;
       }
@@ -424,7 +437,7 @@ class UI {
       const actionBtn = new Button(
         this.createElement('button'),
         {
-          text: action,
+          text: translate(`unit.action.${action}`),
         }
       );
       actionBtn.bindCallback(() => {

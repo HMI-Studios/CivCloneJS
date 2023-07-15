@@ -21,6 +21,14 @@ var ErrandType;
     ErrandType[ErrandType["RESEARCH"] = 2] = "RESEARCH";
     // CULTURE,
 })(ErrandType || (ErrandType = {}));
+const canTrainUnits = {
+    'settlement': true,
+    'encampment': true,
+};
+const canResearch = {
+    'settlement': true,
+    'campus': true,
+};
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
     constructor() {
@@ -184,12 +192,10 @@ class World {
         return null;
     }
     fetchImprovementCatalogs(improvement, coords) {
-        if (improvement.type === 'encampment') {
-            // change this check later, to be more general
+        if (canTrainUnits[improvement.type]) {
             this.sendActions([['getUnitCatalog', [coords]]]);
         }
-        else if (improvement.type === 'campus') {
-            // change this check later, to be more general
+        if (canResearch[improvement.type]) {
             this.sendActions([['getKnowledgeCatalog', [coords]]]);
         }
     }

@@ -78,6 +78,10 @@
     "info": {
       "hp": "HP",
       "movement": "Movement"
+    },
+    "action": {
+      "settleCity": "Settle City",
+      "build": "Build"
     }
   },
   "tile": {
