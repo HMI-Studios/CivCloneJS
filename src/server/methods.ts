@@ -352,7 +352,7 @@ const methods: {
           return;
         }
 
-        if (target.unit && map.canUnitAttack(unit, target.unit)) {
+        if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
           if (unit.promotionClass === PromotionClass.RANGED) {
             world.rangedCombat(unit, target.unit);
             unit.movement = 0;

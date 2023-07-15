@@ -305,7 +305,7 @@ const methods = {
                     game.sendUpdates();
                     return;
                 }
-                if (target.unit && map.canUnitAttack(unit, target.unit)) {
+                if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
                     if (unit.promotionClass === unit_1.PromotionClass.RANGED) {
                         world.rangedCombat(unit, target.unit);
                         unit.movement = 0;
