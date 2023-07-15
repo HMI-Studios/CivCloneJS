@@ -10,6 +10,8 @@ export interface Coords {
   y: number;
 }
 
+const DAMAGE_MULTIPLIER = 20;
+
 export class World {
   map: Map;
   civs: { [civID: number]: Civilization };
@@ -224,14 +226,47 @@ export class World {
     this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);
   }
 
+  rangedCombat(attacker: Unit, defender: Unit): void {
+    const [attackerOffense, attackerDefense, attackerAwareness] = attacker.combatStats;
+    const [defenderOffense, defenderDefense, defenderAwareness] = defender.combatStats;
+    const attackerInitiative = Math.random() * (attackerAwareness * 6);
+    const defenderInitiative = Math.random() * (defenderAwareness);
+
+    const defenderCanAttack = this.map.canUnitAttack(defender, attacker);
+
+    if (attackerInitiative > defenderInitiative || !defenderCanAttack) {
+
+      const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
+      defender.hurt(attackerDamage);
+
+      if (defenderCanAttack) {
+        const defenderDamage = (defenderOffense * defender.hp) / (attackerDefense * attacker.hp) * DAMAGE_MULTIPLIER;
+        attacker.hurt(defenderDamage);
+      }
+
+    } else {
+
+      const defenderDamage = (defenderOffense * defender.hp) / (attackerDefense * attacker.hp) * DAMAGE_MULTIPLIER;
+      attacker.hurt(defenderDamage);
+
+      const attackerDamage = (attackerOffense * attacker.hp) / (defenderDefense * defender.hp) * DAMAGE_MULTIPLIER;
+      defender.hurt(attackerDamage);
+
+    }
+
+    if (attacker.isDead()) this.removeUnit(attacker);
+    if (defender.isDead()) this.removeUnit(defender);
+
+    this.map.tileUpdate(attacker.coords);
+    this.map.tileUpdate(defender.coords);
+  }
+
   // unit, map, civs
   meleeCombat(attacker: Unit, defender: Unit): void {
     const [attackerOffense, attackerDefense, attackerAwareness] = attacker.combatStats;
     const [defenderOffense, defenderDefense, defenderAwareness] = defender.combatStats;
     const attackerInitiative = Math.random() * (attackerAwareness * 1.5);
     const defenderInitiative = Math.random() * (defenderAwareness);
-
-    const DAMAGE_MULTIPLIER = 20;
 
     if (attackerInitiative > defenderInitiative) {
 

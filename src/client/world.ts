@@ -270,6 +270,7 @@ class World {
 
   attack(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attacker: RangedUnit) {
     const path = this.findPath(srcPos, dstPos, pathMap);
+    // TODO - this is NOT robust!
     if (path.length <= attacker.attackRange) {
       this.sendActions([
         ['attack', [ srcPos, dstPos ]]

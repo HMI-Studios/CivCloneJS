@@ -121,8 +121,21 @@ class Map {
         }
         return [paths, dst];
     }
-    getVisibleTilesCoords(unit) {
-        return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
+    getVisibleTilesCoords(unit, visionRange = 2) {
+        return [unit.coords, ...this.getNeighborsCoords(unit.coords, visionRange)];
+    }
+    canUnitSee(unit, targetCoords, isAttack = false) {
+        var _a;
+        const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? ((_a = unit.attackRange) !== null && _a !== void 0 ? _a : 1) : 2);
+        return (0, utils_1.arrayIncludesCoords)(visibleTiles, targetCoords);
+    }
+    canUnitAttack(unit, target) {
+        if (unit.promotionClass === unit_1.PromotionClass.RANGED) {
+            return this.canUnitSee(unit, target.coords, true);
+        }
+        else {
+            return unit.isAdjacentTo(target.coords);
+        }
     }
     setTileOwner(coords, owner, overwrite) {
         var _a;

@@ -1,9 +1,9 @@
 import { Coords, World } from '../world';
-import { MovementClass, Unit } from './tile/unit';
+import { MovementClass, PromotionClass, Unit } from './tile/unit';
 import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
-import { getAdjacentCoords, mod, Event } from '../../utils';
+import { getAdjacentCoords, mod, Event, arrayIncludesCoords } from '../../utils';
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
@@ -166,8 +166,21 @@ export class Map {
     return [paths, dst];
   }
 
-  getVisibleTilesCoords(unit: Unit): Coords[] {
-    return [unit.coords, ...this.getNeighborsCoords(unit.coords, 2)];
+  getVisibleTilesCoords(unit: Unit, visionRange = 2): Coords[] {
+    return [unit.coords, ...this.getNeighborsCoords(unit.coords, visionRange)];
+  }
+
+  canUnitSee(unit: Unit, targetCoords: Coords, isAttack = false): boolean {
+    const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? (unit.attackRange ?? 1) : 2);
+    return arrayIncludesCoords(visibleTiles, targetCoords);
+  }
+
+  canUnitAttack(unit: Unit, target: Unit): boolean {
+    if (unit.promotionClass === PromotionClass.RANGED) {
+      return this.canUnitSee(unit, target.coords, true);
+    } else {
+      return unit.isAdjacentTo(target.coords);
+    }
   }
 
   setTileOwner(coords: Coords, owner: City, overwrite: boolean): void {

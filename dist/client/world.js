@@ -146,6 +146,7 @@ class World {
     }
     attack(srcPos, dstPos, pathMap, attacker) {
         const path = this.findPath(srcPos, dstPos, pathMap);
+        // TODO - this is NOT robust!
         if (path.length <= attacker.attackRange) {
             this.sendActions([
                 ['attack', [srcPos, dstPos]]

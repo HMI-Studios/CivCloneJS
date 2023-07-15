@@ -13,6 +13,7 @@ exports.executeAction = exports.getConnData = exports.games = exports.connData =
 const player_1 = require("./game/player");
 const game_1 = require("./game");
 const generator_1 = require("./game/map/generator");
+const unit_1 = require("./game/map/tile/unit");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -285,6 +286,37 @@ const methods = {
         // if so:
         if (finished) {
             game.endTurn();
+        }
+    },
+    attack: (ws, srcCoords, targetCoords) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        console.log(srcCoords, targetCoords);
+        if (game) {
+            const world = game.world;
+            const map = world.map;
+            const src = map.getTile(srcCoords);
+            const unit = src.unit;
+            if (unit) {
+                const target = map.getTile(targetCoords);
+                if (!unit || unit.civID !== civID) {
+                    game.sendUpdates();
+                    return;
+                }
+                if (target.unit && map.canUnitAttack(unit, target.unit)) {
+                    if (unit.promotionClass === unit_1.PromotionClass.RANGED) {
+                        world.rangedCombat(unit, target.unit);
+                        unit.movement = 0;
+                    }
+                    else {
+                        world.meleeCombat(unit, target.unit);
+                        unit.movement = 0;
+                    }
+                }
+            }
+            game.sendUpdates();
         }
     },
     moveUnit: (ws, srcCoords, path, attack) => {

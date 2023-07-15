@@ -3,6 +3,7 @@ import { Player } from './game/player';
 import { Map, MapOptions } from './game/map';
 import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
+import { PromotionClass } from './game/map/tile/unit';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -325,6 +326,44 @@ const methods: {
     // if so:
     if (finished) {
       game.endTurn();
+    }
+  },
+
+  attack: (ws: WebSocket, srcCoords: Coords, targetCoords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    console.log(srcCoords, targetCoords);
+
+    if (game) {
+      const world = game.world;
+      const map = world.map;
+
+      const src = map.getTile(srcCoords);
+      const unit = src.unit;
+      if (unit) {
+        const target = map.getTile(targetCoords);
+
+        if ( !unit || unit.civID !== civID ) {
+          game.sendUpdates();
+          return;
+        }
+
+        if (target.unit && map.canUnitAttack(unit, target.unit)) {
+          if (unit.promotionClass === PromotionClass.RANGED) {
+            world.rangedCombat(unit, target.unit);
+            unit.movement = 0;
+          } else {
+            world.meleeCombat(unit, target.unit);
+            unit.movement = 0;
+          }
+        }
+      }
+
+      game.sendUpdates();
     }
   },
 
