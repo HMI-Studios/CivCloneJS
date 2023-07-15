@@ -380,12 +380,19 @@ class World {
                 this.unusedUnits = unitPositions.map((_, index) => index);
             };
             this.on.update.unitPositionUpdate = (startPos, endPos) => {
+                var _a, _b;
                 const index = this.getUnitIndex(startPos);
                 if (index !== null) {
                     this.unitPositions[index] = endPos;
                     const unit = this.getTile(endPos).unit;
                     if (unit && unit.movement === 0) {
                         this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
+                    }
+                    if (((_a = camera.selectedUnitPos) === null || _a === void 0 ? void 0 : _a.x) === startPos.x && ((_b = camera.selectedUnitPos) === null || _b === void 0 ? void 0 : _b.y) === startPos.y) {
+                        camera.deselectUnit(this);
+                        if (unit.movement > 0) {
+                            camera.selectUnit(this, endPos, unit);
+                        }
                     }
                 }
             };

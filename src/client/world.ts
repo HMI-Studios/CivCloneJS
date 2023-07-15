@@ -525,6 +525,12 @@ class World {
         if (unit && unit.movement === 0) {
           this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
         }
+        if (camera.selectedUnitPos?.x === startPos.x && camera.selectedUnitPos?.y === startPos.y) {
+          camera.deselectUnit(this);
+          if (unit.movement > 0) {
+            camera.selectUnit(this, endPos, unit);
+          }
+        }
       }
     };
 

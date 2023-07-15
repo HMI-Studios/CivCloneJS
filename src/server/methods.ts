@@ -344,26 +344,33 @@ const methods: {
 
       const src = map.getTile(srcCoords);
       const unit = src.unit;
-      if (unit) {
-        const target = map.getTile(targetCoords);
 
-        if ( !unit || unit.civID !== civID ) {
-          game.sendUpdates();
-          return;
-        }
+      const target = map.getTile(targetCoords);
 
-        if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
-          if (unit.promotionClass === PromotionClass.RANGED) {
-            world.rangedCombat(unit, target.unit);
-            unit.movement = 0;
-          } else {
-            world.meleeCombat(unit, target.unit);
-            unit.movement = 0;
-          }
+      if ( !unit || unit.civID !== civID ) {
+        game.sendUpdates();
+        return;
+      }
+
+      if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
+        if (unit.promotionClass === PromotionClass.RANGED) {
+          world.rangedCombat(unit, target.unit);
+          unit.movement = 0;
+        } else {
+          world.meleeCombat(unit, target.unit);
+          unit.movement = 0;
         }
       }
 
       game.sendUpdates();
+
+      // In case we later support units being moved as a result of them attacking,
+      // we want to send a unit position update here. It also simplifies frontend logic.
+      game.sendToCiv(civID, {
+        update: [
+          ['unitPositionUpdate', [srcCoords, unit.coords]],
+        ],
+      });
     }
   },
 
