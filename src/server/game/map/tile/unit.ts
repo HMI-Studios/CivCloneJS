@@ -75,6 +75,11 @@ export class Unit {
     'slinger': 2,
     'archer': 3,
   }
+
+  static visionRangeTable: { [unitType: string]: number } = {
+    default: 2,
+    'scout': 3,
+  }
   
   static costTable: { [unitType: string]: Yield } = {
     'settler': new Yield({production: 10}),
@@ -92,6 +97,7 @@ export class Unit {
   movementClass: MovementClass;
   combatStats: [number, number, number];
   attackRange?: number;
+  visionRange: number;
   civID: number;
   coords: Coords;
   alive: boolean;
@@ -112,6 +118,7 @@ export class Unit {
     if (this.promotionClass === PromotionClass.RANGED) {
       this.attackRange = Unit.attackRangeTable[type];
     }
+    this.visionRange = Unit.visionRangeTable[type] ?? Unit.visionRangeTable.default;
     this.civID = civID;
     this.coords = coords;
     this.alive = true;

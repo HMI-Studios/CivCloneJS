@@ -166,12 +166,12 @@ export class Map {
     return [paths, dst];
   }
 
-  getVisibleTilesCoords(unit: Unit, visionRange = 2): Coords[] {
-    return [unit.coords, ...this.getNeighborsCoords(unit.coords, visionRange)];
+  getVisibleTilesCoords(unit: Unit, range?: number): Coords[] {
+    return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
   }
 
   canUnitSee(unit: Unit, targetCoords: Coords, isAttack = false): boolean {
-    const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? (unit.attackRange ?? 1) : 2);
+    const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? (unit.attackRange ?? 1) : unit.visionRange);
     return arrayIncludesCoords(visibleTiles, targetCoords);
   }
 

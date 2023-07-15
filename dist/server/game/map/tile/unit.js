@@ -18,6 +18,7 @@ var PromotionClass;
 })(PromotionClass = exports.PromotionClass || (exports.PromotionClass = {}));
 class Unit {
     constructor(type, civID, coords) {
+        var _a;
         this.type = type;
         this.hp = 100;
         this.movement = 0;
@@ -27,6 +28,7 @@ class Unit {
         if (this.promotionClass === PromotionClass.RANGED) {
             this.attackRange = Unit.attackRangeTable[type];
         }
+        this.visionRange = (_a = Unit.visionRangeTable[type]) !== null && _a !== void 0 ? _a : Unit.visionRangeTable.default;
         this.civID = civID;
         this.coords = coords;
         this.alive = true;
@@ -132,6 +134,10 @@ Unit.combatStatsTable = {
 Unit.attackRangeTable = {
     'slinger': 2,
     'archer': 3,
+};
+Unit.visionRangeTable = {
+    default: 2,
+    'scout': 3,
 };
 Unit.costTable = {
     'settler': new yield_1.Yield({ production: 10 }),

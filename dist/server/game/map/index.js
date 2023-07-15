@@ -121,12 +121,12 @@ class Map {
         }
         return [paths, dst];
     }
-    getVisibleTilesCoords(unit, visionRange = 2) {
-        return [unit.coords, ...this.getNeighborsCoords(unit.coords, visionRange)];
+    getVisibleTilesCoords(unit, range) {
+        return [unit.coords, ...this.getNeighborsCoords(unit.coords, range !== null && range !== void 0 ? range : unit.visionRange)];
     }
     canUnitSee(unit, targetCoords, isAttack = false) {
         var _a;
-        const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? ((_a = unit.attackRange) !== null && _a !== void 0 ? _a : 1) : 2);
+        const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? ((_a = unit.attackRange) !== null && _a !== void 0 ? _a : 1) : unit.visionRange);
         return (0, utils_1.arrayIncludesCoords)(visibleTiles, targetCoords);
     }
     canUnitAttack(unit, target) {
