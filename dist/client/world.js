@@ -115,6 +115,9 @@ class World {
         };
         return farmableTiles[tile.type];
     }
+    areSameCoords(pos1, pos2) {
+        return pos1.x === pos2.x && pos1.y === pos2.y;
+    }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
     getTilesInRange(srcPos, range, mode = 0) {
         // BFS to find all tiles within `range` steps

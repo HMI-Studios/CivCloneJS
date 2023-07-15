@@ -8,6 +8,9 @@ const unitActionsTable = {
     'settler': ['settleCity'],
     'scout': [],
     'builder': ['build'],
+    'warrior': [],
+    'slinger': [],
+    'archer': [],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {

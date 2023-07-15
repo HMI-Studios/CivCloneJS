@@ -24,6 +24,9 @@ const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
   'builder': ['build'],
+  'warrior': [],
+  'slinger': [],
+  'archer': [],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [string, unknown[]] } = {
