@@ -465,7 +465,7 @@ const methods: {
     if (game) {
       const map = game.world.map;
       const tile = map.getTile(coords);
-      if (tile.owner?.civID === civID && tile.unit) {
+      if (tile.owner?.civID === civID && tile.unit && map.canBuildOn(tile)) {
         game.sendToCiv(civID, {
           update: [
             ['improvementCatalog', [coords, tile.getImprovementCatalog()]],
