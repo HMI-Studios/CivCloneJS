@@ -43,6 +43,7 @@ interface Improvement {
   storage: ResourceStorage;
   errand?: Errand;
   metadata?: any;
+  isNatural: boolean;
 }
 
 enum ErrandType {
@@ -605,7 +606,7 @@ class World {
     this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
       this.selectedPos = coords;
       ui.showTileInfoMenu(this, coords, tile);
-      if (tile.improvement) {
+      if (tile.improvement && !tile.improvement.isNatural) {
         this.fetchImprovementCatalogs(tile.improvement, coords);
         ui.showSidebarMenu(this, coords, tile);
       } else {

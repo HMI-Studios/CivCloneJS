@@ -57,6 +57,7 @@ class Improvement {
             pillaged: this.pillaged,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
+            isNatural: this.isNatural,
         };
     }
     /**

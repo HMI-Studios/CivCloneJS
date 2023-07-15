@@ -10,6 +10,7 @@ export type ImprovementData = {
   storage: YieldParams;
   errand?: ErrandData;
   metadata?: any;
+  isNatural: boolean;
 };
 
 export class Improvement {
@@ -103,6 +104,7 @@ export class Improvement {
       pillaged: this.pillaged,
       storage: this.storage,
       errand: this.errand?.getData(),
+      isNatural: this.isNatural,
     };
   }
 
