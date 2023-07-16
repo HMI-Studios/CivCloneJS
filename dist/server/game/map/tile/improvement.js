@@ -149,6 +149,9 @@ Improvement.storeCapTable = {
 Improvement.naturalImprovementTable = {
     'forest': true,
 };
+Improvement.improvementHeightTable = {
+    'forest': 5,
+};
 Improvement.trainableUnitClassTable = {
     'settlement': [unit_1.PromotionClass.CIVILLIAN],
     'encampment': [unit_1.PromotionClass.MELEE, unit_1.PromotionClass.RANGED, unit_1.PromotionClass.RECON],

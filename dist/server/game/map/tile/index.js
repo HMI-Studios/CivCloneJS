@@ -69,6 +69,15 @@ class Tile {
         const mode = unit.getMovementClass();
         return mode > -1 ? this.movementCost[mode] || Infinity : 1;
     }
+    getTotalElevation() {
+        var _a;
+        if (this.improvement) {
+            return (_a = this.elevation + improvement_1.Improvement.improvementHeightTable[this.improvement.type]) !== null && _a !== void 0 ? _a : 0;
+        }
+        else {
+            return this.elevation;
+        }
+    }
     setUnit(unit) {
         this.unit = unit;
     }

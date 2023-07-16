@@ -121,8 +121,34 @@ class Map {
         }
         return [paths, dst];
     }
+    getVisibleTilesRecurse(coords, maxElevation, r, direction, coordsArray, tileSet, stepsUntilSpread, stepLength) {
+        // const newCoords = getCoordInDirection(coords, direction);
+        const tile = this.getTile(coords);
+        if (r > 0 && tile.getTotalElevation() <= maxElevation + 5) {
+            if (!tileSet.has(tile)) {
+                coordsArray.push(coords);
+                tileSet.add(tile);
+            }
+            if (stepsUntilSpread === 0) {
+                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction - 1), maxElevation, r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction), maxElevation, r - 1, direction, coordsArray, tileSet, 0, stepLength + 1);
+                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction - 1), maxElevation, r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+            }
+            else {
+                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction), maxElevation, r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
+            }
+        }
+    }
     getVisibleTilesCoords(unit, range) {
-        return [unit.coords, ...this.getNeighborsCoords(unit.coords, range !== null && range !== void 0 ? range : unit.visionRange)];
+        const coordsArray = [];
+        const tileSet = new Set();
+        coordsArray.push(unit.coords);
+        tileSet.add(this.getTile(unit.coords));
+        for (let direction = 0; direction < 6; direction++) {
+            this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(unit.coords, direction), this.getTile(unit.coords).getTotalElevation(), range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
+        }
+        return coordsArray;
+        // return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
     }
     canUnitSee(unit, targetCoords, isAttack = false) {
         var _a;

@@ -41,6 +41,19 @@ export const getAdjacentCoords = ({x, y}: Coords): Coords[] => {
   return coordArray;
 };
 
+export const getCoordInDirection = ({x, y}: Coords, direction: number): Coords => {
+  const coordsDial = [
+    { x: x,   y: y+1 },
+    { x: x+1, y: y+1 },
+    { x: x+1, y: y   },
+    { x: x,   y: y-1 },
+    { x: x-1, y: y   },
+    { x: x-1, y: y+1 },
+  ];
+
+  return coordsDial[mod(direction, 6)];
+}
+
 export const arrayIncludesCoords = (array: Coords[], {x, y}: Coords): boolean => {
   for (const coords of array) {
     if (coords.x === x && coords.y === y) return true;

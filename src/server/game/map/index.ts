@@ -3,7 +3,7 @@ import { MovementClass, PromotionClass, Unit } from './tile/unit';
 import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
-import { getAdjacentCoords, mod, Event, arrayIncludesCoords } from '../../utils';
+import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection } from '../../utils';
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
@@ -166,8 +166,64 @@ export class Map {
     return [paths, dst];
   }
 
+  getVisibleTilesRecurse(
+    coords: Coords,
+    maxElevation: number,
+    r: number,
+    direction: number,
+    coordsArray: Coords[],
+    tileSet: Set<Tile>,
+    stepsUntilSpread: number,
+    stepLength: number,
+  ): void {
+    // const newCoords = getCoordInDirection(coords, direction);
+    const tile = this.getTile(coords);
+    if (r > 0 && tile.getTotalElevation() <= maxElevation + 5) {
+      if (!tileSet.has(tile)) {
+        coordsArray.push(coords);
+        tileSet.add(tile);
+      }
+      if (stepsUntilSpread === 0) {
+        this.getVisibleTilesRecurse(
+          getCoordInDirection(coords, direction-1),
+          maxElevation, r-1, direction, coordsArray, tileSet, stepLength, stepLength
+        );
+        this.getVisibleTilesRecurse(
+          getCoordInDirection(coords, direction),
+          maxElevation, r-1, direction, coordsArray, tileSet, 0, stepLength+1
+        );
+        this.getVisibleTilesRecurse(
+          getCoordInDirection(coords, direction-1),
+          maxElevation, r-1, direction, coordsArray, tileSet, stepLength, stepLength
+        );
+      } else {
+        this.getVisibleTilesRecurse(
+          getCoordInDirection(coords, direction),
+          maxElevation, r-1, direction, coordsArray, tileSet, stepsUntilSpread-1, stepLength
+        );
+      }
+    }
+  }
+
   getVisibleTilesCoords(unit: Unit, range?: number): Coords[] {
-    return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
+    const coordsArray: Coords[] = [];
+    const tileSet: Set<Tile> = new Set();
+    coordsArray.push(unit.coords);
+    tileSet.add(this.getTile(unit.coords));
+    for (let direction = 0; direction < 6; direction++) {
+      this.getVisibleTilesRecurse(
+        getCoordInDirection(unit.coords, direction),
+        this.getTile(unit.coords).getTotalElevation(),
+        range ?? unit.visionRange,
+        direction,
+        coordsArray,
+        tileSet,
+        0,
+        1,
+      );
+    }
+    return coordsArray;
+    // return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
   }
 
   canUnitSee(unit: Unit, targetCoords: Coords, isAttack = false): boolean {

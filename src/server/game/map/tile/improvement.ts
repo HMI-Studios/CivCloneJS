@@ -39,6 +39,10 @@ export class Improvement {
     'forest': true,
   };
 
+  static improvementHeightTable: { [improvement: string]: number } = {
+    'forest': 5,
+  }
+
   static trainableUnitClassTable: { [improvement: string]: PromotionClass[] } = {
     'settlement': [PromotionClass.CIVILLIAN],
     'encampment': [PromotionClass.MELEE, PromotionClass.RANGED, PromotionClass.RECON],

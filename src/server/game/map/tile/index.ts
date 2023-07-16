@@ -125,6 +125,14 @@ export class Tile {
     return mode > -1 ? this.movementCost[mode] || Infinity : 1;
   }
 
+  getTotalElevation(): number {
+    if (this.improvement) {
+      return this.elevation + Improvement.improvementHeightTable[this.improvement.type] ?? 0;
+    } else {
+      return this.elevation;
+    }
+  }
+
   setUnit(unit?: Unit): void {
     this.unit = unit;
   }
