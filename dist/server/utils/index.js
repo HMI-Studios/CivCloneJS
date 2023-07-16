@@ -32,14 +32,23 @@ const getAdjacentCoords = ({ x, y }) => {
 };
 exports.getAdjacentCoords = getAdjacentCoords;
 const getCoordInDirection = ({ x, y }, direction) => {
-    const coordsDial = [
-        { x: x, y: y + 1 },
-        { x: x + 1, y: y + 1 },
-        { x: x + 1, y: y },
-        { x: x, y: y - 1 },
-        { x: x - 1, y: y },
-        { x: x - 1, y: y + 1 },
-    ];
+    const coordsDial = (0, exports.mod)(x, 2) === 1 ?
+        [
+            { x: x, y: y + 1 },
+            { x: x + 1, y: y + 1 },
+            { x: x + 1, y: y },
+            { x: x, y: y - 1 },
+            { x: x - 1, y: y },
+            { x: x - 1, y: y + 1 },
+        ] :
+        [
+            { x: x, y: y + 1 },
+            { x: x + 1, y: y },
+            { x: x + 1, y: y - 1 },
+            { x: x, y: y - 1 },
+            { x: x - 1, y: y - 1 },
+            { x: x - 1, y: y },
+        ];
     return coordsDial[(0, exports.mod)(direction, 6)];
 };
 exports.getCoordInDirection = getCoordInDirection;
