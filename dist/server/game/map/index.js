@@ -121,31 +121,46 @@ class Map {
         }
         return [paths, dst];
     }
-    getVisibleTilesRecurse(coords, maxElevation, r, direction, coordsArray, tileSet, stepsUntilSpread, stepLength) {
-        // const newCoords = getCoordInDirection(coords, direction);
+    getVisibleTilesRecurse(coords, maxElevation, slope, r, direction, coordsArray, tileSet, stepsUntilSpread, stepLength) {
         const tile = this.getTile(coords);
-        if (r > 0 && tile.getTotalElevation() <= maxElevation + 5) {
-            if (!tileSet.has(tile)) {
+        if (r > 0) {
+            if (!tileSet.has(tile) && tile.getTotalElevation() >= maxElevation) {
                 coordsArray.push(coords);
                 tileSet.add(tile);
             }
             if (stepsUntilSpread === 0) {
-                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction - 1), maxElevation, r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
-                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction), maxElevation, r - 1, direction, coordsArray, tileSet, 0, stepLength + 1);
-                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction - 1), maxElevation, r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                const newLeftCoords = (0, utils_1.getCoordInDirection)(coords, direction - 1);
+                const newLeftTile = this.getTile(newLeftCoords);
+                const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
+                const newTile = this.getTile(newCoords);
+                const newSlope = newTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                const newRightCoords = (0, utils_1.getCoordInDirection)(coords, direction + 1);
+                const newRightTile = this.getTile(newRightCoords);
+                const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
             }
             else {
-                this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(coords, direction), maxElevation, r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
+                const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
+                const newTile = this.getTile(newCoords);
+                const newSlope = newTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
             }
         }
     }
     getVisibleTilesCoords(unit, range) {
         const coordsArray = [];
         const tileSet = new Set();
+        const tile = this.getTile(unit.coords);
         coordsArray.push(unit.coords);
-        tileSet.add(this.getTile(unit.coords));
+        tileSet.add(tile);
         for (let direction = 0; direction < 6; direction++) {
-            this.getVisibleTilesRecurse((0, utils_1.getCoordInDirection)(unit.coords, direction), this.getTile(unit.coords).getTotalElevation(), range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
+            const newCoords = (0, utils_1.getCoordInDirection)(unit.coords, direction);
+            const newTile = this.getTile(newCoords);
+            const slope = newTile.getTotalElevation() - tile.getTotalElevation();
+            this.getVisibleTilesRecurse(newCoords, this.getTile(unit.coords).getTotalElevation() + slope, slope, range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
         }
         return coordsArray;
         // return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
