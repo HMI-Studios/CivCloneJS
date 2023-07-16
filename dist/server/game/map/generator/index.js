@@ -42,16 +42,17 @@ class PerlinWorldGenerator {
         this.width = width;
         this.height = height;
         // Elevation Constants - Make these configurable later
-        const SEA_LEVEL = 45;
+        const OCEAN_LEVEL = 45;
         const COAST_LEVEL = 55;
         const PLAINS_LEVEL = 60;
         const HILLS_LEVEL = 80;
         const HIGHLANDS_LEVEL = 90;
         const MOUNTAIN_LEVEL = 98;
+        this.seaLevel = COAST_LEVEL;
         // Define Biomes
         this.biomes = {
             'plains': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, SHALLOW_OCEAN],
+                [OCEAN_LEVEL, SHALLOW_OCEAN],
                 [COAST_LEVEL, GRASS_LOWLANDS],
                 [PLAINS_LEVEL, GRASS_PLAINS],
                 [HILLS_LEVEL, new biome_1.TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
@@ -59,7 +60,7 @@ class PerlinWorldGenerator {
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
             ]),
             'temperate_forest': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, SHALLOW_OCEAN],
+                [OCEAN_LEVEL, SHALLOW_OCEAN],
                 [COAST_LEVEL, TEMPERATE_FOREST_LOWLANDS],
                 [PLAINS_LEVEL, TEMPERATE_FOREST_PLAINS],
                 [HILLS_LEVEL, new biome_1.TilePool([[TEMPERATE_FOREST_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
@@ -67,29 +68,29 @@ class PerlinWorldGenerator {
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
             ]),
             'tundra': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, SHALLOW_OCEAN],
-                [SEA_LEVEL + 5, FROZEN_RIVER],
+                [OCEAN_LEVEL, SHALLOW_OCEAN],
+                [OCEAN_LEVEL + 5, FROZEN_RIVER],
                 [COAST_LEVEL, SNOW_PLAINS],
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
             ]),
             'arctic': new biome_1.Biome(this.random, FROZEN_OCEAN, [
-                [SEA_LEVEL, SHALLOW_FROZEN_OCEAN],
+                [OCEAN_LEVEL, SHALLOW_FROZEN_OCEAN],
                 [COAST_LEVEL, SNOW_PLAINS],
                 [HILLS_LEVEL, SNOW_HILLS],
                 [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
                 [MOUNTAIN_LEVEL, MOUNTAIN],
             ]),
             'desert': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, SHALLOW_OCEAN],
+                [OCEAN_LEVEL, SHALLOW_OCEAN],
                 [COAST_LEVEL, DESERT_PLAINS],
                 [HILLS_LEVEL, DESERT_HILLS],
                 [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
             ]),
             'mild_desert': new biome_1.Biome(this.random, OCEAN, [
-                [SEA_LEVEL, SHALLOW_OCEAN],
+                [OCEAN_LEVEL, SHALLOW_OCEAN],
                 [COAST_LEVEL, new biome_1.TilePool([[DESERT_PLAINS, 3], [GRASS_LOWLANDS, 1]])],
                 [PLAINS_LEVEL, DESERT_PLAINS],
                 [HILLS_LEVEL, DESERT_HILLS],
@@ -190,7 +191,7 @@ class PerlinWorldGenerator {
         let i = 0;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                const tile = new tile_1.Tile(tileTypeMap[i].type, heightMap[i], new yield_1.Yield(tileTypeMap[i].yieldParams));
+                const tile = new tile_1.Tile(tileTypeMap[i].type, Math.max(heightMap[i], this.seaLevel), new yield_1.Yield(tileTypeMap[i].yieldParams));
                 const vegetation = tileTypeMap[i].getVegetation(this.random);
                 if (vegetation)
                     tile.improvement = new improvement_1.Improvement(vegetation, tile.baseYield);
