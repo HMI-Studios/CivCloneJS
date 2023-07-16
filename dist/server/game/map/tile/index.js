@@ -69,14 +69,13 @@ class Tile {
         const mode = unit.getMovementClass();
         return mode > -1 ? this.movementCost[mode] || Infinity : 1;
     }
+    /**
+     *
+     * @returns the total elevation of this tile plus the height of any improvemnts on it, rounded to the nearest unit.
+     */
     getTotalElevation() {
         var _a;
-        if (this.improvement) {
-            return (_a = this.elevation + improvement_1.Improvement.improvementHeightTable[this.improvement.type]) !== null && _a !== void 0 ? _a : 0;
-        }
-        else {
-            return this.elevation;
-        }
+        return Math.round(this.elevation + (this.improvement ? (_a = improvement_1.Improvement.improvementHeightTable[this.improvement.type]) !== null && _a !== void 0 ? _a : 0 : 0));
     }
     setUnit(unit) {
         this.unit = unit;

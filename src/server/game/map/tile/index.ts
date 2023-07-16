@@ -125,12 +125,14 @@ export class Tile {
     return mode > -1 ? this.movementCost[mode] || Infinity : 1;
   }
 
+  /**
+   * 
+   * @returns the total elevation of this tile plus the height of any improvemnts on it, rounded to the nearest unit.
+   */
   getTotalElevation(): number {
-    if (this.improvement) {
-      return this.elevation + Improvement.improvementHeightTable[this.improvement.type] ?? 0;
-    } else {
-      return this.elevation;
-    }
+    return Math.round(
+      this.elevation + (this.improvement ? Improvement.improvementHeightTable[this.improvement.type] ?? 0 : 0)
+    );
   }
 
   setUnit(unit?: Unit): void {
