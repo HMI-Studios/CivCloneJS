@@ -69,6 +69,14 @@ class Tile {
         const mode = unit.getMovementClass();
         return mode > -1 ? this.movementCost[mode] || Infinity : 1;
     }
+    /**
+     *
+     * @returns the total elevation of this tile plus the height of any improvemnts on it, rounded to the nearest unit.
+     */
+    getTotalElevation() {
+        var _a;
+        return Math.round(this.elevation + (this.improvement ? (_a = improvement_1.Improvement.improvementHeightTable[this.improvement.type]) !== null && _a !== void 0 ? _a : 0 : 0));
+    }
     setUnit(unit) {
         this.unit = unit;
     }
@@ -141,6 +149,31 @@ class Tile {
     }
     /**
      *
+     * @returns whether farms can be build on this tile
+     */
+    isFarmable() {
+        const farmableTileTypes = {
+            'grass_lowlands': true,
+            'plains': true,
+        };
+        return this.type in farmableTileTypes;
+    }
+    /**
+     *
+     * @returns list of improvements the builder on this tile knows how to build
+     */
+    getBuildableImprovements() {
+        if (!this.unit)
+            return [];
+        return knowledge_1.Knowledge.getBuildableImprovements(this.getKnowledges(true))
+            .filter((improvementType) => {
+            if (improvementType === 'farm' && !this.isFarmable())
+                return false;
+            return true;
+        });
+    }
+    /**
+     *
      * @returns list of units classes this improvement knows how to train
      */
     getTrainableUnitTypes() {
@@ -149,6 +182,17 @@ class Tile {
         const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
         return knowledge_1.Knowledge.getTrainableUnits(this.getKnowledges(true))
             .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
+    }
+    /**
+     *
+     * @returns type and cost of improvements the builder on this tile knows how to build, or null if it cannot build improvements
+     */
+    getImprovementCatalog() {
+        const buildableImprovements = this.getBuildableImprovements();
+        const catalog = improvement_1.Improvement.makeCatalog(buildableImprovements);
+        if (catalog.length === 0)
+            return null;
+        return catalog;
     }
     /**
      *

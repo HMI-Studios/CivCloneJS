@@ -13,6 +13,7 @@ exports.executeAction = exports.getConnData = exports.games = exports.connData =
 const player_1 = require("./game/player");
 const game_1 = require("./game");
 const generator_1 = require("./game/map/generator");
+const unit_1 = require("./game/map/tile/unit");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -50,7 +51,7 @@ exports.games = {
 (() => __awaiter(void 0, void 0, void 0, function* () {
     exports.games[1] = yield game_1.Game.load('singleplayer test');
     // games[2] = await Game.load('no units test')
-    // games[2] = await Game.load('multiplayer test')
+    exports.games[2] = yield game_1.Game.load('multiplayer test');
 }))();
 const createGame = (username, playerCount, mapOptions, options) => {
     var _a;
@@ -287,6 +288,42 @@ const methods = {
             game.endTurn();
         }
     },
+    attack: (ws, srcCoords, targetCoords) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        console.log(srcCoords, targetCoords);
+        if (game) {
+            const world = game.world;
+            const map = world.map;
+            const src = map.getTile(srcCoords);
+            const unit = src.unit;
+            const target = map.getTile(targetCoords);
+            if (!unit || unit.civID !== civID) {
+                game.sendUpdates();
+                return;
+            }
+            if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
+                if (unit.promotionClass === unit_1.PromotionClass.RANGED) {
+                    world.rangedCombat(unit, target.unit);
+                    unit.movement = 0;
+                }
+                else {
+                    world.meleeCombat(unit, target.unit);
+                    unit.movement = 0;
+                }
+            }
+            game.sendUpdates();
+            // In case we later support units being moved as a result of them attacking,
+            // we want to send a unit position update here. It also simplifies frontend logic.
+            game.sendToCiv(civID, {
+                update: [
+                    ['unitPositionUpdate', [srcCoords, unit.coords]],
+                ],
+            });
+        }
+    },
     moveUnit: (ws, srcCoords, path, attack) => {
         const username = getUsername(ws);
         const gameID = getGameID(ws);
@@ -308,18 +345,8 @@ const methods = {
                 if (dst.unit) {
                     break;
                 }
-                // mark tiles currently visible by unit as unseen
-                const srcVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of srcVisible) {
-                    map.setTileVisibility(civID, coords, false);
-                }
                 unit.movement -= dst.getMovementCost(unit);
                 map.moveUnitTo(unit, dstCoords);
-                // mark tiles now visible by unit as seen
-                const newVisible = map.getVisibleTilesCoords(unit);
-                for (const coords of newVisible) {
-                    map.setTileVisibility(civID, coords, true);
-                }
                 src = dst;
                 finalCoords = dstCoords;
             }
@@ -360,6 +387,28 @@ const methods = {
                     // TODO - some kind of error here?
                 }
                 game.sendUpdates();
+            }
+        }
+    },
+    /**
+     * The list of improvements the builder on the given coords is able to build
+     * @param coords
+     */
+    getImprovementCatalog: (ws, coords) => {
+        var _a;
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === civID && tile.unit && map.canBuildOn(tile)) {
+                game.sendToCiv(civID, {
+                    update: [
+                        ['improvementCatalog', [coords, tile.getImprovementCatalog()]],
+                    ],
+                });
             }
         }
     },

@@ -24,6 +24,9 @@ class Improvement {
         //   this.yield = new Yield({});
         // }
     }
+    static makeCatalog(types) {
+        return types.map(type => ({ type, cost: errand_1.WorkErrand.errandCostTable[errand_1.ErrandType.CONSTRUCTION][type] }));
+    }
     export() {
         var _a;
         return {
@@ -57,6 +60,7 @@ class Improvement {
             pillaged: this.pillaged,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
+            isNatural: this.isNatural,
         };
     }
     /**
@@ -144,6 +148,9 @@ Improvement.storeCapTable = {
 };
 Improvement.naturalImprovementTable = {
     'forest': true,
+};
+Improvement.improvementHeightTable = {
+    'forest': 5,
 };
 Improvement.trainableUnitClassTable = {
     'settlement': [unit_1.PromotionClass.CIVILLIAN],

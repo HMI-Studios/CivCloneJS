@@ -240,10 +240,18 @@ class Camera {
                             mapClicked = true;
                             world.on.event.selectTile({ x, y }, tile);
                             console.log(x, y);
-                            if (this.selectedUnitPos && world.posIndex({ x, y }) in this.highlightedTiles) {
-                                world.moveUnit(this.selectedUnitPos, { x, y }, this.highlightedTiles, !!tile.unit);
+                            if (this.selectedUnitPos) {
+                                const selectedUnit = world.getTile(this.selectedUnitPos).unit;
+                                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && tile.unit.civID !== world.player.civID) {
+                                    world.attack(this.selectedUnitPos, { x, y }, selectedUnit);
+                                }
+                                else if (world.posIndex({ x, y }) in this.highlightedTiles) {
+                                    world.moveUnit(this.selectedUnitPos, { x, y }, this.highlightedTiles, !!tile.unit);
+                                }
+                                else {
+                                    this.deselectUnit(world);
+                                }
                             }
-                            this.deselectUnit(world);
                         }
                         ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
                         if (tile.unit && this.mouseDownTime === 1 && tile.unit.civID === world.player.civID && ui.turnActive) {

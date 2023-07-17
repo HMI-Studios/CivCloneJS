@@ -23,6 +23,18 @@ interface Unit {
   hp: number;
   movement: number;
   civID: number;
+  promotionClass: PromotionClass;
+}
+
+interface RangedUnit extends Unit {
+  attackRange: number;
+}
+
+enum PromotionClass {
+  CIVILLIAN,
+  MELEE,
+  RANGED,
+  RECON,
 }
 
 interface Improvement {
@@ -31,6 +43,7 @@ interface Improvement {
   storage: ResourceStorage;
   errand?: Errand;
   metadata?: any;
+  isNatural: boolean;
 }
 
 enum ErrandType {
@@ -92,6 +105,16 @@ type Coords = {
 };
 
 type MovementCost = [number, number];
+
+const canTrainUnits: { [improvement: string]: boolean } = {
+  'settlement': true,
+  'encampment': true,
+};
+
+const canResearch: { [improvement: string]: boolean } = {
+  'settlement': true,
+  'campus': true,
+};
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
@@ -209,6 +232,11 @@ class World {
     return farmableTiles[tile.type];
   }
 
+  areSameCoords(pos1: Coords | null, pos2: Coords | null): boolean {
+    if (pos1 === null || pos2 === null) return false;
+    return pos1.x === pos2.x && pos1.y === pos2.y;
+  }
+
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
   getTilesInRange(srcPos: Coords, range: number, mode = 0): { [key: string]: Coords } {
     // BFS to find all tiles within `range` steps
@@ -244,8 +272,7 @@ class World {
     return paths;
   }
 
-  moveUnit(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attack: boolean): void {
-    console.log(srcPos, dstPos, pathMap);
+  findPath(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }): Coords[] {
     let curPos: Coords = dstPos;
     const path: Coords[] = [];
     while (this.posIndex(srcPos) !== this.posIndex(curPos)) {
@@ -254,6 +281,21 @@ class World {
       curPos = pathMap[this.posIndex(curPos)];
     }
     path.reverse();
+    return path;
+  }
+
+  attack(srcPos: Coords, dstPos: Coords, attacker: RangedUnit) {
+    const reachableTiles = this.getTilesInRange(srcPos, attacker.attackRange)
+    if (Object.keys(reachableTiles).includes(this.posIndex(dstPos).toString())) {
+      this.sendActions([
+        ['attack', [ srcPos, dstPos ]]
+      ]);
+    }
+  }
+
+  moveUnit(srcPos: Coords, dstPos: Coords, pathMap: { [key: string]: Coords }, attack: boolean): void {
+    console.log(srcPos, dstPos, pathMap);
+    const path = this.findPath(srcPos, dstPos, pathMap);
     this.sendActions([
       ['moveUnit', [ srcPos, path, attack ]]
     ]);
@@ -287,11 +329,10 @@ class World {
   }
 
   fetchImprovementCatalogs(improvement: Improvement, coords: Coords): void {
-    if (improvement.type === 'encampment') {
-      // change this check later, to be more general
+    if (canTrainUnits[improvement.type]) {
       this.sendActions([[ 'getUnitCatalog', [coords] ]])
-    } else if (improvement.type === 'campus') {
-      // change this check later, to be more general
+    }
+    if (canResearch[improvement.type]) {
       this.sendActions([[ 'getKnowledgeCatalog', [coords] ]])
     }
   }
@@ -467,7 +508,7 @@ class World {
     this.on.update.tileUpdate = (pos: Coords, tile: Tile): void => {
       this.tiles[this.posIndex(pos)] = tile;
       if (this.selectedPos && pos.x === this.selectedPos.x && pos.y === this.selectedPos.y) {
-        if (tile.improvement) {
+        if (tile.improvement && !tile.improvement.isNatural) {
           ui.hideSidebarMenu();
           ui.showSidebarMenu(this, pos, tile);
           this.fetchImprovementCatalogs(tile.improvement, pos);
@@ -488,6 +529,12 @@ class World {
         const unit = this.getTile(endPos).unit;
         if (unit && unit.movement === 0) {
           this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
+        }
+        if (this.areSameCoords(camera.selectedUnitPos, startPos)) {
+          camera.deselectUnit(this);
+          if (unit.movement > 0) {
+            camera.selectUnit(this, endPos, unit);
+          }
         }
       }
     };
@@ -579,7 +626,7 @@ class World {
     this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
       this.selectedPos = coords;
       ui.showTileInfoMenu(this, coords, tile);
-      if (tile.improvement) {
+      if (tile.improvement && !tile.improvement.isNatural) {
         this.fetchImprovementCatalogs(tile.improvement, coords);
         ui.showSidebarMenu(this, coords, tile);
       } else {

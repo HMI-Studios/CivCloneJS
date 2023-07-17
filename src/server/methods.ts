@@ -3,6 +3,7 @@ import { Player } from './game/player';
 import { Map, MapOptions } from './game/map';
 import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
+import { PromotionClass } from './game/map/tile/unit';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -52,7 +53,7 @@ export const games: { [gameID: number] : Game } = {
 (async () => {
   games[1] = await Game.load('singleplayer test')
   // games[2] = await Game.load('no units test')
-  // games[2] = await Game.load('multiplayer test')
+  games[2] = await Game.load('multiplayer test')
 })()
 
 const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
@@ -328,6 +329,51 @@ const methods: {
     }
   },
 
+  attack: (ws: WebSocket, srcCoords: Coords, targetCoords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    console.log(srcCoords, targetCoords);
+
+    if (game) {
+      const world = game.world;
+      const map = world.map;
+
+      const src = map.getTile(srcCoords);
+      const unit = src.unit;
+
+      const target = map.getTile(targetCoords);
+
+      if ( !unit || unit.civID !== civID ) {
+        game.sendUpdates();
+        return;
+      }
+
+      if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
+        if (unit.promotionClass === PromotionClass.RANGED) {
+          world.rangedCombat(unit, target.unit);
+          unit.movement = 0;
+        } else {
+          world.meleeCombat(unit, target.unit);
+          unit.movement = 0;
+        }
+      }
+
+      game.sendUpdates();
+
+      // In case we later support units being moved as a result of them attacking,
+      // we want to send a unit position update here. It also simplifies frontend logic.
+      game.sendToCiv(civID, {
+        update: [
+          ['unitPositionUpdate', [srcCoords, unit.coords]],
+        ],
+      });
+    }
+  },
+
   moveUnit: (ws: WebSocket, srcCoords: Coords, path: Coords[], attack: boolean) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
@@ -358,20 +404,8 @@ const methods: {
           break;
         }
 
-        // mark tiles currently visible by unit as unseen
-        const srcVisible = map.getVisibleTilesCoords(unit);
-        for (const coords of srcVisible) {
-          map.setTileVisibility(civID, coords, false);
-        }
-
         unit.movement -= dst.getMovementCost(unit);
         map.moveUnitTo(unit, dstCoords);
-
-        // mark tiles now visible by unit as seen
-        const newVisible = map.getVisibleTilesCoords(unit);
-        for (const coords of newVisible) {
-          map.setTileVisibility(civID, coords, true);
-        }
 
         src = dst;
         finalCoords = dstCoords;
@@ -420,6 +454,30 @@ const methods: {
         }
 
         game.sendUpdates();
+      }
+    }
+  },
+
+  /**
+   * The list of improvements the builder on the given coords is able to build
+   * @param coords 
+   */
+  getImprovementCatalog: (ws: WebSocket, coords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+      const tile = map.getTile(coords);
+      if (tile.owner?.civID === civID && tile.unit && map.canBuildOn(tile)) {
+        game.sendToCiv(civID, {
+          update: [
+            ['improvementCatalog', [coords, tile.getImprovementCatalog()]],
+          ],
+        });
       }
     }
   },

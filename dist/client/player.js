@@ -7,7 +7,10 @@ const errandTypeTable = {
 const unitActionsTable = {
     'settler': ['settleCity'],
     'scout': [],
-    'builder': ['buildFarm', 'buildEncampment'],
+    'builder': ['build'],
+    'warrior': [],
+    'slinger': [],
+    'archer': [],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
@@ -15,25 +18,14 @@ const unitActionsFnTable = {
         const name = prompt(`${translate('menu.city.prompt')}:`);
         return ['settleCity', [pos, name]];
     },
-    'buildFarm': (pos) => {
-        return ['buildImprovement', [pos, 'farm']];
-    },
-    'buildEncampment': (pos) => {
-        return ['buildImprovement', [pos, 'encampment']];
+    'build': (pos, improvement) => {
+        return ['buildImprovement', [pos, improvement]];
     },
 };
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
         const tile = world.getTile(pos);
         return world.canSettleOn(tile);
-    },
-    'buildFarm': (world, pos) => {
-        const tile = world.getTile(pos);
-        return world.canBuildOn(tile) && world.canFarmOn(tile);
-    },
-    'buildEncampment': (world, pos) => {
-        const tile = world.getTile(pos);
-        return world.canBuildOn(tile) && !world.isRiver(tile);
     },
 };
 const iconPathTable = {
@@ -340,11 +332,29 @@ class UI {
     }
     showUnitActionsMenu(world, pos, unit) {
         for (const action of unitActionsTable[unit.type]) {
+            if (action === 'build') {
+                world.sendActions([['getImprovementCatalog', [pos]]]);
+                world.on.update.improvementCatalog = (catalogPos, catalog) => {
+                    if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
+                        return;
+                    for (const item of catalog) {
+                        const actionBtn = new Button(this.createElement('button'), {
+                            // Note that we have the cost info here, we are for now choosing not to display it.
+                            text: `${translate(`unit.action.${action}`)} ${translate(`improvement.${item.type}`)}`,
+                        });
+                        actionBtn.bindCallback(() => {
+                            world.sendActions([unitActionsFnTable[action](pos, item.type)]);
+                        });
+                        this.elements.unitActionsMenu.appendChild(actionBtn.element);
+                    }
+                };
+                continue;
+            }
             if (!unitActionsAvailabilityTable[action](world, pos)) {
                 continue;
             }
             const actionBtn = new Button(this.createElement('button'), {
-                text: action,
+                text: translate(`unit.action.${action}`),
             });
             actionBtn.bindCallback(() => {
                 world.sendActions([unitActionsFnTable[action](pos)]);

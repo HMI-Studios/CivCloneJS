@@ -22,6 +22,8 @@ export class Knowledge {
   improvements: string[];
 
   public static knowledgeTree: { [name: string]: Knowledge } = {
+    'start': new Knowledge('start', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 0 }), [], {units: ['settler', 'builder']}),
+    'food_0': new Knowledge('food_0', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 10 }), [], {improvements: ['farm']}),
     'military_0': new Knowledge('military_0', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), [], {units: ['warrior', 'slinger']}),
     'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), [], {units: ['scout']}),
     'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), ['military_0'], {units: ['archer']}),
