@@ -152,18 +152,18 @@ class Tile {
      * @returns whether farms can be build on this tile
      */
     isFarmable() {
-        const farmableTiles = {
-            grass_lowlands: true,
-            plains: true,
+        const farmableTileTypes = {
+            'grass_lowlands': true,
+            'plains': true,
         };
-        return farmableTiles[this.type];
+        return this.type in farmableTileTypes;
     }
     /**
      *
      * @returns list of improvements the builder on this tile knows how to build
      */
     getBuildableImprovements() {
-        if (!(this.unit))
+        if (!this.unit)
             return [];
         return knowledge_1.Knowledge.getBuildableImprovements(this.getKnowledges(true))
             .filter((improvementType) => {

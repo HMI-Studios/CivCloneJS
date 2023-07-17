@@ -232,7 +232,8 @@ class World {
     return farmableTiles[tile.type];
   }
 
-  areSameCoords(pos1: Coords, pos2: Coords): boolean {
+  areSameCoords(pos1: Coords | null, pos2: Coords | null): boolean {
+    if (pos1 === null || pos2 === null) return false;
     return pos1.x === pos2.x && pos1.y === pos2.y;
   }
 
@@ -529,7 +530,7 @@ class World {
         if (unit && unit.movement === 0) {
           this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
         }
-        if (camera.selectedUnitPos?.x === startPos.x && camera.selectedUnitPos?.y === startPos.y) {
+        if (this.areSameCoords(camera.selectedUnitPos, startPos)) {
           camera.deselectUnit(this);
           if (unit.movement > 0) {
             camera.selectUnit(this, endPos, unit);

@@ -116,6 +116,8 @@ class World {
         return farmableTiles[tile.type];
     }
     areSameCoords(pos1, pos2) {
+        if (pos1 === null || pos2 === null)
+            return false;
         return pos1.x === pos2.x && pos1.y === pos2.y;
     }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
@@ -383,7 +385,6 @@ class World {
                 this.unusedUnits = unitPositions.map((_, index) => index);
             };
             this.on.update.unitPositionUpdate = (startPos, endPos) => {
-                var _a, _b;
                 const index = this.getUnitIndex(startPos);
                 if (index !== null) {
                     this.unitPositions[index] = endPos;
@@ -391,7 +392,7 @@ class World {
                     if (unit && unit.movement === 0) {
                         this.unusedUnits.splice(this.unusedUnits.indexOf(index), 1);
                     }
-                    if (((_a = camera.selectedUnitPos) === null || _a === void 0 ? void 0 : _a.x) === startPos.x && ((_b = camera.selectedUnitPos) === null || _b === void 0 ? void 0 : _b.y) === startPos.y) {
+                    if (this.areSameCoords(camera.selectedUnitPos, startPos)) {
                         camera.deselectUnit(this);
                         if (unit.movement > 0) {
                             camera.selectUnit(this, endPos, unit);

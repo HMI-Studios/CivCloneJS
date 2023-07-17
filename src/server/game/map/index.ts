@@ -245,14 +245,15 @@ export class Map {
     return coordsArray;
   }
 
-  canUnitSee(unit: Unit, targetCoords: Coords, isAttack = false): boolean {
+  canUnitSee(unit: Unit, targetCoords: Coords, options?: { isAttack?: boolean }): boolean {
+    const isAttack = options?.isAttack ?? false;
     const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? (unit.attackRange ?? 1) : unit.visionRange);
     return arrayIncludesCoords(visibleTiles, targetCoords);
   }
 
   canUnitAttack(unit: Unit, target: Unit): boolean {
     if (unit.promotionClass === PromotionClass.RANGED) {
-      return this.canUnitSee(unit, target.coords, true);
+      return this.canUnitSee(unit, target.coords, { isAttack: true });
     } else {
       return unit.isAdjacentTo(target.coords);
     }

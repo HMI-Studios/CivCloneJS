@@ -164,14 +164,15 @@ class Map {
         }
         return coordsArray;
     }
-    canUnitSee(unit, targetCoords, isAttack = false) {
-        var _a;
-        const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? ((_a = unit.attackRange) !== null && _a !== void 0 ? _a : 1) : unit.visionRange);
+    canUnitSee(unit, targetCoords, options) {
+        var _a, _b;
+        const isAttack = (_a = options === null || options === void 0 ? void 0 : options.isAttack) !== null && _a !== void 0 ? _a : false;
+        const visibleTiles = this.getVisibleTilesCoords(unit, isAttack ? ((_b = unit.attackRange) !== null && _b !== void 0 ? _b : 1) : unit.visionRange);
         return (0, utils_1.arrayIncludesCoords)(visibleTiles, targetCoords);
     }
     canUnitAttack(unit, target) {
         if (unit.promotionClass === unit_1.PromotionClass.RANGED) {
-            return this.canUnitSee(unit, target.coords, true);
+            return this.canUnitSee(unit, target.coords, { isAttack: true });
         }
         else {
             return unit.isAdjacentTo(target.coords);
