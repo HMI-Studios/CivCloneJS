@@ -163,7 +163,6 @@ class Map {
             this.getVisibleTilesRecurse(newCoords, this.getTile(unit.coords).getTotalElevation() + slope, slope, range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
         }
         return coordsArray;
-        // return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
     }
     canUnitSee(unit, targetCoords, isAttack = false) {
         var _a;

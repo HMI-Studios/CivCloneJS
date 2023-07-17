@@ -243,7 +243,6 @@ export class Map {
       );
     }
     return coordsArray;
-    // return [unit.coords, ...this.getNeighborsCoords(unit.coords, range ?? unit.visionRange)];
   }
 
   canUnitSee(unit: Unit, targetCoords: Coords, isAttack = false): boolean {
