@@ -14,6 +14,7 @@ class Tile {
         this.unit = undefined;
         this.improvement = undefined;
         this.owner = undefined;
+        this.walls = [null, null, null, null, null, null];
         this.discoveredBy = {};
         this.visibleTo = {};
         this.baseYield = baseYield;
@@ -57,6 +58,7 @@ class Tile {
             movementCost: this.movementCost,
             improvement: (_a = this.improvement) === null || _a === void 0 ? void 0 : _a.getData(),
             owner: (_b = this.owner) === null || _b === void 0 ? void 0 : _b.getData(),
+            walls: this.walls,
             yield: this.getTileYield(),
             elevation: this.elevation,
         };

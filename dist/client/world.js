@@ -14,6 +14,11 @@ var PromotionClass;
     PromotionClass[PromotionClass["RANGED"] = 2] = "RANGED";
     PromotionClass[PromotionClass["RECON"] = 3] = "RECON";
 })(PromotionClass || (PromotionClass = {}));
+var WallType;
+(function (WallType) {
+    WallType[WallType["CLIFF"] = 0] = "CLIFF";
+    WallType[WallType["WALL"] = 1] = "WALL";
+})(WallType || (WallType = {}));
 var ErrandType;
 (function (ErrandType) {
     ErrandType[ErrandType["CONSTRUCTION"] = 0] = "CONSTRUCTION";
@@ -45,6 +50,7 @@ class World {
             error: {},
             event: {},
         };
+        this.listeners = {};
         this.civs = {};
         this.player = {
             name: null,
@@ -480,6 +486,11 @@ class World {
             };
             this.on.event.selectTile = (coords, tile) => {
                 this.selectedPos = coords;
+                if (this.listeners.selectTile) {
+                    this.listeners.selectTile(coords, tile);
+                    this.listeners.selectTile = null;
+                    return;
+                }
                 ui.showTileInfoMenu(this, coords, tile);
                 if (tile.improvement && !tile.improvement.isNatural) {
                     this.fetchImprovementCatalogs(tile.improvement, coords);
@@ -493,6 +504,18 @@ class World {
                 this.selectedPos = null;
                 ui.hideTileInfoMenu();
                 ui.hideSidebarMenu();
+            };
+            this.on.event.buildWall = (pos, callback) => {
+                camera.deselectUnit(world);
+                const neighbors = this.getNeighbors(pos);
+                const newHighlightedTiles = {};
+                for (const pos of neighbors) {
+                    newHighlightedTiles[this.posIndex(pos)] = pos;
+                }
+                camera.highlightedTiles = newHighlightedTiles;
+                this.listeners.selectTile = (coords, tile) => {
+                    callback(coords, tile);
+                };
             };
             yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {
                 console.error('Connection Failed. Reload page to retry.');

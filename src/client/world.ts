@@ -46,6 +46,15 @@ interface Improvement {
   isNatural: boolean;
 }
 
+enum WallType {
+  CLIFF,
+  WALL,
+}
+
+interface Wall {
+  type: WallType;
+}
+
 enum ErrandType {
   CONSTRUCTION,
   UNIT_TRAINING,
@@ -128,6 +137,7 @@ class World {
   socket: WebSocket;
   socketDidOpen: boolean;
   on: { update: WorldEventHandlerMap, error: WorldEventHandlerMap, event: WorldEventHandlerMap };
+  listeners: { [name: string]: ((...args: any) => void) | null };
   civs: { [key: string]: Civ };
   player: Player;
   constructor() {
@@ -144,6 +154,7 @@ class World {
       error: {},
       event: {},
     };
+    this.listeners = {};
     this.civs = {};
     this.player = {
       name: null,
@@ -625,6 +636,11 @@ class World {
 
     this.on.event.selectTile = (coords: Coords, tile: Tile): void => {
       this.selectedPos = coords;
+      if (this.listeners.selectTile) {
+        this.listeners.selectTile(coords, tile);
+        this.listeners.selectTile = null;
+        return;
+      }
       ui.showTileInfoMenu(this, coords, tile);
       if (tile.improvement && !tile.improvement.isNatural) {
         this.fetchImprovementCatalogs(tile.improvement, coords);
@@ -638,6 +654,21 @@ class World {
       this.selectedPos = null;
       ui.hideTileInfoMenu();
       ui.hideSidebarMenu();
+    }
+
+    this.on.event.buildWall = (pos: Coords, callback: (...args: any) => void): void => {
+      camera.deselectUnit(world);
+      const neighbors = this.getNeighbors(pos);
+      const newHighlightedTiles = {};
+      for (const pos of neighbors) {
+        newHighlightedTiles[this.posIndex(pos)] = pos;
+      }
+
+      camera.highlightedTiles = newHighlightedTiles;
+
+      this.listeners.selectTile = (coords: Coords, tile: Tile): void => {
+        callback(coords, tile);
+      }
     }
 
     await this.connect().catch(async () => {
