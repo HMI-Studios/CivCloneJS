@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Knowledge = exports.KnowledgeBranch = void 0;
+exports.KnowledgeBucket = exports.KnowledgeSourceLinks = exports.KnowledgeSource = exports.Knowledge = exports.KnowledgeBranch = void 0;
 const yield_1 = require("./yield");
 var KnowledgeBranch;
 (function (KnowledgeBranch) {
@@ -88,6 +88,182 @@ Knowledge.knowledgeTree = {
     'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), [], { units: ['scout'] }),
     'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), ['military_0'], { units: ['archer'] }),
     'science_1': new Knowledge('science_1', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 10 }), [], { improvements: ['campus'] }),
+    'military_1': new Knowledge('military_1', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 10 }), ['military_0'], { improvements: ['encampment'] }),
     'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), ['recon_0', 'science_1'], { units: ['spy'] }),
 };
+const KNOWLEDGE_SPREAD_DELAY = 5;
+const KNOWLEDGE_SPREAD_SPEED = 1;
+class KnowledgeSource {
+    constructor(knowledges) {
+        this.knowledges = knowledges;
+        this.timeline = [];
+        this.completionQueue = [];
+        for (const knowledge in this.knowledges) {
+            if (!(this.knowledges[knowledge] < 100)) {
+                this.completionQueue.push(knowledge);
+            }
+        }
+    }
+    static fromLinks(links) {
+        const knowledges = links.getKnowledgeMap();
+        return new KnowledgeSource(knowledges);
+    }
+    /**
+     *
+     * @returns knowledge map
+     */
+    getKnowledgeMap() {
+        return this.knowledges;
+    }
+    /**
+     * @param completed whether the knowledge must have 100 points to be included
+     * @returns list of knowledge names
+     */
+    getKnowledges(currentTurn = null) {
+        if (currentTurn === null) {
+            const knowledges = Object.keys(this.knowledges).map((knowledge) => [knowledge, this.knowledges[knowledge]]);
+            return knowledges.filter(([_, progress]) => !(progress < 100));
+        }
+        else {
+            return this.timeline.map(([knowledge, turn]) => {
+                const turnDiff = currentTurn - turn;
+                const knowledgeShare = Math.min(Math.max(0, turnDiff + KNOWLEDGE_SPREAD_DELAY) * (100 / KNOWLEDGE_SPREAD_DELAY), 100);
+                return [knowledge, Math.round(knowledgeShare)];
+            });
+        }
+    }
+    /**
+     * Returns `true` if this bucket has 100 points for all knowledges in `knowledgeNames`, else `false`.
+     * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
+     */
+    hasKnowledges(knowledgeNames) {
+        var _a;
+        for (const name of knowledgeNames) {
+            if (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)
+                return false;
+        }
+        return true;
+    }
+    /**
+     *
+     * @param knowledge The knowledge instance to be added.
+     * @param amount The amount of the knowledge to be added. (0 - 100)
+     * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present in this bucket.
+     */
+    addKnowledge(knowledge, amount, requirementPenalty, maxPoints = 100) {
+        var _a, _b;
+        if (maxPoints > 100 || maxPoints < 0)
+            throw 'Invalid Knowledge Cap!';
+        if (!this.hasKnowledges(knowledge.prerequisites))
+            amount *= requirementPenalty;
+        const wasNotCompleted = this.knowledges[knowledge.name] < 100;
+        this.knowledges[knowledge.name] = Math.min(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, Math.max((_b = this.knowledges[knowledge.name]) !== null && _b !== void 0 ? _b : 0, maxPoints));
+        if (this.knowledges[knowledge.name] === 100 && wasNotCompleted) {
+            this.completionQueue.push(knowledge.name);
+        }
+    }
+    turn(world) {
+        for (const knowledge of this.completionQueue) {
+            this.timeline.push([knowledge, world.currentTurn]);
+        }
+    }
+}
+exports.KnowledgeSource = KnowledgeSource;
+class KnowledgeSourceLinks {
+    constructor() {
+        this.sources = [];
+    }
+    /**
+     *
+     * @returns knowledge map
+     */
+    getKnowledgeMap() {
+        const knowledges = {};
+        for (const [source, currentTurn] of this.sources) {
+            for (const [knowledge, progress] of source.getKnowledges(currentTurn)) {
+                if (!(knowledge in knowledges))
+                    knowledges[knowledge] = 0;
+                knowledges[knowledge] += progress;
+            }
+        }
+        return knowledges;
+    }
+    /**
+     *
+     * @returns list of knowledge names
+     */
+    getKnowledges() {
+        const knowledges = this.getKnowledgeMap();
+        return Object.keys(knowledges).map(knowledge => ([knowledge, knowledges[knowledge]]));
+    }
+    turn(world) {
+    }
+}
+exports.KnowledgeSourceLinks = KnowledgeSourceLinks;
+class KnowledgeBucket {
+    constructor(knowledges) {
+        if (knowledges) {
+            this.source = new KnowledgeSource(knowledges);
+        }
+        else {
+            this.source = new KnowledgeSourceLinks();
+        }
+    }
+    export() {
+        // TODO - this does NOT account for Knowledge Source Links! FIXME!
+        return this.getKnowledgeMap();
+    }
+    /**
+     * @param completed whether the knowledge must have 100 points to be included
+     * @returns list of knowledge names
+     */
+    getKnowledges(completed) {
+        const knowledgeNames = this.source.getKnowledges().filter(([knowledge, progress]) => (!completed || progress === 100)).map(([knowledge, _]) => knowledge);
+        return knowledgeNames;
+    }
+    /**
+     *
+     * @returns knowledge map
+     */
+    getKnowledgeMap() {
+        return this.source.getKnowledgeMap();
+    }
+    /**
+     * Returns `true` if this bucket has 100 points for all knowledges in `knowledgeNames`, else `false`.
+     * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
+     */
+    hasKnowledges(knowledgeNames) {
+        if (this.source instanceof KnowledgeSourceLinks) {
+            const knowledges = {};
+            for (const name of this.getKnowledges(true)) {
+                knowledges[name] = true;
+            }
+            for (const name of knowledgeNames) {
+                if (!(name in knowledges))
+                    return false;
+            }
+            return true;
+        }
+        else {
+            return this.source.hasKnowledges(knowledgeNames);
+        }
+    }
+    /**
+     *
+     * @param knowledge The knowledge instance to be added.
+     * @param amount The amount of the knowledge to be added. (0 - 100)
+     * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present in this bucket.
+     */
+    addKnowledge(knowledge, amount, requirementPenalty, maxPoints = 100) {
+        if (maxPoints > 100 || maxPoints < 0)
+            throw 'Invalid Knowledge Cap!';
+        if (this.source instanceof KnowledgeSourceLinks)
+            this.source = KnowledgeSource.fromLinks(this.source);
+        this.source.addKnowledge(knowledge, amount, requirementPenalty, maxPoints);
+    }
+    turn(world) {
+        this.source.turn(world);
+    }
+}
+exports.KnowledgeBucket = KnowledgeBucket;
 //# sourceMappingURL=knowledge.js.map
