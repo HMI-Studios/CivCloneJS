@@ -51,6 +51,7 @@ class World {
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
             this.leaderPool[i] = new leader_1.Leader(i);
         }
+        this.currentTurn = 1;
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
     }
     export() {
@@ -244,6 +245,7 @@ class World {
     }
     turn() {
         this.map.turn(this);
+        this.currentTurn++;
     }
 }
 exports.World = World;

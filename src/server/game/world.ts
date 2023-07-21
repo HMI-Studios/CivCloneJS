@@ -19,6 +19,8 @@ export class World {
   leaderPool: { [leaderID: number]: Leader };
   updates: { (civID: number): Event }[];
 
+  public currentTurn: number;
+
   constructor(map?: Map, civsCount?: number) {
     this.updates = [];
 
@@ -72,6 +74,8 @@ export class World {
     for (let i = 0; i < leaderTemplates.length; i++) {
       this.leaderPool[i] = new Leader(i);
     }
+
+    this.currentTurn = 1;
 
 
     // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
@@ -295,5 +299,7 @@ export class World {
 
   turn(): void {
     this.map.turn(this);
+
+    this.currentTurn++;
   }
 }
