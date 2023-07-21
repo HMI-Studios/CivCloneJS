@@ -663,7 +663,7 @@ class World {
             height: Number(height),
           }, {
             gameName,
-            seed: Number(seed),
+            seed: seed ? Number(seed) : null,
           }]]])
           ui.setView('gameList');
         } catch {
