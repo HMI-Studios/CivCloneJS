@@ -117,8 +117,9 @@ export class Knowledge {
   }
 }
 
-const KNOWLEDGE_SPREAD_DELAY = 5;
-const KNOWLEDGE_SPREAD_SPEED = 1;
+export const KNOWLEDGE_SPREAD_RANGE = 5;
+export const KNOWLEDGE_SPREAD_SPEED = 1;
+export const KNOWLEDGE_SPREAD_DELAY = 5;
 
 export class KnowledgeSource {
   private knowledges: KnowledgeMap;
@@ -210,6 +211,10 @@ export class KnowledgeSourceLinks {
     this.sources = [];
   }
 
+  addLink(source: KnowledgeSource, currentTurn: number): void {
+    this.sources.push([source, currentTurn]);
+  }
+
   /**
    * 
    * @returns knowledge map
@@ -237,7 +242,7 @@ export class KnowledgeSourceLinks {
   }
 
   turn(world: World): void {
-    
+    // Nothing to do here. We can't update our links here, since the bucket by design does not know what tile it's on.
   }
 }
 
@@ -255,6 +260,23 @@ export class KnowledgeBucket {
   export() {
     // TODO - this does NOT account for Knowledge Source Links! FIXME!
     return this.getKnowledgeMap();
+  }
+
+  getSource(): KnowledgeSource | null {
+    if (this.source instanceof KnowledgeSource) return this.source;
+    else return null;
+  }
+
+  hasLinks(): boolean {
+    return this.source instanceof KnowledgeSourceLinks;
+  }
+
+  addLink(bucket: KnowledgeBucket, currentTurn: number): void {
+    if (this.source instanceof KnowledgeSourceLinks) {
+      const source = bucket.getSource();
+      if (!source) return;
+      this.source.addLink(source, currentTurn);
+    } else return;
   }
 
   /**

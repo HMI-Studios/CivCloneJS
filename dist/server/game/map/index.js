@@ -9,6 +9,7 @@ const utils_1 = require("../../utils");
 const trade_1 = require("./trade");
 const yield_1 = require("./tile/yield");
 const errand_1 = require("./tile/errand");
+const knowledge_1 = require("./tile/knowledge");
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
@@ -391,24 +392,27 @@ class Map {
     turn(world) {
         // Tiles
         this.forEachTile((tile, coords) => {
-            var _a;
+            var _a, _b;
             if (tile.improvement) {
                 tile.improvement.work(world);
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
                     tile.improvement.errand.complete(world, this, tile);
                     delete tile.improvement.errand;
                 }
+                if ((_b = tile.improvement.knowledge) === null || _b === void 0 ? void 0 : _b.hasLinks()) {
+                    const [_, posDistances] = this.getPathTree(coords, knowledge_1.KNOWLEDGE_SPREAD_RANGE, 0);
+                    for (const pos in posDistances) {
+                        const otherTile = this.tiles[pos];
+                        if (!otherTile ||
+                            !otherTile.improvement ||
+                            !otherTile.improvement.knowledge ||
+                            otherTile.improvement.knowledge.hasLinks())
+                            continue;
+                        const distance = posDistances[pos];
+                        tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / knowledge_1.KNOWLEDGE_SPREAD_SPEED)));
+                    }
+                }
             }
-            // const knowledges = tile.getKnowledges(false);
-            // if (knowledges.length > 0) {
-            //   const spillover = tile.getKnowledgeSpillover();
-            //   for (const name in spillover) {
-            //     const [spilloverPoints, maxPoints] = spillover[name];
-            //     for (const neighborCoords of this.getNeighborsCoords(coords)) {
-            //       this.getTile(neighborCoords).addKnowledge(Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
-            //     }
-            //   }
-            // }
         });
         // Traders
         for (let i = 0; i < this.traders.length; i++) {

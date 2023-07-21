@@ -7,7 +7,7 @@ import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
-import { Knowledge, KnowledgeMap } from './tile/knowledge';
+import { Knowledge, KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -499,6 +499,21 @@ export class Map {
         if (tile.improvement.errand?.completed) {
           tile.improvement.errand.complete(world, this, tile);
           delete tile.improvement.errand;
+        }
+
+        if (tile.improvement.knowledge?.hasLinks()) {
+          const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
+          for (const pos in posDistances) {
+            const otherTile: Tile | undefined = this.tiles[pos];
+            if (
+              !otherTile ||
+              !otherTile.improvement ||
+              !otherTile.improvement.knowledge ||
+              otherTile.improvement.knowledge.hasLinks()
+            ) continue;
+            const distance = posDistances[pos];
+            tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
+          }
         }
       }
     });

@@ -184,7 +184,7 @@ export class Tile {
    * @returns list of units classes this improvement knows how to train
    */
    getTrainableUnitTypes(): string[] {
-    if (!this.improvement) return [];
+    if (!this.improvement || !this.improvement.knowledge) return [];
     const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => ({ ...obj, [name]: true }), {});
     return Knowledge.getTrainableUnits(this.improvement.knowledge.getKnowledges(true))
       .filter(unitType => trainableUnitClasses[Unit.promotionClassTable[unitType]]);
@@ -217,7 +217,7 @@ export class Tile {
    * @returns type and cost of knowledges this tile knows how to research, or null if it cannot research
    */
   getKnowledgeCatalog(): Knowledge[] | null {
-    if (!this.improvement) return null;
+    if (!this.improvement || !this.improvement.knowledge) return null;
     const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
     const completedKnowledges = this.improvement.knowledge.getKnowledges(true);
     const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);

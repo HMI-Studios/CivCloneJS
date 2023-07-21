@@ -12,7 +12,7 @@ export type ImprovementData = {
   errand?: ErrandData;
   metadata?: any;
   isNatural: boolean;
-  knowledge: KnowledgeMap;
+  knowledge?: KnowledgeMap;
 };
 
 export interface ImprovementConstructionCost {
@@ -65,7 +65,7 @@ export class Improvement {
   protected suppliers: Trader[];
   protected storage: ResourceStore;
 
-  public knowledge: KnowledgeBucket;
+  public knowledge?: KnowledgeBucket;
 
   static makeCatalog(types: string[]): ImprovementConstructionCost[] {
     return types.map(type => (
@@ -85,8 +85,9 @@ export class Improvement {
     this.suppliers = [];
     if (this.isNatural) {
       this.yield = new Yield({});
+    } else {
+      this.knowledge = new KnowledgeBucket(knowledges);
     }
-    this.knowledge = new KnowledgeBucket(knowledges);
   }
 
   export() {
@@ -97,7 +98,7 @@ export class Improvement {
       yield: this.yield,
       storage: this.storage,
       errand: this.errand?.export(),
-      knowledge: this.knowledge.export(),
+      knowledge: this.knowledge?.export(),
     };
   }
 
@@ -113,7 +114,7 @@ export class Improvement {
     if (data.errand) improvement.errand = WorkErrand.import(improvement.storage, data.errand);
     improvement.traders = [];
     improvement.suppliers = [];
-    improvement.knowledge = new KnowledgeBucket(data.knowledge);
+    if (data.isNatural) improvement.knowledge = new KnowledgeBucket(data.knowledge);
     return improvement;
   }
 
@@ -124,7 +125,7 @@ export class Improvement {
       storage: this.storage,
       errand: this.errand?.getData(),
       isNatural: this.isNatural,
-      knowledge: this.knowledge.getKnowledgeMap(),
+      knowledge: this.knowledge?.getKnowledgeMap(),
     };
   }
 
@@ -164,7 +165,7 @@ export class Improvement {
 
     // }
 
-    this.knowledge.turn(world);
+    this.knowledge?.turn(world);
 
     if (this.errand) {
       if (this.storage.fulfills(this.errand.cost)) {

@@ -21,13 +21,15 @@ class Improvement {
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
         }
-        this.knowledge = new knowledge_1.KnowledgeBucket(knowledges);
+        else {
+            this.knowledge = new knowledge_1.KnowledgeBucket(knowledges);
+        }
     }
     static makeCatalog(types) {
         return types.map(type => ({ type, cost: errand_1.WorkErrand.errandCostTable[errand_1.ErrandType.CONSTRUCTION][type] }));
     }
     export() {
-        var _a;
+        var _a, _b;
         return {
             type: this.type,
             pillaged: this.pillaged,
@@ -35,7 +37,7 @@ class Improvement {
             yield: this.yield,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.export(),
-            knowledge: this.knowledge.export(),
+            knowledge: (_b = this.knowledge) === null || _b === void 0 ? void 0 : _b.export(),
         };
     }
     static import(data) {
@@ -51,18 +53,19 @@ class Improvement {
             improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];
         improvement.suppliers = [];
-        improvement.knowledge = new knowledge_1.KnowledgeBucket(data.knowledge);
+        if (data.isNatural)
+            improvement.knowledge = new knowledge_1.KnowledgeBucket(data.knowledge);
         return improvement;
     }
     getData() {
-        var _a;
+        var _a, _b;
         return {
             type: this.type,
             pillaged: this.pillaged,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
             isNatural: this.isNatural,
-            knowledge: this.knowledge.getKnowledgeMap(),
+            knowledge: (_b = this.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap(),
         };
     }
     /**
@@ -94,9 +97,10 @@ class Improvement {
     }
     work(world) {
         // TODO - ADD POPULATION/COST CHECK
+        var _a;
         // if (type === 'farm') {
         // }
-        this.knowledge.turn(world);
+        (_a = this.knowledge) === null || _a === void 0 ? void 0 : _a.turn(world);
         if (this.errand) {
             if (this.storage.fulfills(this.errand.cost)) {
                 this.errand.completed = true;

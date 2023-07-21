@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.KnowledgeBucket = exports.KnowledgeSourceLinks = exports.KnowledgeSource = exports.Knowledge = exports.KnowledgeBranch = void 0;
+exports.KnowledgeBucket = exports.KnowledgeSourceLinks = exports.KnowledgeSource = exports.KNOWLEDGE_SPREAD_DELAY = exports.KNOWLEDGE_SPREAD_SPEED = exports.KNOWLEDGE_SPREAD_RANGE = exports.Knowledge = exports.KnowledgeBranch = void 0;
 const yield_1 = require("./yield");
 var KnowledgeBranch;
 (function (KnowledgeBranch) {
@@ -91,8 +91,9 @@ Knowledge.knowledgeTree = {
     'military_1': new Knowledge('military_1', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 10 }), ['military_0'], { improvements: ['encampment'] }),
     'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), ['recon_0', 'science_1'], { units: ['spy'] }),
 };
-const KNOWLEDGE_SPREAD_DELAY = 5;
-const KNOWLEDGE_SPREAD_SPEED = 1;
+exports.KNOWLEDGE_SPREAD_RANGE = 5;
+exports.KNOWLEDGE_SPREAD_SPEED = 1;
+exports.KNOWLEDGE_SPREAD_DELAY = 5;
 class KnowledgeSource {
     constructor(knowledges) {
         this.knowledges = knowledges;
@@ -127,7 +128,7 @@ class KnowledgeSource {
         else {
             return this.timeline.map(([knowledge, turn]) => {
                 const turnDiff = currentTurn - turn;
-                const knowledgeShare = Math.min(Math.max(0, turnDiff + KNOWLEDGE_SPREAD_DELAY) * (100 / KNOWLEDGE_SPREAD_DELAY), 100);
+                const knowledgeShare = Math.min(Math.max(0, turnDiff + exports.KNOWLEDGE_SPREAD_DELAY) * (100 / exports.KNOWLEDGE_SPREAD_DELAY), 100);
                 return [knowledge, Math.round(knowledgeShare)];
             });
         }
@@ -173,6 +174,9 @@ class KnowledgeSourceLinks {
     constructor() {
         this.sources = [];
     }
+    addLink(source, currentTurn) {
+        this.sources.push([source, currentTurn]);
+    }
     /**
      *
      * @returns knowledge map
@@ -197,6 +201,7 @@ class KnowledgeSourceLinks {
         return Object.keys(knowledges).map(knowledge => ([knowledge, knowledges[knowledge]]));
     }
     turn(world) {
+        // Nothing to do here. We can't update our links here, since the bucket by design does not know what tile it's on.
     }
 }
 exports.KnowledgeSourceLinks = KnowledgeSourceLinks;
@@ -212,6 +217,25 @@ class KnowledgeBucket {
     export() {
         // TODO - this does NOT account for Knowledge Source Links! FIXME!
         return this.getKnowledgeMap();
+    }
+    getSource() {
+        if (this.source instanceof KnowledgeSource)
+            return this.source;
+        else
+            return null;
+    }
+    hasLinks() {
+        return this.source instanceof KnowledgeSourceLinks;
+    }
+    addLink(bucket, currentTurn) {
+        if (this.source instanceof KnowledgeSourceLinks) {
+            const source = bucket.getSource();
+            if (!source)
+                return;
+            this.source.addLink(source, currentTurn);
+        }
+        else
+            return;
     }
     /**
      * @param completed whether the knowledge must have 100 points to be included
