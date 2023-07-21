@@ -445,7 +445,7 @@ const methods: {
 
       const unit = map.getTile(coords)?.unit;
       if (unit?.type === 'settler' && unit?.civID === civID) {
-        const validCityLocation = map.settleCityAt(coords, name, civID);
+        const validCityLocation = map.settleCityAt(coords, name, civID, unit);
 
         if (validCityLocation) {
           world.removeUnit(unit);
@@ -496,7 +496,7 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
-        map.startConstructionAt(coords, type, civID);
+        map.startConstructionAt(coords, type, civID, unit);
         game.sendUpdates();
       }
     }

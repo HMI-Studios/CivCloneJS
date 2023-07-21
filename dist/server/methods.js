@@ -379,7 +379,7 @@ const methods = {
             const map = world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
-                const validCityLocation = map.settleCityAt(coords, name, civID);
+                const validCityLocation = map.settleCityAt(coords, name, civID, unit);
                 if (validCityLocation) {
                     world.removeUnit(unit);
                 }
@@ -422,7 +422,7 @@ const methods = {
             const tile = map.getTile(coords);
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
-                map.startConstructionAt(coords, type, civID);
+                map.startConstructionAt(coords, type, civID, unit);
                 game.sendUpdates();
             }
         }
