@@ -501,19 +501,23 @@ export class Map {
           delete tile.improvement.errand;
         }
 
-        if (tile.improvement.knowledge?.hasLinks()) {
-          tile.improvement.knowledge.clearLinks();
-          const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
-          for (const pos in posDistances) {
-            const otherTile: Tile | undefined = this.tiles[pos];
-            if (
-              !otherTile ||
-              !otherTile.improvement ||
-              !otherTile.improvement.knowledge ||
-              otherTile.improvement.knowledge.hasLinks()
-            ) continue;
-            const distance = posDistances[pos];
-            tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
+        if (tile.improvement.knowledge) {
+          if (tile.improvement.knowledge.hasLinks()) {
+            tile.improvement.knowledge.clearLinks();
+            const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
+            for (const pos in posDistances) {
+              const otherTile: Tile | undefined = this.tiles[pos];
+              if (
+                !otherTile ||
+                !otherTile.improvement ||
+                !otherTile.improvement.knowledge ||
+                otherTile.improvement.knowledge.hasLinks()
+              ) continue;
+              const distance = posDistances[pos];
+              tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
+            }
+          } else if (tile.unit) {
+            tile.unit.knowledge.mergeKnowledge(tile.improvement.knowledge);
           }
         }
       }

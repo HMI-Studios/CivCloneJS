@@ -296,6 +296,19 @@ class KnowledgeBucket {
             this.source = KnowledgeSource.fromLinks(this.source);
         this.source.addKnowledge(knowledge, amount, requirementPenalty, maxPoints);
     }
+    mergeKnowledge(bucket) {
+        if (this.source instanceof KnowledgeSourceLinks)
+            return;
+        const bucketKnowledgeMap = bucket.getKnowledgeMap();
+        const thisKnowledgeMap = this.getKnowledgeMap();
+        for (const name in bucketKnowledgeMap) {
+            const bucketProgress = bucketKnowledgeMap[name];
+            const thisProgress = thisKnowledgeMap[name];
+            if (bucketProgress > thisProgress) {
+                this.addKnowledge(Knowledge.knowledgeTree[name], bucketProgress - thisProgress, 0.5); // TODO FIXME - magic number
+            }
+        }
+    }
     turn(world) {
         this.source.turn(world);
     }
