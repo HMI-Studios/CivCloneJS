@@ -374,9 +374,12 @@ class UI {
         unitHP.innerText = `${translate('unit.info.hp')}: ${unit.hp}%`;
         const unitMovement = this.createElement('span', { className: 'infoSpan' });
         unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
+        const unitKnowledge = this.createElement('span', { className: 'infoSpan' });
+        unitKnowledge.innerText = JSON.stringify(unit.knowledge);
         this.elements.unitInfoMenu.appendChild(unitName);
         this.elements.unitInfoMenu.appendChild(unitHP);
         this.elements.unitInfoMenu.appendChild(unitMovement);
+        this.elements.unitInfoMenu.appendChild(unitKnowledge);
         this.root.appendChild(this.elements.unitInfoMenu);
     }
     hideUnitInfoMenu() {
@@ -384,6 +387,7 @@ class UI {
         this.elements.unitInfoMenu.innerHTML = '';
     }
     showTileInfoMenu(world, pos, tile) {
+        var _a;
         this.elements.tileInfoMenu.innerHTML = '';
         const tileType = this.createElement('span', { className: 'infoSpan' });
         tileType.innerText = `${translate('tile.info.type')}: ${translate(`tile.${tile.type}`)}`;
@@ -392,7 +396,7 @@ class UI {
         const tileElevation = this.createElement('span', { className: 'infoSpan' });
         tileElevation.innerText = `${translate('tile.info.elevation')}: ${Math.round(tile.elevation)}`;
         const tileKnowledge = this.createElement('span', { className: 'infoSpan' });
-        tileKnowledge.innerText = JSON.stringify(tile.knowledges);
+        tileKnowledge.innerText = JSON.stringify((_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge);
         this.elements.tileInfoMenu.appendChild(tileType);
         this.elements.tileInfoMenu.appendChild(tileMovementCost);
         this.elements.tileInfoMenu.appendChild(tileElevation);

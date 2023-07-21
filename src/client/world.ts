@@ -24,6 +24,7 @@ interface Unit {
   movement: number;
   civID: number;
   promotionClass: PromotionClass;
+  knowledge: KnowledgeMap;
 }
 
 interface RangedUnit extends Unit {
@@ -37,6 +38,8 @@ enum PromotionClass {
   RECON,
 }
 
+type KnowledgeMap = { [name: string]: number };
+
 interface Improvement {
   type: string;
   pillaged: boolean;
@@ -44,6 +47,7 @@ interface Improvement {
   errand?: Errand;
   metadata?: any;
   isNatural: boolean;
+  knowledge: KnowledgeMap;
 }
 
 enum ErrandType {

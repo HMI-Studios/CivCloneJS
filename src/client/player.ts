@@ -465,10 +465,13 @@ class UI {
     unitHP.innerText = `${translate('unit.info.hp')}: ${unit.hp}%`;
     const unitMovement = this.createElement('span', {className: 'infoSpan'});
     unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
+    const unitKnowledge = this.createElement('span', {className: 'infoSpan'});
+    unitKnowledge.innerText = JSON.stringify(unit.knowledge);
 
     this.elements.unitInfoMenu.appendChild(unitName);
     this.elements.unitInfoMenu.appendChild(unitHP);
     this.elements.unitInfoMenu.appendChild(unitMovement);
+    this.elements.unitInfoMenu.appendChild(unitKnowledge);
     this.root.appendChild(this.elements.unitInfoMenu);
   }
 
@@ -487,7 +490,7 @@ class UI {
     const tileElevation = this.createElement('span', {className: 'infoSpan'});
     tileElevation.innerText = `${translate('tile.info.elevation')}: ${Math.round(tile.elevation)}`;
     const tileKnowledge = this.createElement('span', {className: 'infoSpan'});
-    tileKnowledge.innerText = JSON.stringify(tile.knowledges);
+    tileKnowledge.innerText = JSON.stringify(tile.improvement?.knowledge);
 
     this.elements.tileInfoMenu.appendChild(tileType);
     this.elements.tileInfoMenu.appendChild(tileMovementCost);
