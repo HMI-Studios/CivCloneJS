@@ -24,6 +24,7 @@ export class Improvement {
   static yieldTable: { [improvement: string]: Yield } = {
     'settlement': new Yield({food: 2, production: 2}),
     'encampment': new Yield({production: 1}),
+    'campus': new Yield({science: 5}),
   
     'farm': new Yield({food: 1}),
   

@@ -145,6 +145,7 @@ exports.Improvement = Improvement;
 Improvement.yieldTable = {
     'settlement': new yield_1.Yield({ food: 2, production: 2 }),
     'encampment': new yield_1.Yield({ production: 1 }),
+    'campus': new yield_1.Yield({ science: 5 }),
     'farm': new yield_1.Yield({ food: 1 }),
     'forest': new yield_1.Yield({ food: 1 }),
 };
