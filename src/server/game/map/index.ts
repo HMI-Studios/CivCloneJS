@@ -186,33 +186,41 @@ export class Map {
       if (stepsUntilSpread === 0) {
         const newLeftCoords = getCoordInDirection(coords, direction-1);
         const newLeftTile = this.getTile(newLeftCoords);
-        const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope),
-          r-1, direction, coordsArray, tileSet, stepLength, stepLength
-        );
+        if (newLeftTile) {
+          const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope),
+            r-1, direction, coordsArray, tileSet, stepLength, stepLength
+          );
+        }
         const newCoords = getCoordInDirection(coords, direction);
         const newTile = this.getTile(newCoords);
-        const newSlope = newTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newCoords, maxElevation + slope, Math.max(slope, newSlope),
-          r-1, direction, coordsArray, tileSet, stepLength, stepLength
-        );
+        if (newTile) {
+          const newSlope = newTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newCoords, maxElevation + slope, Math.max(slope, newSlope),
+            r-1, direction, coordsArray, tileSet, stepLength, stepLength
+          );
+        }
         const newRightCoords = getCoordInDirection(coords, direction+1);
         const newRightTile = this.getTile(newRightCoords);
-        const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope),
-          r-1, direction, coordsArray, tileSet, stepLength, stepLength
-        );
+        if (newRightTile) {
+          const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope),
+            r-1, direction, coordsArray, tileSet, stepLength, stepLength
+          );
+        }
       } else {
         const newCoords = getCoordInDirection(coords, direction);
         const newTile = this.getTile(newCoords);
-        const newSlope = newTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newCoords, maxElevation + slope, Math.max(slope, newSlope),
-          r-1, direction, coordsArray, tileSet, stepsUntilSpread-1, stepLength
-        );
+        if (newTile) {
+          const newSlope = newTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newCoords, maxElevation + slope, Math.max(slope, newSlope),
+            r-1, direction, coordsArray, tileSet, stepsUntilSpread-1, stepLength
+          );
+        }
       }
     }
   }
@@ -228,6 +236,7 @@ export class Map {
     for (let direction = 0; direction < 6; direction++) {
       const newCoords = getCoordInDirection(unit.coords, direction);
       const newTile = this.getTile(newCoords);
+      if (!newTile) continue;
       const slope = newTile.getTotalElevation() - tile.getTotalElevation();
 
       this.getVisibleTilesRecurse(
