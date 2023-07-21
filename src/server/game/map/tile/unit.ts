@@ -1,5 +1,6 @@
 import { getAdjacentCoords } from '../../../utils';
 import { Coords } from '../../world';
+import { KnowledgeBucket, KnowledgeMap } from './knowledge';
 import { Yield } from './yield';
 
 export interface UnitTypeCost {
@@ -14,6 +15,7 @@ export interface UnitData {
   civID: number,
   promotionClass: PromotionClass,
   attackRange?: number,
+  knowledge: KnowledgeMap,
 }
 
 export enum MovementClass {
@@ -102,13 +104,15 @@ export class Unit {
   coords: Coords;
   alive: boolean;
 
+  public knowledge: KnowledgeBucket;
+
   static makeCatalog(types: string[]): UnitTypeCost[] {
     return types.map(type => (
       { type, cost: Unit.costTable[type] }
     ));
   }
 
-  constructor(type: string, civID: number, coords: Coords) {
+  constructor(type: string, civID: number, coords: Coords, knowledge?: KnowledgeMap) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -122,6 +126,7 @@ export class Unit {
     this.civID = civID;
     this.coords = coords;
     this.alive = true;
+    this.knowledge = new KnowledgeBucket(knowledge ?? {});
   }
 
   export() {
@@ -132,6 +137,7 @@ export class Unit {
       civID: this.civID,
       coords: this.coords,
       alive: this.alive,
+      knowledge: this.knowledge.getKnowledgeMap(),
     };
   }
 
@@ -146,6 +152,7 @@ export class Unit {
       unit.attackRange = Unit.attackRangeTable[unit.type];
     }
     unit.alive = data.alive;
+    unit.knowledge = new KnowledgeBucket(data.knowledge);
     return unit;
   }
 
@@ -157,6 +164,7 @@ export class Unit {
       civID: this.civID,
       promotionClass: this.promotionClass,
       attackRange: this.attackRange,
+      knowledge: this.knowledge.getKnowledgeMap(),
     };
   }
   

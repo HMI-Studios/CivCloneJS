@@ -9,7 +9,6 @@ const utils_1 = require("../../utils");
 const trade_1 = require("./trade");
 const yield_1 = require("./tile/yield");
 const errand_1 = require("./tile/errand");
-const knowledge_1 = require("./tile/knowledge");
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
@@ -304,7 +303,7 @@ class Map {
             tile.type !== 'frozen_coastal' &&
             tile.type !== 'river');
     }
-    settleCityAt(coords, name, civID) {
+    settleCityAt(coords, name, civID, settler) {
         const tile = this.getTile(coords);
         if (!this.canSettleOn(tile))
             return false;
@@ -314,14 +313,14 @@ class Map {
             this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
-        this.buildImprovementAt(coords, 'settlement', civID);
+        this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge.getKnowledgeMap());
         return true;
     }
     startErrandAt(coords, improvement, errand) {
         improvement.startErrand(errand);
         this.tileUpdate(coords);
     }
-    startConstructionAt(coords, improvementType, ownerID) {
+    startConstructionAt(coords, improvementType, ownerID, builder) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
@@ -339,14 +338,14 @@ class Map {
             tile.type !== 'frozen_ocean' &&
             tile.type !== 'mountain');
     }
-    buildImprovementAt(coords, type, ownerID) {
+    buildImprovementAt(coords, type, ownerID, knowledges) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
         if (!this.canBuildOn(tile))
             return;
-        tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
+        tile.improvement = new improvement_1.Improvement(type, tile.baseYield, knowledges);
         this.tileUpdate(coords);
     }
     trainUnitAt(coords, unitType, ownerID) {
@@ -394,22 +393,22 @@ class Map {
         this.forEachTile((tile, coords) => {
             var _a;
             if (tile.improvement) {
-                tile.improvement.work();
+                tile.improvement.work(world);
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
                     tile.improvement.errand.complete(world, this, tile);
                     delete tile.improvement.errand;
                 }
             }
-            const knowledges = tile.getKnowledges(false);
-            if (knowledges.length > 0) {
-                const spillover = tile.getKnowledgeSpillover();
-                for (const name in spillover) {
-                    const [spilloverPoints, maxPoints] = spillover[name];
-                    for (const neighborCoords of this.getNeighborsCoords(coords)) {
-                        this.getTile(neighborCoords).addKnowledge(knowledge_1.Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
-                    }
-                }
-            }
+            // const knowledges = tile.getKnowledges(false);
+            // if (knowledges.length > 0) {
+            //   const spillover = tile.getKnowledgeSpillover();
+            //   for (const name in spillover) {
+            //     const [spilloverPoints, maxPoints] = spillover[name];
+            //     for (const neighborCoords of this.getNeighborsCoords(coords)) {
+            //       this.getTile(neighborCoords).addKnowledge(Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
+            //     }
+            //   }
+            // }
         });
         // Traders
         for (let i = 0; i < this.traders.length; i++) {

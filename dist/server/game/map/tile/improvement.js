@@ -6,7 +6,7 @@ const knowledge_1 = require("./knowledge");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
-    constructor(type, baseYield, metadata) {
+    constructor(type, baseYield, knowledges, metadata) {
         var _a, _b;
         if (!(type && baseYield))
             return;
@@ -20,9 +20,8 @@ class Improvement {
         this.suppliers = [];
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
-        } // else if (type === 'worksite') {
-        //   this.yield = new Yield({});
-        // }
+        }
+        this.knowledge = new knowledge_1.KnowledgeBucket(knowledges);
     }
     static makeCatalog(types) {
         return types.map(type => ({ type, cost: errand_1.WorkErrand.errandCostTable[errand_1.ErrandType.CONSTRUCTION][type] }));
@@ -36,6 +35,7 @@ class Improvement {
             yield: this.yield,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.export(),
+            knowledge: this.knowledge.export(),
         };
     }
     static import(data) {
@@ -51,6 +51,7 @@ class Improvement {
             improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];
         improvement.suppliers = [];
+        improvement.knowledge = new knowledge_1.KnowledgeBucket(data.knowledge);
         return improvement;
     }
     getData() {
@@ -61,6 +62,7 @@ class Improvement {
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
             isNatural: this.isNatural,
+            knowledge: this.knowledge.getKnowledgeMap(),
         };
     }
     /**
@@ -90,10 +92,11 @@ class Improvement {
     startErrand(errand) {
         this.errand = new errand_1.WorkErrand(this.storage, errand);
     }
-    work() {
+    work(world) {
         // TODO - ADD POPULATION/COST CHECK
         // if (type === 'farm') {
         // }
+        this.knowledge.turn(world);
         if (this.errand) {
             if (this.storage.fulfills(this.errand.cost)) {
                 this.errand.completed = true;

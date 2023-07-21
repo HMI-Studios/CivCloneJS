@@ -10,7 +10,6 @@ class Tile {
         this.movementCost = Tile.movementCostTable[type];
         this.type = type;
         this.elevation = tileHeight;
-        this.knowledges = {};
         this.unit = undefined;
         this.improvement = undefined;
         this.owner = undefined;
@@ -30,7 +29,6 @@ class Tile {
             discoveredBy: this.discoveredBy,
             // visibleTo: { [civID: number]: number },
             baseYield: this.baseYield,
-            knowledges: this.knowledges,
         };
     }
     static import(data) {
@@ -39,7 +37,6 @@ class Tile {
         if (data.improvement)
             tile.improvement = improvement_1.Improvement.import(data.improvement);
         tile.discoveredBy = data.discoveredBy;
-        tile.knowledges = data.knowledges;
         return tile;
     }
     getTileYield() {
@@ -63,7 +60,7 @@ class Tile {
     }
     getVisibleData() {
         var _a;
-        return Object.assign(Object.assign({}, this.getDiscoveredData()), { knowledges: this.knowledges, unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(), visible: true });
+        return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(), visible: true });
     }
     getMovementCost(unit) {
         const mode = unit.getMovementClass();
@@ -98,56 +95,6 @@ class Tile {
         return !!this.improvement && (this.improvement.yield.canSupply(requirement));
     }
     /**
-     * @param completed whether the knowledge must have 100 points to be included
-     * @returns list of knowledge names
-     */
-    getKnowledges(completed) {
-        const knowledges = Object.keys(this.knowledges);
-        if (!completed)
-            return knowledges;
-        return knowledges.filter(name => !(this.knowledges[name] < 100));
-    }
-    /**
-     *
-     * @returns Map between knowledge name and [spilloverPoints, maxPoints]
-     */
-    getKnowledgeSpillover() {
-        const KNOWLEDGE_SPREAD_DENOM = 10;
-        const knowledgeSpillover = {};
-        for (const name in this.knowledges) {
-            const knowledgePoints = this.knowledges[name];
-            const spillover = Math.ceil((knowledgePoints / 6) / KNOWLEDGE_SPREAD_DENOM);
-            knowledgeSpillover[name] = [spillover, knowledgePoints];
-        }
-        return knowledgeSpillover;
-    }
-    /**
-     * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
-     * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
-     */
-    hasKnowledges(knowledgeNames) {
-        var _a;
-        for (const name of knowledgeNames) {
-            if (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)
-                return false;
-        }
-        return true;
-    }
-    /**
-     *
-     * @param knowledge The knowledge instance to be added.
-     * @param amount The amount of the knowledge to be added. (0 - 100)
-     * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
-     */
-    addKnowledge(knowledge, amount, requirementPenalty, maxPoints = 100) {
-        var _a, _b;
-        if (maxPoints > 100 || maxPoints < 0)
-            throw 'Invalid Knowledge Cap!';
-        if (!this.hasKnowledges(knowledge.prerequisites))
-            amount *= requirementPenalty;
-        this.knowledges[knowledge.name] = Math.min(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, Math.max((_b = this.knowledges[knowledge.name]) !== null && _b !== void 0 ? _b : 0, maxPoints));
-    }
-    /**
      *
      * @returns whether farms can be build on this tile
      */
@@ -161,11 +108,12 @@ class Tile {
     /**
      *
      * @returns list of improvements the builder on this tile knows how to build
+     * TODO - move this to Unit class
      */
     getBuildableImprovements() {
         if (!this.unit)
             return [];
-        return knowledge_1.Knowledge.getBuildableImprovements(this.getKnowledges(true))
+        return knowledge_1.Knowledge.getBuildableImprovements(this.unit.knowledge.getKnowledges(true))
             .filter((improvementType) => {
             if (improvementType === 'farm' && !this.isFarmable())
                 return false;
@@ -180,7 +128,7 @@ class Tile {
         if (!this.improvement)
             return [];
         const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
-        return knowledge_1.Knowledge.getTrainableUnits(this.getKnowledges(true))
+        return knowledge_1.Knowledge.getTrainableUnits(this.improvement.knowledge.getKnowledges(true))
             .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
     }
     /**
@@ -213,9 +161,9 @@ class Tile {
         if (!this.improvement)
             return null;
         const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
-        const completedKnowledges = this.getKnowledges(true).filter(key => !(this.knowledges[key] < 100));
+        const completedKnowledges = this.improvement.knowledge.getKnowledges(true);
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
-        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => { var _a; return (knowledgeBranches[branch] && (((_a = this.knowledges[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
+        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => (knowledgeBranches[branch]));
         return knowledgeCatalog;
     }
 }

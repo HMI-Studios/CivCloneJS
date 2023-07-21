@@ -77,7 +77,8 @@ WorkErrand.errandActionEffects = {
         }
     },
     [ErrandType.RESEARCH]: (world, map, tile, action) => {
-        tile.addKnowledge(knowledge_1.Knowledge.knowledgeTree[action.option], 100, 0);
+        var _a;
+        (_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge.addKnowledge(knowledge_1.Knowledge.knowledgeTree[action.option], 100, 0);
     },
 };
 //# sourceMappingURL=errand.js.map

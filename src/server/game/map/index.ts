@@ -7,7 +7,7 @@ import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
-import { Knowledge } from './tile/knowledge';
+import { Knowledge, KnowledgeMap } from './tile/knowledge';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -391,7 +391,7 @@ export class Map {
     );
   }
 
-  settleCityAt(coords: Coords, name: string, civID: number): boolean {
+  settleCityAt(coords: Coords, name: string, civID: number, settler: Unit): boolean {
     const tile = this.getTile(coords);
     if (!this.canSettleOn(tile)) return false;
 
@@ -404,7 +404,7 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.buildImprovementAt(coords, 'settlement', civID);
+    this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge.getKnowledgeMap());
     return true;
   }
 
@@ -413,7 +413,7 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  startConstructionAt(coords: Coords, improvementType: string, ownerID: number): void {
+  startConstructionAt(coords: Coords, improvementType: string, ownerID: number, builder: Unit): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
@@ -435,12 +435,12 @@ export class Map {
     );
   }
 
-  buildImprovementAt(coords: Coords, type: string, ownerID: number): void {
+  buildImprovementAt(coords: Coords, type: string, ownerID: number, knowledges?: KnowledgeMap): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     if (!this.canBuildOn(tile)) return;
 
-    tile.improvement = new Improvement(type, tile.baseYield);
+    tile.improvement = new Improvement(type, tile.baseYield, knowledges);
 
     this.tileUpdate(coords);
   }
@@ -495,21 +495,10 @@ export class Map {
     // Tiles
     this.forEachTile((tile, coords) => {
       if (tile.improvement) {
-        tile.improvement.work();
+        tile.improvement.work(world);
         if (tile.improvement.errand?.completed) {
           tile.improvement.errand.complete(world, this, tile);
           delete tile.improvement.errand;
-        }
-      }
-
-      const knowledges = tile.getKnowledges(false);
-      if (knowledges.length > 0) {
-        const spillover = tile.getKnowledgeSpillover();
-        for (const name in spillover) {
-          const [spilloverPoints, maxPoints] = spillover[name];
-          for (const neighborCoords of this.getNeighborsCoords(coords)) {
-            this.getTile(neighborCoords).addKnowledge(Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
-          }
         }
       }
     });

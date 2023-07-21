@@ -2,14 +2,13 @@ import { Unit, UnitData, UnitTypeCost } from './unit';
 import { Improvement, ImprovementConstructionCost, ImprovementData } from './improvement';
 import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
-import { Knowledge } from './knowledge';
+import { Knowledge, KnowledgeBucket } from './knowledge';
 
 export interface TileData {
   type: string;
   elevation: number;
   movementCost: [number, number];
   yield: Yield;
-  knowledges?: { [name: string]: number };
   unit?: UnitData;
   improvement?: ImprovementData;
   owner?: CityData;
@@ -40,8 +39,6 @@ export class Tile {
   type: string;
   elevation: number;
 
-  private knowledges: { [name: string]: number };
-
   unit?: Unit;
   improvement?: Improvement;
   owner?: City;
@@ -55,8 +52,6 @@ export class Tile {
     this.movementCost = Tile.movementCostTable[type];
     this.type = type;
     this.elevation = tileHeight;
-
-    this.knowledges = {};
 
     this.unit = undefined;
     this.improvement = undefined;
@@ -79,7 +74,6 @@ export class Tile {
       discoveredBy: this.discoveredBy,
       // visibleTo: { [civID: number]: number },
       baseYield: this.baseYield,
-      knowledges: this.knowledges,
     };
   }
 
@@ -88,7 +82,6 @@ export class Tile {
     // tile.unit = Unit.import(data.unit);
     if (data.improvement) tile.improvement = Improvement.import(data.improvement);
     tile.discoveredBy = data.discoveredBy;
-    tile.knowledges = data.knowledges;
     return tile;
   }
 
@@ -114,7 +107,6 @@ export class Tile {
   getVisibleData(): TileData {
     return {
       ...this.getDiscoveredData(),
-      knowledges: this.knowledges,
       unit: this.unit?.getData(),
       visible: true,
     }
@@ -162,58 +154,6 @@ export class Tile {
   }
 
   /**
-   * @param completed whether the knowledge must have 100 points to be included
-   * @returns list of knowledge names
-   */
-  getKnowledges(completed: boolean): string[] {
-    const knowledges = Object.keys(this.knowledges);
-    if (!completed) return knowledges;
-    return knowledges.filter(name => !(this.knowledges[name] < 100));
-  }
-
-  /**
-   * 
-   * @returns Map between knowledge name and [spilloverPoints, maxPoints]
-   */
-  getKnowledgeSpillover(): { [name: string]: [number, number] } {
-    const KNOWLEDGE_SPREAD_DENOM = 10;
-
-    const knowledgeSpillover = {};
-    for (const name in this.knowledges) {
-      const knowledgePoints = this.knowledges[name];
-      const spillover = Math.ceil((knowledgePoints / 6) / KNOWLEDGE_SPREAD_DENOM);
-      knowledgeSpillover[name] = [spillover, knowledgePoints];
-    }
-    return knowledgeSpillover;
-  }
-
-  /**
-   * Returns `true` if this tile has 100 points for all knowledges in `knowledgeNames`, else `false`.
-   * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
-   */
-  hasKnowledges(knowledgeNames: string[]): boolean {
-    for (const name of knowledgeNames) {
-      if ((this.knowledges[name] ?? 0) < 100) return false;
-    }
-    return true;
-  }
-
-  /**
-   * 
-   * @param knowledge The knowledge instance to be added.
-   * @param amount The amount of the knowledge to be added. (0 - 100)
-   * @param requirementPenalty Multiplier that will be applied to `amount` if the prerequisites of the knowledge are not present on this tile.
-   */
-  addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number, maxPoints = 100): void {
-    if (maxPoints > 100 || maxPoints < 0) throw 'Invalid Knowledge Cap!';
-    if (!this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
-    this.knowledges[knowledge.name] = Math.min(
-      (this.knowledges[knowledge.name] ?? 0) + amount,
-      Math.max(this.knowledges[knowledge.name] ?? 0, maxPoints)
-    );
-  }
-
-  /**
    * 
    * @returns whether farms can be build on this tile
    */
@@ -228,10 +168,11 @@ export class Tile {
   /**
    * 
    * @returns list of improvements the builder on this tile knows how to build
+   * TODO - move this to Unit class
    */
    getBuildableImprovements(): string[] {
     if (!this.unit) return [];
-    return Knowledge.getBuildableImprovements(this.getKnowledges(true))
+    return Knowledge.getBuildableImprovements(this.unit.knowledge.getKnowledges(true))
       .filter((improvementType) => {
         if (improvementType === 'farm' && !this.isFarmable()) return false;
         return true;
@@ -245,7 +186,7 @@ export class Tile {
    getTrainableUnitTypes(): string[] {
     if (!this.improvement) return [];
     const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => ({ ...obj, [name]: true }), {});
-    return Knowledge.getTrainableUnits(this.getKnowledges(true))
+    return Knowledge.getTrainableUnits(this.improvement.knowledge.getKnowledges(true))
       .filter(unitType => trainableUnitClasses[Unit.promotionClassTable[unitType]]);
   }
 
@@ -278,10 +219,10 @@ export class Tile {
   getKnowledgeCatalog(): Knowledge[] | null {
     if (!this.improvement) return null;
     const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
-    const completedKnowledges = this.getKnowledges(true).filter(key => !(this.knowledges[key] < 100));
+    const completedKnowledges = this.improvement.knowledge.getKnowledges(true);
     const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);
     const knowledgeCatalog = reachableKnowledges.filter(
-      ({ name, branch }) => (knowledgeBranches[branch] && ((this.knowledges[name] ?? 0) < 100))
+      ({ name, branch }) => (knowledgeBranches[branch])
     );
     return knowledgeCatalog;
   }
