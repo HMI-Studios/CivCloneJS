@@ -502,6 +502,7 @@ export class Map {
         }
 
         if (tile.improvement.knowledge?.hasLinks()) {
+          tile.improvement.knowledge.clearLinks();
           const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
           for (const pos in posDistances) {
             const otherTile: Tile | undefined = this.tiles[pos];

@@ -201,6 +201,7 @@ export class KnowledgeSource {
     for (const knowledge of this.completionQueue) {
       this.timeline.push([knowledge, world.currentTurn])
     }
+    this.completionQueue = [];
   }
 }
 
@@ -210,6 +211,11 @@ export class KnowledgeSourceLinks {
   constructor() {
     this.sources = [];
   }
+
+  clearLinks(): void {
+    this.sources = [];
+  }
+
 
   addLink(source: KnowledgeSource, currentTurn: number): void {
     this.sources.push([source, currentTurn]);
@@ -224,7 +230,7 @@ export class KnowledgeSourceLinks {
     for (const [source, currentTurn] of this.sources) {
       for (const [knowledge, progress] of source.getKnowledges(currentTurn)) {
         if (!(knowledge in knowledges)) knowledges[knowledge] = 0;
-        knowledges[knowledge] += progress;
+        knowledges[knowledge] = Math.min(knowledges[knowledge] + progress, 100);
       }
     }
     
@@ -269,6 +275,12 @@ export class KnowledgeBucket {
 
   hasLinks(): boolean {
     return this.source instanceof KnowledgeSourceLinks;
+  }
+
+  clearLinks(): void {
+    if (this.source instanceof KnowledgeSourceLinks) {
+      this.source.clearLinks();
+    } else return;
   }
 
   addLink(bucket: KnowledgeBucket, currentTurn: number): void {

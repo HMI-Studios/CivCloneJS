@@ -400,6 +400,7 @@ class Map {
                     delete tile.improvement.errand;
                 }
                 if ((_b = tile.improvement.knowledge) === null || _b === void 0 ? void 0 : _b.hasLinks()) {
+                    tile.improvement.knowledge.clearLinks();
                     const [_, posDistances] = this.getPathTree(coords, knowledge_1.KNOWLEDGE_SPREAD_RANGE, 0);
                     for (const pos in posDistances) {
                         const otherTile = this.tiles[pos];
