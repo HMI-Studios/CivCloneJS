@@ -75,6 +75,7 @@ class World {
             civs: exportedCivs,
             civsCount: this.civsCount,
             leaderPool: this.leaderPool,
+            currentTurn: this.currentTurn,
         };
     }
     static import(data) {
@@ -99,6 +100,7 @@ class World {
                 world.setCivLeader(leaderData.civID, Number(leaderID));
             }
         }
+        world.currentTurn = data.currentTurn;
         return world;
     }
     getUpdates() {
