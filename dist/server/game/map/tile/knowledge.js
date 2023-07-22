@@ -109,6 +109,18 @@ class KnowledgeSource {
         const knowledges = links.getKnowledgeMap();
         return new KnowledgeSource(knowledges);
     }
+    export() {
+        return {
+            knowledges: this.knowledges,
+            timeline: this.timeline,
+        };
+    }
+    static import(data) {
+        const knowledgeSource = new KnowledgeSource({});
+        knowledgeSource.knowledges = data.knowledges;
+        knowledgeSource.timeline = data.timeline;
+        return knowledgeSource;
+    }
     /**
      *
      * @returns knowledge map
@@ -157,9 +169,11 @@ class KnowledgeSource {
             throw 'Invalid Knowledge Cap!';
         if (!this.hasKnowledges(knowledge.prerequisites))
             amount *= requirementPenalty;
-        const wasNotCompleted = this.knowledges[knowledge.name] < 100;
+        const wasNotCompleted = !this.knowledges[knowledge.name] || this.knowledges[knowledge.name] < 100;
         this.knowledges[knowledge.name] = Math.min(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, Math.max((_b = this.knowledges[knowledge.name]) !== null && _b !== void 0 ? _b : 0, maxPoints));
+        console.log(this.knowledges[knowledge.name], wasNotCompleted);
         if (this.knowledges[knowledge.name] === 100 && wasNotCompleted) {
+            console.log('COMPLETED', knowledge.name, amount, requirementPenalty, maxPoints);
             this.completionQueue.push(knowledge.name);
         }
     }
@@ -219,8 +233,19 @@ class KnowledgeBucket {
         }
     }
     export() {
-        // TODO - this does NOT account for Knowledge Source Links! FIXME!
-        return this.getKnowledgeMap();
+        if (this.source instanceof KnowledgeSource)
+            return this.source.export();
+        else
+            return { links: true };
+    }
+    static import(data) {
+        const bucket = new KnowledgeBucket();
+        if (data === null || data === void 0 ? void 0 : data.links) {
+        }
+        else if (data) {
+            bucket.source = KnowledgeSource.import(data);
+        }
+        return bucket;
     }
     getSource() {
         if (this.source instanceof KnowledgeSource)
@@ -297,13 +322,14 @@ class KnowledgeBucket {
         this.source.addKnowledge(knowledge, amount, requirementPenalty, maxPoints);
     }
     mergeKnowledge(bucket) {
+        var _a;
         if (this.source instanceof KnowledgeSourceLinks)
             return;
         const bucketKnowledgeMap = bucket.getKnowledgeMap();
         const thisKnowledgeMap = this.getKnowledgeMap();
         for (const name in bucketKnowledgeMap) {
             const bucketProgress = bucketKnowledgeMap[name];
-            const thisProgress = thisKnowledgeMap[name];
+            const thisProgress = (_a = thisKnowledgeMap[name]) !== null && _a !== void 0 ? _a : 0;
             if (bucketProgress > thisProgress) {
                 this.addKnowledge(Knowledge.knowledgeTree[name], bucketProgress - thisProgress, 0.5); // TODO FIXME - magic number
             }

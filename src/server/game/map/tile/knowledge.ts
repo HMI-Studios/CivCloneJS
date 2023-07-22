@@ -142,6 +142,20 @@ export class KnowledgeSource {
     }
   }
 
+  export() {
+    return {
+      knowledges: this.knowledges,
+      timeline: this.timeline,
+    };
+  }
+
+  static import(data): KnowledgeSource {
+    const knowledgeSource = new KnowledgeSource({});
+    knowledgeSource.knowledges = data.knowledges;
+    knowledgeSource.timeline = data.timeline;
+    return knowledgeSource;
+  }
+
   /**
    * 
    * @returns knowledge map
@@ -187,11 +201,12 @@ export class KnowledgeSource {
   addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number, maxPoints = 100): void {
     if (maxPoints > 100 || maxPoints < 0) throw 'Invalid Knowledge Cap!';
     if (!this.hasKnowledges(knowledge.prerequisites)) amount *= requirementPenalty;
-    const wasNotCompleted = this.knowledges[knowledge.name] < 100;
+    const wasNotCompleted = !this.knowledges[knowledge.name] || this.knowledges[knowledge.name] < 100;
     this.knowledges[knowledge.name] = Math.min(
       (this.knowledges[knowledge.name] ?? 0) + amount,
       Math.max(this.knowledges[knowledge.name] ?? 0, maxPoints)
     );
+    console.log(this.knowledges[knowledge.name], wasNotCompleted)
     if (this.knowledges[knowledge.name] === 100 && wasNotCompleted) {
       this.completionQueue.push(knowledge.name);
     }
@@ -264,8 +279,17 @@ export class KnowledgeBucket {
   }
 
   export() {
-    // TODO - this does NOT account for Knowledge Source Links! FIXME!
-    return this.getKnowledgeMap();
+    if (this.source instanceof KnowledgeSource) return this.source.export();
+    else return { links: true };
+  }
+
+  static import(data): KnowledgeBucket {
+    const bucket = new KnowledgeBucket();
+    if (data?.links) {
+    } else if (data) {
+      bucket.source = KnowledgeSource.import(data);
+    }
+    return bucket;
   }
 
   getSource(): KnowledgeSource | null {
@@ -347,7 +371,7 @@ export class KnowledgeBucket {
     const thisKnowledgeMap = this.getKnowledgeMap();
     for (const name in bucketKnowledgeMap) {
       const bucketProgress = bucketKnowledgeMap[name];
-      const thisProgress = thisKnowledgeMap[name];
+      const thisProgress = thisKnowledgeMap[name] ?? 0;
       if (bucketProgress > thisProgress) {
         this.addKnowledge(Knowledge.knowledgeTree[name], bucketProgress - thisProgress, 0.5); // TODO FIXME - magic number
       }

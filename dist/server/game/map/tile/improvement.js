@@ -53,8 +53,8 @@ class Improvement {
             improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];
         improvement.suppliers = [];
-        if (data.isNatural)
-            improvement.knowledge = new knowledge_1.KnowledgeBucket(data.knowledge);
+        if (!data.isNatural)
+            improvement.knowledge = knowledge_1.KnowledgeBucket.import(data.knowledge);
         return improvement;
     }
     getData() {

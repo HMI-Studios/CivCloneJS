@@ -115,7 +115,7 @@ export class Improvement {
     if (data.errand) improvement.errand = WorkErrand.import(improvement.storage, data.errand);
     improvement.traders = [];
     improvement.suppliers = [];
-    if (data.isNatural) improvement.knowledge = new KnowledgeBucket(data.knowledge);
+    if (!data.isNatural) improvement.knowledge = KnowledgeBucket.import(data.knowledge);
     return improvement;
   }
 
