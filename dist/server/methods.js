@@ -52,7 +52,6 @@ exports.games = {
     exports.games[1] = yield game_1.Game.load('singleplayer test');
     // games[2] = await Game.load('no units test')
     exports.games[2] = yield game_1.Game.load('multiplayer test');
-    exports.games[3] = yield game_1.Game.load('spy');
 }))();
 const createGame = (username, playerCount, mapOptions, options) => {
     var _a;
@@ -342,6 +341,10 @@ const methods = {
                     return;
                 }
                 if (dst.unit) {
+                    if (dst.unit.cloaked) {
+                        dst.unit.setCloak(false);
+                        map.tileUpdate(dstCoords);
+                    }
                     break;
                 }
                 unit.movement -= dst.getMovementCost(unit);
@@ -537,7 +540,7 @@ const methods = {
             const map = game.world.map;
             const tile = map.getTile(coords);
             const unit = tile.unit;
-            if (unit && unit.civID === civID) {
+            if (unit && unit.civID === civID && unit.movement) {
                 unit.setCloak(cloaked);
                 unit.movement = 0;
                 map.tileUpdate(unit.coords);

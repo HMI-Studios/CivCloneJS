@@ -397,6 +397,10 @@ const methods: {
         }
 
         if (dst.unit) {
+          if (dst.unit.cloaked) {
+            dst.unit.setCloak(false);
+            map.tileUpdate(dstCoords);
+          }
           break;
         }
 
