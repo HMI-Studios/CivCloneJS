@@ -3,7 +3,7 @@ import * as WebSocket from 'ws';
 
 import express from 'express';
 const app = express();
-import { PORT, ADDR_PREFIX } from './config';
+import { PORT, ADDR_PREFIX, DEBUG } from './config';
 
 import path from 'path';
 app.use(`${ADDR_PREFIX}`, express.static(path.join(__dirname, '../client')));
@@ -40,7 +40,10 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
       return;
     }
 
-    console.log('received:', data);
+    if (DEBUG) {
+      const { username, ip } = getConnData(ws);
+      console.log(`Recieved from ${username} (${ip}):`, JSON.stringify(data));
+    }
 
     if (data.actions) {
       for (let i = 0; i < data.actions.length; i++) {

@@ -293,7 +293,6 @@ const methods = {
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, targetCoords);
         if (game) {
             const world = game.world;
             const map = world.map;
@@ -329,7 +328,6 @@ const methods = {
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, path, attack);
         if (game) {
             const world = game.world;
             const map = world.map;
