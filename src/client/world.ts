@@ -612,7 +612,17 @@ class World {
     };
 
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
-      ui.showUnitActionsMenu(this, coords, unit);
+      const skipTurn = () => {
+        if (camera.selectedUnitPos) {
+          const index = this.getUnitIndex(camera.selectedUnitPos) as number;
+          camera.deselectUnit(this);
+          const metaIndex = this.unusedUnits.indexOf(index);
+          if (metaIndex > -1) {
+            this.unusedUnits.splice(metaIndex, 1);
+          }
+        }
+      }
+      ui.showUnitActionsMenu(this, coords, unit, skipTurn);
       ui.showUnitInfoMenu(this, coords, unit);
     }
 

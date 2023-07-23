@@ -527,12 +527,6 @@ export class Map {
       const distance = posDistances[pos];
       improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
     }
-    if (tile.unit) {
-      const tileKnowledgeMap = improvement.knowledge.getKnowledgeMap();
-      for (const name in tileKnowledgeMap) {
-        tile.unit.knowledge[name] = Math.max(tile.unit.knowledge[name] ?? 0, tileKnowledgeMap[name]);
-      }
-    }
 
     improvement.knowledge.turn(world);
   }
@@ -549,6 +543,11 @@ export class Map {
 
         if (tile.improvement.knowledge) {
           this.updateImprovementLinks(world, tile, coords, tile.improvement);
+
+          if (tile.unit && tile.unit.civID === tile.owner?.civID) {
+            const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
+            tile.unit.updateKnowledge(tileKnowledgeMap);
+          }
         }
       }
     });

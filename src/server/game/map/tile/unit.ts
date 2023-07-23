@@ -81,6 +81,7 @@ export class Unit {
   static visionRangeTable: { [unitType: string]: number } = {
     default: 2,
     'scout': 3,
+    'spy': 3,
   }
   
   static costTable: { [unitType: string]: Yield } = {
@@ -89,6 +90,7 @@ export class Unit {
     'scout': new Yield({production: 10}),
     'warrior': new Yield({production: 15}),
     'slinger': new Yield({production: 15}),
+    'archer': new Yield({production: 20}),
     'spy': new Yield({production: 20}),
   }
 
@@ -186,6 +188,12 @@ export class Unit {
     if (this.hp <= 0) {
       this.hp = 0;
       this.setDead();
+    }
+  }
+
+  updateKnowledge(knowledgeMap: KnowledgeMap): void {
+    for (const name in knowledgeMap) {
+      this.knowledge[name] = Math.max(this.knowledge[name] ?? 0, knowledgeMap[name]);
     }
   }
 

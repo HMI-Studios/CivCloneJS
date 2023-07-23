@@ -27,6 +27,7 @@ const unitActionsTable: { [unit: string]: string[] } = {
   'warrior': [],
   'slinger': [],
   'archer': [],
+  'spy': ['stealKnowledge'],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [string, unknown[]] } = {
@@ -407,7 +408,16 @@ class UI {
     this.elements.centerModal.remove();
   }
 
-  showUnitActionsMenu(world: World, pos: Coords, unit: Unit): void {
+  showUnitActionsMenu(world: World, pos: Coords, unit: Unit, skipTurn: () => void): void {
+    const actionBtn = new Button(
+      this.createElement('button'),
+      {
+        text: translate(`unit.action.skipTurn`),
+      }
+    );
+    actionBtn.bindCallback(skipTurn);
+    this.elements.unitActionsMenu.appendChild(actionBtn.element);
+
     for (const action of unitActionsTable[unit.type]) {
       if (action === 'build') {
         world.sendActions([['getImprovementCatalog', [pos]]]);
@@ -433,7 +443,7 @@ class UI {
         continue;
       }
 
-      if (!unitActionsAvailabilityTable[action](world, pos)) {
+      if (action in unitActionsAvailabilityTable && !unitActionsAvailabilityTable[action](world, pos)) {
         continue;
       }
 
@@ -444,7 +454,11 @@ class UI {
         }
       );
       actionBtn.bindCallback(() => {
-        world.sendActions([unitActionsFnTable[action](pos)]);
+        if (action in unitActionsFnTable) {
+          world.sendActions([unitActionsFnTable[action](pos)]);
+        } else {
+          world.sendActions([[action, [pos]]])
+        }
       });
 
       this.elements.unitActionsMenu.appendChild(actionBtn.element);

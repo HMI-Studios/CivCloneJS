@@ -601,4 +601,27 @@ const methods: {
       game.sendUpdates();
     }
   },
+
+  stealKnowledge: (ws: WebSocket, coords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile.unit;
+      if (unit) {
+        const tileKnowledgeMap = tile.improvement?.knowledge?.getKnowledgeMap();
+        if (tileKnowledgeMap) unit.updateKnowledge(tileKnowledgeMap);
+        // TODO - spy invisiblity stuff + possibility of being discovered here
+        
+        map.tileUpdate(unit.coords);
+        game.sendUpdates();
+      }
+    }
+  },
 };

@@ -37,6 +37,7 @@ class Map {
     /**
      *
      * @param world The map needs to have a reference to the world on import, so that it can setup things like Links. Yes, this is irregular, but I see no way around it for now.
+     * NOTE that this world object is NOT complete, and ONLY the currentTurn field is guaranteed to be set!
      * @param data
      * @returns
      */
@@ -412,7 +413,6 @@ class Map {
         this.tileUpdate(coords);
     }
     updateImprovementLinks(world, tile, coords, improvement) {
-        var _a;
         if (!improvement.knowledge)
             return;
         improvement.knowledge.clearLinks();
@@ -427,18 +427,12 @@ class Map {
             const distance = posDistances[pos];
             improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / knowledge_1.KNOWLEDGE_SPREAD_SPEED)));
         }
-        if (tile.unit) {
-            const tileKnowledgeMap = improvement.knowledge.getKnowledgeMap();
-            for (const name in tileKnowledgeMap) {
-                tile.unit.knowledge[name] = Math.max((_a = tile.unit.knowledge[name]) !== null && _a !== void 0 ? _a : 0, tileKnowledgeMap[name]);
-            }
-        }
         improvement.knowledge.turn(world);
     }
     turn(world) {
         // Tiles
         this.forEachTile((tile, coords) => {
-            var _a;
+            var _a, _b;
             if (tile.improvement) {
                 tile.improvement.work(world);
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
@@ -447,6 +441,10 @@ class Map {
                 }
                 if (tile.improvement.knowledge) {
                     this.updateImprovementLinks(world, tile, coords, tile.improvement);
+                    if (tile.unit && tile.unit.civID === ((_b = tile.owner) === null || _b === void 0 ? void 0 : _b.civID)) {
+                        const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
+                        tile.unit.updateKnowledge(tileKnowledgeMap);
+                    }
                 }
             }
         });

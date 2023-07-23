@@ -90,6 +90,12 @@ class Unit {
             this.setDead();
         }
     }
+    updateKnowledge(knowledgeMap) {
+        var _a;
+        for (const name in knowledgeMap) {
+            this.knowledge[name] = Math.max((_a = this.knowledge[name]) !== null && _a !== void 0 ? _a : 0, knowledgeMap[name]);
+        }
+    }
     newTurn() {
         this.movement = Unit.movementTable[this.type];
     }
@@ -142,6 +148,7 @@ Unit.attackRangeTable = {
 Unit.visionRangeTable = {
     default: 2,
     'scout': 3,
+    'spy': 3,
 };
 Unit.costTable = {
     'settler': new yield_1.Yield({ production: 10 }),
@@ -149,6 +156,7 @@ Unit.costTable = {
     'scout': new yield_1.Yield({ production: 10 }),
     'warrior': new yield_1.Yield({ production: 15 }),
     'slinger': new yield_1.Yield({ production: 15 }),
+    'archer': new yield_1.Yield({ production: 20 }),
     'spy': new yield_1.Yield({ production: 20 }),
 };
 //# sourceMappingURL=unit.js.map

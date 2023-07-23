@@ -11,6 +11,7 @@ const unitActionsTable = {
     'warrior': [],
     'slinger': [],
     'archer': [],
+    'spy': ['stealKnowledge'],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
@@ -330,7 +331,12 @@ class UI {
         this.elements.gameList.remove();
         this.elements.centerModal.remove();
     }
-    showUnitActionsMenu(world, pos, unit) {
+    showUnitActionsMenu(world, pos, unit, skipTurn) {
+        const actionBtn = new Button(this.createElement('button'), {
+            text: translate(`unit.action.skipTurn`),
+        });
+        actionBtn.bindCallback(skipTurn);
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
         for (const action of unitActionsTable[unit.type]) {
             if (action === 'build') {
                 world.sendActions([['getImprovementCatalog', [pos]]]);
@@ -350,14 +356,19 @@ class UI {
                 };
                 continue;
             }
-            if (!unitActionsAvailabilityTable[action](world, pos)) {
+            if (action in unitActionsAvailabilityTable && !unitActionsAvailabilityTable[action](world, pos)) {
                 continue;
             }
             const actionBtn = new Button(this.createElement('button'), {
                 text: translate(`unit.action.${action}`),
             });
             actionBtn.bindCallback(() => {
-                world.sendActions([unitActionsFnTable[action](pos)]);
+                if (action in unitActionsFnTable) {
+                    world.sendActions([unitActionsFnTable[action](pos)]);
+                }
+                else {
+                    world.sendActions([[action, [pos]]]);
+                }
             });
             this.elements.unitActionsMenu.appendChild(actionBtn.element);
         }

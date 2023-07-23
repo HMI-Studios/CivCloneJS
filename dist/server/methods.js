@@ -509,5 +509,25 @@ const methods = {
             game.sendUpdates();
         }
     },
+    stealKnowledge: (ws, coords) => {
+        var _a, _b;
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile.unit;
+            if (unit) {
+                const tileKnowledgeMap = (_b = (_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap();
+                if (tileKnowledgeMap)
+                    unit.updateKnowledge(tileKnowledgeMap);
+                // TODO - spy invisiblity stuff + possibility of being discovered here
+                map.tileUpdate(unit.coords);
+                game.sendUpdates();
+            }
+        }
+    },
 };
 //# sourceMappingURL=methods.js.map
