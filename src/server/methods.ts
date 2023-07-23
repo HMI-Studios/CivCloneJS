@@ -633,8 +633,9 @@ const methods: {
 
       const tile = map.getTile(coords);
       const unit = tile.unit;
-      if (unit && unit.civID === civID) {
+      if (unit && unit.civID === civID && unit.movement) {
         unit.setCloak(cloaked);
+        unit.movement = 0;
         
         map.tileUpdate(unit.coords);
         game.sendUpdates();

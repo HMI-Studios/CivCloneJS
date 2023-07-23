@@ -52,6 +52,7 @@ exports.games = {
     exports.games[1] = yield game_1.Game.load('singleplayer test');
     // games[2] = await Game.load('no units test')
     exports.games[2] = yield game_1.Game.load('multiplayer test');
+    exports.games[3] = yield game_1.Game.load('spy');
 }))();
 const createGame = (username, playerCount, mapOptions, options) => {
     var _a;
@@ -538,6 +539,7 @@ const methods = {
             const unit = tile.unit;
             if (unit && unit.civID === civID) {
                 unit.setCloak(cloaked);
+                unit.movement = 0;
                 map.tileUpdate(unit.coords);
                 game.sendUpdates();
             }
