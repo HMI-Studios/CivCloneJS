@@ -262,7 +262,7 @@ class KnowledgeBucket {
      * @returns list of knowledge names
      */
     getKnowledges(completed) {
-        const knowledgeNames = (this.source || this.links).getKnowledges().filter(([knowledge, progress]) => (!completed || progress === 100)).map(([knowledge, _]) => knowledge);
+        const knowledgeNames = this.links.getKnowledges().filter(([_, progress]) => (!completed || progress === 100)).map(([knowledge, _]) => knowledge);
         return knowledgeNames;
     }
     /**
@@ -270,7 +270,7 @@ class KnowledgeBucket {
      * @returns knowledge map
      */
     getKnowledgeMap() {
-        return (this.source || this.links).getKnowledgeMap();
+        return this.links.getKnowledgeMap();
     }
     /**
      * Returns `true` if this bucket has 100 points for all knowledges in `knowledgeNames`, else `false`.

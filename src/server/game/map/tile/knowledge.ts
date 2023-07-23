@@ -313,7 +313,7 @@ export class KnowledgeBucket {
    * @returns list of knowledge names
    */
   getKnowledges(completed: boolean): string[] {
-    const knowledgeNames = (this.source || this.links).getKnowledges().filter(([knowledge, progress]) => (
+    const knowledgeNames = this.links.getKnowledges().filter(([_, progress]) => (
       !completed || progress === 100
     )).map(([knowledge, _]) => knowledge);
     return knowledgeNames;
@@ -324,7 +324,7 @@ export class KnowledgeBucket {
    * @returns knowledge map
    */
   getKnowledgeMap(): KnowledgeMap {
-    return (this.source || this.links).getKnowledgeMap();
+    return this.links.getKnowledgeMap();
   }
 
   /**
