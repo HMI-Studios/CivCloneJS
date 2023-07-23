@@ -166,8 +166,6 @@ export class Improvement {
 
     // }
 
-    this.knowledge?.turn(world);
-
     if (this.errand) {
       if (this.storage.fulfills(this.errand.cost)) {
         this.errand.completed = true;

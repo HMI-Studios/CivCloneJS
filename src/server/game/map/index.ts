@@ -527,6 +527,8 @@ export class Map {
           if (tile.unit) {
             tile.unit.knowledge.mergeKnowledge(tile.improvement.knowledge.getKnowledgeMap());
           }
+
+          tile.improvement.knowledge.turn(world);
         }
       }
     });

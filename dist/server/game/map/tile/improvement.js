@@ -97,10 +97,8 @@ class Improvement {
     }
     work(world) {
         // TODO - ADD POPULATION/COST CHECK
-        var _a;
         // if (type === 'farm') {
         // }
-        (_a = this.knowledge) === null || _a === void 0 ? void 0 : _a.turn(world);
         if (this.errand) {
             if (this.storage.fulfills(this.errand.cost)) {
                 this.errand.completed = true;
