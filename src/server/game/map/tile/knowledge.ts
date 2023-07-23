@@ -206,7 +206,6 @@ export class KnowledgeSource {
       (this.knowledges[knowledge.name] ?? 0) + amount,
       Math.max(this.knowledges[knowledge.name] ?? 0, maxPoints)
     );
-    console.log(this.knowledges[knowledge.name], wasNotCompleted)
     if (this.knowledges[knowledge.name] === 100 && wasNotCompleted) {
       this.completionQueue.push(knowledge.name);
     }
@@ -268,51 +267,45 @@ export class KnowledgeSourceLinks {
 }
 
 export class KnowledgeBucket {
-  private source: KnowledgeSource | KnowledgeSourceLinks;
+  private source?: KnowledgeSource;
+  private links: KnowledgeSourceLinks;
 
   constructor(knowledges?: KnowledgeMap) {
     if (knowledges) {
       this.source = new KnowledgeSource(knowledges);
-    } else {
-      this.source = new KnowledgeSourceLinks();
     }
+    this.links = new KnowledgeSourceLinks();
   }
 
   export() {
-    if (this.source instanceof KnowledgeSource) return this.source.export();
-    else return { links: true };
+    if (this.source) return this.source.export();
   }
 
   static import(data): KnowledgeBucket {
     const bucket = new KnowledgeBucket();
-    if (data?.links) {
-    } else if (data) {
+    if (data) {
       bucket.source = KnowledgeSource.import(data);
     }
     return bucket;
   }
 
   getSource(): KnowledgeSource | null {
-    if (this.source instanceof KnowledgeSource) return this.source;
+    if (this.source) return this.source;
     else return null;
   }
 
-  hasLinks(): boolean {
-    return this.source instanceof KnowledgeSourceLinks;
+  hasSource(): boolean {
+    return !!this.source;
   }
 
   clearLinks(): void {
-    if (this.source instanceof KnowledgeSourceLinks) {
-      this.source.clearLinks();
-    } else return;
+    this.links.clearLinks();
   }
 
   addLink(bucket: KnowledgeBucket, currentTurn: number): void {
-    if (this.source instanceof KnowledgeSourceLinks) {
-      const source = bucket.getSource();
-      if (!source) return;
-      this.source.addLink(source, currentTurn);
-    } else return;
+    const source = bucket.getSource();
+    if (!source) return;
+    this.links.addLink(source, currentTurn);
   }
 
   /**
@@ -320,7 +313,7 @@ export class KnowledgeBucket {
    * @returns list of knowledge names
    */
   getKnowledges(completed: boolean): string[] {
-    const knowledgeNames = this.source.getKnowledges().filter(([knowledge, progress]) => (
+    const knowledgeNames = (this.source || this.links).getKnowledges().filter(([knowledge, progress]) => (
       !completed || progress === 100
     )).map(([knowledge, _]) => knowledge);
     return knowledgeNames;
@@ -331,7 +324,7 @@ export class KnowledgeBucket {
    * @returns knowledge map
    */
   getKnowledgeMap(): KnowledgeMap {
-    return this.source.getKnowledgeMap();
+    return (this.source || this.links).getKnowledgeMap();
   }
 
   /**
@@ -339,7 +332,7 @@ export class KnowledgeBucket {
    * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
    */
   hasKnowledges(knowledgeNames: string[]): boolean {
-    if (this.source instanceof KnowledgeSourceLinks) {
+    if (!this.source) {
       const knowledges = {};
       for (const name of this.getKnowledges(true)) {
         knowledges[name] = true;
@@ -361,13 +354,12 @@ export class KnowledgeBucket {
    */
   addKnowledge(knowledge: Knowledge, amount: number, requirementPenalty: number, maxPoints = 100): void {
     if (maxPoints > 100 || maxPoints < 0) throw 'Invalid Knowledge Cap!';
-    if (this.source instanceof KnowledgeSourceLinks) this.source = KnowledgeSource.fromLinks(this.source);
+    if (!this.source) this.source = KnowledgeSource.fromLinks(this.links);
     this.source.addKnowledge(knowledge, amount, requirementPenalty, maxPoints);
   }
 
-  mergeKnowledge(bucket: KnowledgeBucket): void {
-    if (this.source instanceof KnowledgeSourceLinks) return;
-    const bucketKnowledgeMap = bucket.getKnowledgeMap();
+  mergeKnowledge(bucketKnowledgeMap: KnowledgeMap): void {
+    if (!this.source) return;
     const thisKnowledgeMap = this.getKnowledgeMap();
     for (const name in bucketKnowledgeMap) {
       const bucketProgress = bucketKnowledgeMap[name];
@@ -379,6 +371,10 @@ export class KnowledgeBucket {
   }
 
   turn(world: World): void {
-    this.source.turn(world);
+    this.links.turn(world);
+    if (this.source) {
+      this.mergeKnowledge(this.links.getKnowledgeMap());
+      this.source?.turn(world);
+    }
   }
 }

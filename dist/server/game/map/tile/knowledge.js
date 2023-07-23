@@ -171,9 +171,7 @@ class KnowledgeSource {
             amount *= requirementPenalty;
         const wasNotCompleted = !this.knowledges[knowledge.name] || this.knowledges[knowledge.name] < 100;
         this.knowledges[knowledge.name] = Math.min(((_a = this.knowledges[knowledge.name]) !== null && _a !== void 0 ? _a : 0) + amount, Math.max((_b = this.knowledges[knowledge.name]) !== null && _b !== void 0 ? _b : 0, maxPoints));
-        console.log(this.knowledges[knowledge.name], wasNotCompleted);
         if (this.knowledges[knowledge.name] === 100 && wasNotCompleted) {
-            console.log('COMPLETED', knowledge.name, amount, requirementPenalty, maxPoints);
             this.completionQueue.push(knowledge.name);
         }
     }
@@ -228,57 +226,43 @@ class KnowledgeBucket {
         if (knowledges) {
             this.source = new KnowledgeSource(knowledges);
         }
-        else {
-            this.source = new KnowledgeSourceLinks();
-        }
+        this.links = new KnowledgeSourceLinks();
     }
     export() {
-        if (this.source instanceof KnowledgeSource)
+        if (this.source)
             return this.source.export();
-        else
-            return { links: true };
     }
     static import(data) {
         const bucket = new KnowledgeBucket();
-        if (data === null || data === void 0 ? void 0 : data.links) {
-        }
-        else if (data) {
+        if (data) {
             bucket.source = KnowledgeSource.import(data);
         }
         return bucket;
     }
     getSource() {
-        if (this.source instanceof KnowledgeSource)
+        if (this.source)
             return this.source;
         else
             return null;
     }
-    hasLinks() {
-        return this.source instanceof KnowledgeSourceLinks;
+    hasSource() {
+        return !!this.source;
     }
     clearLinks() {
-        if (this.source instanceof KnowledgeSourceLinks) {
-            this.source.clearLinks();
-        }
-        else
-            return;
+        this.links.clearLinks();
     }
     addLink(bucket, currentTurn) {
-        if (this.source instanceof KnowledgeSourceLinks) {
-            const source = bucket.getSource();
-            if (!source)
-                return;
-            this.source.addLink(source, currentTurn);
-        }
-        else
+        const source = bucket.getSource();
+        if (!source)
             return;
+        this.links.addLink(source, currentTurn);
     }
     /**
      * @param completed whether the knowledge must have 100 points to be included
      * @returns list of knowledge names
      */
     getKnowledges(completed) {
-        const knowledgeNames = this.source.getKnowledges().filter(([knowledge, progress]) => (!completed || progress === 100)).map(([knowledge, _]) => knowledge);
+        const knowledgeNames = (this.source || this.links).getKnowledges().filter(([knowledge, progress]) => (!completed || progress === 100)).map(([knowledge, _]) => knowledge);
         return knowledgeNames;
     }
     /**
@@ -286,14 +270,14 @@ class KnowledgeBucket {
      * @returns knowledge map
      */
     getKnowledgeMap() {
-        return this.source.getKnowledgeMap();
+        return (this.source || this.links).getKnowledgeMap();
     }
     /**
      * Returns `true` if this bucket has 100 points for all knowledges in `knowledgeNames`, else `false`.
      * @param knowledgeNames List of knowledge names, matching the keys of Knowledge.knowledgeTree.
      */
     hasKnowledges(knowledgeNames) {
-        if (this.source instanceof KnowledgeSourceLinks) {
+        if (!this.source) {
             const knowledges = {};
             for (const name of this.getKnowledges(true)) {
                 knowledges[name] = true;
@@ -317,15 +301,14 @@ class KnowledgeBucket {
     addKnowledge(knowledge, amount, requirementPenalty, maxPoints = 100) {
         if (maxPoints > 100 || maxPoints < 0)
             throw 'Invalid Knowledge Cap!';
-        if (this.source instanceof KnowledgeSourceLinks)
-            this.source = KnowledgeSource.fromLinks(this.source);
+        if (!this.source)
+            this.source = KnowledgeSource.fromLinks(this.links);
         this.source.addKnowledge(knowledge, amount, requirementPenalty, maxPoints);
     }
-    mergeKnowledge(bucket) {
+    mergeKnowledge(bucketKnowledgeMap) {
         var _a;
-        if (this.source instanceof KnowledgeSourceLinks)
+        if (!this.source)
             return;
-        const bucketKnowledgeMap = bucket.getKnowledgeMap();
         const thisKnowledgeMap = this.getKnowledgeMap();
         for (const name in bucketKnowledgeMap) {
             const bucketProgress = bucketKnowledgeMap[name];
@@ -336,7 +319,12 @@ class KnowledgeBucket {
         }
     }
     turn(world) {
-        this.source.turn(world);
+        var _a;
+        this.links.turn(world);
+        if (this.source) {
+            this.mergeKnowledge(this.links.getKnowledgeMap());
+            (_a = this.source) === null || _a === void 0 ? void 0 : _a.turn(world);
+        }
     }
 }
 exports.KnowledgeBucket = KnowledgeBucket;
