@@ -203,7 +203,7 @@ class KnowledgeSourceLinks {
             for (const [knowledge, progress] of source.getKnowledges(currentTurn)) {
                 if (!(knowledge in knowledges))
                     knowledges[knowledge] = 0;
-                knowledges[knowledge] = Math.min(knowledges[knowledge] + progress, 100);
+                knowledges[knowledge] = Math.max(knowledges[knowledge], progress);
             }
         }
         return knowledges;
