@@ -517,7 +517,7 @@ const methods = {
             const map = game.world.map;
             const tile = map.getTile(coords);
             const unit = tile.unit;
-            if (unit) {
+            if (unit && unit.civID === civID) {
                 const tileKnowledgeMap = (_b = (_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap();
                 if (tileKnowledgeMap)
                     unit.updateKnowledge(tileKnowledgeMap);

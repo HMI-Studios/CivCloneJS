@@ -610,7 +610,7 @@ const methods: {
 
       const tile = map.getTile(coords);
       const unit = tile.unit;
-      if (unit) {
+      if (unit && unit.civID === civID) {
         const tileKnowledgeMap = tile.improvement?.knowledge?.getKnowledgeMap();
         if (tileKnowledgeMap) unit.updateKnowledge(tileKnowledgeMap);
         // TODO - spy invisiblity stuff + possibility of being discovered here
