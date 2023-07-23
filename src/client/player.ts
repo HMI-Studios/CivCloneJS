@@ -413,7 +413,7 @@ class UI {
         world.sendActions([['getImprovementCatalog', [pos]]]);
 
         world.on.update.improvementCatalog = (catalogPos: Coords, catalog: { type: string, cost: Yield }[]) => {
-          if (!(pos.x === catalogPos.x && pos.y === catalogPos.y)) return;
+          if (!(pos.x === catalogPos.x && pos.y === catalogPos.y) || !catalog) return;
           for (const item of catalog) {
             const actionBtn = new Button(
               this.createElement('button'),
@@ -610,7 +610,7 @@ class UI {
       if (tileKnowledgeCatalog) tileKnowledgeCatalog.remove();
       tileKnowledgeCatalog = this.createElement('div', {className: 'catalogDiv', children: [
         this.createElement('h3', {className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.knowledgeCatalog') }}),
-        this.createElement('div', {className: 'sidebarInfoTable', children: catalog.map(knowledge => (
+        this.createElement('div', {className: 'sidebarInfoTable', children: catalog && catalog.map(knowledge => (
           this.createElement('div', { className: 'sidebarInfoTableRow', children: [
             this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
               world.sendActions([[ 'researchKnowledge', [pos, knowledge.name] ]])

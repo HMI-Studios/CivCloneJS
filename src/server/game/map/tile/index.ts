@@ -219,10 +219,11 @@ export class Tile {
   getKnowledgeCatalog(): Knowledge[] | null {
     if (!this.improvement || !this.improvement.knowledge) return null;
     const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
+    const knowledgeMap = this.improvement.knowledge.getKnowledgeMap();
     const completedKnowledges = this.improvement.knowledge.getKnowledges(true);
     const reachableKnowledges = Knowledge.getReachableKnowledges(completedKnowledges);
     const knowledgeCatalog = reachableKnowledges.filter(
-      ({ name, branch }) => (knowledgeBranches[branch])
+      ({ name, branch }) => (knowledgeBranches[branch] && ((knowledgeMap[name] ?? 0) < 100))
     );
     return knowledgeCatalog;
   }

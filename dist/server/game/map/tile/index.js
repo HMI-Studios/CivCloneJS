@@ -161,9 +161,10 @@ class Tile {
         if (!this.improvement || !this.improvement.knowledge)
             return null;
         const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
+        const knowledgeMap = this.improvement.knowledge.getKnowledgeMap();
         const completedKnowledges = this.improvement.knowledge.getKnowledges(true);
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
-        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => (knowledgeBranches[branch]));
+        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => { var _a; return (knowledgeBranches[branch] && (((_a = knowledgeMap[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
         return knowledgeCatalog;
     }
 }
