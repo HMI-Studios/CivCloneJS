@@ -413,7 +413,7 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge.getKnowledgeMap());
+    this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge);
     return true;
   }
 
@@ -525,7 +525,10 @@ export class Map {
             tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
           }
           if (tile.unit) {
-            tile.unit.knowledge.mergeKnowledge(tile.improvement.knowledge.getKnowledgeMap());
+            const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
+            for (const name in tileKnowledgeMap) {
+              tile.unit.knowledge[name] = Math.max(tile.unit.knowledge[name] ?? 0, tileKnowledgeMap[name]);
+            }
           }
 
           tile.improvement.knowledge.turn(world);

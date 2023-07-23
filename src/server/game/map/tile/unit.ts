@@ -104,7 +104,7 @@ export class Unit {
   coords: Coords;
   alive: boolean;
 
-  public knowledge: KnowledgeBucket;
+  public knowledge: KnowledgeMap;
 
   static makeCatalog(types: string[]): UnitTypeCost[] {
     return types.map(type => (
@@ -126,7 +126,7 @@ export class Unit {
     this.civID = civID;
     this.coords = coords;
     this.alive = true;
-    this.knowledge = new KnowledgeBucket(knowledge ?? {});
+    this.knowledge = knowledge ?? {};
   }
 
   export() {
@@ -137,7 +137,7 @@ export class Unit {
       civID: this.civID,
       coords: this.coords,
       alive: this.alive,
-      knowledge: this.knowledge.getKnowledgeMap(),
+      knowledge: this.knowledge,
     };
   }
 
@@ -152,7 +152,7 @@ export class Unit {
       unit.attackRange = Unit.attackRangeTable[unit.type];
     }
     unit.alive = data.alive;
-    unit.knowledge = new KnowledgeBucket(data.knowledge);
+    unit.knowledge = data.knowledge;
     return unit;
   }
 
@@ -164,7 +164,7 @@ export class Unit {
       civID: this.civID,
       promotionClass: this.promotionClass,
       attackRange: this.attackRange,
-      knowledge: this.knowledge.getKnowledgeMap(),
+      knowledge: this.knowledge,
     };
   }
   

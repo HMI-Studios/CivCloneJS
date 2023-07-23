@@ -324,7 +324,7 @@ class Map {
             this.setTileOwner(neighbor, city, false);
             this.tileUpdate(neighbor);
         }
-        this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge.getKnowledgeMap());
+        this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge);
         return true;
     }
     startErrandAt(coords, improvement, errand) {
@@ -402,7 +402,7 @@ class Map {
     turn(world) {
         // Tiles
         this.forEachTile((tile, coords) => {
-            var _a;
+            var _a, _b;
             if (tile.improvement) {
                 tile.improvement.work(world);
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
@@ -423,7 +423,10 @@ class Map {
                         tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / knowledge_1.KNOWLEDGE_SPREAD_SPEED)));
                     }
                     if (tile.unit) {
-                        tile.unit.knowledge.mergeKnowledge(tile.improvement.knowledge.getKnowledgeMap());
+                        const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
+                        for (const name in tileKnowledgeMap) {
+                            tile.unit.knowledge[name] = Math.max((_b = tile.unit.knowledge[name]) !== null && _b !== void 0 ? _b : 0, tileKnowledgeMap[name]);
+                        }
                     }
                     tile.improvement.knowledge.turn(world);
                 }

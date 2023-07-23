@@ -113,7 +113,8 @@ class Tile {
     getBuildableImprovements() {
         if (!this.unit)
             return [];
-        return knowledge_1.Knowledge.getBuildableImprovements(this.unit.knowledge.getKnowledges(true))
+        const unitKnowledge = this.unit.knowledge;
+        return knowledge_1.Knowledge.getBuildableImprovements(Object.keys(unitKnowledge).filter((name) => !(unitKnowledge[name] < 100)))
             .filter((improvementType) => {
             if (improvementType === 'farm' && !this.isFarmable())
                 return false;

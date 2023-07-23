@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Unit = exports.PromotionClass = exports.MovementClass = void 0;
 const utils_1 = require("../../../utils");
-const knowledge_1 = require("./knowledge");
 const yield_1 = require("./yield");
 var MovementClass;
 (function (MovementClass) {
@@ -33,7 +32,7 @@ class Unit {
         this.civID = civID;
         this.coords = coords;
         this.alive = true;
-        this.knowledge = new knowledge_1.KnowledgeBucket(knowledge !== null && knowledge !== void 0 ? knowledge : {});
+        this.knowledge = knowledge !== null && knowledge !== void 0 ? knowledge : {};
     }
     static makeCatalog(types) {
         return types.map(type => ({ type, cost: Unit.costTable[type] }));
@@ -46,7 +45,7 @@ class Unit {
             civID: this.civID,
             coords: this.coords,
             alive: this.alive,
-            knowledge: this.knowledge.getKnowledgeMap(),
+            knowledge: this.knowledge,
         };
     }
     static import(data) {
@@ -60,7 +59,7 @@ class Unit {
             unit.attackRange = Unit.attackRangeTable[unit.type];
         }
         unit.alive = data.alive;
-        unit.knowledge = new knowledge_1.KnowledgeBucket(data.knowledge);
+        unit.knowledge = data.knowledge;
         return unit;
     }
     getData() {
@@ -71,7 +70,7 @@ class Unit {
             civID: this.civID,
             promotionClass: this.promotionClass,
             attackRange: this.attackRange,
-            knowledge: this.knowledge.getKnowledgeMap(),
+            knowledge: this.knowledge,
         };
     }
     getMovementClass() {
