@@ -519,6 +519,13 @@ class World {
           this.fetchImprovementCatalogs(tile.improvement, pos);
         }
       }
+      if (this.areSameCoords(camera.selectedUnitPos, pos)) {
+        const unit = this.getTile(pos).unit;
+        camera.deselectUnit(this);
+        if (unit.movement > 0) {
+          camera.selectUnit(this, pos, unit);
+        }
+      }
       
     };
 
