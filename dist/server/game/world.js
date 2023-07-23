@@ -80,7 +80,8 @@ class World {
     }
     static import(data) {
         const world = new World();
-        world.map = map_1.Map.import(data.map);
+        world.currentTurn = data.currentTurn;
+        world.map = map_1.Map.import(world, data.map);
         world.civs = {};
         for (const civID in data.civs) {
             const civData = data.civs[civID];
@@ -100,7 +101,6 @@ class World {
                 world.setCivLeader(leaderData.civID, Number(leaderID));
             }
         }
-        world.currentTurn = data.currentTurn;
         return world;
     }
     getUpdates() {

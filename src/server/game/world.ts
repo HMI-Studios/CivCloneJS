@@ -109,7 +109,8 @@ export class World {
 
   static import(data: any): World {
     const world = new World();
-    world.map = Map.import(data.map);
+    world.currentTurn = data.currentTurn;
+    world.map = Map.import(world, data.map);
     world.civs = {};
     for (const civID in data.civs) {
       const civData = data.civs[civID];
@@ -129,7 +130,6 @@ export class World {
         world.setCivLeader(leaderData.civID, Number(leaderID));
       }
     }
-    world.currentTurn = data.currentTurn;
     return world;
   }
 

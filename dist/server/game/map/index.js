@@ -34,7 +34,13 @@ class Map {
             traders: this.traders.map(trader => trader.export()),
         };
     }
-    static import(data) {
+    /**
+     *
+     * @param world The map needs to have a reference to the world on import, so that it can setup things like Links. Yes, this is irregular, but I see no way around it for now.
+     * @param data
+     * @returns
+     */
+    static import(world, data) {
         const map = new Map(data.height, data.width);
         map.tiles = data.tiles.map(tileData => tile_1.Tile.import(tileData));
         map.cities = data.cities.map(cityData => {
@@ -46,6 +52,12 @@ class Map {
             return city;
         });
         map.traders = data.traders.map(traderData => trade_1.Trader.import(map, traderData));
+        map.forEachTile((tile, coords) => {
+            var _a;
+            if ((_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge) {
+                map.updateImprovementLinks(world, tile, coords, tile.improvement);
+            }
+        });
         return map;
     }
     pos({ x, y }) {
@@ -399,10 +411,34 @@ class Map {
         }
         this.tileUpdate(coords);
     }
+    updateImprovementLinks(world, tile, coords, improvement) {
+        var _a;
+        if (!improvement.knowledge)
+            return;
+        improvement.knowledge.clearLinks();
+        const [_, posDistances] = this.getPathTree(coords, knowledge_1.KNOWLEDGE_SPREAD_RANGE, 0);
+        for (const pos in posDistances) {
+            const otherTile = this.tiles[pos];
+            if (!otherTile ||
+                !otherTile.improvement ||
+                !otherTile.improvement.knowledge ||
+                !otherTile.improvement.knowledge.hasSource())
+                continue;
+            const distance = posDistances[pos];
+            improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / knowledge_1.KNOWLEDGE_SPREAD_SPEED)));
+        }
+        if (tile.unit) {
+            const tileKnowledgeMap = improvement.knowledge.getKnowledgeMap();
+            for (const name in tileKnowledgeMap) {
+                tile.unit.knowledge[name] = Math.max((_a = tile.unit.knowledge[name]) !== null && _a !== void 0 ? _a : 0, tileKnowledgeMap[name]);
+            }
+        }
+        improvement.knowledge.turn(world);
+    }
     turn(world) {
         // Tiles
         this.forEachTile((tile, coords) => {
-            var _a, _b;
+            var _a;
             if (tile.improvement) {
                 tile.improvement.work(world);
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
@@ -410,25 +446,7 @@ class Map {
                     delete tile.improvement.errand;
                 }
                 if (tile.improvement.knowledge) {
-                    tile.improvement.knowledge.clearLinks();
-                    const [_, posDistances] = this.getPathTree(coords, knowledge_1.KNOWLEDGE_SPREAD_RANGE, 0);
-                    for (const pos in posDistances) {
-                        const otherTile = this.tiles[pos];
-                        if (!otherTile ||
-                            !otherTile.improvement ||
-                            !otherTile.improvement.knowledge ||
-                            !otherTile.improvement.knowledge.hasSource())
-                            continue;
-                        const distance = posDistances[pos];
-                        tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / knowledge_1.KNOWLEDGE_SPREAD_SPEED)));
-                    }
-                    if (tile.unit) {
-                        const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
-                        for (const name in tileKnowledgeMap) {
-                            tile.unit.knowledge[name] = Math.max((_b = tile.unit.knowledge[name]) !== null && _b !== void 0 ? _b : 0, tileKnowledgeMap[name]);
-                        }
-                    }
-                    tile.improvement.knowledge.turn(world);
+                    this.updateImprovementLinks(world, tile, coords, tile.improvement);
                 }
             }
         });

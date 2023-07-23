@@ -49,7 +49,14 @@ export class Map {
     };
   }
 
-  static import(data: any): Map {
+  /**
+   * 
+   * @param world The map needs to have a reference to the world on import, so that it can setup things like Links. Yes, this is irregular, but I see no way around it for now.
+   * NOTE that this world object is NOT complete, and ONLY the currentTurn field is guaranteed to be set!
+   * @param data 
+   * @returns 
+   */
+  static import(world: World, data: any): Map {
     const map = new Map(data.height, data.width);
     map.tiles = data.tiles.map(tileData => Tile.import(tileData));
     map.cities = data.cities.map(cityData => {
@@ -61,6 +68,11 @@ export class Map {
       return city;
     });
     map.traders = data.traders.map(traderData => Trader.import(map, traderData));
+    map.forEachTile((tile, coords) => {
+      if (tile.improvement?.knowledge) {
+        map.updateImprovementLinks(world, tile, coords, tile.improvement);
+      }
+    });
     return map;
   }
 
@@ -500,6 +512,31 @@ export class Map {
     this.tileUpdate(coords);
   }
 
+  private updateImprovementLinks(world: World, tile: Tile, coords: Coords, improvement: Improvement) {
+    if (!improvement.knowledge) return;
+    improvement.knowledge.clearLinks();
+    const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
+    for (const pos in posDistances) {
+      const otherTile: Tile | undefined = this.tiles[pos];
+      if (
+        !otherTile ||
+        !otherTile.improvement ||
+        !otherTile.improvement.knowledge ||
+        !otherTile.improvement.knowledge.hasSource()
+      ) continue;
+      const distance = posDistances[pos];
+      improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
+    }
+    if (tile.unit) {
+      const tileKnowledgeMap = improvement.knowledge.getKnowledgeMap();
+      for (const name in tileKnowledgeMap) {
+        tile.unit.knowledge[name] = Math.max(tile.unit.knowledge[name] ?? 0, tileKnowledgeMap[name]);
+      }
+    }
+
+    improvement.knowledge.turn(world);
+  }
+
   turn(world: World): void {
     // Tiles
     this.forEachTile((tile, coords) => {
@@ -511,27 +548,7 @@ export class Map {
         }
 
         if (tile.improvement.knowledge) {
-          tile.improvement.knowledge.clearLinks();
-          const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
-          for (const pos in posDistances) {
-            const otherTile: Tile | undefined = this.tiles[pos];
-            if (
-              !otherTile ||
-              !otherTile.improvement ||
-              !otherTile.improvement.knowledge ||
-              !otherTile.improvement.knowledge.hasSource()
-            ) continue;
-            const distance = posDistances[pos];
-            tile.improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
-          }
-          if (tile.unit) {
-            const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
-            for (const name in tileKnowledgeMap) {
-              tile.unit.knowledge[name] = Math.max(tile.unit.knowledge[name] ?? 0, tileKnowledgeMap[name]);
-            }
-          }
-
-          tile.improvement.knowledge.turn(world);
+          this.updateImprovementLinks(world, tile, coords, tile.improvement);
         }
       }
     });
