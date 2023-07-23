@@ -11,7 +11,7 @@ const unitActionsTable = {
     'warrior': [],
     'slinger': [],
     'archer': [],
-    'spy': ['stealKnowledge'],
+    'spy': ['stealKnowledge', 'cloak', 'decloak'],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
@@ -22,11 +22,27 @@ const unitActionsFnTable = {
     'build': (pos, improvement) => {
         return ['buildImprovement', [pos, improvement]];
     },
+    'cloak': (pos) => {
+        return ['setCloak', [pos, true]];
+    },
+    'decloak': (pos) => {
+        return ['setCloak', [pos, false]];
+    },
 };
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
         const tile = world.getTile(pos);
         return world.canSettleOn(tile);
+    },
+    'cloak': (world, pos) => {
+        var _a;
+        const tile = world.getTile(pos);
+        return !((_a = tile.unit.cloaked) !== null && _a !== void 0 ? _a : false);
+    },
+    'decloak': (world, pos) => {
+        var _a;
+        const tile = world.getTile(pos);
+        return (_a = tile.unit.cloaked) !== null && _a !== void 0 ? _a : false;
     },
 };
 const iconPathTable = {

@@ -33,6 +33,9 @@ class Unit {
         this.coords = coords;
         this.alive = true;
         this.knowledge = knowledge !== null && knowledge !== void 0 ? knowledge : {};
+        if (Unit.cloakTable[type]) {
+            this.cloaked = false;
+        }
     }
     static makeCatalog(types) {
         return types.map(type => ({ type, cost: Unit.costTable[type] }));
@@ -46,6 +49,7 @@ class Unit {
             coords: this.coords,
             alive: this.alive,
             knowledge: this.knowledge,
+            cloaked: this.cloaked,
         };
     }
     static import(data) {
@@ -60,10 +64,13 @@ class Unit {
         }
         unit.alive = data.alive;
         unit.knowledge = data.knowledge;
+        if (Unit.cloakTable[unit.type]) {
+            unit.cloaked = data.cloaked;
+        }
         return unit;
     }
-    getData() {
-        return {
+    getData(civID) {
+        return !this.cloaked || civID === this.civID ? {
             type: this.type,
             hp: this.hp,
             movement: this.movement,
@@ -71,7 +78,8 @@ class Unit {
             promotionClass: this.promotionClass,
             attackRange: this.attackRange,
             knowledge: this.knowledge,
-        };
+            cloaked: this.cloaked,
+        } : undefined;
     }
     getMovementClass() {
         return this.movementClass;
@@ -94,6 +102,11 @@ class Unit {
         var _a;
         for (const name in knowledgeMap) {
             this.knowledge[name] = Math.max((_a = this.knowledge[name]) !== null && _a !== void 0 ? _a : 0, knowledgeMap[name]);
+        }
+    }
+    setCloak(cloaked) {
+        if (Unit.cloakTable[this.type]) {
+            this.cloaked = cloaked;
         }
     }
     newTurn() {
@@ -144,6 +157,9 @@ Unit.combatStatsTable = {
 Unit.attackRangeTable = {
     'slinger': 2,
     'archer': 3,
+};
+Unit.cloakTable = {
+    'spy': true,
 };
 Unit.visionRangeTable = {
     default: 2,

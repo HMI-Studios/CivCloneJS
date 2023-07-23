@@ -295,7 +295,7 @@ export class Map {
   getCivTile(civID: number, tile: Tile): TileData | null {
     if (tile.discoveredBy[civID]) {
       if (tile.visibleTo[civID]) {
-        return tile.getVisibleData();
+        return tile.getVisibleData(civID);
       } else {
         return tile.getDiscoveredData();
       }

@@ -58,9 +58,9 @@ class Tile {
             elevation: this.elevation,
         };
     }
-    getVisibleData() {
+    getVisibleData(civID) {
         var _a;
-        return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(), visible: true });
+        return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(civID), visible: true });
     }
     getMovementCost(unit) {
         const mode = unit.getMovementClass();

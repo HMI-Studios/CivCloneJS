@@ -27,7 +27,7 @@ const unitActionsTable: { [unit: string]: string[] } = {
   'warrior': [],
   'slinger': [],
   'archer': [],
-  'spy': ['stealKnowledge'],
+  'spy': ['stealKnowledge', 'cloak', 'decloak'],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [string, unknown[]] } = {
@@ -39,12 +39,26 @@ const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [st
   'build': (pos: Coords, improvement: string): [string, unknown[]] => {
     return ['buildImprovement', [pos, improvement]];
   },
+  'cloak': (pos: Coords): [string, unknown[]] => {
+    return ['setCloak', [pos, true]];
+  },
+  'decloak': (pos: Coords): [string, unknown[]] => {
+    return ['setCloak', [pos, false]];
+  },
 };
 
 const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
   'settleCity': (world: World, pos: Coords): boolean => {
     const tile = world.getTile(pos);
     return world.canSettleOn(tile);
+  },
+  'cloak': (world: World, pos: Coords): boolean => {
+    const tile = world.getTile(pos);
+    return !(tile.unit.cloaked ?? false);
+  },
+  'decloak': (world: World, pos: Coords): boolean => {
+    const tile = world.getTile(pos);
+    return tile.unit.cloaked ?? false;
   },
 };
 

@@ -104,10 +104,10 @@ export class Tile {
     };
   }
 
-  getVisibleData(): TileData {
+  getVisibleData(civID: number): TileData {
     return {
       ...this.getDiscoveredData(),
-      unit: this.unit?.getData(),
+      unit: this.unit?.getData(civID),
       visible: true,
     }
   }

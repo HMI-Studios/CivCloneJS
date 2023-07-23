@@ -620,4 +620,25 @@ const methods: {
       }
     }
   },
+
+  setCloak: (ws: WebSocket, coords: Coords, cloaked: boolean) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile.unit;
+      if (unit && unit.civID === civID) {
+        unit.setCloak(cloaked);
+        
+        map.tileUpdate(unit.coords);
+        game.sendUpdates();
+      }
+    }
+  },
 };

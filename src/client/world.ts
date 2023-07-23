@@ -25,6 +25,7 @@ interface Unit {
   civID: number;
   promotionClass: PromotionClass;
   knowledge: KnowledgeMap;
+  cloaked?: boolean;
 }
 
 interface RangedUnit extends Unit {

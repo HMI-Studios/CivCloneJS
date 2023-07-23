@@ -16,6 +16,7 @@ export interface UnitData {
   promotionClass: PromotionClass,
   attackRange?: number,
   knowledge: KnowledgeMap,
+  cloaked?: boolean,
 }
 
 export enum MovementClass {
@@ -78,6 +79,10 @@ export class Unit {
     'archer': 3,
   }
 
+  static cloakTable: { [unitType: string]: boolean } = {
+    'spy': true,
+  }
+
   static visionRangeTable: { [unitType: string]: number } = {
     default: 2,
     'scout': 3,
@@ -105,6 +110,7 @@ export class Unit {
   civID: number;
   coords: Coords;
   alive: boolean;
+  cloaked?: boolean;
 
   public knowledge: KnowledgeMap;
 
@@ -129,6 +135,9 @@ export class Unit {
     this.coords = coords;
     this.alive = true;
     this.knowledge = knowledge ?? {};
+    if (Unit.cloakTable[type]) {
+      this.cloaked = false;
+    }
   }
 
   export() {
@@ -140,6 +149,7 @@ export class Unit {
       coords: this.coords,
       alive: this.alive,
       knowledge: this.knowledge,
+      cloaked: this.cloaked,
     };
   }
 
@@ -155,11 +165,14 @@ export class Unit {
     }
     unit.alive = data.alive;
     unit.knowledge = data.knowledge;
+    if (Unit.cloakTable[unit.type]) {
+      unit.cloaked = data.cloaked;
+    }
     return unit;
   }
 
-  getData(): UnitData {
-    return {
+  getData(civID: number): UnitData | undefined {
+    return !this.cloaked || civID === this.civID ? {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
@@ -167,7 +180,8 @@ export class Unit {
       promotionClass: this.promotionClass,
       attackRange: this.attackRange,
       knowledge: this.knowledge,
-    };
+      cloaked: this.cloaked,
+    } : undefined;
   }
   
   getMovementClass(): number {
@@ -194,6 +208,12 @@ export class Unit {
   updateKnowledge(knowledgeMap: KnowledgeMap): void {
     for (const name in knowledgeMap) {
       this.knowledge[name] = Math.max(this.knowledge[name] ?? 0, knowledgeMap[name]);
+    }
+  }
+
+  setCloak(cloaked: boolean): void {
+    if (Unit.cloakTable[this.type]) {
+      this.cloaked = cloaked;
     }
   }
 

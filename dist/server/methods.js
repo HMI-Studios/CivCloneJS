@@ -527,5 +527,21 @@ const methods = {
             }
         }
     },
+    setCloak: (ws, coords, cloaked) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile.unit;
+            if (unit && unit.civID === civID) {
+                unit.setCloak(cloaked);
+                map.tileUpdate(unit.coords);
+                game.sendUpdates();
+            }
+        }
+    },
 };
 //# sourceMappingURL=methods.js.map
