@@ -525,7 +525,7 @@ class World {
                 ui.hideSidebarMenu();
             };
             this.on.event.buildWall = (pos, callback) => {
-                camera.deselectUnit(world);
+                camera.deselectUnit(this);
                 const neighbors = this.getNeighbors(pos);
                 const newHighlightedTiles = {};
                 for (const pos of neighbors) {
@@ -534,6 +534,7 @@ class World {
                 camera.highlightedTiles = newHighlightedTiles;
                 this.listeners.selectTile = (coords, tile) => {
                     callback(coords, tile);
+                    camera.highlightedTiles = {};
                 };
             };
             yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {

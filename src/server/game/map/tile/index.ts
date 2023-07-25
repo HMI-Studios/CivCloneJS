@@ -168,6 +168,10 @@ export class Tile {
     this.visibleTo[civID] = 0;
   }
 
+  setWall(direction: number, type: number): void {
+    this.walls[direction] = { type };
+  }
+
   canSupply(requirement: YieldParams): boolean {
     return !!this.improvement && (
       this.improvement.yield.canSupply(requirement)

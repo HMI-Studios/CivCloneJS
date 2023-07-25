@@ -422,8 +422,6 @@ export class Map {
     for (const neighbor of this.getNeighborsCoords(coords)) {
       this.setTileOwner(neighbor, city, false);
 
-      this.getTile(neighbor).addKnowledge(Knowledge.knowledgeTree['food_0'], 100, 1);
-
       this.tileUpdate(neighbor);
     }
 

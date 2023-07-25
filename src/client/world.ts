@@ -105,6 +105,7 @@ interface Tile {
     name: string,
   };
   visible: boolean;
+  walls: Wall[];
 }
 
 interface GameMetadata {
@@ -681,7 +682,7 @@ class World {
     }
 
     this.on.event.buildWall = (pos: Coords, callback: (...args: any) => void): void => {
-      camera.deselectUnit(world);
+      camera.deselectUnit(this);
       const neighbors = this.getNeighbors(pos);
       const newHighlightedTiles = {};
       for (const pos of neighbors) {
@@ -692,6 +693,7 @@ class World {
 
       this.listeners.selectTile = (coords: Coords, tile: Tile): void => {
         callback(coords, tile);
+        camera.highlightedTiles = {};
       }
     }
 

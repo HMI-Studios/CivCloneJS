@@ -4,6 +4,7 @@ import { Map, MapOptions } from './game/map';
 import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
 import { PromotionClass } from './game/map/tile/unit';
+import { getDirection } from './utils';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -497,6 +498,27 @@ const methods: {
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
         map.startConstructionAt(coords, type, civID, unit);
+        game.sendUpdates();
+      }
+    }
+  },
+
+  buildWall: (ws: WebSocket, coords: Coords, facingCoords: Coords, type: number) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile?.unit;
+
+      if (unit?.type === 'builder' && unit?.civID === civID) {
+        tile.setWall(getDirection(coords, facingCoords), type);
+        map.tileUpdate(coords);
         game.sendUpdates();
       }
     }

@@ -93,6 +93,9 @@ class Tile {
     clearVisibility(civID) {
         this.visibleTo[civID] = 0;
     }
+    setWall(direction, type) {
+        this.walls[direction] = { type };
+    }
     canSupply(requirement) {
         return !!this.improvement && (this.improvement.yield.canSupply(requirement));
     }

@@ -14,6 +14,7 @@ const player_1 = require("./game/player");
 const game_1 = require("./game");
 const generator_1 = require("./game/map/generator");
 const unit_1 = require("./game/map/tile/unit");
+const utils_1 = require("./utils");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -425,6 +426,22 @@ const methods = {
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
                 map.startConstructionAt(coords, type, civID, unit);
+                game.sendUpdates();
+            }
+        }
+    },
+    buildWall: (ws, coords, facingCoords, type) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
+                tile.setWall((0, utils_1.getDirection)(coords, facingCoords), type);
+                map.tileUpdate(coords);
                 game.sendUpdates();
             }
         }
