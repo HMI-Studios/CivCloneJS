@@ -131,6 +131,26 @@ const canResearch: { [improvement: string]: boolean } = {
   'campus': true,
 };
 
+const getCoordsDial = ({x, y}: Coords): Coords[] => {
+  return mod(x, 2) === 1 ? 
+  [
+    { x: x,   y: y+1 },
+    { x: x+1, y: y+1 },
+    { x: x+1, y: y   },
+    { x: x,   y: y-1 },
+    { x: x-1, y: y   },
+    { x: x-1, y: y+1 },
+  ] :
+  [
+    { x: x,   y: y+1 },
+    { x: x+1, y: y   },
+    { x: x+1, y: y-1 },
+    { x: x,   y: y-1 },
+    { x: x-1, y: y-1 },
+    { x: x-1, y: y   },
+  ];
+};
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
   tiles: Tile[];
@@ -203,6 +223,18 @@ class World {
     return filter ? tiles.filter((pos) => !!this.getTile(pos)) : tiles;
   }
 
+  getDirection(origin: Coords, target: Coords): number {
+    const coordsDial = getCoordsDial(origin);
+    let direction = -1;
+    coordsDial.forEach((coords, i) => {
+      if (this.areSameCoords(origin, target)) {
+        direction = i;
+      }
+    });
+  
+    return direction;
+  }
+
   isAdjacent(posA: Coords, posB: Coords): boolean {
     // TODO - possibly optimize this? memoize?
     return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
@@ -251,7 +283,7 @@ class World {
 
   areSameCoords(pos1: Coords | null, pos2: Coords | null): boolean {
     if (pos1 === null || pos2 === null) return false;
-    return pos1.x === pos2.x && pos1.y === pos2.y;
+    return mod(pos1.x, this.width) === mod(pos2.x, this.width) && pos1.y === pos2.y;
   }
 
   // mode: 0 = land unit, 1 = sea unit; -1 = air unit
@@ -273,6 +305,8 @@ class World {
 
         const tile = this.getTile(adjPos);
         if (tile.unit && tile.unit.civID === this.player.civID) continue;
+        console.log(tile.walls, this.getDirection(adjPos, atPos), adjPos, atPos)
+        if (tile.walls[this.getDirection(adjPos, atPos)] !== null) continue;
 
         const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {

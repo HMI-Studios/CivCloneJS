@@ -122,6 +122,8 @@ class Map {
                 const tile = this.getTile(adjPos);
                 // PATH BLOCKING LOGIC HERE
                 // if (tile.unit && tile.unit.civID === this.player.civID) continue;
+                if (tile.walls[(0, utils_1.getDirection)(adjPos, atPos)] !== null)
+                    continue;
                 const movementCost = mode !== unit_1.MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
                 if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
                     dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;

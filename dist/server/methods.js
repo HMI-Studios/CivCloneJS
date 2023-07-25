@@ -337,7 +337,7 @@ const methods = {
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
                 const unit = src.unit;
-                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit))) {
+                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords)))) {
                     game.sendUpdates();
                     return;
                 }
@@ -348,7 +348,7 @@ const methods = {
                     }
                     break;
                 }
-                unit.movement -= dst.getMovementCost(unit);
+                unit.movement -= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords));
                 map.moveUnitTo(unit, dstCoords);
                 src = dst;
                 finalCoords = dstCoords;

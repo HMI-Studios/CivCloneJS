@@ -392,7 +392,7 @@ const methods: {
 
         const unit = src.unit;
 
-        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit)) ) {
+        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords))) ) {
           game.sendUpdates();
           return;
         }
@@ -405,7 +405,7 @@ const methods: {
           break;
         }
 
-        unit.movement -= dst.getMovementCost(unit);
+        unit.movement -= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords));
         map.moveUnitTo(unit, dstCoords);
 
         src = dst;

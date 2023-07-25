@@ -4,6 +4,7 @@ import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
 import { Knowledge, KnowledgeBucket } from './knowledge';
 import { Wall } from './wall';
+import { getDirection } from '../../../utils';
 
 export interface TileData {
   type: string;
@@ -133,8 +134,9 @@ export class Tile {
     }
   }
 
-  getMovementCost(unit: Unit): number {
+  getMovementCost(unit: Unit, direction: number): number {
     const mode = unit.getMovementClass();
+    if (this.walls[direction] !== null) return Infinity;
     return mode > -1 ? this.movementCost[mode] || Infinity : 1;
   }
 

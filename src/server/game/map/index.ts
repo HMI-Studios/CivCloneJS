@@ -3,7 +3,7 @@ import { MovementClass, PromotionClass, Unit } from './tile/unit';
 import { City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
-import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection } from '../../utils';
+import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection, getDirection } from '../../utils';
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
@@ -162,6 +162,7 @@ export class Map {
         const tile = this.getTile(adjPos);
         // PATH BLOCKING LOGIC HERE
         // if (tile.unit && tile.unit.civID === this.player.civID) continue;
+        if (tile.walls[getDirection(adjPos, atPos)] !== null) continue;
 
         const movementCost = mode !== MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {

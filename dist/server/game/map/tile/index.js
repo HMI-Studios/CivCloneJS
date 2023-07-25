@@ -64,8 +64,10 @@ class Tile {
         var _a;
         return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(civID), visible: true });
     }
-    getMovementCost(unit) {
+    getMovementCost(unit, direction) {
         const mode = unit.getMovementClass();
+        if (this.walls[direction] !== null)
+            return Infinity;
         return mode > -1 ? this.movementCost[mode] || Infinity : 1;
     }
     /**
