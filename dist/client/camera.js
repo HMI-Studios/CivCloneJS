@@ -135,6 +135,24 @@ class Camera {
         ctx.drawImage(((_a = textures.unit[unit.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
         ctx.globalAlpha = 1;
     }
+    drawTileLine(x1, y1, x2, y2) {
+        const { zoom, x: camX, y: camY, textures, ctx } = this;
+        const { width, height } = world;
+        const leftX1 = (-camX + ((x1 - (width / 2)) * X_TILE_SPACING)) * zoom;
+        const topY1 = (camY - (((y1 - (height / 2)) * TILE_HEIGHT) + (mod(x1, 2) * Y_TILE_SPACING))) * zoom;
+        const leftX2 = (-camX + ((x2 - (width / 2)) * X_TILE_SPACING)) * zoom;
+        const topY2 = (camY - (((y2 - (height / 2)) * TILE_HEIGHT) + (mod(x2, 2) * Y_TILE_SPACING))) * zoom;
+        const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+        const center1 = [leftX1 + (TILE_WIDTH / 2 * zoom), topY1 + middleYOffset];
+        const center2 = [leftX2 + (TILE_WIDTH / 2 * zoom), topY2 + middleYOffset];
+        ctx.beginPath();
+        ctx.lineWidth = zoom * 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#66faff';
+        ctx.moveTo(...center1);
+        ctx.lineTo(...center2);
+        ctx.stroke();
+    }
     render(world) {
         var _a, _b, _c;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
@@ -240,6 +258,7 @@ class Camera {
                         ctx.stroke();
                     }
                     if (x === selectedX && y === selectedY) {
+                        this.hoverPos = { x, y };
                         if (this.mouseDownTime === 1) {
                             mapClicked = true;
                             world.on.event.selectTile({ x, y }, tile);
@@ -276,6 +295,16 @@ class Camera {
                 }
             }
         }
+        if (this.selectedUnitPos && this.hoverPos && world.posIndex(this.hoverPos) in this.highlightedTiles) {
+            let i = 0;
+            let curPos = this.hoverPos;
+            while (i < 100 && !world.areSameCoords(curPos, this.selectedUnitPos)) {
+                const { x, y } = this.highlightedTiles[world.posIndex(curPos)];
+                this.drawTileLine(curPos.x, curPos.y, x, y);
+                curPos = this.highlightedTiles[world.posIndex(curPos)];
+            }
+        }
+        this.drawTileLine(1, 6, 1, 7);
         if (!mapClicked && this.mouseDownTime === 1) {
             this.highlightedTiles = {};
             world.on.event.deselectUnit(this.selectedUnitPos);
