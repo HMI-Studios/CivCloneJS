@@ -23,7 +23,7 @@ const errandTypeTable: { [type: number]: string } = {
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
-  'builder': ['build'],
+  'builder': ['build', 'buildWall'],
   'warrior': [],
   'slinger': [],
   'archer': [],
@@ -39,6 +39,8 @@ const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [st
   'build': (pos: Coords, improvement: string): [string, unknown[]] => {
     return ['buildImprovement', [pos, improvement]];
   },
+  'buildWall': (pos: Coords, towards: Coords, type: WallType): [string, unknown[]] => {
+    return ['buildWall', [pos, towards, type]];
   'cloak': (pos: Coords): [string, unknown[]] => {
     return ['setCloak', [pos, true]];
   },
@@ -453,6 +455,24 @@ class UI {
             this.elements.unitActionsMenu.appendChild(actionBtn.element);
           }
         };
+
+        continue;
+      }
+
+      if (action === 'buildWall') {
+        const actionBtn = new Button(
+          this.createElement('button'),
+          {
+            text: `${translate(`unit.action.${action}`)}`,
+          }
+        );
+        actionBtn.bindCallback(() => {
+          world.on.event.buildWall(pos, (selectedPos: Coords) => {
+            world.sendActions([unitActionsFnTable[action](pos, selectedPos, WallType.WALL)]);
+          });
+        });
+  
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
 
         continue;
       }

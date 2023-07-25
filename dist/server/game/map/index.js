@@ -335,6 +335,7 @@ class Map {
         this.cities.push(city);
         for (const neighbor of this.getNeighborsCoords(coords)) {
             this.setTileOwner(neighbor, city, false);
+            this.getTile(neighbor).addKnowledge(knowledge_1.Knowledge.knowledgeTree['food_0'], 100, 1);
             this.tileUpdate(neighbor);
         }
         this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge);

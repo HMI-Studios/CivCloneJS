@@ -3,6 +3,7 @@ import { Improvement, ImprovementConstructionCost, ImprovementData } from './imp
 import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
 import { Knowledge, KnowledgeBucket } from './knowledge';
+import { Wall } from './wall';
 
 export interface TileData {
   type: string;
@@ -12,6 +13,14 @@ export interface TileData {
   unit?: UnitData;
   improvement?: ImprovementData;
   owner?: CityData;
+  walls: [
+    Wall | null,
+    Wall | null,
+    Wall | null,
+    Wall | null,
+    Wall | null,
+    Wall | null,
+  ];
   visible?: boolean;
 }
 
@@ -43,6 +52,15 @@ export class Tile {
   improvement?: Improvement;
   owner?: City;
 
+  walls: [
+    Wall | null,
+    Wall | null,
+    Wall | null,
+    Wall | null,
+    Wall | null,
+    Wall | null,
+  ];
+
   discoveredBy: { [civID: number]: boolean };
   visibleTo: { [civID: number]: number };
 
@@ -56,6 +74,8 @@ export class Tile {
     this.unit = undefined;
     this.improvement = undefined;
     this.owner = undefined;
+
+    this.walls = [null, null, null, null, null, null];
 
     this.discoveredBy = {};
     this.visibleTo = {};
@@ -99,6 +119,7 @@ export class Tile {
       movementCost: this.movementCost,
       improvement: this.improvement?.getData(),
       owner: this.owner?.getData(),
+      walls: this.walls,
       yield: this.getTileYield(),
       elevation: this.elevation,
     };
