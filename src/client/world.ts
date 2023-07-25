@@ -227,7 +227,7 @@ class World {
     const coordsDial = getCoordsDial(origin);
     let direction = -1;
     coordsDial.forEach((coords, i) => {
-      if (this.areSameCoords(origin, target)) {
+      if (this.areSameCoords(coords, target)) {
         direction = i;
       }
     });
@@ -306,7 +306,7 @@ class World {
         const tile = this.getTile(adjPos);
         if (tile.unit && tile.unit.civID === this.player.civID) continue;
         console.log(tile.walls, this.getDirection(adjPos, atPos), adjPos, atPos)
-        if (tile.walls[this.getDirection(adjPos, atPos)] !== null) continue;
+        if (tile.walls[this.getDirection(adjPos, atPos)]) continue;
 
         const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {
