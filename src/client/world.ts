@@ -532,9 +532,11 @@ class World {
       }
       if (this.areSameCoords(camera.selectedUnitPos, pos)) {
         const unit = this.getTile(pos).unit;
-        camera.deselectUnit(this);
-        if (unit.movement > 0) {
-          camera.selectUnit(this, pos, unit);
+        if (unit) {
+          camera.deselectUnit(this);
+          if (unit.movement > 0) {
+            camera.selectUnit(this, pos, unit);
+          }
         }
       }
       
