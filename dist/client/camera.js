@@ -173,21 +173,36 @@ class Camera {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     ctx.drawImage(((_a = textures.tile[tile.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
+                    const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
+                    const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
+                    const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
+                    const rightCapXOffset = X_TILE_SPACING * zoom;
+                    const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+                    const margin = 1 * zoom;
+                    const positions = [
+                        [leftX + rightCapXOffset - margin, topY + margin],
+                        [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
+                        [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
+                        [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
+                        [leftX + margin, topY + middleYOffset],
+                        [leftX + leftCapXOffset + margin, topY + margin],
+                    ];
+                    if (tile.walls.reduce((sum, wall) => (sum + (wall === null ? 0 : 1)), 0) > 0) {
+                        ctx.beginPath();
+                        ctx.lineWidth = margin * 4;
+                        ctx.lineCap = 'square';
+                        ctx.strokeStyle = '#777';
+                        ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
+                        for (let i = 0; i < tile.walls.length; i++) {
+                            if (tile.walls[i] === null)
+                                ctx.moveTo(...positions[i]);
+                            else
+                                ctx.lineTo(...positions[i]);
+                        }
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
                     if (tile.owner) {
-                        const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
-                        const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
-                        const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
-                        const rightCapXOffset = X_TILE_SPACING * zoom;
-                        const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
-                        const margin = 1 * zoom;
-                        const positions = [
-                            [leftX + rightCapXOffset - margin, topY + margin],
-                            [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
-                            [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
-                            [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
-                            [leftX + margin, topY + middleYOffset],
-                            [leftX + leftCapXOffset + margin, topY + margin],
-                        ];
                         const neighbors = world.getNeighbors({ x, y }, false);
                         ctx.beginPath();
                         ctx.lineWidth = margin * 2;
@@ -210,20 +225,6 @@ class Camera {
                     }
                     ctx.globalAlpha = 1;
                     if (world.posIndex({ x, y }) in this.highlightedTiles || (this.selectedUnitPos && (world.posIndex({ x, y }) === world.posIndex(this.selectedUnitPos)))) {
-                        const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
-                        const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
-                        const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
-                        const rightCapXOffset = X_TILE_SPACING * zoom;
-                        const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
-                        const margin = 1 * zoom;
-                        const positions = [
-                            [leftX + rightCapXOffset - margin, topY + margin],
-                            [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
-                            [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
-                            [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
-                            [leftX + margin, topY + middleYOffset],
-                            [leftX + leftCapXOffset + margin, topY + margin],
-                        ];
                         const neighbors = world.getNeighbors({ x, y }, false);
                         ctx.beginPath();
                         ctx.lineWidth = margin * 2;
