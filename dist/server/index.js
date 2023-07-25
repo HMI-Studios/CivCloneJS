@@ -57,7 +57,10 @@ wss.on('connection', (ws, req) => {
             ws.send(JSON.stringify({ error: ['bad JSON'] }));
             return;
         }
-        console.log('received:', data);
+        if (config_1.DEBUG) {
+            const { username, ip } = (0, methods_1.getConnData)(ws);
+            console.log(`Recieved from ${username} (${ip}):`, JSON.stringify(data));
+        }
         if (data.actions) {
             for (let i = 0; i < data.actions.length; i++) {
                 const action = data.actions[i][0];

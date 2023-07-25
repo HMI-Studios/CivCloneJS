@@ -36,8 +36,18 @@ class World {
                     }
                 }
                 if (legal_start_location) {
-                    this.addUnit(new unit_1.Unit('settler', civID, settler_coords));
-                    this.addUnit(new unit_1.Unit('builder', civID, builder_coords));
+                    this.addUnit(new unit_1.Unit('settler', civID, settler_coords, {
+                        'start': 100,
+                        'food_0': 100,
+                        'military_0': 100,
+                        'science_1': 100,
+                    }));
+                    this.addUnit(new unit_1.Unit('builder', civID, builder_coords, {
+                        'start': 100,
+                        'food_0': 100,
+                        'military_0': 100,
+                        'science_1': 100,
+                    }));
                     this.addUnit(new unit_1.Unit('scout', civID, scout_coords));
                     start_location_successful = true;
                     break;
@@ -51,6 +61,7 @@ class World {
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
             this.leaderPool[i] = new leader_1.Leader(i);
         }
+        this.currentTurn = 1;
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
     }
     export() {
@@ -64,11 +75,13 @@ class World {
             civs: exportedCivs,
             civsCount: this.civsCount,
             leaderPool: this.leaderPool,
+            currentTurn: this.currentTurn,
         };
     }
     static import(data) {
         const world = new World();
-        world.map = map_1.Map.import(data.map);
+        world.currentTurn = data.currentTurn;
+        world.map = map_1.Map.import(world, data.map);
         world.civs = {};
         for (const civID in data.civs) {
             const civData = data.civs[civID];
@@ -243,7 +256,11 @@ class World {
         this.map.tileUpdate(defender.coords);
     }
     turn() {
+        const startTime = new Date().getTime();
         this.map.turn(this);
+        // TODO - maybe make a world.log for actual non-debug logs?
+        console.log(`Turn ${this.currentTurn} finished in ${new Date().getTime() - startTime}ms`);
+        this.currentTurn++;
     }
 }
 exports.World = World;

@@ -293,7 +293,6 @@ const methods = {
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, targetCoords);
         if (game) {
             const world = game.world;
             const map = world.map;
@@ -329,7 +328,6 @@ const methods = {
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, path, attack);
         if (game) {
             const world = game.world;
             const map = world.map;
@@ -343,6 +341,10 @@ const methods = {
                     return;
                 }
                 if (dst.unit) {
+                    if (dst.unit.cloaked) {
+                        dst.unit.setCloak(false);
+                        map.tileUpdate(dstCoords);
+                    }
                     break;
                 }
                 unit.movement -= dst.getMovementCost(unit);
@@ -379,7 +381,7 @@ const methods = {
             const map = world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
-                const validCityLocation = map.settleCityAt(coords, name, civID);
+                const validCityLocation = map.settleCityAt(coords, name, civID, unit);
                 if (validCityLocation) {
                     world.removeUnit(unit);
                 }
@@ -422,7 +424,7 @@ const methods = {
             const tile = map.getTile(coords);
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
-                map.startConstructionAt(coords, type, civID);
+                map.startConstructionAt(coords, type, civID, unit);
                 game.sendUpdates();
             }
         }
@@ -507,6 +509,43 @@ const methods = {
             const tile = map.getTile(coords);
             map.researchKnowledgeAt(coords, name, civID);
             game.sendUpdates();
+        }
+    },
+    stealKnowledge: (ws, coords) => {
+        var _a, _b;
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile.unit;
+            if (unit && unit.civID === civID) {
+                const tileKnowledgeMap = (_b = (_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap();
+                if (tileKnowledgeMap)
+                    unit.updateKnowledge(tileKnowledgeMap);
+                // TODO - spy invisiblity stuff + possibility of being discovered here
+                map.tileUpdate(unit.coords);
+                game.sendUpdates();
+            }
+        }
+    },
+    setCloak: (ws, coords, cloaked) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile.unit;
+            if (unit && unit.civID === civID && unit.movement) {
+                unit.setCloak(cloaked);
+                unit.movement = 0;
+                map.tileUpdate(unit.coords);
+                game.sendUpdates();
+            }
         }
     },
 };

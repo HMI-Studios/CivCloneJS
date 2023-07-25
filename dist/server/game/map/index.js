@@ -34,7 +34,14 @@ class Map {
             traders: this.traders.map(trader => trader.export()),
         };
     }
-    static import(data) {
+    /**
+     *
+     * @param world The map needs to have a reference to the world on import, so that it can setup things like Links. Yes, this is irregular, but I see no way around it for now.
+     * NOTE that this world object is NOT complete, and ONLY the currentTurn field is guaranteed to be set!
+     * @param data
+     * @returns
+     */
+    static import(world, data) {
         const map = new Map(data.height, data.width);
         map.tiles = data.tiles.map(tileData => tile_1.Tile.import(tileData));
         map.cities = data.cities.map(cityData => {
@@ -46,6 +53,12 @@ class Map {
             return city;
         });
         map.traders = data.traders.map(traderData => trade_1.Trader.import(map, traderData));
+        map.forEachTile((tile, coords) => {
+            var _a;
+            if ((_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge) {
+                map.updateImprovementLinks(world, tile, coords, tile.improvement);
+            }
+        });
         return map;
     }
     pos({ x, y }) {
@@ -131,22 +144,30 @@ class Map {
             if (stepsUntilSpread === 0) {
                 const newLeftCoords = (0, utils_1.getCoordInDirection)(coords, direction - 1);
                 const newLeftTile = this.getTile(newLeftCoords);
-                const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
-                this.getVisibleTilesRecurse(newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                if (newLeftTile) {
+                    const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
+                    this.getVisibleTilesRecurse(newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                }
                 const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
                 const newTile = this.getTile(newCoords);
-                const newSlope = newTile.getTotalElevation() - maxElevation;
-                this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                if (newTile) {
+                    const newSlope = newTile.getTotalElevation() - maxElevation;
+                    this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                }
                 const newRightCoords = (0, utils_1.getCoordInDirection)(coords, direction + 1);
                 const newRightTile = this.getTile(newRightCoords);
-                const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
-                this.getVisibleTilesRecurse(newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                if (newRightTile) {
+                    const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
+                    this.getVisibleTilesRecurse(newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+                }
             }
             else {
                 const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
                 const newTile = this.getTile(newCoords);
-                const newSlope = newTile.getTotalElevation() - maxElevation;
-                this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
+                if (newTile) {
+                    const newSlope = newTile.getTotalElevation() - maxElevation;
+                    this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
+                }
             }
         }
     }
@@ -159,6 +180,8 @@ class Map {
         for (let direction = 0; direction < 6; direction++) {
             const newCoords = (0, utils_1.getCoordInDirection)(unit.coords, direction);
             const newTile = this.getTile(newCoords);
+            if (!newTile)
+                continue;
             const slope = newTile.getTotalElevation() - tile.getTotalElevation();
             this.getVisibleTilesRecurse(newCoords, this.getTile(unit.coords).getTotalElevation() + slope, slope, range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
         }
@@ -194,7 +217,7 @@ class Map {
     getCivTile(civID, tile) {
         if (tile.discoveredBy[civID]) {
             if (tile.visibleTo[civID]) {
-                return tile.getVisibleData();
+                return tile.getVisibleData(civID);
             }
             else {
                 return tile.getDiscoveredData();
@@ -304,7 +327,7 @@ class Map {
             tile.type !== 'frozen_coastal' &&
             tile.type !== 'river');
     }
-    settleCityAt(coords, name, civID) {
+    settleCityAt(coords, name, civID, settler) {
         const tile = this.getTile(coords);
         if (!this.canSettleOn(tile))
             return false;
@@ -315,14 +338,14 @@ class Map {
             this.getTile(neighbor).addKnowledge(knowledge_1.Knowledge.knowledgeTree['food_0'], 100, 1);
             this.tileUpdate(neighbor);
         }
-        this.buildImprovementAt(coords, 'settlement', civID);
+        this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge);
         return true;
     }
     startErrandAt(coords, improvement, errand) {
         improvement.startErrand(errand);
         this.tileUpdate(coords);
     }
-    startConstructionAt(coords, improvementType, ownerID) {
+    startConstructionAt(coords, improvementType, ownerID, builder) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
@@ -340,14 +363,14 @@ class Map {
             tile.type !== 'frozen_ocean' &&
             tile.type !== 'mountain');
     }
-    buildImprovementAt(coords, type, ownerID) {
+    buildImprovementAt(coords, type, ownerID, knowledges) {
         var _a;
         const tile = this.getTile(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
         if (!this.canBuildOn(tile))
             return;
-        tile.improvement = new improvement_1.Improvement(type, tile.baseYield);
+        tile.improvement = new improvement_1.Improvement(type, tile.baseYield, knowledges);
         this.tileUpdate(coords);
     }
     trainUnitAt(coords, unitType, ownerID) {
@@ -390,24 +413,38 @@ class Map {
         }
         this.tileUpdate(coords);
     }
+    updateImprovementLinks(world, tile, coords, improvement) {
+        if (!improvement.knowledge)
+            return;
+        improvement.knowledge.clearLinks();
+        const [_, posDistances] = this.getPathTree(coords, knowledge_1.KNOWLEDGE_SPREAD_RANGE, 0);
+        for (const pos in posDistances) {
+            const otherTile = this.tiles[pos];
+            if (!otherTile ||
+                !otherTile.improvement ||
+                !otherTile.improvement.knowledge ||
+                !otherTile.improvement.knowledge.hasSource())
+                continue;
+            const distance = posDistances[pos];
+            improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / knowledge_1.KNOWLEDGE_SPREAD_SPEED)));
+        }
+        improvement.knowledge.turn(world);
+    }
     turn(world) {
         // Tiles
         this.forEachTile((tile, coords) => {
-            var _a;
+            var _a, _b;
             if (tile.improvement) {
-                tile.improvement.work();
+                tile.improvement.work(world);
                 if ((_a = tile.improvement.errand) === null || _a === void 0 ? void 0 : _a.completed) {
                     tile.improvement.errand.complete(world, this, tile);
                     delete tile.improvement.errand;
                 }
-            }
-            const knowledges = tile.getKnowledges(false);
-            if (knowledges.length > 0) {
-                const spillover = tile.getKnowledgeSpillover();
-                for (const name in spillover) {
-                    const [spilloverPoints, maxPoints] = spillover[name];
-                    for (const neighborCoords of this.getNeighborsCoords(coords)) {
-                        this.getTile(neighborCoords).addKnowledge(knowledge_1.Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
+                if (tile.improvement.knowledge) {
+                    this.updateImprovementLinks(world, tile, coords, tile.improvement);
+                    if (tile.unit && tile.unit.civID === ((_b = tile.owner) === null || _b === void 0 ? void 0 : _b.civID)) {
+                        const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
+                        tile.unit.updateKnowledge(tileKnowledgeMap);
                     }
                 }
             }

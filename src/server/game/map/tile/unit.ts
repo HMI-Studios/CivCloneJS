@@ -1,5 +1,6 @@
 import { getAdjacentCoords } from '../../../utils';
 import { Coords } from '../../world';
+import { KnowledgeBucket, KnowledgeMap } from './knowledge';
 import { Yield } from './yield';
 
 export interface UnitTypeCost {
@@ -14,6 +15,8 @@ export interface UnitData {
   civID: number,
   promotionClass: PromotionClass,
   attackRange?: number,
+  knowledge: KnowledgeMap,
+  cloaked?: boolean,
 }
 
 export enum MovementClass {
@@ -76,9 +79,14 @@ export class Unit {
     'archer': 3,
   }
 
+  static cloakTable: { [unitType: string]: boolean } = {
+    'spy': true,
+  }
+
   static visionRangeTable: { [unitType: string]: number } = {
     default: 2,
     'scout': 3,
+    'spy': 3,
   }
   
   static costTable: { [unitType: string]: Yield } = {
@@ -87,6 +95,7 @@ export class Unit {
     'scout': new Yield({production: 10}),
     'warrior': new Yield({production: 15}),
     'slinger': new Yield({production: 15}),
+    'archer': new Yield({production: 20}),
     'spy': new Yield({production: 20}),
   }
 
@@ -101,6 +110,9 @@ export class Unit {
   civID: number;
   coords: Coords;
   alive: boolean;
+  cloaked?: boolean;
+
+  public knowledge: KnowledgeMap;
 
   static makeCatalog(types: string[]): UnitTypeCost[] {
     return types.map(type => (
@@ -108,7 +120,7 @@ export class Unit {
     ));
   }
 
-  constructor(type: string, civID: number, coords: Coords) {
+  constructor(type: string, civID: number, coords: Coords, knowledge?: KnowledgeMap) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -122,6 +134,10 @@ export class Unit {
     this.civID = civID;
     this.coords = coords;
     this.alive = true;
+    this.knowledge = knowledge ?? {};
+    if (Unit.cloakTable[type]) {
+      this.cloaked = false;
+    }
   }
 
   export() {
@@ -132,6 +148,8 @@ export class Unit {
       civID: this.civID,
       coords: this.coords,
       alive: this.alive,
+      knowledge: this.knowledge,
+      cloaked: this.cloaked,
     };
   }
 
@@ -146,18 +164,24 @@ export class Unit {
       unit.attackRange = Unit.attackRangeTable[unit.type];
     }
     unit.alive = data.alive;
+    unit.knowledge = data.knowledge;
+    if (Unit.cloakTable[unit.type]) {
+      unit.cloaked = data.cloaked;
+    }
     return unit;
   }
 
-  getData(): UnitData {
-    return {
+  getData(civID: number): UnitData | undefined {
+    return !this.cloaked || civID === this.civID ? {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
       civID: this.civID,
       promotionClass: this.promotionClass,
       attackRange: this.attackRange,
-    };
+      knowledge: this.knowledge,
+      cloaked: this.cloaked,
+    } : undefined;
   }
   
   getMovementClass(): number {
@@ -178,6 +202,18 @@ export class Unit {
     if (this.hp <= 0) {
       this.hp = 0;
       this.setDead();
+    }
+  }
+
+  updateKnowledge(knowledgeMap: KnowledgeMap): void {
+    for (const name in knowledgeMap) {
+      this.knowledge[name] = Math.max(this.knowledge[name] ?? 0, knowledgeMap[name]);
+    }
+  }
+
+  setCloak(cloaked: boolean): void {
+    if (Unit.cloakTable[this.type]) {
+      this.cloaked = cloaked;
     }
   }
 

@@ -1,6 +1,7 @@
+import { World } from '../../world';
 import { Trader } from '../trade';
 import { ErrandAction, ErrandData, ErrandType, WorkErrand } from './errand';
-import { Knowledge, KnowledgeBranch } from './knowledge';
+import { Knowledge, KnowledgeBranch, KnowledgeBucket, KnowledgeMap } from './knowledge';
 import { PromotionClass } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
 
@@ -11,6 +12,7 @@ export type ImprovementData = {
   errand?: ErrandData;
   metadata?: any;
   isNatural: boolean;
+  knowledge?: KnowledgeMap;
 };
 
 export interface ImprovementConstructionCost {
@@ -22,6 +24,7 @@ export class Improvement {
   static yieldTable: { [improvement: string]: Yield } = {
     'settlement': new Yield({food: 2, production: 2}),
     'encampment': new Yield({production: 1}),
+    'campus': new Yield({science: 5}),
   
     'farm': new Yield({food: 1}),
   
@@ -63,13 +66,15 @@ export class Improvement {
   protected suppliers: Trader[];
   protected storage: ResourceStore;
 
+  public knowledge?: KnowledgeBucket;
+
   static makeCatalog(types: string[]): ImprovementConstructionCost[] {
     return types.map(type => (
       { type, cost: WorkErrand.errandCostTable[ErrandType.CONSTRUCTION][type] }
     ));
   }
   
-  constructor(type?: string, baseYield?: Yield, metadata?: any) {
+  constructor(type?: string, baseYield?: Yield, knowledges?: KnowledgeMap, metadata?: any) {
     if (!(type && baseYield)) return;
     this.type = type;
     this.pillaged = false;
@@ -81,10 +86,9 @@ export class Improvement {
     this.suppliers = [];
     if (this.isNatural) {
       this.yield = new Yield({});
-    }// else if (type === 'worksite') {
-    //   this.yield = new Yield({});
-      
-    // }
+    } else {
+      this.knowledge = new KnowledgeBucket(knowledges);
+    }
   }
 
   export() {
@@ -95,6 +99,7 @@ export class Improvement {
       yield: this.yield,
       storage: this.storage,
       errand: this.errand?.export(),
+      knowledge: this.knowledge?.export(),
     };
   }
 
@@ -110,6 +115,7 @@ export class Improvement {
     if (data.errand) improvement.errand = WorkErrand.import(improvement.storage, data.errand);
     improvement.traders = [];
     improvement.suppliers = [];
+    if (!data.isNatural) improvement.knowledge = KnowledgeBucket.import(data.knowledge);
     return improvement;
   }
 
@@ -120,6 +126,7 @@ export class Improvement {
       storage: this.storage,
       errand: this.errand?.getData(),
       isNatural: this.isNatural,
+      knowledge: this.knowledge?.getKnowledgeMap(),
     };
   }
 
@@ -152,7 +159,7 @@ export class Improvement {
     this.errand = new WorkErrand(this.storage, errand);
   }
 
-  work(): void {
+  work(world: World): void {
     // TODO - ADD POPULATION/COST CHECK
 
     // if (type === 'farm') {

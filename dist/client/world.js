@@ -385,6 +385,13 @@ class World {
                         this.fetchImprovementCatalogs(tile.improvement, pos);
                     }
                 }
+                if (this.areSameCoords(camera.selectedUnitPos, pos)) {
+                    const unit = this.getTile(pos).unit;
+                    camera.deselectUnit(this);
+                    if (unit.movement > 0) {
+                        camera.selectUnit(this, pos, unit);
+                    }
+                }
             };
             this.on.update.unitPositions = (unitPositions) => {
                 this.unitPositions = unitPositions;
@@ -470,7 +477,17 @@ class World {
                 ui.showMainMenu(mainMenuFns);
             });
             this.on.event.selectUnit = (coords, unit) => {
-                ui.showUnitActionsMenu(this, coords, unit);
+                const skipTurn = () => {
+                    if (camera.selectedUnitPos) {
+                        const index = this.getUnitIndex(camera.selectedUnitPos);
+                        camera.deselectUnit(this);
+                        const metaIndex = this.unusedUnits.indexOf(index);
+                        if (metaIndex > -1) {
+                            this.unusedUnits.splice(metaIndex, 1);
+                        }
+                    }
+                };
+                ui.showUnitActionsMenu(this, coords, unit, skipTurn);
                 ui.showUnitInfoMenu(this, coords, unit);
             };
             this.on.event.deselectUnit = (selectedUnitPos) => {
@@ -533,7 +550,7 @@ class World {
                                         height: Number(height),
                                     }, {
                                         gameName,
-                                        seed: Number(seed),
+                                        seed: seed ? Number(seed) : null,
                                     }]]]);
                         ui.setView('gameList');
                     }

@@ -177,6 +177,8 @@ class Camera {
     );
     ctx.fill();
 
+    if (unit.cloaked) ctx.globalAlpha = 0.5;
+
     // Unit Color Background
     ctx.fillStyle = civs[unit.civID].color;
     ctx.beginPath();
@@ -201,6 +203,8 @@ class Camera {
       UNIT_WIDTH * zoom,
       UNIT_HEIGHT * zoom
     );
+
+    ctx.globalAlpha = 1;
   }
 
   render(world: World) {

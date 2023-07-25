@@ -7,7 +7,7 @@ import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
-import { Knowledge } from './tile/knowledge';
+import { Knowledge, KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
 const TRADER_SPEED = 1;
@@ -49,7 +49,14 @@ export class Map {
     };
   }
 
-  static import(data: any): Map {
+  /**
+   * 
+   * @param world The map needs to have a reference to the world on import, so that it can setup things like Links. Yes, this is irregular, but I see no way around it for now.
+   * NOTE that this world object is NOT complete, and ONLY the currentTurn field is guaranteed to be set!
+   * @param data 
+   * @returns 
+   */
+  static import(world: World, data: any): Map {
     const map = new Map(data.height, data.width);
     map.tiles = data.tiles.map(tileData => Tile.import(tileData));
     map.cities = data.cities.map(cityData => {
@@ -61,6 +68,11 @@ export class Map {
       return city;
     });
     map.traders = data.traders.map(traderData => Trader.import(map, traderData));
+    map.forEachTile((tile, coords) => {
+      if (tile.improvement?.knowledge) {
+        map.updateImprovementLinks(world, tile, coords, tile.improvement);
+      }
+    });
     return map;
   }
 
@@ -186,33 +198,41 @@ export class Map {
       if (stepsUntilSpread === 0) {
         const newLeftCoords = getCoordInDirection(coords, direction-1);
         const newLeftTile = this.getTile(newLeftCoords);
-        const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope),
-          r-1, direction, coordsArray, tileSet, stepLength, stepLength
-        );
+        if (newLeftTile) {
+          const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope),
+            r-1, direction, coordsArray, tileSet, stepLength, stepLength
+          );
+        }
         const newCoords = getCoordInDirection(coords, direction);
         const newTile = this.getTile(newCoords);
-        const newSlope = newTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newCoords, maxElevation + slope, Math.max(slope, newSlope),
-          r-1, direction, coordsArray, tileSet, stepLength, stepLength
-        );
+        if (newTile) {
+          const newSlope = newTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newCoords, maxElevation + slope, Math.max(slope, newSlope),
+            r-1, direction, coordsArray, tileSet, stepLength, stepLength
+          );
+        }
         const newRightCoords = getCoordInDirection(coords, direction+1);
         const newRightTile = this.getTile(newRightCoords);
-        const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope),
-          r-1, direction, coordsArray, tileSet, stepLength, stepLength
-        );
+        if (newRightTile) {
+          const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope),
+            r-1, direction, coordsArray, tileSet, stepLength, stepLength
+          );
+        }
       } else {
         const newCoords = getCoordInDirection(coords, direction);
         const newTile = this.getTile(newCoords);
-        const newSlope = newTile.getTotalElevation() - maxElevation;
-        this.getVisibleTilesRecurse(
-          newCoords, maxElevation + slope, Math.max(slope, newSlope),
-          r-1, direction, coordsArray, tileSet, stepsUntilSpread-1, stepLength
-        );
+        if (newTile) {
+          const newSlope = newTile.getTotalElevation() - maxElevation;
+          this.getVisibleTilesRecurse(
+            newCoords, maxElevation + slope, Math.max(slope, newSlope),
+            r-1, direction, coordsArray, tileSet, stepsUntilSpread-1, stepLength
+          );
+        }
       }
     }
   }
@@ -228,6 +248,7 @@ export class Map {
     for (let direction = 0; direction < 6; direction++) {
       const newCoords = getCoordInDirection(unit.coords, direction);
       const newTile = this.getTile(newCoords);
+      if (!newTile) continue;
       const slope = newTile.getTotalElevation() - tile.getTotalElevation();
 
       this.getVisibleTilesRecurse(
@@ -274,7 +295,7 @@ export class Map {
   getCivTile(civID: number, tile: Tile): TileData | null {
     if (tile.discoveredBy[civID]) {
       if (tile.visibleTo[civID]) {
-        return tile.getVisibleData();
+        return tile.getVisibleData(civID);
       } else {
         return tile.getDiscoveredData();
       }
@@ -391,7 +412,7 @@ export class Map {
     );
   }
 
-  settleCityAt(coords: Coords, name: string, civID: number): boolean {
+  settleCityAt(coords: Coords, name: string, civID: number, settler: Unit): boolean {
     const tile = this.getTile(coords);
     if (!this.canSettleOn(tile)) return false;
 
@@ -406,7 +427,7 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.buildImprovementAt(coords, 'settlement', civID);
+    this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge);
     return true;
   }
 
@@ -415,7 +436,7 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  startConstructionAt(coords: Coords, improvementType: string, ownerID: number): void {
+  startConstructionAt(coords: Coords, improvementType: string, ownerID: number, builder: Unit): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     
@@ -437,12 +458,12 @@ export class Map {
     );
   }
 
-  buildImprovementAt(coords: Coords, type: string, ownerID: number): void {
+  buildImprovementAt(coords: Coords, type: string, ownerID: number, knowledges?: KnowledgeMap): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     if (!this.canBuildOn(tile)) return;
 
-    tile.improvement = new Improvement(type, tile.baseYield);
+    tile.improvement = new Improvement(type, tile.baseYield, knowledges);
 
     this.tileUpdate(coords);
   }
@@ -493,24 +514,41 @@ export class Map {
     this.tileUpdate(coords);
   }
 
+  private updateImprovementLinks(world: World, tile: Tile, coords: Coords, improvement: Improvement) {
+    if (!improvement.knowledge) return;
+    improvement.knowledge.clearLinks();
+    const [_, posDistances] = this.getPathTree(coords, KNOWLEDGE_SPREAD_RANGE, 0);
+    for (const pos in posDistances) {
+      const otherTile: Tile | undefined = this.tiles[pos];
+      if (
+        !otherTile ||
+        !otherTile.improvement ||
+        !otherTile.improvement.knowledge ||
+        !otherTile.improvement.knowledge.hasSource()
+      ) continue;
+      const distance = posDistances[pos];
+      improvement.knowledge.addLink(otherTile.improvement.knowledge, Math.round(world.currentTurn - (distance / KNOWLEDGE_SPREAD_SPEED)));
+    }
+
+    improvement.knowledge.turn(world);
+  }
+
   turn(world: World): void {
     // Tiles
     this.forEachTile((tile, coords) => {
       if (tile.improvement) {
-        tile.improvement.work();
+        tile.improvement.work(world);
         if (tile.improvement.errand?.completed) {
           tile.improvement.errand.complete(world, this, tile);
           delete tile.improvement.errand;
         }
-      }
 
-      const knowledges = tile.getKnowledges(false);
-      if (knowledges.length > 0) {
-        const spillover = tile.getKnowledgeSpillover();
-        for (const name in spillover) {
-          const [spilloverPoints, maxPoints] = spillover[name];
-          for (const neighborCoords of this.getNeighborsCoords(coords)) {
-            this.getTile(neighborCoords).addKnowledge(Knowledge.knowledgeTree[name], spilloverPoints, 0.1, maxPoints);
+        if (tile.improvement.knowledge) {
+          this.updateImprovementLinks(world, tile, coords, tile.improvement);
+
+          if (tile.unit && tile.unit.civID === tile.owner?.civID) {
+            const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
+            tile.unit.updateKnowledge(tileKnowledgeMap);
           }
         }
       }

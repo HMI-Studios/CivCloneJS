@@ -6,7 +6,7 @@ const knowledge_1 = require("./knowledge");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
-    constructor(type, baseYield, metadata) {
+    constructor(type, baseYield, knowledges, metadata) {
         var _a, _b;
         if (!(type && baseYield))
             return;
@@ -20,15 +20,16 @@ class Improvement {
         this.suppliers = [];
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
-        } // else if (type === 'worksite') {
-        //   this.yield = new Yield({});
-        // }
+        }
+        else {
+            this.knowledge = new knowledge_1.KnowledgeBucket(knowledges);
+        }
     }
     static makeCatalog(types) {
         return types.map(type => ({ type, cost: errand_1.WorkErrand.errandCostTable[errand_1.ErrandType.CONSTRUCTION][type] }));
     }
     export() {
-        var _a;
+        var _a, _b;
         return {
             type: this.type,
             pillaged: this.pillaged,
@@ -36,6 +37,7 @@ class Improvement {
             yield: this.yield,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.export(),
+            knowledge: (_b = this.knowledge) === null || _b === void 0 ? void 0 : _b.export(),
         };
     }
     static import(data) {
@@ -51,16 +53,19 @@ class Improvement {
             improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];
         improvement.suppliers = [];
+        if (!data.isNatural)
+            improvement.knowledge = knowledge_1.KnowledgeBucket.import(data.knowledge);
         return improvement;
     }
     getData() {
-        var _a;
+        var _a, _b;
         return {
             type: this.type,
             pillaged: this.pillaged,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
             isNatural: this.isNatural,
+            knowledge: (_b = this.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap(),
         };
     }
     /**
@@ -90,7 +95,7 @@ class Improvement {
     startErrand(errand) {
         this.errand = new errand_1.WorkErrand(this.storage, errand);
     }
-    work() {
+    work(world) {
         // TODO - ADD POPULATION/COST CHECK
         // if (type === 'farm') {
         // }
@@ -138,6 +143,7 @@ exports.Improvement = Improvement;
 Improvement.yieldTable = {
     'settlement': new yield_1.Yield({ food: 2, production: 2 }),
     'encampment': new yield_1.Yield({ production: 1 }),
+    'campus': new yield_1.Yield({ science: 5 }),
     'farm': new yield_1.Yield({ food: 1 }),
     'forest': new yield_1.Yield({ food: 1 }),
 };

@@ -24,6 +24,8 @@ interface Unit {
   movement: number;
   civID: number;
   promotionClass: PromotionClass;
+  knowledge: KnowledgeMap;
+  cloaked?: boolean;
 }
 
 interface RangedUnit extends Unit {
@@ -37,6 +39,8 @@ enum PromotionClass {
   RECON,
 }
 
+type KnowledgeMap = { [name: string]: number };
+
 interface Improvement {
   type: string;
   pillaged: boolean;
@@ -44,6 +48,7 @@ interface Improvement {
   errand?: Errand;
   metadata?: any;
   isNatural: boolean;
+  knowledge: KnowledgeMap;
 }
 
 enum WallType {
@@ -525,6 +530,13 @@ class World {
           this.fetchImprovementCatalogs(tile.improvement, pos);
         }
       }
+      if (this.areSameCoords(camera.selectedUnitPos, pos)) {
+        const unit = this.getTile(pos).unit;
+        camera.deselectUnit(this);
+        if (unit.movement > 0) {
+          camera.selectUnit(this, pos, unit);
+        }
+      }
       
     };
 
@@ -619,7 +631,17 @@ class World {
     };
 
     this.on.event.selectUnit = (coords: Coords, unit: Unit): void => {
-      ui.showUnitActionsMenu(this, coords, unit);
+      const skipTurn = () => {
+        if (camera.selectedUnitPos) {
+          const index = this.getUnitIndex(camera.selectedUnitPos) as number;
+          camera.deselectUnit(this);
+          const metaIndex = this.unusedUnits.indexOf(index);
+          if (metaIndex > -1) {
+            this.unusedUnits.splice(metaIndex, 1);
+          }
+        }
+      }
+      ui.showUnitActionsMenu(this, coords, unit, skipTurn);
       ui.showUnitInfoMenu(this, coords, unit);
     }
 
@@ -690,7 +712,7 @@ class World {
             height: Number(height),
           }, {
             gameName,
-            seed: Number(seed),
+            seed: seed ? Number(seed) : null,
           }]]])
           ui.setView('gameList');
         } catch {

@@ -124,6 +124,8 @@ class Camera {
         ctx.beginPath();
         ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 1.9) * zoom, UNIT_WIDTH * zoom * (unit.hp / 100), 2 * zoom);
         ctx.fill();
+        if (unit.cloaked)
+            ctx.globalAlpha = 0.5;
         // Unit Color Background
         ctx.fillStyle = civs[unit.civID].color;
         ctx.beginPath();
@@ -131,6 +133,7 @@ class Camera {
         ctx.arc((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
         ctx.fill();
         ctx.drawImage(((_a = textures.unit[unit.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
+        ctx.globalAlpha = 1;
     }
     render(world) {
         var _a, _b, _c;
