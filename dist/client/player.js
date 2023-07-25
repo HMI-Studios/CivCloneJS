@@ -24,6 +24,7 @@ const unitActionsFnTable = {
     },
     'buildWall': (pos, towards, type) => {
         return ['buildWall', [pos, towards, type]];
+    },
     'cloak': (pos) => {
         return ['setCloak', [pos, true]];
     },

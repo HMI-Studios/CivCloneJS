@@ -41,6 +41,7 @@ const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [st
   },
   'buildWall': (pos: Coords, towards: Coords, type: WallType): [string, unknown[]] => {
     return ['buildWall', [pos, towards, type]];
+  },
   'cloak': (pos: Coords): [string, unknown[]] => {
     return ['setCloak', [pos, true]];
   },
