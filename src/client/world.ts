@@ -240,6 +240,14 @@ class World {
     return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
   }
 
+  adjacentify(x1: number, x2: number) {
+    if (mod(x1, this.width) === this.width - 1 && mod(x2, this.width) === 0) return x1 + 1;
+    if (mod(x1, this.width) === 0 && mod(x2, this.width) === this.width - 1) return x1 - 1;
+    if (mod(x1, this.width) > mod(x2, this.width)) return x1 - 1;
+    if (mod(x1, this.width) < mod(x2, this.width)) return x1 + 1;
+    return x1;
+  }
+
   isOcean(tile: Tile): boolean {
     return (
       tile.type === 'ocean' ||

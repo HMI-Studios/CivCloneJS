@@ -145,12 +145,13 @@ class Camera {
         const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
         const center1 = [leftX1 + (TILE_WIDTH / 2 * zoom), topY1 + middleYOffset];
         const center2 = [leftX2 + (TILE_WIDTH / 2 * zoom), topY2 + middleYOffset];
+        const offset = [(center2[0] - center1[0]) / 2, (center2[1] - center1[1]) / 2];
         ctx.beginPath();
         ctx.lineWidth = zoom * 2;
         ctx.lineCap = 'round';
         ctx.strokeStyle = '#66faff';
         ctx.moveTo(...center1);
-        ctx.lineTo(...center2);
+        ctx.lineTo(center1[0] + offset[0], center1[1] + offset[1]);
         ctx.stroke();
     }
     render(world) {
@@ -181,6 +182,19 @@ class Camera {
         const selectedX = Math.round((wmX / X_TILE_SPACING) + selectorXOffset);
         const selectedY = Math.round(((wmY + height) / TILE_HEIGHT) + (selectorYOffset + (mod(selectedX, 2) / -2)));
         this.clear();
+        const selectedPath = {};
+        if (this.selectedUnitPos && this.hoverPos && world.posIndex(this.hoverPos) in this.highlightedTiles) {
+            let i = 0;
+            let curPos = this.hoverPos;
+            let prevPos = null;
+            while (i < 100 && !world.areSameCoords(curPos, this.selectedUnitPos)) {
+                const nextPos = this.highlightedTiles[world.posIndex(curPos)];
+                selectedPath[world.posIndex(curPos)] = [prevPos, nextPos];
+                prevPos = curPos;
+                curPos = nextPos;
+            }
+            selectedPath[world.posIndex(curPos)] = [prevPos, null];
+        }
         // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
         for (let yCount = Math.min(yEnd, height) - 0.5; yCount >= Math.max(yStart, 0); yCount -= 0.5) {
             const shiftedXStart = xStart + Number((mod(yCount, 1) === 0) !== (mod(xStart, 2) === 0));
@@ -289,22 +303,32 @@ class Camera {
                         ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
                     }
                     ctx.globalAlpha = 1;
+                    if (selectedPath[world.posIndex({ x, y })]) {
+                        const [prevPos, nextPos] = selectedPath[world.posIndex({ x, y })];
+                        if (prevPos) {
+                            const { x: x1, y: y1 } = prevPos;
+                            this.drawTileLine(x, y, world.adjacentify(x, x1), y1);
+                        }
+                        if (nextPos) {
+                            const { x: x2, y: y2 } = nextPos;
+                            this.drawTileLine(x, y, world.adjacentify(x, x2), y2);
+                        }
+                    }
                     if (tile.unit) {
                         this.renderUnit(world, tile.unit, x, y);
                     }
                 }
             }
         }
-        if (this.selectedUnitPos && this.hoverPos && world.posIndex(this.hoverPos) in this.highlightedTiles) {
-            let i = 0;
-            let curPos = this.hoverPos;
-            while (i < 100 && !world.areSameCoords(curPos, this.selectedUnitPos)) {
-                const { x, y } = this.highlightedTiles[world.posIndex(curPos)];
-                this.drawTileLine(curPos.x, curPos.y, x, y);
-                curPos = this.highlightedTiles[world.posIndex(curPos)];
-            }
-        }
-        this.drawTileLine(1, 6, 1, 7);
+        // if (this.selectedUnitPos && this.hoverPos && world.posIndex(this.hoverPos) in this.highlightedTiles) {
+        //   let i = 0;
+        //   let curPos = this.hoverPos;
+        //   while (i < 100 && !world.areSameCoords(curPos, this.selectedUnitPos)) {
+        //     const { x, y } = this.highlightedTiles[world.posIndex(curPos)];
+        //     this.drawTileLine(curPos.x, curPos.y, x, y);
+        //     curPos = this.highlightedTiles[world.posIndex(curPos)];
+        //   }
+        // }
         if (!mapClicked && this.mouseDownTime === 1) {
             this.highlightedTiles = {};
             world.on.event.deselectUnit(this.selectedUnitPos);

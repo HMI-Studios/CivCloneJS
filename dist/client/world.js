@@ -122,6 +122,17 @@ class World {
         // TODO - possibly optimize this? memoize?
         return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
     }
+    adjacentify(x1, x2) {
+        if (mod(x1, this.width) === this.width - 1 && mod(x2, this.width) === 0)
+            return x1 + 1;
+        if (mod(x1, this.width) === 0 && mod(x2, this.width) === this.width - 1)
+            return x1 - 1;
+        if (mod(x1, this.width) > mod(x2, this.width))
+            return x1 - 1;
+        if (mod(x1, this.width) < mod(x2, this.width))
+            return x1 + 1;
+        return x1;
+    }
     isOcean(tile) {
         return (tile.type === 'ocean' ||
             tile.type === 'frozen_ocean');
