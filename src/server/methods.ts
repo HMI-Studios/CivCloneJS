@@ -405,6 +405,8 @@ const methods: {
           break;
         }
 
+        if (src.walls[getDirection(unit.coords, dstCoords)]) break;
+
         unit.movement -= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords));
         map.moveUnitTo(unit, dstCoords);
 

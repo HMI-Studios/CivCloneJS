@@ -118,11 +118,14 @@ class Map {
         const paths = {};
         while (queue.length) {
             const atPos = queue.shift();
+            const atTile = this.getTile(atPos);
             for (const adjPos of this.getNeighborsCoords(atPos)) {
                 const tile = this.getTile(adjPos);
                 // PATH BLOCKING LOGIC HERE
                 // if (tile.unit && tile.unit.civID === this.player.civID) continue;
                 if (tile.walls[(0, utils_1.getDirection)(adjPos, atPos)] !== null)
+                    continue;
+                if (atTile.walls[(0, utils_1.getDirection)(atPos, adjPos)] !== null)
                     continue;
                 const movementCost = mode !== unit_1.MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
                 if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {

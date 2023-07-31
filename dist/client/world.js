@@ -180,8 +180,9 @@ class World {
                 const tile = this.getTile(adjPos);
                 if (tile.unit && tile.unit.civID === this.player.civID)
                     continue;
-                console.log(tile.walls, this.getDirection(adjPos, atPos), adjPos, atPos);
                 if (tile.walls[this.getDirection(adjPos, atPos)])
+                    continue;
+                if (this.getTile(atPos).walls[this.getDirection(atPos, adjPos)])
                     continue;
                 const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
                 if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {

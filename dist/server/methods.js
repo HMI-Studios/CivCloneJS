@@ -348,6 +348,8 @@ const methods = {
                     }
                     break;
                 }
+                if (src.walls[(0, utils_1.getDirection)(unit.coords, dstCoords)])
+                    break;
                 unit.movement -= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords));
                 map.moveUnitTo(unit, dstCoords);
                 src = dst;

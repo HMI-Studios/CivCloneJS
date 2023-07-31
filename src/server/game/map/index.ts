@@ -156,6 +156,7 @@ export class Map {
 
     while (queue.length) {
       const atPos = queue.shift() as Coords;
+      const atTile = this.getTile(atPos);
 
       for (const adjPos of this.getNeighborsCoords(atPos)) {
 
@@ -163,6 +164,7 @@ export class Map {
         // PATH BLOCKING LOGIC HERE
         // if (tile.unit && tile.unit.civID === this.player.civID) continue;
         if (tile.walls[getDirection(adjPos, atPos)] !== null) continue;
+        if (atTile.walls[getDirection(atPos, adjPos)] !== null) continue;
 
         const movementCost = mode !== MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
