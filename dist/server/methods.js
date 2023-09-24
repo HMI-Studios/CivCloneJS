@@ -108,6 +108,11 @@ const executeAction = (ws, action, ...args) => {
 };
 exports.executeAction = executeAction;
 const methods = {
+    listMethods: (ws) => {
+        sendTo(ws, { update: [
+                ['methodList', [Object.keys(methods)]],
+            ] });
+    },
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
         sendTo(ws, { update: [

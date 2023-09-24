@@ -115,6 +115,12 @@ export const executeAction = (ws: WebSocket, action: string, ...args: unknown[])
 const methods: {
   [key: string]: (...args: unknown[]) => void;
 } = {
+  listMethods: (ws: WebSocket) => {
+    sendTo(ws, { update: [
+      ['methodList', [Object.keys(methods)]],
+    ] });
+  },
+
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
     sendTo(ws, { update: [
