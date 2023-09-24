@@ -29,6 +29,7 @@ class Camera {
   selectedUnitPos: Coords | null;
   highlightedTiles: { [key: string]: Coords };
   hoverPos: Coords | null;
+  showTradeRoutes: boolean;
 
   constructor() {
     this.x = 0;
@@ -90,6 +91,7 @@ class Camera {
     this.mouseDownTime = 0;
     this.selectedUnitPos = null;
     this.highlightedTiles = {};
+    this.showTradeRoutes = false;
   }
 
   loadTexture(path: string): HTMLImageElement {
@@ -279,6 +281,23 @@ class Camera {
       selectedPath[world.posIndex(curPos)] = [prevPos, null];
     }
 
+    const tradeRoutePaths = {};
+    if (this.showTradeRoutes) {
+      for (const route of world.tradeRoutes) {
+        let prevPos: Coords | null = null;
+        for (const curPos of route.path) {
+          if (!tradeRoutePaths[world.posIndex(curPos)]) {
+            tradeRoutePaths[world.posIndex(curPos)] = new Set();
+          }
+          if (prevPos) {
+            tradeRoutePaths[world.posIndex(curPos)].add(world.getDirection(curPos, prevPos));
+            tradeRoutePaths[world.posIndex(prevPos)].add(world.getDirection(prevPos, curPos));
+          }
+          prevPos = curPos
+        }
+      }
+    }
+
     // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
     for (let yCount = Math.min(yEnd, height) - 0.5; yCount >= Math.max(yStart, 0); yCount -= 0.5) {
       const shiftedXStart = xStart + Number((mod(yCount, 1) === 0) !== (mod(xStart, 2) === 0));
@@ -418,6 +437,15 @@ class Camera {
           }
 
           ctx.globalAlpha = 1;
+
+          if (this.showTradeRoutes && tradeRoutePaths[world.posIndex({x, y})]) {
+            for (let direction = 0; direction < 6; direction++) {
+              if (tradeRoutePaths[world.posIndex({x, y})].has(direction)) {
+                const { x: otherX, y: otherY } = getCoordsDial({x, y})[direction];
+                this.drawTileLine(x, y, world.adjacentify(x, otherX), otherY);
+              }
+            }
+          }
 
           if (selectedPath[world.posIndex({x, y})]) {
             const [ prevPos, nextPos ] = selectedPath[world.posIndex({x, y})];

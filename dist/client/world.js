@@ -75,6 +75,7 @@ class World {
             name: null,
             civID: null,
         };
+        this.tradeRoutes = [];
     }
     posIndex({ x, y }) {
         return (y * this.width) + mod(x, this.width);
@@ -485,6 +486,9 @@ class World {
             this.on.update.civID = (civID) => {
                 this.player.civID = civID;
             };
+            this.on.update.tradersList = (tradeRoutes) => {
+                this.tradeRoutes = tradeRoutes;
+            };
             this.on.error.notReady = (reason) => {
                 console.error('Error:', reason);
                 ui.hideReadyBtn();
@@ -580,6 +584,10 @@ class World {
                     callback(coords, tile);
                     camera.highlightedTiles = {};
                 };
+            };
+            this.on.event.showTradeRoutes = () => {
+                this.sendActions([['getTraders', []]]);
+                camera.showTradeRoutes = true;
             };
             yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {
                 console.error('Connection Failed. Reload page to retry.');

@@ -114,6 +114,15 @@ interface GameMetadata {
   playersConnected: number;
 }
 
+interface TradeRoute {
+  path: Coords[];
+  routeLength: number;
+  sink: Improvement;
+  source: Improvement;
+  speed: number;
+  storage: ResourceStorage;
+}
+
 type Coords = {
   x: number;
   y: number;
@@ -166,6 +175,7 @@ class World {
   listeners: { [name: string]: ((...args: any) => void) | null };
   civs: { [key: string]: Civ };
   player: Player;
+  tradeRoutes: TradeRoute[];
   constructor() {
     this.tiles = [];
     this.unitPositions = [];
@@ -186,6 +196,7 @@ class World {
       name: null,
       civID: null,
     };
+    this.tradeRoutes = [];
   }
 
   posIndex({ x, y }: Coords): number {
@@ -635,6 +646,10 @@ class World {
       this.player.civID = civID;
     };
 
+    this.on.update.tradersList = (tradeRoutes: TradeRoute[]) => {
+      this.tradeRoutes = tradeRoutes;
+    };
+
     this.on.error.notReady = (reason): void => {
       console.error('Error:', reason);
       ui.hideReadyBtn();
@@ -737,6 +752,11 @@ class World {
         callback(coords, tile);
         camera.highlightedTiles = {};
       }
+    }
+
+    this.on.event.showTradeRoutes = (): void => {
+      this.sendActions([['getTraders', []]]);
+      camera.showTradeRoutes = true;
     }
 
     await this.connect().catch(async () => {
