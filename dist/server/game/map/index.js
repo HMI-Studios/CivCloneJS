@@ -109,6 +109,17 @@ class Map {
         this.getNeighborsRecurse(coords, r, new Set(), coordList, {}, options === null || options === void 0 ? void 0 : options.filter);
         return coordList;
     }
+    getStepMovementCost(atPos, atTile, adjPos, adjTile, mode) {
+        if (mode === unit_1.MovementClass.AIR)
+            return 1;
+        // PATH BLOCKING LOGIC HERE
+        // if (tile.unit && tile.unit.civID === this.player.civID) return 0;
+        if (adjTile.walls[(0, utils_1.getDirection)(adjPos, atPos)] !== null)
+            return 0;
+        if (atTile.walls[(0, utils_1.getDirection)(atPos, adjPos)] !== null)
+            return 0;
+        return adjTile.movementCost[mode];
+    }
     getPathTree(srcPos, range, mode) {
         // BFS to find all tiles within `range` steps
         const queue = [];
@@ -121,13 +132,7 @@ class Map {
             const atTile = this.getTile(atPos);
             for (const adjPos of this.getNeighborsCoords(atPos)) {
                 const tile = this.getTile(adjPos);
-                // PATH BLOCKING LOGIC HERE
-                // if (tile.unit && tile.unit.civID === this.player.civID) continue;
-                if (tile.walls[(0, utils_1.getDirection)(adjPos, atPos)] !== null)
-                    continue;
-                if (atTile.walls[(0, utils_1.getDirection)(atPos, adjPos)] !== null)
-                    continue;
-                const movementCost = mode !== unit_1.MovementClass.AIR ? tile.movementCost[mode] || Infinity : 1;
+                const movementCost = this.getStepMovementCost(atPos, atTile, adjPos, tile, mode) || Infinity;
                 if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
                     dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
                     if (dst[this.pos(adjPos)] <= range) {
@@ -304,6 +309,36 @@ class Map {
             return null;
         return [fullPath, dst[srcPosKey]];
     }
+    validateRoute(route, mode) {
+        const [path, maximumLength] = route;
+        let previousPosTile = null;
+        let length = 0;
+        for (const pos of path) {
+            const tile = this.getTile(pos);
+            if (previousPosTile !== null) {
+                length += this.getStepMovementCost(...previousPosTile, pos, tile, mode) || Infinity;
+            }
+            previousPosTile = [pos, tile];
+        }
+        return length <= maximumLength;
+    }
+    recreateTradeRoute(trader, range = 5) {
+        const oldPath = trader.path;
+        const sourcePos = oldPath[0];
+        const sinkPos = oldPath[oldPath.length - 1];
+        const [pathTree, dst] = this.getPathTree(sinkPos, range, trader.movementClass);
+        const sourceTile = this.getTile(sourcePos);
+        if (sourceTile.improvement) {
+            const route = this.findRoute(pathTree, dst, this.pos(sourcePos), sinkPos);
+            if (!route)
+                return;
+            const sinkTile = this.getTile(sinkPos);
+            if (!sinkTile.improvement)
+                return;
+            this.addTrader(new trade_1.Trader(trader.civID, route, sourceTile.improvement, sinkTile.improvement, TRADER_SPEED, TRADER_CAPACITY, // TODO - this is not correct, but it will work for now.
+            trader.movementClass));
+        }
+    }
     createTradeRoutes(civID, coords, sink, requirement, range = 5, mode = 0) {
         var _a;
         const [pathTree, dst] = this.getPathTree(coords, range, mode);
@@ -319,7 +354,7 @@ class Map {
                 const route = this.findRoute(pathTree, dst, Number(pos), coords);
                 if (!route)
                     continue;
-                this.addTrader(new trade_1.Trader(civID, route, tile.improvement, sink, TRADER_SPEED, yield_1.Yield.min(TRADER_CAPACITY, requirement)));
+                this.addTrader(new trade_1.Trader(civID, route, tile.improvement, sink, TRADER_SPEED, yield_1.Yield.min(TRADER_CAPACITY, requirement), mode));
             }
         }
     }
@@ -454,13 +489,24 @@ class Map {
             }
         });
         // Traders
+        const traderResets = [];
         for (let i = 0; i < this.traders.length; i++) {
             const trader = this.traders[i];
+            const isValid = this.validateRoute([trader.path, trader.length], trader.movementClass);
+            if (!isValid) {
+                traderResets.push(() => {
+                    this.recreateTradeRoute(trader);
+                });
+                trader.expire();
+            }
             trader.shunt();
             if (trader.expired) {
                 this.traders.splice(i, 1);
                 i--;
             }
+        }
+        for (const resetTrader of traderResets) {
+            resetTrader();
         }
     }
 }
