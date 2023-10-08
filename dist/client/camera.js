@@ -49,6 +49,12 @@ class Camera {
                 worksite: this.loadOverlayTexture('improvement_worksite'),
                 encampment: this.loadOverlayTexture('improvement_encampment'),
                 campus: this.loadOverlayTexture('improvement_campus'),
+                walls_0: this.loadOverlayTexture('walls_0'),
+                walls_1: this.loadOverlayTexture('walls_1'),
+                walls_2: this.loadOverlayTexture('walls_2'),
+                walls_3: this.loadOverlayTexture('walls_3'),
+                walls_4: this.loadOverlayTexture('walls_4'),
+                walls_5: this.loadOverlayTexture('walls_5'),
                 farm: this.loadOverlayTexture('improvement_farm'),
                 forest: this.loadOverlayTexture('improvement_forest'),
             },
@@ -156,7 +162,7 @@ class Camera {
         ctx.stroke();
     }
     render(world) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height } = world;
         const [wmX, wmY] = [camX + (mouseX / zoom), camY + (mouseY / zoom)];
@@ -219,6 +225,7 @@ class Camera {
                 const y = Math.floor(yCount);
                 const tile = world.getTile({ x, y });
                 if (tile) {
+                    const hasWalls = tile.walls.reduce((sum, wall) => (sum + (wall === null ? 0 : 1)), 0) > 0;
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     ctx.drawImage(((_a = textures.tile[tile.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
@@ -236,20 +243,13 @@ class Camera {
                         [leftX + margin, topY + middleYOffset],
                         [leftX + leftCapXOffset + margin, topY + margin],
                     ];
-                    if (tile.walls.reduce((sum, wall) => (sum + (wall === null ? 0 : 1)), 0) > 0) {
-                        ctx.beginPath();
-                        ctx.lineWidth = margin * 4;
-                        ctx.lineCap = 'square';
-                        ctx.strokeStyle = '#777';
-                        ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
-                        for (let i = 0; i < tile.walls.length; i++) {
-                            if (tile.walls[i] === null)
-                                ctx.moveTo(...positions[i]);
-                            else
-                                ctx.lineTo(...positions[i]);
+                    if (hasWalls) {
+                        for (const i of [0, 5, 1]) {
+                            if (tile.walls[i] !== null) {
+                                const overlay = (_b = textures.improvements[`walls_${i}`]) !== null && _b !== void 0 ? _b : textures.missing_overlay;
+                                ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
+                            }
                         }
-                        ctx.stroke();
-                        ctx.setLineDash([]);
                     }
                     if (tile.owner) {
                         const neighbors = world.getNeighbors({ x, y }, false);
@@ -262,7 +262,7 @@ class Camera {
                             const neighbor = world.getTile(neighbors[i]);
                             if (!neighbor)
                                 ctx.moveTo(...positions[i]);
-                            else if (((_b = neighbor.owner) === null || _b === void 0 ? void 0 : _b.civID) === tile.owner.civID)
+                            else if (((_c = neighbor.owner) === null || _c === void 0 ? void 0 : _c.civID) === tile.owner.civID)
                                 ctx.moveTo(...positions[i]);
                             else
                                 ctx.lineTo(...positions[i]);
@@ -316,7 +316,7 @@ class Camera {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     if (tile.improvement) {
-                        const overlay = (_c = textures.improvements[tile.improvement.type]) !== null && _c !== void 0 ? _c : textures.missing_overlay;
+                        const overlay = (_d = textures.improvements[tile.improvement.type]) !== null && _d !== void 0 ? _d : textures.missing_overlay;
                         ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
                     }
                     ctx.globalAlpha = 1;
@@ -328,6 +328,20 @@ class Camera {
                             }
                         }
                     }
+                    if (tile.unit) {
+                        this.renderUnit(world, tile.unit, x, y);
+                    }
+                    if (!tile.visible)
+                        ctx.globalAlpha = 0.5;
+                    if (hasWalls) {
+                        for (const i of [2, 3, 4]) {
+                            if (tile.walls[i] !== null) {
+                                const overlay = (_e = textures.improvements[`walls_${i}`]) !== null && _e !== void 0 ? _e : textures.missing_overlay;
+                                ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
+                            }
+                        }
+                    }
+                    ctx.globalAlpha = 1;
                     if (selectedPath[world.posIndex({ x, y })]) {
                         const [prevPos, nextPos] = selectedPath[world.posIndex({ x, y })];
                         if (prevPos) {
@@ -338,9 +352,6 @@ class Camera {
                             const { x: x2, y: y2 } = nextPos;
                             this.drawTileLine(x, y, world.adjacentify(x, x2), y2);
                         }
-                    }
-                    if (tile.unit) {
-                        this.renderUnit(world, tile.unit, x, y);
                     }
                 }
             }
