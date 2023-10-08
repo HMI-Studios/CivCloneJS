@@ -2,7 +2,7 @@ import { World } from '../../world';
 import { Trader } from '../trade';
 import { ErrandAction, ErrandData, ErrandType, WorkErrand } from './errand';
 import { Knowledge, KnowledgeBranch, KnowledgeBucket, KnowledgeMap } from './knowledge';
-import { PromotionClass } from './unit';
+import { PromotionClass, PromotionEra, Unit } from './unit';
 import { ResourceStore, Yield, YieldParams } from './yield';
 
 export type ImprovementData = {
@@ -46,13 +46,31 @@ export class Improvement {
     'forest': 5,
   }
 
-  static trainableUnitClassTable: { [improvement: string]: PromotionClass[] } = {
-    'settlement': [PromotionClass.CIVILLIAN],
-    'encampment': [PromotionClass.MELEE, PromotionClass.RANGED, PromotionClass.RECON],
+  static trainableUnitClassTable: { [improvement: string]: [PromotionClass, PromotionEra][] } = {
+    'settlement': [
+      [PromotionClass.CIVILLIAN, PromotionEra.ALL],
+      [PromotionClass.RECON, PromotionEra.ANCIENT],
+    ],
+    'encampment': [
+      [PromotionClass.MELEE, PromotionEra.ALL],
+      [PromotionClass.RANGED, PromotionEra.ALL],
+      [PromotionClass.RECON, PromotionEra.ALL],
+    ],
   };
 
-  static researchableKnowledgeBranchTable: { [improvement: string]: KnowledgeBranch[] } = {
-    'campus': [KnowledgeBranch.OFFENSE, KnowledgeBranch.DEFESNSE, KnowledgeBranch.CIVICS, KnowledgeBranch.DEVELOPMENT],
+  static researchableKnowledgeBranchTable: { [improvement: string]: [KnowledgeBranch, PromotionEra][] } = {
+    'settlement' : [
+      [KnowledgeBranch.OFFENSE, PromotionEra.ANCIENT],
+      [KnowledgeBranch.DEFESNSE, PromotionEra.ANCIENT],
+      [KnowledgeBranch.CIVICS, PromotionEra.ANCIENT],
+      [KnowledgeBranch.DEVELOPMENT, PromotionEra.ANCIENT],
+    ],
+    'campus': [
+      [KnowledgeBranch.OFFENSE, PromotionEra.ALL],
+      [KnowledgeBranch.DEFESNSE, PromotionEra.ALL],
+      [KnowledgeBranch.CIVICS, PromotionEra.ALL],
+      [KnowledgeBranch.DEVELOPMENT, PromotionEra.ALL],
+    ],
   };
 
   type: string;
@@ -134,7 +152,7 @@ export class Improvement {
    * 
    * @returns list of units classes this improvement knows how to train
    */
-  getTrainableUnitClasses(): PromotionClass[] {
+  getTrainableUnitClasses(): [PromotionClass, PromotionEra][] {
     return Improvement.trainableUnitClassTable[this.type] ?? [];
   }
 
@@ -142,8 +160,21 @@ export class Improvement {
    * 
    * @returns list of knowledge branches this improvement knows how to research
    */
-  getResearchableKnowledgeBranches(): KnowledgeBranch[] {
+  getResearchableKnowledgeBranches(): [KnowledgeBranch, PromotionEra][] {
     return Improvement.researchableKnowledgeBranchTable[this.type] ?? [];
+  }
+
+  /**
+   * 
+   * @returns list of units classes this improvement knows how to train
+   */
+   getTrainableUnitTypes(): string[] {
+    if (!this.knowledge) return [];
+    const trainableUnitClasses = this.getTrainableUnitClasses().reduce((obj, [prClass, era]) => ({ ...obj, [prClass]: era }), {});
+    return Knowledge.getTrainableUnits(this.knowledge.getKnowledges(true))
+      .filter(unitType => (
+        (trainableUnitClasses[Unit.promotionClassTable[unitType]] ?? PromotionEra.NONE) >= Unit.promotionEraTable[unitType]
+      ));
   }
 
   /**
@@ -151,8 +182,10 @@ export class Improvement {
    * @returns list of knowledges this improvement knows how to research
    */
   getResearchableKnowledgeNames(): string[] {
-    const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, branch) => ({ ...obj, [branch]: true }), {});
-    return Knowledge.getKnowledgeList().filter(({ branch }) => researchableBranches[branch]).map(({ name }) => name);
+    const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, [branch, era]) => ({ ...obj, [branch]: era }), {});
+    return Knowledge.getKnowledgeList().filter(({ branch, era }) => (
+      researchableBranches[branch] ?? PromotionEra.NONE >= era
+    )).map(({ name }) => name);
   }
 
   startErrand(errand: ErrandAction) {

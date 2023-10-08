@@ -121,6 +121,13 @@ const methods: {
     ] });
   },
 
+  // TODO - DEBUG ONLY! REMOVE IN PROD!
+  memCheck: (ws: WebSocket) => {
+    sendTo(ws, { update: [
+      ['debug', [process.memoryUsage()]],
+    ] });
+  },
+
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
     sendTo(ws, { update: [

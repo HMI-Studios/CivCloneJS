@@ -1,4 +1,5 @@
 import { World } from "../../world";
+import { PromotionEra } from "./unit";
 import { Yield } from "./yield";
 
 export type KnowledgeData = {
@@ -19,20 +20,21 @@ export enum KnowledgeBranch {
 export class Knowledge {
   name: string;
   branch: KnowledgeBranch;
+  era: PromotionEra;
   cost: Yield;
   prerequisites: string[];
   units: string[];
   improvements: string[];
 
   public static knowledgeTree: { [name: string]: Knowledge } = {
-    'start': new Knowledge('start', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 0 }), [], {units: ['settler', 'builder']}),
-    'food_0': new Knowledge('food_0', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 10 }), [], {improvements: ['farm']}),
-    'military_0': new Knowledge('military_0', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), [], {units: ['warrior', 'slinger']}),
-    'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), [], {units: ['scout']}),
-    'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), ['military_0'], {units: ['archer']}),
-    'science_1': new Knowledge('science_1', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 10 }), [], {improvements: ['campus']}),
-    'military_1': new Knowledge('military_1', KnowledgeBranch.DEVELOPMENT, new Yield({ science: 10 }), ['military_0'], {improvements: ['encampment']}),
-    'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, new Yield({ science: 10 }), ['recon_0', 'science_1'], {units: ['spy']}),
+    'start': new Knowledge('start', KnowledgeBranch.DEVELOPMENT, PromotionEra.ANCIENT, new Yield({ science: 0 }), [], {units: ['settler', 'builder']}),
+    'food_0': new Knowledge('food_0', KnowledgeBranch.DEVELOPMENT, PromotionEra.ANCIENT, new Yield({ science: 10 }), [], {improvements: ['farm']}),
+    'military_0': new Knowledge('military_0', KnowledgeBranch.OFFENSE, PromotionEra.ANCIENT, new Yield({ science: 10 }), [], {units: ['warrior', 'slinger']}),
+    'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, PromotionEra.ANCIENT, new Yield({ science: 10 }), [], {units: ['scout']}),
+    'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, PromotionEra.ANCIENT, new Yield({ science: 10 }), ['military_0'], {units: ['archer']}),
+    'science_1': new Knowledge('science_1', KnowledgeBranch.DEVELOPMENT, PromotionEra.CLASSICAL, new Yield({ science: 10 }), [], {improvements: ['campus']}),
+    'military_1': new Knowledge('military_1', KnowledgeBranch.DEVELOPMENT, PromotionEra.CLASSICAL, new Yield({ science: 10 }), ['military_0'], {improvements: ['encampment']}),
+    'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, PromotionEra.CLASSICAL, new Yield({ science: 10 }), ['recon_0', 'science_1'], {units: ['spy']}),
   }
 
   public static getCosts(): { [name: string]: Yield } {
@@ -96,12 +98,14 @@ export class Knowledge {
   constructor(
     name: string,
     branch: KnowledgeBranch,
+    era: PromotionEra,
     cost: Yield,
     prerequisites: string[],
     unlocks: { units?: string[], improvements?: string[] }
   ) {
     this.name = name;
     this.branch = branch;
+    this.era = era;
     this.cost = cost;
     this.prerequisites = prerequisites;
     this.units = unlocks.units ?? [];

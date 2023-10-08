@@ -113,6 +113,12 @@ const methods = {
                 ['methodList', [Object.keys(methods)]],
             ] });
     },
+    // TODO - DEBUG ONLY! REMOVE IN PROD!
+    memCheck: (ws) => {
+        sendTo(ws, { update: [
+                ['debug', [process.memoryUsage()]],
+            ] });
+    },
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
         sendTo(ws, { update: [

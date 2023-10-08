@@ -380,6 +380,14 @@ class World {
                     ['setLeader', [leaderID]],
                 ]);
             };
+            this.on.update.debug = (data) => {
+                try {
+                    console.log(JSON.parse(data));
+                }
+                catch (err) {
+                    console.log(data);
+                }
+            };
             this.on.update.gameList = (gameList) => {
                 if (ui.view === 'gameList') {
                     ui.hideAll();

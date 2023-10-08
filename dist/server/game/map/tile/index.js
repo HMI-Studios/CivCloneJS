@@ -130,17 +130,6 @@ class Tile {
     }
     /**
      *
-     * @returns list of units classes this improvement knows how to train
-     */
-    getTrainableUnitTypes() {
-        if (!this.improvement || !this.improvement.knowledge)
-            return [];
-        const trainableUnitClasses = this.improvement.getTrainableUnitClasses().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
-        return knowledge_1.Knowledge.getTrainableUnits(this.improvement.knowledge.getKnowledges(true))
-            .filter(unitType => trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]);
-    }
-    /**
-     *
      * @returns type and cost of improvements the builder on this tile knows how to build, or null if it cannot build improvements
      */
     getImprovementCatalog() {
@@ -155,7 +144,9 @@ class Tile {
      * @returns type and cost of units this improvement knows how to train, or null if it cannot train units
      */
     getUnitCatalog() {
-        const trainableUnits = this.getTrainableUnitTypes();
+        if (!this.improvement)
+            return null;
+        const trainableUnits = this.improvement.getTrainableUnitTypes();
         const catalog = unit_1.Unit.makeCatalog(trainableUnits);
         if (catalog.length === 0)
             return null;
@@ -168,11 +159,11 @@ class Tile {
     getKnowledgeCatalog() {
         if (!this.improvement || !this.improvement.knowledge)
             return null;
-        const knowledgeBranches = this.improvement.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
+        const knowledgeNames = this.improvement.getResearchableKnowledgeNames().reduce((obj, name) => (Object.assign(Object.assign({}, obj), { [name]: true })), {});
         const knowledgeMap = this.improvement.knowledge.getKnowledgeMap();
         const completedKnowledges = this.improvement.knowledge.getKnowledges(true);
         const reachableKnowledges = knowledge_1.Knowledge.getReachableKnowledges(completedKnowledges);
-        const knowledgeCatalog = reachableKnowledges.filter(({ name, branch }) => { var _a; return (knowledgeBranches[branch] && (((_a = knowledgeMap[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
+        const knowledgeCatalog = reachableKnowledges.filter(({ name }) => { var _a; return (knowledgeNames[name] && (((_a = knowledgeMap[name]) !== null && _a !== void 0 ? _a : 0) < 100)); });
         return knowledgeCatalog;
     }
 }

@@ -32,6 +32,19 @@ export enum PromotionClass {
   RECON,
 }
 
+export enum PromotionEra {
+  NONE,
+  ANCIENT,
+  CLASSICAL,
+  MEDIEVAL,
+  RENAISSANCE,
+  INDUSTRIAL,
+  MODERN,
+  ATOMIC,
+  INFORMATION,
+  ALL,
+}
+
 export class Unit {
   static movementTable: { [unitType: string]: number } = {
     'settler': 3,
@@ -61,6 +74,16 @@ export class Unit {
     'slinger': PromotionClass.RANGED,
     'archer': PromotionClass.RANGED,
     'spy': PromotionClass.RECON,
+  };
+  
+  static promotionEraTable: { [unitType: string]: PromotionEra } = {
+    'settler': PromotionEra.ANCIENT,
+    'builder': PromotionEra.ANCIENT,
+    'scout': PromotionEra.ANCIENT,
+    'warrior': PromotionEra.ANCIENT,
+    'slinger': PromotionEra.ANCIENT,
+    'archer': PromotionEra.ANCIENT,
+    'spy': PromotionEra.CLASSICAL,
   };
   
   static combatStatsTable: { [unitType: string]: [number, number, number] } = {

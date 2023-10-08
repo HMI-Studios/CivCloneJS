@@ -529,6 +529,14 @@ class World {
       ]);
     };
 
+    this.on.update.debug = (data: any): void => {
+      try {
+        console.log(JSON.parse(data));
+      } catch (err) {
+        console.log(data);
+      }
+    };
+
     this.on.update.gameList = (gameList: { [key: string]: GameMetadata }): void => {
       if (ui.view === 'gameList') {
         ui.hideAll();

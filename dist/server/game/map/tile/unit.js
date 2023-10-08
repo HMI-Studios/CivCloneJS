@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Unit = exports.PromotionClass = exports.MovementClass = void 0;
+exports.Unit = exports.PromotionEra = exports.PromotionClass = exports.MovementClass = void 0;
 const utils_1 = require("../../../utils");
 const yield_1 = require("./yield");
 var MovementClass;
@@ -16,6 +16,19 @@ var PromotionClass;
     PromotionClass[PromotionClass["RANGED"] = 2] = "RANGED";
     PromotionClass[PromotionClass["RECON"] = 3] = "RECON";
 })(PromotionClass = exports.PromotionClass || (exports.PromotionClass = {}));
+var PromotionEra;
+(function (PromotionEra) {
+    PromotionEra[PromotionEra["NONE"] = 0] = "NONE";
+    PromotionEra[PromotionEra["ANCIENT"] = 1] = "ANCIENT";
+    PromotionEra[PromotionEra["CLASSICAL"] = 2] = "CLASSICAL";
+    PromotionEra[PromotionEra["MEDIEVAL"] = 3] = "MEDIEVAL";
+    PromotionEra[PromotionEra["RENAISSANCE"] = 4] = "RENAISSANCE";
+    PromotionEra[PromotionEra["INDUSTRIAL"] = 5] = "INDUSTRIAL";
+    PromotionEra[PromotionEra["MODERN"] = 6] = "MODERN";
+    PromotionEra[PromotionEra["ATOMIC"] = 7] = "ATOMIC";
+    PromotionEra[PromotionEra["INFORMATION"] = 8] = "INFORMATION";
+    PromotionEra[PromotionEra["ALL"] = 9] = "ALL";
+})(PromotionEra = exports.PromotionEra || (exports.PromotionEra = {}));
 class Unit {
     constructor(type, civID, coords, knowledge) {
         var _a;
@@ -143,6 +156,15 @@ Unit.promotionClassTable = {
     'slinger': PromotionClass.RANGED,
     'archer': PromotionClass.RANGED,
     'spy': PromotionClass.RECON,
+};
+Unit.promotionEraTable = {
+    'settler': PromotionEra.ANCIENT,
+    'builder': PromotionEra.ANCIENT,
+    'scout': PromotionEra.ANCIENT,
+    'warrior': PromotionEra.ANCIENT,
+    'slinger': PromotionEra.ANCIENT,
+    'archer': PromotionEra.ANCIENT,
+    'spy': PromotionEra.CLASSICAL,
 };
 Unit.combatStatsTable = {
     // 'unitType': [offense, defense, awareness],

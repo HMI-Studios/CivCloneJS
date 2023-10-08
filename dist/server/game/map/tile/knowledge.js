@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.KnowledgeBucket = exports.KnowledgeSourceLinks = exports.KnowledgeSource = exports.KNOWLEDGE_SPREAD_DELAY = exports.KNOWLEDGE_SPREAD_SPEED = exports.KNOWLEDGE_SPREAD_RANGE = exports.Knowledge = exports.KnowledgeBranch = void 0;
+const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 var KnowledgeBranch;
 (function (KnowledgeBranch) {
@@ -10,10 +11,11 @@ var KnowledgeBranch;
     KnowledgeBranch[KnowledgeBranch["DEVELOPMENT"] = 3] = "DEVELOPMENT";
 })(KnowledgeBranch = exports.KnowledgeBranch || (exports.KnowledgeBranch = {}));
 class Knowledge {
-    constructor(name, branch, cost, prerequisites, unlocks) {
+    constructor(name, branch, era, cost, prerequisites, unlocks) {
         var _a, _b;
         this.name = name;
         this.branch = branch;
+        this.era = era;
         this.cost = cost;
         this.prerequisites = prerequisites;
         this.units = (_a = unlocks.units) !== null && _a !== void 0 ? _a : [];
@@ -82,14 +84,14 @@ class Knowledge {
 }
 exports.Knowledge = Knowledge;
 Knowledge.knowledgeTree = {
-    'start': new Knowledge('start', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 0 }), [], { units: ['settler', 'builder'] }),
-    'food_0': new Knowledge('food_0', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 10 }), [], { improvements: ['farm'] }),
-    'military_0': new Knowledge('military_0', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), [], { units: ['warrior', 'slinger'] }),
-    'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), [], { units: ['scout'] }),
-    'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), ['military_0'], { units: ['archer'] }),
-    'science_1': new Knowledge('science_1', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 10 }), [], { improvements: ['campus'] }),
-    'military_1': new Knowledge('military_1', KnowledgeBranch.DEVELOPMENT, new yield_1.Yield({ science: 10 }), ['military_0'], { improvements: ['encampment'] }),
-    'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, new yield_1.Yield({ science: 10 }), ['recon_0', 'science_1'], { units: ['spy'] }),
+    'start': new Knowledge('start', KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.ANCIENT, new yield_1.Yield({ science: 0 }), [], { units: ['settler', 'builder'] }),
+    'food_0': new Knowledge('food_0', KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.ANCIENT, new yield_1.Yield({ science: 10 }), [], { improvements: ['farm'] }),
+    'military_0': new Knowledge('military_0', KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ANCIENT, new yield_1.Yield({ science: 10 }), [], { units: ['warrior', 'slinger'] }),
+    'recon_0': new Knowledge('recon_0', KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ANCIENT, new yield_1.Yield({ science: 10 }), [], { units: ['scout'] }),
+    'ranged_1': new Knowledge('ranged_1', KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ANCIENT, new yield_1.Yield({ science: 10 }), ['military_0'], { units: ['archer'] }),
+    'science_1': new Knowledge('science_1', KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.CLASSICAL, new yield_1.Yield({ science: 10 }), [], { improvements: ['campus'] }),
+    'military_1': new Knowledge('military_1', KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.CLASSICAL, new yield_1.Yield({ science: 10 }), ['military_0'], { improvements: ['encampment'] }),
+    'recon_1': new Knowledge('recon_1', KnowledgeBranch.OFFENSE, unit_1.PromotionEra.CLASSICAL, new yield_1.Yield({ science: 10 }), ['recon_0', 'science_1'], { units: ['spy'] }),
 };
 exports.KNOWLEDGE_SPREAD_RANGE = 5;
 exports.KNOWLEDGE_SPREAD_SPEED = 1;

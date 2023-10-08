@@ -86,11 +86,28 @@ class Improvement {
     }
     /**
      *
+     * @returns list of units classes this improvement knows how to train
+     */
+    getTrainableUnitTypes() {
+        if (!this.knowledge)
+            return [];
+        const trainableUnitClasses = this.getTrainableUnitClasses().reduce((obj, [prClass, era]) => (Object.assign(Object.assign({}, obj), { [prClass]: era })), {});
+        return knowledge_1.Knowledge.getTrainableUnits(this.knowledge.getKnowledges(true))
+            .filter(unitType => {
+            var _a;
+            return (((_a = trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]) !== null && _a !== void 0 ? _a : unit_1.PromotionEra.NONE) >= unit_1.Unit.promotionEraTable[unitType]);
+        });
+    }
+    /**
+     *
      * @returns list of knowledges this improvement knows how to research
      */
     getResearchableKnowledgeNames() {
-        const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
-        return knowledge_1.Knowledge.getKnowledgeList().filter(({ branch }) => researchableBranches[branch]).map(({ name }) => name);
+        const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, [branch, era]) => (Object.assign(Object.assign({}, obj), { [branch]: era })), {});
+        return knowledge_1.Knowledge.getKnowledgeList().filter(({ branch, era }) => {
+            var _a;
+            return ((_a = researchableBranches[branch]) !== null && _a !== void 0 ? _a : unit_1.PromotionEra.NONE >= era);
+        }).map(({ name }) => name);
     }
     startErrand(errand) {
         this.errand = new errand_1.WorkErrand(this.storage, errand);
@@ -159,10 +176,28 @@ Improvement.improvementHeightTable = {
     'forest': 5,
 };
 Improvement.trainableUnitClassTable = {
-    'settlement': [unit_1.PromotionClass.CIVILLIAN],
-    'encampment': [unit_1.PromotionClass.MELEE, unit_1.PromotionClass.RANGED, unit_1.PromotionClass.RECON],
+    'settlement': [
+        [unit_1.PromotionClass.CIVILLIAN, unit_1.PromotionEra.ALL],
+        [unit_1.PromotionClass.RECON, unit_1.PromotionEra.ANCIENT],
+    ],
+    'encampment': [
+        [unit_1.PromotionClass.MELEE, unit_1.PromotionEra.ALL],
+        [unit_1.PromotionClass.RANGED, unit_1.PromotionEra.ALL],
+        [unit_1.PromotionClass.RECON, unit_1.PromotionEra.ALL],
+    ],
 };
 Improvement.researchableKnowledgeBranchTable = {
-    'campus': [knowledge_1.KnowledgeBranch.OFFENSE, knowledge_1.KnowledgeBranch.DEFESNSE, knowledge_1.KnowledgeBranch.CIVICS, knowledge_1.KnowledgeBranch.DEVELOPMENT],
+    'settlement': [
+        [knowledge_1.KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ANCIENT],
+        [knowledge_1.KnowledgeBranch.DEFESNSE, unit_1.PromotionEra.ANCIENT],
+        [knowledge_1.KnowledgeBranch.CIVICS, unit_1.PromotionEra.ANCIENT],
+        [knowledge_1.KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.ANCIENT],
+    ],
+    'campus': [
+        [knowledge_1.KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ALL],
+        [knowledge_1.KnowledgeBranch.DEFESNSE, unit_1.PromotionEra.ALL],
+        [knowledge_1.KnowledgeBranch.CIVICS, unit_1.PromotionEra.ALL],
+        [knowledge_1.KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.ALL],
+    ],
 };
 //# sourceMappingURL=improvement.js.map
