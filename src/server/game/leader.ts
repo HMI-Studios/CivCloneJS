@@ -1,5 +1,14 @@
+import { KnowledgeMap } from './map/tile/knowledge';
+
+const DEFAULT_START_KNOWLEDGE = {
+  'start': 100,
+  'food_0': 100,
+  'military_0': 100,
+  'science_1': 100,
+}
+
 export const leaderTemplates = [
-  { color: '#820000', textColor: '#ccc', name: 'Rokun' }, // RICH RED
+  { color: '#820000', textColor: '#ccc', name: 'Rokun', startingKnowledge: { 'science_1': 0, 'military_1': 100 } }, // RICH RED
   { color: '#0a2ead', textColor: '#ccc', name: 'Azura' }, // BLUE
   { color: '#03a300', textColor: '#222', name: 'Vertos' }, // GREEN
   { color: '#bd9a02', textColor: '#222', name: 'Solei' }, // SAND YELLOW
@@ -24,14 +33,21 @@ export class Leader {
   private name: string;
   private civID: number | null;
 
+  public startingKnowledge: KnowledgeMap;
+
   constructor(id: number) {
-    const { color, textColor, name } = leaderTemplates[id];
+    const { color, textColor, name, startingKnowledge } = leaderTemplates[id];
     this.id = id;
     this.color = color;
     this.textColor = textColor;
     this.secondaryColor = color;
     this.name = name;
     this.civID = null;
+
+    this.startingKnowledge = {
+      ...DEFAULT_START_KNOWLEDGE,
+      ...startingKnowledge,
+    };
   }
 
   static import(data: any): Leader {

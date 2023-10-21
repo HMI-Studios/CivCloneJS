@@ -36,18 +36,8 @@ class World {
                     }
                 }
                 if (legal_start_location) {
-                    this.addUnit(new unit_1.Unit('settler', civID, settler_coords, {
-                        'start': 100,
-                        'food_0': 100,
-                        'military_0': 100,
-                        'science_1': 100,
-                    }));
-                    this.addUnit(new unit_1.Unit('builder', civID, builder_coords, {
-                        'start': 100,
-                        'food_0': 100,
-                        'military_0': 100,
-                        'science_1': 100,
-                    }));
+                    this.addUnit(new unit_1.Unit('settler', civID, settler_coords));
+                    this.addUnit(new unit_1.Unit('builder', civID, builder_coords));
                     this.addUnit(new unit_1.Unit('scout', civID, scout_coords));
                     start_location_successful = true;
                     break;
@@ -132,6 +122,10 @@ class World {
             }
             this.civs[civID].leader = leader;
             leader.select(civID);
+            for (const unit of this.civs[civID].getUnits()) {
+                unit.knowledge = {};
+                unit.updateKnowledge(leader.startingKnowledge);
+            }
             return true;
         }
         else {
