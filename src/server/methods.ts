@@ -655,6 +655,7 @@ const methods: {
         const tileKnowledgeMap = tile.improvement?.knowledge?.getKnowledgeMap();
         if (tileKnowledgeMap) unit.updateKnowledge(tileKnowledgeMap);
         // TODO - spy invisiblity stuff + possibility of being discovered here
+        // TODO - what about stealing from builders?
         
         map.tileUpdate(unit.coords);
         game.sendUpdates();

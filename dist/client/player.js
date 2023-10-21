@@ -525,15 +525,21 @@ class UI {
             if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
                 return;
             if (tileUnitCatalog)
-                tileKnowledgeCatalog.remove();
+                tileUnitCatalog.remove();
             tileUnitCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
-                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-                                this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
-                                            world.sendActions([['trainUnit', [pos, unit.type]]]);
-                                        } } }),
-                                this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(unit.cost)] }),
-                            ] }))) }),
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(unit => {
+                            const trainUnitBtn = this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
+                                        world.sendActions([['trainUnit', [pos, unit.type]]]);
+                                    } } });
+                            if (tile.improvement.errand) {
+                                trainUnitBtn.setAttribute('disabled', 'true');
+                            }
+                            return (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                                    trainUnitBtn,
+                                    this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(unit.cost)] }),
+                                ] }));
+                        }) }),
                 ] });
             this.elements.sidebarMenu.appendChild(tileUnitCatalog);
         };
@@ -544,12 +550,18 @@ class UI {
                 tileKnowledgeCatalog.remove();
             tileKnowledgeCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.knowledgeCatalog') } }),
-                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(knowledge => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-                                this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
-                                            world.sendActions([['researchKnowledge', [pos, knowledge.name]]]);
-                                        } } }),
-                                this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(knowledge.cost)] }),
-                            ] }))) }),
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(knowledge => {
+                            const researchKnowlegeBtn = this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
+                                        world.sendActions([['researchKnowledge', [pos, knowledge.name]]]);
+                                    } } });
+                            if (tile.improvement.errand) {
+                                researchKnowlegeBtn.setAttribute('disabled', 'true');
+                            }
+                            return (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                                    researchKnowlegeBtn,
+                                    this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(knowledge.cost)] }),
+                                ] }));
+                        }) }),
                 ] });
             this.elements.sidebarMenu.appendChild(tileKnowledgeCatalog);
         };

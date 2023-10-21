@@ -7,13 +7,14 @@ import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
-import { Knowledge, KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
+import { KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
 
-// MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
+// MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE?
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY: YieldParams = {
   food: 10,
   production: 10,
+  science: 5,
 };
 
 export interface MapOptions {

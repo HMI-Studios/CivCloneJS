@@ -10,11 +10,12 @@ const trade_1 = require("./trade");
 const yield_1 = require("./tile/yield");
 const errand_1 = require("./tile/errand");
 const knowledge_1 = require("./tile/knowledge");
-// MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE!
+// MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE?
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
     food: 10,
     production: 10,
+    science: 5,
 };
 class Map {
     constructor(height, width) {
