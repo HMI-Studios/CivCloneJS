@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Trader = void 0;
 const yield_1 = require("./tile/yield");
 class Trader {
-    constructor(civID, [path, length], source, sink, speed, capacity) {
+    constructor(civID, [path, length], source, sink, speed, capacity, mode) {
         this.civID = civID;
         this.path = path;
         this.source = source;
@@ -13,6 +13,7 @@ class Trader {
         this.expired = false;
         this.turnTime = Math.ceil(length / speed);
         this.turnsElapsed = 0;
+        this.movementClass = mode;
         const capacityPerTurn = Object.keys(capacity).reduce((acc, key) => { var _a; return (Object.assign(Object.assign({}, acc), { [key]: ((_a = capacity[key]) !== null && _a !== void 0 ? _a : 0) / this.turnTime })); }, {});
         this.storage = new yield_1.ResourceStore(capacityPerTurn);
         this.source.subscribeTrader(this);
@@ -27,19 +28,20 @@ class Trader {
             expired: this.expired,
             turnsElapsed: this.turnsElapsed,
             storage: this.storage,
+            movementClass: this.movementClass,
         };
     }
     /***
      * import() needs a reference to the Map in order to get references to the source and sink Improvements
      */
-    static import(map, { civID, path, speed, length, expired, turnsElapsed, storage }) {
+    static import(map, { civID, path, speed, length, expired, turnsElapsed, storage, movementClass }) {
         // This is safe, since a Route is guaranteed to always start at the source and end at the sink.
         const source = map.getTile(path[0]);
         const sink = map.getTile(path[path.length - 1]);
         if (source.improvement && sink.improvement) {
             const capacity = storage.capacity;
             delete storage.capacity;
-            const trader = new Trader(civID, [path, length], source.improvement, sink.improvement, speed, capacity);
+            const trader = new Trader(civID, [path, length], source.improvement, sink.improvement, speed, capacity, movementClass);
             trader.storage.incr(new yield_1.Yield(storage));
             trader.expired = expired;
             trader.turnsElapsed = turnsElapsed;

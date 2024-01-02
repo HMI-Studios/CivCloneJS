@@ -1,6 +1,7 @@
 import { Coords } from "../world";
 import { Map } from "./index";
 import { Improvement, ImprovementData } from "./tile/improvement";
+import { MovementClass } from "./tile/unit";
 import { ResourceStore, Yield, YieldParams } from "./tile/yield";
 
 export type Route = [Coords[], number];
@@ -24,10 +25,19 @@ export class Trader {
   expired: boolean;
   turnTime: number;
   turnsElapsed: number;
+  movementClass: MovementClass;
 
   private storage: ResourceStore;
 
-  constructor(civID: number, [path, length]: Route, source: Improvement, sink: Improvement, speed: number, capacity: YieldParams) {
+  constructor(
+    civID: number,
+    [path, length]: Route,
+    source: Improvement,
+    sink: Improvement,
+    speed: number,
+    capacity: YieldParams,
+    mode: MovementClass
+  ) {
     this.civID = civID;
     this.path = path;
     this.source = source;
@@ -37,6 +47,7 @@ export class Trader {
     this.expired = false;
     this.turnTime = Math.ceil(length / speed);
     this.turnsElapsed = 0;
+    this.movementClass = mode;
 
     const capacityPerTurn = Object.keys(capacity).reduce((acc, key) => ({...acc, [key]: (capacity[key] ?? 0) / this.turnTime}), {});
     this.storage = new ResourceStore(capacityPerTurn);
@@ -54,20 +65,21 @@ export class Trader {
       expired: this.expired,
       turnsElapsed: this.turnsElapsed,
       storage: this.storage,
+      movementClass: this.movementClass,
     };
   }
 
   /***
    * import() needs a reference to the Map in order to get references to the source and sink Improvements
    */
-  static import(map: Map, {civID, path, speed, length, expired, turnsElapsed, storage}: any): Trader {
+  static import(map: Map, {civID, path, speed, length, expired, turnsElapsed, storage, movementClass}: any): Trader {
     // This is safe, since a Route is guaranteed to always start at the source and end at the sink.
     const source = map.getTile(path[0]);
     const sink = map.getTile(path[path.length - 1]);
     if (source.improvement && sink.improvement) {
       const capacity = storage.capacity;
       delete storage.capacity;
-      const trader = new Trader(civID, [path, length], source.improvement, sink.improvement, speed, capacity);
+      const trader = new Trader(civID, [path, length], source.improvement, sink.improvement, speed, capacity, movementClass);
       trader.storage.incr(new Yield(storage));
       trader.expired = expired;
       trader.turnsElapsed = turnsElapsed;

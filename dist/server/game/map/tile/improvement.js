@@ -6,7 +6,7 @@ const knowledge_1 = require("./knowledge");
 const unit_1 = require("./unit");
 const yield_1 = require("./yield");
 class Improvement {
-    constructor(type, baseYield, metadata) {
+    constructor(type, baseYield, knowledges, metadata) {
         var _a, _b;
         if (!(type && baseYield))
             return;
@@ -20,15 +20,16 @@ class Improvement {
         this.suppliers = [];
         if (this.isNatural) {
             this.yield = new yield_1.Yield({});
-        } // else if (type === 'worksite') {
-        //   this.yield = new Yield({});
-        // }
+        }
+        else {
+            this.knowledge = new knowledge_1.KnowledgeBucket(knowledges);
+        }
     }
     static makeCatalog(types) {
         return types.map(type => ({ type, cost: errand_1.WorkErrand.errandCostTable[errand_1.ErrandType.CONSTRUCTION][type] }));
     }
     export() {
-        var _a;
+        var _a, _b;
         return {
             type: this.type,
             pillaged: this.pillaged,
@@ -36,6 +37,7 @@ class Improvement {
             yield: this.yield,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.export(),
+            knowledge: (_b = this.knowledge) === null || _b === void 0 ? void 0 : _b.export(),
         };
     }
     static import(data) {
@@ -51,16 +53,19 @@ class Improvement {
             improvement.errand = errand_1.WorkErrand.import(improvement.storage, data.errand);
         improvement.traders = [];
         improvement.suppliers = [];
+        if (!data.isNatural)
+            improvement.knowledge = knowledge_1.KnowledgeBucket.import(data.knowledge);
         return improvement;
     }
     getData() {
-        var _a;
+        var _a, _b;
         return {
             type: this.type,
             pillaged: this.pillaged,
             storage: this.storage,
             errand: (_a = this.errand) === null || _a === void 0 ? void 0 : _a.getData(),
             isNatural: this.isNatural,
+            knowledge: (_b = this.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap(),
         };
     }
     /**
@@ -81,16 +86,33 @@ class Improvement {
     }
     /**
      *
+     * @returns list of units classes this improvement knows how to train
+     */
+    getTrainableUnitTypes() {
+        if (!this.knowledge)
+            return [];
+        const trainableUnitClasses = this.getTrainableUnitClasses().reduce((obj, [prClass, era]) => (Object.assign(Object.assign({}, obj), { [prClass]: era })), {});
+        return knowledge_1.Knowledge.getTrainableUnits(this.knowledge.getKnowledges(true))
+            .filter(unitType => {
+            var _a;
+            return (((_a = trainableUnitClasses[unit_1.Unit.promotionClassTable[unitType]]) !== null && _a !== void 0 ? _a : unit_1.PromotionEra.NONE) >= unit_1.Unit.promotionEraTable[unitType]);
+        });
+    }
+    /**
+     *
      * @returns list of knowledges this improvement knows how to research
      */
     getResearchableKnowledgeNames() {
-        const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, branch) => (Object.assign(Object.assign({}, obj), { [branch]: true })), {});
-        return knowledge_1.Knowledge.getKnowledgeList().filter(({ branch }) => researchableBranches[branch]).map(({ name }) => name);
+        const researchableBranches = this.getResearchableKnowledgeBranches().reduce((obj, [branch, era]) => (Object.assign(Object.assign({}, obj), { [branch]: era })), {});
+        return knowledge_1.Knowledge.getKnowledgeList().filter(({ branch, era }) => {
+            var _a;
+            return ((_a = researchableBranches[branch]) !== null && _a !== void 0 ? _a : unit_1.PromotionEra.NONE >= era);
+        }).map(({ name }) => name);
     }
     startErrand(errand) {
         this.errand = new errand_1.WorkErrand(this.storage, errand);
     }
-    work() {
+    work(world) {
         // TODO - ADD POPULATION/COST CHECK
         // if (type === 'farm') {
         // }
@@ -138,6 +160,7 @@ exports.Improvement = Improvement;
 Improvement.yieldTable = {
     'settlement': new yield_1.Yield({ food: 2, production: 2 }),
     'encampment': new yield_1.Yield({ production: 1 }),
+    'campus': new yield_1.Yield({ science: 5 }),
     'farm': new yield_1.Yield({ food: 1 }),
     'forest': new yield_1.Yield({ food: 1 }),
 };
@@ -153,10 +176,28 @@ Improvement.improvementHeightTable = {
     'forest': 5,
 };
 Improvement.trainableUnitClassTable = {
-    'settlement': [unit_1.PromotionClass.CIVILLIAN],
-    'encampment': [unit_1.PromotionClass.MELEE, unit_1.PromotionClass.RANGED, unit_1.PromotionClass.RECON],
+    'settlement': [
+        [unit_1.PromotionClass.CIVILLIAN, unit_1.PromotionEra.ALL],
+        [unit_1.PromotionClass.RECON, unit_1.PromotionEra.ANCIENT],
+    ],
+    'encampment': [
+        [unit_1.PromotionClass.MELEE, unit_1.PromotionEra.ALL],
+        [unit_1.PromotionClass.RANGED, unit_1.PromotionEra.ALL],
+        [unit_1.PromotionClass.RECON, unit_1.PromotionEra.ALL],
+    ],
 };
 Improvement.researchableKnowledgeBranchTable = {
-    'campus': [knowledge_1.KnowledgeBranch.OFFENSE, knowledge_1.KnowledgeBranch.DEFESNSE, knowledge_1.KnowledgeBranch.CIVICS, knowledge_1.KnowledgeBranch.DEVELOPMENT],
+    'settlement': [
+        [knowledge_1.KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ANCIENT],
+        [knowledge_1.KnowledgeBranch.DEFESNSE, unit_1.PromotionEra.ANCIENT],
+        [knowledge_1.KnowledgeBranch.CIVICS, unit_1.PromotionEra.ANCIENT],
+        [knowledge_1.KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.ANCIENT],
+    ],
+    'campus': [
+        [knowledge_1.KnowledgeBranch.OFFENSE, unit_1.PromotionEra.ALL],
+        [knowledge_1.KnowledgeBranch.DEFESNSE, unit_1.PromotionEra.ALL],
+        [knowledge_1.KnowledgeBranch.CIVICS, unit_1.PromotionEra.ALL],
+        [knowledge_1.KnowledgeBranch.DEVELOPMENT, unit_1.PromotionEra.ALL],
+    ],
 };
 //# sourceMappingURL=improvement.js.map

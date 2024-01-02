@@ -53,7 +53,7 @@ export class WorkErrand {
       }
     },
     [ErrandType.RESEARCH]: (world, map, tile, action) => {
-      tile.addKnowledge(Knowledge.knowledgeTree[action.option], 100, 0);
+      tile.improvement?.knowledge?.addKnowledge(Knowledge.knowledgeTree[action.option], 100, 0);
     },
   }
 

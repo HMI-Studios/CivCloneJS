@@ -41,26 +41,42 @@ export const getAdjacentCoords = ({x, y}: Coords): Coords[] => {
   return coordArray;
 };
 
-export const getCoordInDirection = ({x, y}: Coords, direction: number): Coords => {
-  const coordsDial = mod(x, 2) === 1 ? 
-    [
-      { x: x,   y: y+1 },
-      { x: x+1, y: y+1 },
-      { x: x+1, y: y   },
-      { x: x,   y: y-1 },
-      { x: x-1, y: y   },
-      { x: x-1, y: y+1 },
-    ] :
-    [
-      { x: x,   y: y+1 },
-      { x: x+1, y: y   },
-      { x: x+1, y: y-1 },
-      { x: x,   y: y-1 },
-      { x: x-1, y: y-1 },
-      { x: x-1, y: y   },
-    ];
+const getCoordsDial = ({x, y}: Coords): Coords[] => {
+  return mod(x, 2) === 1 ? 
+  [
+    { x: x,   y: y+1 },
+    { x: x+1, y: y+1 },
+    { x: x+1, y: y   },
+    { x: x,   y: y-1 },
+    { x: x-1, y: y   },
+    { x: x-1, y: y+1 },
+  ] :
+  [
+    { x: x,   y: y+1 },
+    { x: x+1, y: y   },
+    { x: x+1, y: y-1 },
+    { x: x,   y: y-1 },
+    { x: x-1, y: y-1 },
+    { x: x-1, y: y   },
+  ];
+};
 
+export const getCoordInDirection = (coords: Coords, direction: number): Coords => {
+  const coordsDial = getCoordsDial(coords);
+  
   return coordsDial[mod(direction, 6)];
+};
+
+export const getDirection = (origin: Coords, target: Coords): number => {
+  const coordsDial = getCoordsDial(origin);
+  let direction = -1;
+  coordsDial.forEach((coords, i) => {
+    if (coords.x === target.x && coords.y === target.y) {
+      direction = i;
+    }
+  });
+
+  return direction;
 }
 
 export const arrayIncludesCoords = (array: Coords[], {x, y}: Coords): boolean => {

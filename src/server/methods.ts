@@ -4,6 +4,7 @@ import { Map, MapOptions } from './game/map';
 import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
 import { PromotionClass } from './game/map/tile/unit';
+import { getDirection } from './utils';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -114,6 +115,19 @@ export const executeAction = (ws: WebSocket, action: string, ...args: unknown[])
 const methods: {
   [key: string]: (...args: unknown[]) => void;
 } = {
+  listMethods: (ws: WebSocket) => {
+    sendTo(ws, { update: [
+      ['methodList', [Object.keys(methods)]],
+    ] });
+  },
+
+  // TODO - DEBUG ONLY! REMOVE IN PROD!
+  memCheck: (ws: WebSocket) => {
+    sendTo(ws, { update: [
+      ['debug', [process.memoryUsage()]],
+    ] });
+  },
+
   setPlayer: (ws: WebSocket, username: string) => {
     getConnData(ws).username = username;
     sendTo(ws, { update: [
@@ -336,8 +350,6 @@ const methods: {
     const game = games[gameID];
     const civID = game.players[username].civID;
 
-    console.log(srcCoords, targetCoords);
-
     if (game) {
       const world = game.world;
       const map = world.map;
@@ -381,8 +393,6 @@ const methods: {
     const game = games[gameID];
     const civID = game.players[username].civID;
 
-    console.log(srcCoords, path, attack);
-
     if (game) {
       const world = game.world;
       const map = world.map;
@@ -395,16 +405,22 @@ const methods: {
 
         const unit = src.unit;
 
-        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit)) ) {
+        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords))) ) {
           game.sendUpdates();
           return;
         }
 
         if (dst.unit) {
+          if (dst.unit.cloaked) {
+            dst.unit.setCloak(false);
+            map.tileUpdate(dstCoords);
+          }
           break;
         }
 
-        unit.movement -= dst.getMovementCost(unit);
+        if (src.walls[getDirection(unit.coords, dstCoords)]) break;
+
+        unit.movement -= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords));
         map.moveUnitTo(unit, dstCoords);
 
         src = dst;
@@ -445,7 +461,7 @@ const methods: {
 
       const unit = map.getTile(coords)?.unit;
       if (unit?.type === 'settler' && unit?.civID === civID) {
-        const validCityLocation = map.settleCityAt(coords, name, civID);
+        const validCityLocation = map.settleCityAt(coords, name, civID, unit);
 
         if (validCityLocation) {
           world.removeUnit(unit);
@@ -496,7 +512,28 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
-        map.startConstructionAt(coords, type, civID);
+        map.startConstructionAt(coords, type, civID, unit);
+        game.sendUpdates();
+      }
+    }
+  },
+
+  buildWall: (ws: WebSocket, coords: Coords, facingCoords: Coords, type: number) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile?.unit;
+
+      if (unit?.type === 'builder' && unit?.civID === civID) {
+        tile.setWall(getDirection(coords, facingCoords), type);
+        map.tileUpdate(coords);
         game.sendUpdates();
       }
     }
@@ -599,6 +636,52 @@ const methods: {
 
       map.researchKnowledgeAt(coords, name, civID);
       game.sendUpdates();
+    }
+  },
+
+  stealKnowledge: (ws: WebSocket, coords: Coords) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile.unit;
+      if (unit && unit.civID === civID) {
+        const tileKnowledgeMap = tile.improvement?.knowledge?.getKnowledgeMap();
+        if (tileKnowledgeMap) unit.updateKnowledge(tileKnowledgeMap);
+        // TODO - spy invisiblity stuff + possibility of being discovered here
+        // TODO - what about stealing from builders?
+        
+        map.tileUpdate(unit.coords);
+        game.sendUpdates();
+      }
+    }
+  },
+
+  setCloak: (ws: WebSocket, coords: Coords, cloaked: boolean) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile.unit;
+      if (unit && unit.civID === civID && unit.movement) {
+        unit.setCloak(cloaked);
+        unit.movement = 0;
+        
+        map.tileUpdate(unit.coords);
+        game.sendUpdates();
+      }
     }
   },
 };

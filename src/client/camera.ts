@@ -28,6 +28,8 @@ class Camera {
   mouseDownTime: number;
   selectedUnitPos: Coords | null;
   highlightedTiles: { [key: string]: Coords };
+  hoverPos: Coords | null;
+  showTradeRoutes: boolean;
 
   constructor() {
     this.x = 0;
@@ -80,6 +82,13 @@ class Camera {
         encampment: this.loadOverlayTexture('improvement_encampment'),
         campus: this.loadOverlayTexture('improvement_campus'),
 
+        walls_0: this.loadOverlayTexture('walls_0'),
+        walls_1: this.loadOverlayTexture('walls_1'),
+        walls_2: this.loadOverlayTexture('walls_2'),
+        walls_3: this.loadOverlayTexture('walls_3'),
+        walls_4: this.loadOverlayTexture('walls_4'),
+        walls_5: this.loadOverlayTexture('walls_5'),
+
         farm: this.loadOverlayTexture('improvement_farm'),
 
         forest: this.loadOverlayTexture('improvement_forest'),
@@ -89,6 +98,7 @@ class Camera {
     this.mouseDownTime = 0;
     this.selectedUnitPos = null;
     this.highlightedTiles = {};
+    this.showTradeRoutes = false;
   }
 
   loadTexture(path: string): HTMLImageElement {
@@ -177,6 +187,8 @@ class Camera {
     );
     ctx.fill();
 
+    if (unit.cloaked) ctx.globalAlpha = 0.5;
+
     // Unit Color Background
     ctx.fillStyle = civs[unit.civID].color;
     ctx.beginPath();
@@ -201,6 +213,31 @@ class Camera {
       UNIT_WIDTH * zoom,
       UNIT_HEIGHT * zoom
     );
+
+    ctx.globalAlpha = 1;
+  }
+
+  drawTileLine(x1, y1, x2, y2) {
+    const { zoom, x: camX, y: camY, textures, ctx } = this;
+    const { width, height } = world;
+
+    const leftX1 = (-camX + ((x1 - (width / 2)) * X_TILE_SPACING)) * zoom;
+    const topY1 = (camY - (((y1 - (height / 2)) * TILE_HEIGHT) + (mod(x1, 2) * Y_TILE_SPACING))) * zoom;
+    const leftX2 = (-camX + ((x2 - (width / 2)) * X_TILE_SPACING)) * zoom;
+    const topY2 = (camY - (((y2 - (height / 2)) * TILE_HEIGHT) + (mod(x2, 2) * Y_TILE_SPACING))) * zoom;
+    const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+
+    const center1: [number, number] = [leftX1 + (TILE_WIDTH / 2 * zoom), topY1 + middleYOffset];
+    const center2: [number, number] = [leftX2 + (TILE_WIDTH / 2 * zoom), topY2 + middleYOffset];
+    const offset: [number, number] = [(center2[0] - center1[0]) / 2, (center2[1] - center1[1]) / 2];
+
+    ctx.beginPath();
+    ctx.lineWidth = zoom * 2;
+    ctx.lineCap='round';
+    ctx.strokeStyle = '#66faff';
+    ctx.moveTo(...center1);
+    ctx.lineTo(center1[0] + offset[0], center1[1] + offset[1]);
+    ctx.stroke();
   }
 
   render(world: World) {
@@ -236,6 +273,38 @@ class Camera {
     const selectedY = Math.round(((wmY + height) / TILE_HEIGHT) + (selectorYOffset + (mod(selectedX, 2) / -2)));
 
     this.clear();
+
+    const selectedPath = {};
+    if (this.selectedUnitPos && this.hoverPos && world.posIndex(this.hoverPos) in this.highlightedTiles) {
+      let i = 0;
+      let curPos = this.hoverPos;
+      let prevPos: Coords | null = null;
+      while (i < 100 && !world.areSameCoords(curPos, this.selectedUnitPos)) {
+        const nextPos = this.highlightedTiles[world.posIndex(curPos)];
+        selectedPath[world.posIndex(curPos)] = [prevPos, nextPos];
+        prevPos = curPos;
+        curPos = nextPos;
+      }
+      selectedPath[world.posIndex(curPos)] = [prevPos, null];
+    }
+
+    const tradeRoutePaths = {};
+    if (this.showTradeRoutes) {
+      for (const route of world.tradeRoutes) {
+        let prevPos: Coords | null = null;
+        for (const curPos of route.path) {
+          if (!tradeRoutePaths[world.posIndex(curPos)]) {
+            tradeRoutePaths[world.posIndex(curPos)] = new Set();
+          }
+          if (prevPos) {
+            tradeRoutePaths[world.posIndex(curPos)].add(world.getDirection(curPos, prevPos));
+            tradeRoutePaths[world.posIndex(prevPos)].add(world.getDirection(prevPos, curPos));
+          }
+          prevPos = curPos
+        }
+      }
+    }
+
     // for (let y = Math.max(yStart, 0); y < Math.min(yEnd, height); y++) {
     for (let yCount = Math.min(yEnd, height) - 0.5; yCount >= Math.max(yStart, 0); yCount -= 0.5) {
       const shiftedXStart = xStart + Number((mod(yCount, 1) === 0) !== (mod(xStart, 2) === 0));
@@ -245,6 +314,8 @@ class Camera {
 
         const tile = world.getTile({x, y});
         if (tile) {
+
+          const hasWalls = tile.walls.reduce((sum, wall) => (sum + (wall === null ? 0 : 1)), 0) > 0;
 
           if (!tile.visible) ctx.globalAlpha = 0.5;
 
@@ -256,23 +327,38 @@ class Camera {
             TILE_HEIGHT * zoom
           );
 
+          const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
+          const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
+          const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
+          const rightCapXOffset = X_TILE_SPACING * zoom;
+          const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
+          const margin = 1 * zoom;
+
+          const positions: [number, number][] = [
+            [leftX + rightCapXOffset - margin, topY + margin],
+            [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
+            [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
+            [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
+            [leftX + margin, topY + middleYOffset],
+            [leftX + leftCapXOffset + margin, topY + margin],
+          ];
+
+          if (hasWalls) {
+            for (const i of [0, 5, 1]) {
+              if (tile.walls[i] !== null) {
+                const overlay = textures.improvements[`walls_${i}`] ?? textures.missing_overlay;
+                ctx.drawImage(
+                  overlay.texture as CanvasImageSource,
+                  (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
+                  (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom,
+                  TILE_WIDTH * zoom,
+                  overlay.texture.height * zoom
+                );
+              }
+            }
+          }
+
           if (tile.owner) {
-            const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
-            const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
-            const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
-            const rightCapXOffset = X_TILE_SPACING * zoom;
-            const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
-            const margin = 1 * zoom;
-
-            const positions: [number, number][] = [
-              [leftX + rightCapXOffset - margin, topY + margin],
-              [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
-              [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
-              [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
-              [leftX + margin, topY + middleYOffset],
-              [leftX + leftCapXOffset + margin, topY + margin],
-            ];
-
             const neighbors = world.getNeighbors({x, y}, false);
             ctx.beginPath();
             ctx.lineWidth = margin * 2;
@@ -295,22 +381,6 @@ class Camera {
           if (world.posIndex({x, y}) in this.highlightedTiles || (
               this.selectedUnitPos && (world.posIndex({x, y}) === world.posIndex(this.selectedUnitPos))
             )) {
-            const leftX = (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom;
-            const topY = (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom;
-            const leftCapXOffset = (TILE_WIDTH - X_TILE_SPACING) * zoom;
-            const rightCapXOffset = X_TILE_SPACING * zoom;
-            const middleYOffset = ((TILE_HEIGHT - 1) / 2) * zoom;
-            const margin = 1 * zoom;
-
-            const positions: [number, number][] = [
-              [leftX + rightCapXOffset - margin, topY + margin],
-              [leftX + (TILE_WIDTH * zoom) - margin, topY + middleYOffset],
-              [leftX + rightCapXOffset - margin, topY + (TILE_HEIGHT * zoom) - margin],
-              [leftX + leftCapXOffset + margin, topY + (TILE_HEIGHT * zoom) - margin],
-              [leftX + margin, topY + middleYOffset],
-              [leftX + leftCapXOffset + margin, topY + margin],
-            ];
-
             const neighbors = world.getNeighbors({x, y}, false);
             ctx.beginPath();
             ctx.lineWidth = margin * 2;
@@ -327,6 +397,8 @@ class Camera {
           }
 
           if (x === selectedX && y === selectedY) {
+
+            this.hoverPos = {x, y};
 
             if (this.mouseDownTime === 1) {
 
@@ -376,12 +448,62 @@ class Camera {
 
           ctx.globalAlpha = 1;
 
+          if (this.showTradeRoutes && tradeRoutePaths[world.posIndex({x, y})]) {
+            for (let direction = 0; direction < 6; direction++) {
+              if (tradeRoutePaths[world.posIndex({x, y})].has(direction)) {
+                const { x: otherX, y: otherY } = getCoordsDial({x, y})[direction];
+                this.drawTileLine(x, y, world.adjacentify(x, otherX), otherY);
+              }
+            }
+          }
+
           if (tile.unit) {
             this.renderUnit(world, tile.unit, x, y);
+          }
+
+          if (!tile.visible) ctx.globalAlpha = 0.5;
+
+          if (hasWalls) {
+            for (const i of [2, 3, 4]) {
+              if (tile.walls[i] !== null) {
+                const overlay = textures.improvements[`walls_${i}`] ?? textures.missing_overlay;
+                ctx.drawImage(
+                  overlay.texture as CanvasImageSource,
+                  (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
+                  (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom,
+                  TILE_WIDTH * zoom,
+                  overlay.texture.height * zoom
+                );
+              }
+            }
+          }
+
+          ctx.globalAlpha = 1;
+
+          if (selectedPath[world.posIndex({x, y})]) {
+            const [ prevPos, nextPos ] = selectedPath[world.posIndex({x, y})];
+            if (prevPos) {
+              const { x: x1, y: y1 } = prevPos;
+              this.drawTileLine(x, y, world.adjacentify(x, x1), y1);
+            }
+            if (nextPos) {
+              const { x: x2, y: y2 } = nextPos;
+              this.drawTileLine(x, y, world.adjacentify(x, x2), y2);
+            }
           }
         }
       }
     }
+
+    // if (this.selectedUnitPos && this.hoverPos && world.posIndex(this.hoverPos) in this.highlightedTiles) {
+    //   let i = 0;
+    //   let curPos = this.hoverPos;
+    //   while (i < 100 && !world.areSameCoords(curPos, this.selectedUnitPos)) {
+    //     const { x, y } = this.highlightedTiles[world.posIndex(curPos)];
+    //     this.drawTileLine(curPos.x, curPos.y, x, y);
+    //     curPos = this.highlightedTiles[world.posIndex(curPos)];
+    //   }
+    // }
 
     if (!mapClicked && this.mouseDownTime === 1) {
       this.highlightedTiles = {};

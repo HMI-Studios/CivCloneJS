@@ -14,6 +14,11 @@ var PromotionClass;
     PromotionClass[PromotionClass["RANGED"] = 2] = "RANGED";
     PromotionClass[PromotionClass["RECON"] = 3] = "RECON";
 })(PromotionClass || (PromotionClass = {}));
+var WallType;
+(function (WallType) {
+    WallType[WallType["CLIFF"] = 0] = "CLIFF";
+    WallType[WallType["WALL"] = 1] = "WALL";
+})(WallType || (WallType = {}));
 var ErrandType;
 (function (ErrandType) {
     ErrandType[ErrandType["CONSTRUCTION"] = 0] = "CONSTRUCTION";
@@ -28,6 +33,25 @@ const canTrainUnits = {
 const canResearch = {
     'settlement': true,
     'campus': true,
+};
+const getCoordsDial = ({ x, y }) => {
+    return mod(x, 2) === 1 ?
+        [
+            { x: x, y: y + 1 },
+            { x: x + 1, y: y + 1 },
+            { x: x + 1, y: y },
+            { x: x, y: y - 1 },
+            { x: x - 1, y: y },
+            { x: x - 1, y: y + 1 },
+        ] :
+        [
+            { x: x, y: y + 1 },
+            { x: x + 1, y: y },
+            { x: x + 1, y: y - 1 },
+            { x: x, y: y - 1 },
+            { x: x - 1, y: y - 1 },
+            { x: x - 1, y: y },
+        ];
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
@@ -45,11 +69,13 @@ class World {
             error: {},
             event: {},
         };
+        this.listeners = {};
         this.civs = {};
         this.player = {
             name: null,
             civID: null,
         };
+        this.tradeRoutes = [];
     }
     posIndex({ x, y }) {
         return (y * this.width) + mod(x, this.width);
@@ -83,9 +109,30 @@ class World {
         }
         return filter ? tiles.filter((pos) => !!this.getTile(pos)) : tiles;
     }
+    getDirection(origin, target) {
+        const coordsDial = getCoordsDial(origin);
+        let direction = -1;
+        coordsDial.forEach((coords, i) => {
+            if (this.areSameCoords(coords, target)) {
+                direction = i;
+            }
+        });
+        return direction;
+    }
     isAdjacent(posA, posB) {
         // TODO - possibly optimize this? memoize?
         return this.getNeighbors(posB).map(coord => this.posIndex(coord)).includes(this.posIndex(posA));
+    }
+    adjacentify(x1, x2) {
+        if (mod(x1, this.width) === this.width - 1 && mod(x2, this.width) === 0)
+            return x1 + 1;
+        if (mod(x1, this.width) === 0 && mod(x2, this.width) === this.width - 1)
+            return x1 - 1;
+        if (mod(x1, this.width) > mod(x2, this.width))
+            return x1 - 1;
+        if (mod(x1, this.width) < mod(x2, this.width))
+            return x1 + 1;
+        return x1;
     }
     isOcean(tile) {
         return (tile.type === 'ocean' ||
@@ -118,7 +165,7 @@ class World {
     areSameCoords(pos1, pos2) {
         if (pos1 === null || pos2 === null)
             return false;
-        return pos1.x === pos2.x && pos1.y === pos2.y;
+        return mod(pos1.x, this.width) === mod(pos2.x, this.width) && pos1.y === pos2.y;
     }
     // mode: 0 = land unit, 1 = sea unit; -1 = air unit
     getTilesInRange(srcPos, range, mode = 0) {
@@ -133,6 +180,10 @@ class World {
             for (const adjPos of this.getNeighbors(atPos)) {
                 const tile = this.getTile(adjPos);
                 if (tile.unit && tile.unit.civID === this.player.civID)
+                    continue;
+                if (tile.walls[this.getDirection(adjPos, atPos)])
+                    continue;
+                if (this.getTile(atPos).walls[this.getDirection(atPos, adjPos)])
                     continue;
                 const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
                 if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {
@@ -329,6 +380,14 @@ class World {
                     ['setLeader', [leaderID]],
                 ]);
             };
+            this.on.update.debug = (data) => {
+                try {
+                    console.log(JSON.parse(data));
+                }
+                catch (err) {
+                    console.log(data);
+                }
+            };
             this.on.update.gameList = (gameList) => {
                 if (ui.view === 'gameList') {
                     ui.hideAll();
@@ -379,6 +438,15 @@ class World {
                         this.fetchImprovementCatalogs(tile.improvement, pos);
                     }
                 }
+                if (this.areSameCoords(camera.selectedUnitPos, pos)) {
+                    const unit = this.getTile(pos).unit;
+                    if (unit) {
+                        camera.deselectUnit(this);
+                        if (unit.movement > 0) {
+                            camera.selectUnit(this, pos, unit);
+                        }
+                    }
+                }
             };
             this.on.update.unitPositions = (unitPositions) => {
                 this.unitPositions = unitPositions;
@@ -426,6 +494,9 @@ class World {
             this.on.update.civID = (civID) => {
                 this.player.civID = civID;
             };
+            this.on.update.tradersList = (tradeRoutes) => {
+                this.tradeRoutes = tradeRoutes;
+            };
             this.on.error.notReady = (reason) => {
                 console.error('Error:', reason);
                 ui.hideReadyBtn();
@@ -464,7 +535,17 @@ class World {
                 ui.showMainMenu(mainMenuFns);
             });
             this.on.event.selectUnit = (coords, unit) => {
-                ui.showUnitActionsMenu(this, coords, unit);
+                const skipTurn = () => {
+                    if (camera.selectedUnitPos) {
+                        const index = this.getUnitIndex(camera.selectedUnitPos);
+                        camera.deselectUnit(this);
+                        const metaIndex = this.unusedUnits.indexOf(index);
+                        if (metaIndex > -1) {
+                            this.unusedUnits.splice(metaIndex, 1);
+                        }
+                    }
+                };
+                ui.showUnitActionsMenu(this, coords, unit, skipTurn);
                 ui.showUnitInfoMenu(this, coords, unit);
             };
             this.on.event.deselectUnit = (selectedUnitPos) => {
@@ -480,6 +561,11 @@ class World {
             };
             this.on.event.selectTile = (coords, tile) => {
                 this.selectedPos = coords;
+                if (this.listeners.selectTile) {
+                    this.listeners.selectTile(coords, tile);
+                    this.listeners.selectTile = null;
+                    return;
+                }
                 ui.showTileInfoMenu(this, coords, tile);
                 if (tile.improvement && !tile.improvement.isNatural) {
                     this.fetchImprovementCatalogs(tile.improvement, coords);
@@ -493,6 +579,23 @@ class World {
                 this.selectedPos = null;
                 ui.hideTileInfoMenu();
                 ui.hideSidebarMenu();
+            };
+            this.on.event.buildWall = (pos, callback) => {
+                camera.deselectUnit(this);
+                const neighbors = this.getNeighbors(pos);
+                const newHighlightedTiles = {};
+                for (const pos of neighbors) {
+                    newHighlightedTiles[this.posIndex(pos)] = pos;
+                }
+                camera.highlightedTiles = newHighlightedTiles;
+                this.listeners.selectTile = (coords, tile) => {
+                    callback(coords, tile);
+                    camera.highlightedTiles = {};
+                };
+            };
+            this.on.event.showTradeRoutes = () => {
+                this.sendActions([['getTraders', []]]);
+                camera.showTradeRoutes = true;
             };
             yield this.connect().catch(() => __awaiter(this, void 0, void 0, function* () {
                 console.error('Connection Failed. Reload page to retry.');
@@ -510,7 +613,7 @@ class World {
                                         height: Number(height),
                                     }, {
                                         gameName,
-                                        seed: Number(seed),
+                                        seed: seed ? Number(seed) : null,
                                     }]]]);
                         ui.setView('gameList');
                     }

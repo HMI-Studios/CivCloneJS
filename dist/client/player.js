@@ -7,10 +7,11 @@ const errandTypeTable = {
 const unitActionsTable = {
     'settler': ['settleCity'],
     'scout': [],
-    'builder': ['build'],
+    'builder': ['build', 'buildWall'],
     'warrior': [],
     'slinger': [],
     'archer': [],
+    'spy': ['stealKnowledge', 'cloak', 'decloak'],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
@@ -21,11 +22,30 @@ const unitActionsFnTable = {
     'build': (pos, improvement) => {
         return ['buildImprovement', [pos, improvement]];
     },
+    'buildWall': (pos, towards, type) => {
+        return ['buildWall', [pos, towards, type]];
+    },
+    'cloak': (pos) => {
+        return ['setCloak', [pos, true]];
+    },
+    'decloak': (pos) => {
+        return ['setCloak', [pos, false]];
+    },
 };
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
         const tile = world.getTile(pos);
         return world.canSettleOn(tile);
+    },
+    'cloak': (world, pos) => {
+        var _a;
+        const tile = world.getTile(pos);
+        return !((_a = tile.unit.cloaked) !== null && _a !== void 0 ? _a : false);
+    },
+    'decloak': (world, pos) => {
+        var _a;
+        const tile = world.getTile(pos);
+        return (_a = tile.unit.cloaked) !== null && _a !== void 0 ? _a : false;
     },
 };
 const iconPathTable = {
@@ -330,12 +350,17 @@ class UI {
         this.elements.gameList.remove();
         this.elements.centerModal.remove();
     }
-    showUnitActionsMenu(world, pos, unit) {
+    showUnitActionsMenu(world, pos, unit, skipTurn) {
+        const actionBtn = new Button(this.createElement('button'), {
+            text: translate(`unit.action.skipTurn`),
+        });
+        actionBtn.bindCallback(skipTurn);
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
         for (const action of unitActionsTable[unit.type]) {
             if (action === 'build') {
                 world.sendActions([['getImprovementCatalog', [pos]]]);
                 world.on.update.improvementCatalog = (catalogPos, catalog) => {
-                    if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
+                    if (!(pos.x === catalogPos.x && pos.y === catalogPos.y) || !catalog)
                         return;
                     for (const item of catalog) {
                         const actionBtn = new Button(this.createElement('button'), {
@@ -350,14 +375,31 @@ class UI {
                 };
                 continue;
             }
-            if (!unitActionsAvailabilityTable[action](world, pos)) {
+            if (action === 'buildWall') {
+                const actionBtn = new Button(this.createElement('button'), {
+                    text: `${translate(`unit.action.${action}`)}`,
+                });
+                actionBtn.bindCallback(() => {
+                    world.on.event.buildWall(pos, (selectedPos) => {
+                        world.sendActions([unitActionsFnTable[action](pos, selectedPos, WallType.WALL)]);
+                    });
+                });
+                this.elements.unitActionsMenu.appendChild(actionBtn.element);
+                continue;
+            }
+            if (action in unitActionsAvailabilityTable && !unitActionsAvailabilityTable[action](world, pos)) {
                 continue;
             }
             const actionBtn = new Button(this.createElement('button'), {
                 text: translate(`unit.action.${action}`),
             });
             actionBtn.bindCallback(() => {
-                world.sendActions([unitActionsFnTable[action](pos)]);
+                if (action in unitActionsFnTable) {
+                    world.sendActions([unitActionsFnTable[action](pos)]);
+                }
+                else {
+                    world.sendActions([[action, [pos]]]);
+                }
             });
             this.elements.unitActionsMenu.appendChild(actionBtn.element);
         }
@@ -374,9 +416,12 @@ class UI {
         unitHP.innerText = `${translate('unit.info.hp')}: ${unit.hp}%`;
         const unitMovement = this.createElement('span', { className: 'infoSpan' });
         unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
+        const unitKnowledge = this.createElement('span', { className: 'infoSpan' });
+        unitKnowledge.innerText = JSON.stringify(unit.knowledge);
         this.elements.unitInfoMenu.appendChild(unitName);
         this.elements.unitInfoMenu.appendChild(unitHP);
         this.elements.unitInfoMenu.appendChild(unitMovement);
+        this.elements.unitInfoMenu.appendChild(unitKnowledge);
         this.root.appendChild(this.elements.unitInfoMenu);
     }
     hideUnitInfoMenu() {
@@ -384,6 +429,7 @@ class UI {
         this.elements.unitInfoMenu.innerHTML = '';
     }
     showTileInfoMenu(world, pos, tile) {
+        var _a;
         this.elements.tileInfoMenu.innerHTML = '';
         const tileType = this.createElement('span', { className: 'infoSpan' });
         tileType.innerText = `${translate('tile.info.type')}: ${translate(`tile.${tile.type}`)}`;
@@ -392,7 +438,7 @@ class UI {
         const tileElevation = this.createElement('span', { className: 'infoSpan' });
         tileElevation.innerText = `${translate('tile.info.elevation')}: ${Math.round(tile.elevation)}`;
         const tileKnowledge = this.createElement('span', { className: 'infoSpan' });
-        tileKnowledge.innerText = JSON.stringify(tile.knowledges);
+        tileKnowledge.innerText = JSON.stringify((_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge);
         this.elements.tileInfoMenu.appendChild(tileType);
         this.elements.tileInfoMenu.appendChild(tileMovementCost);
         this.elements.tileInfoMenu.appendChild(tileElevation);
@@ -479,15 +525,21 @@ class UI {
             if (!(pos.x === catalogPos.x && pos.y === catalogPos.y))
                 return;
             if (tileUnitCatalog)
-                tileKnowledgeCatalog.remove();
+                tileUnitCatalog.remove();
             tileUnitCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.unitCatalog') } }),
-                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(unit => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-                                this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
-                                            world.sendActions([['trainUnit', [pos, unit.type]]]);
-                                        } } }),
-                                this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(unit.cost)] }),
-                            ] }))) }),
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(unit => {
+                            const trainUnitBtn = this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`unit.${unit.type}`), onclick: () => {
+                                        world.sendActions([['trainUnit', [pos, unit.type]]]);
+                                    } } });
+                            if (tile.improvement.errand) {
+                                trainUnitBtn.setAttribute('disabled', 'true');
+                            }
+                            return (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                                    trainUnitBtn,
+                                    this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(unit.cost)] }),
+                                ] }));
+                        }) }),
                 ] });
             this.elements.sidebarMenu.appendChild(tileUnitCatalog);
         };
@@ -498,12 +550,18 @@ class UI {
                 tileKnowledgeCatalog.remove();
             tileKnowledgeCatalog = this.createElement('div', { className: 'catalogDiv', children: [
                     this.createElement('h3', { className: 'sidebarInfoHeading', attrs: { innerText: translate('improvement.info.knowledgeCatalog') } }),
-                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog.map(knowledge => (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
-                                this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
-                                            world.sendActions([['researchKnowledge', [pos, knowledge.name]]]);
-                                        } } }),
-                                this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(knowledge.cost)] }),
-                            ] }))) }),
+                    this.createElement('div', { className: 'sidebarInfoTable', children: catalog && catalog.map(knowledge => {
+                            const researchKnowlegeBtn = this.createElement('button', { className: 'errandButton', attrs: { innerText: translate(`knowledge.${knowledge.name}`), onclick: () => {
+                                        world.sendActions([['researchKnowledge', [pos, knowledge.name]]]);
+                                    } } });
+                            if (tile.improvement.errand) {
+                                researchKnowlegeBtn.setAttribute('disabled', 'true');
+                            }
+                            return (this.createElement('div', { className: 'sidebarInfoTableRow', children: [
+                                    researchKnowlegeBtn,
+                                    this.createElement('span', { className: 'sidebarInfoSpan', children: [this.createYieldDisplay(knowledge.cost)] }),
+                                ] }));
+                        }) }),
                 ] });
             this.elements.sidebarMenu.appendChild(tileKnowledgeCatalog);
         };

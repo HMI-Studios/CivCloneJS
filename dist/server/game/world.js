@@ -51,6 +51,7 @@ class World {
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
             this.leaderPool[i] = new leader_1.Leader(i);
         }
+        this.currentTurn = 1;
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
     }
     export() {
@@ -64,11 +65,13 @@ class World {
             civs: exportedCivs,
             civsCount: this.civsCount,
             leaderPool: this.leaderPool,
+            currentTurn: this.currentTurn,
         };
     }
     static import(data) {
         const world = new World();
-        world.map = map_1.Map.import(data.map);
+        world.currentTurn = data.currentTurn;
+        world.map = map_1.Map.import(world, data.map);
         world.civs = {};
         for (const civID in data.civs) {
             const civData = data.civs[civID];
@@ -119,6 +122,10 @@ class World {
             }
             this.civs[civID].leader = leader;
             leader.select(civID);
+            for (const unit of this.civs[civID].getUnits()) {
+                unit.knowledge = {};
+                unit.updateKnowledge(leader.startingKnowledge);
+            }
             return true;
         }
         else {
@@ -243,7 +250,11 @@ class World {
         this.map.tileUpdate(defender.coords);
     }
     turn() {
+        const startTime = new Date().getTime();
         this.map.turn(this);
+        // TODO - maybe make a world.log for actual non-debug logs?
+        console.log(`Turn ${this.currentTurn} finished in ${new Date().getTime() - startTime}ms`);
+        this.currentTurn++;
     }
 }
 exports.World = World;

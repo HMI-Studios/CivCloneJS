@@ -14,6 +14,7 @@ const player_1 = require("./game/player");
 const game_1 = require("./game");
 const generator_1 = require("./game/map/generator");
 const unit_1 = require("./game/map/tile/unit");
+const utils_1 = require("./utils");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -107,6 +108,17 @@ const executeAction = (ws, action, ...args) => {
 };
 exports.executeAction = executeAction;
 const methods = {
+    listMethods: (ws) => {
+        sendTo(ws, { update: [
+                ['methodList', [Object.keys(methods)]],
+            ] });
+    },
+    // TODO - DEBUG ONLY! REMOVE IN PROD!
+    memCheck: (ws) => {
+        sendTo(ws, { update: [
+                ['debug', [process.memoryUsage()]],
+            ] });
+    },
     setPlayer: (ws, username) => {
         (0, exports.getConnData)(ws).username = username;
         sendTo(ws, { update: [
@@ -293,7 +305,6 @@ const methods = {
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, targetCoords);
         if (game) {
             const world = game.world;
             const map = world.map;
@@ -329,7 +340,6 @@ const methods = {
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
         const civID = game.players[username].civID;
-        console.log(srcCoords, path, attack);
         if (game) {
             const world = game.world;
             const map = world.map;
@@ -338,14 +348,20 @@ const methods = {
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
                 const unit = src.unit;
-                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit))) {
+                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords)))) {
                     game.sendUpdates();
                     return;
                 }
                 if (dst.unit) {
+                    if (dst.unit.cloaked) {
+                        dst.unit.setCloak(false);
+                        map.tileUpdate(dstCoords);
+                    }
                     break;
                 }
-                unit.movement -= dst.getMovementCost(unit);
+                if (src.walls[(0, utils_1.getDirection)(unit.coords, dstCoords)])
+                    break;
+                unit.movement -= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords));
                 map.moveUnitTo(unit, dstCoords);
                 src = dst;
                 finalCoords = dstCoords;
@@ -379,7 +395,7 @@ const methods = {
             const map = world.map;
             const unit = (_a = map.getTile(coords)) === null || _a === void 0 ? void 0 : _a.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'settler' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
-                const validCityLocation = map.settleCityAt(coords, name, civID);
+                const validCityLocation = map.settleCityAt(coords, name, civID, unit);
                 if (validCityLocation) {
                     world.removeUnit(unit);
                 }
@@ -422,7 +438,23 @@ const methods = {
             const tile = map.getTile(coords);
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID && !tile.improvement) {
-                map.startConstructionAt(coords, type, civID);
+                map.startConstructionAt(coords, type, civID, unit);
+                game.sendUpdates();
+            }
+        }
+    },
+    buildWall: (ws, coords, facingCoords, type) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if ((unit === null || unit === void 0 ? void 0 : unit.type) === 'builder' && (unit === null || unit === void 0 ? void 0 : unit.civID) === civID) {
+                tile.setWall((0, utils_1.getDirection)(coords, facingCoords), type);
+                map.tileUpdate(coords);
                 game.sendUpdates();
             }
         }
@@ -507,6 +539,44 @@ const methods = {
             const tile = map.getTile(coords);
             map.researchKnowledgeAt(coords, name, civID);
             game.sendUpdates();
+        }
+    },
+    stealKnowledge: (ws, coords) => {
+        var _a, _b;
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile.unit;
+            if (unit && unit.civID === civID) {
+                const tileKnowledgeMap = (_b = (_a = tile.improvement) === null || _a === void 0 ? void 0 : _a.knowledge) === null || _b === void 0 ? void 0 : _b.getKnowledgeMap();
+                if (tileKnowledgeMap)
+                    unit.updateKnowledge(tileKnowledgeMap);
+                // TODO - spy invisiblity stuff + possibility of being discovered here
+                // TODO - what about stealing from builders?
+                map.tileUpdate(unit.coords);
+                game.sendUpdates();
+            }
+        }
+    },
+    setCloak: (ws, coords, cloaked) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile.unit;
+            if (unit && unit.civID === civID && unit.movement) {
+                unit.setCloak(cloaked);
+                unit.movement = 0;
+                map.tileUpdate(unit.coords);
+                game.sendUpdates();
+            }
         }
     },
 };

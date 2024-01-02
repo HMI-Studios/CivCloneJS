@@ -74,14 +74,20 @@
   "unit": {
     "settler": "Settler",
     "builder": "Builder",
+    "warrior": "Warrior",
+    "slinger": "Slinger",
+    "archer": "Archer",
     "scout": "Scout",
+    "spy": "Spy",
     "info": {
       "hp": "HP",
       "movement": "Movement"
     },
     "action": {
+      "skipTurn": "Skip",
       "settleCity": "Settle City",
-      "build": "Build"
+      "build": "Build",
+      "stealKnowledge": "Steal Tech"
     }
   },
   "tile": {
@@ -131,8 +137,12 @@
     }
   },
   "knowledge": {
+    "food_0": "Early Agriculture",
     "military_0": "Early Warfare",
-    "recon_0": "Scouting"
+    "military_1": "Organized Warfare",
+    "ranged_1": "Archery",
+    "recon_0": "Scouting",
+    "recon_1": "Basic Espionage"
   },
   "yield": {
     "food": "Food",
