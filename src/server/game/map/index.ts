@@ -1,6 +1,6 @@
 import { Coords, World } from '../world';
 import { MovementClass, PromotionClass, Unit } from './tile/unit';
-import { City } from './tile/city';
+import { BarbarianCamp, City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
 import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection, getDirection } from '../../utils';
@@ -296,14 +296,19 @@ export class Map {
     if (tile.owner) {
       if (!overwrite) return;
       tile.owner?.removeTile(coords);
-      tile.setVisibility(tile.owner.civID, false);
+      if (tile.owner.civID) {
+        tile.setVisibility(tile.owner.civID, false);
+      }
     }
     tile.owner = owner;
-    tile.setVisibility(owner.civID, true);
+    if (owner.civID) {
+      tile.setVisibility(owner.civID, true);
+    }
     owner.addTile(coords);
   }
 
   getCivTile(civID: number, tile: Tile): TileData | null {
+    return tile.getVisibleData(civID);
     if (tile.discoveredBy[civID]) {
       if (tile.visibleTo[civID]) {
         return tile.getVisibleData(civID);
@@ -344,7 +349,7 @@ export class Map {
     // mark tiles currently visible by unit as unseen
     const srcVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of srcVisible) {
-      this.setTileVisibility(unit.civID, visibleCoords, false);
+      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, false);
     }
 
     this.getTile(unit.coords).setUnit(undefined);
@@ -356,7 +361,7 @@ export class Map {
     // mark tiles now visible by unit as seen
     const newVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of newVisible) {
-      this.setTileVisibility(unit.civID, visibleCoords, true);
+      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, true);
     }
   }
 
@@ -462,6 +467,18 @@ export class Map {
     );
   }
 
+  newBarbarianCampAt(coords: Coords): number | null {
+    const tile = this.getTile(coords);
+    if (!this.canSettleOn(tile)) return null;
+
+    const camp: BarbarianCamp = new BarbarianCamp(coords);
+    this.cities.push(camp);
+    const cityID = this.cities.length - 1;
+
+    this.buildImprovementAt(coords, 'barbarian_camp');
+    return cityID;
+  }
+
   settleCityAt(coords: Coords, name: string, civID: number, settler: Unit): boolean {
     const tile = this.getTile(coords);
     if (!this.canSettleOn(tile)) return false;
@@ -506,7 +523,7 @@ export class Map {
     );
   }
 
-  buildImprovementAt(coords: Coords, type: string, ownerID: number, knowledges?: KnowledgeMap): void {
+  buildImprovementAt(coords: Coords, type: string, ownerID?: number, knowledges?: KnowledgeMap): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     if (!this.canBuildOn(tile)) return;

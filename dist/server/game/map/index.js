@@ -219,13 +219,18 @@ class Map {
             if (!overwrite)
                 return;
             (_a = tile.owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
-            tile.setVisibility(tile.owner.civID, false);
+            if (tile.owner.civID) {
+                tile.setVisibility(tile.owner.civID, false);
+            }
         }
         tile.owner = owner;
-        tile.setVisibility(owner.civID, true);
+        if (owner.civID) {
+            tile.setVisibility(owner.civID, true);
+        }
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {
+        return tile.getVisibleData(civID);
         if (tile.discoveredBy[civID]) {
             if (tile.visibleTo[civID]) {
                 return tile.getVisibleData(civID);
@@ -262,7 +267,8 @@ class Map {
         // mark tiles currently visible by unit as unseen
         const srcVisible = this.getVisibleTilesCoords(unit);
         for (const visibleCoords of srcVisible) {
-            this.setTileVisibility(unit.civID, visibleCoords, false);
+            if (unit.civID !== undefined)
+                this.setTileVisibility(unit.civID, visibleCoords, false);
         }
         this.getTile(unit.coords).setUnit(undefined);
         this.tileUpdate(unit.coords);
@@ -272,7 +278,8 @@ class Map {
         // mark tiles now visible by unit as seen
         const newVisible = this.getVisibleTilesCoords(unit);
         for (const visibleCoords of newVisible) {
-            this.setTileVisibility(unit.civID, visibleCoords, true);
+            if (unit.civID !== undefined)
+                this.setTileVisibility(unit.civID, visibleCoords, true);
         }
     }
     addTrader(trader) {
@@ -367,6 +374,16 @@ class Map {
             tile.type !== 'coastal' &&
             tile.type !== 'frozen_coastal' &&
             tile.type !== 'river');
+    }
+    newBarbarianCampAt(coords) {
+        const tile = this.getTile(coords);
+        if (!this.canSettleOn(tile))
+            return null;
+        const camp = new city_1.BarbarianCamp(coords);
+        this.cities.push(camp);
+        const cityID = this.cities.length - 1;
+        this.buildImprovementAt(coords, 'barbarian_camp');
+        return cityID;
     }
     settleCityAt(coords, name, civID, settler) {
         const tile = this.getTile(coords);

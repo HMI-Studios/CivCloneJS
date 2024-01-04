@@ -68,7 +68,7 @@ WorkErrand.errandActionEffects = {
     [ErrandType.UNIT_TRAINING]: (world, map, tile, action) => {
         if (!(tile.owner && action.location))
             return;
-        const newUnit = new unit_1.Unit(action.option, tile.owner.civID, action.location);
+        const newUnit = new unit_1.Unit(action.option, action.location, tile.owner.civID);
         if (tile.unit) {
             // if there is already a unit on this tile, we must figure something else out
         }

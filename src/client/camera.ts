@@ -190,7 +190,7 @@ class Camera {
     if (unit.cloaked) ctx.globalAlpha = 0.5;
 
     // Unit Color Background
-    ctx.fillStyle = civs[unit.civID].color;
+    ctx.fillStyle = civs[unit.civID]?.color ?? (unit.isBarbarian ? '#F00': '#333');
     ctx.beginPath();
     ctx.rect(
       (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom,

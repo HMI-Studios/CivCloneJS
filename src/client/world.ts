@@ -26,6 +26,7 @@ interface Unit {
   promotionClass: PromotionClass;
   knowledge: KnowledgeMap;
   cloaked?: boolean;
+  isBarbarian?: boolean;
 }
 
 interface RangedUnit extends Unit {
