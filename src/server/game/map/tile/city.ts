@@ -9,6 +9,7 @@ import { Unit } from "./unit";
 export interface CityData {
   name: string;
   civID?: number;
+  isBarbarian: boolean;
 }
 
 export class City {
@@ -58,6 +59,7 @@ export class City {
     return {
       name: this.name,
       civID: this.civID,
+      isBarbarian: this instanceof BarbarianCamp,
     };
   }
 
@@ -140,22 +142,32 @@ export class BarbarianCamp extends UnitController {
 
     const camp = map.getTile(this.center).improvement as Improvement;
     if (!camp.errand) {
-      let raidMode: boolean;
-      if (this.raidTarget && !this.settleTarget) {
-        raidMode = true;
-      } else if (!this.raidTarget && this.settleTarget) {
-        raidMode = false;
-      } else {
-        raidMode = Boolean(world.random.randInt(0, 1));
-      }
-      if (raidMode) {
-        // TODO
-      } else {
+      if (!this.units.some(unit => unit.type === 'scout')) {
         map.startErrandAt(this.center, camp, {
           type: ErrandType.UNIT_TRAINING,
-          option: 'settler',
+          option: 'scout',
           location: this.center,
         });
+      } else {
+        let raidMode: boolean;
+        raidMode = true;
+        if (!this.raidTarget && this.settleTarget) {
+          raidMode = false;
+        } else if (this.settleTarget) {
+          raidMode = Boolean(world.random.randInt(0, 1));
+        }
+        if (this.units.some(unit => unit.type === 'settler')) {
+          raidMode = true;
+        }
+        if (raidMode) {
+          // TODO
+        } else {
+          map.startErrandAt(this.center, camp, {
+            type: ErrandType.UNIT_TRAINING,
+            option: 'settler',
+            location: this.center,
+          });
+        }
       }
     }
 
@@ -165,10 +177,15 @@ export class BarbarianCamp extends UnitController {
       const visibleCoords = map.getVisibleTilesCoords(unit, unit.visionRange);
       const canSeeCamp = arrayIncludesCoords(visibleCoords, this.center);
       if (unit.type === 'scout') {
+        const MAX_SCOUTING_TURNS = 15;
         if (!('turnsSinceCampSpotted' in unit.automationData)) {
           unit.automationData.turnsSinceCampSpotted = 0;
         }
         unit.automationData.turnsSinceCampSpotted++;
+        if (unit.automationData.turnsSinceCampSpotted > MAX_SCOUTING_TURNS) {
+          unit.automationData.target = this.center;
+          delete unit.automationData.wanderTarget;
+        }
         visibleCoords.forEach(coords => {
           const tile = map.getTile(coords);
           if (tile.improvement) {
@@ -177,18 +194,53 @@ export class BarbarianCamp extends UnitController {
               if (!(coords.x === this.center.x && coords.y === this.center.y)) {
                 unit.automationData.target = this.center;
                 delete unit.automationData.wanderTarget;
-              } else if (unit.automationData.target) {
+              } else {
                 this.raidTarget = unit.automationData.raidTarget ?? this.raidTarget;
                 this.settleTarget = unit.automationData.settleTarget ?? this.settleTarget;
+                delete unit.automationData.raidTarget;
+                delete unit.automationData.settleTarget;
               }
             }
           }
           if (unit.automationData.turnsSinceCampSpotted > 3 && !canSeeCamp) {
             if (map.canSettleOn(tile) && !unit.automationData.settleTarget) {
-              
+              unit.automationData.settleTarget = coords;
             }
           }
         });
+      } else if (unit.type === 'settler') {
+        if (!unit.automationData.target) {
+          if (canSeeCamp) {
+            if (this.settleTarget) unit.automationData.target = this.settleTarget;
+            else return;
+          } else {
+            unit.automationData.target = this.center;
+          }
+        } else {
+          visibleCoords.forEach(coords => {
+            const tile = map.getTile(coords);
+            if (!unit.automationData.target) {
+              if (tile.unit?.cityID === this.id && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
+                unit.automationData.target = tile.unit.automationData.settleTarget;
+              }
+            }
+          });
+          if (
+            unit.automationData.target && (
+              (unit.coords.x === unit.automationData.target.x && unit.coords.y === unit.automationData.target.y) ||
+              arrayIncludesCoords(getAdjacentCoords(unit.coords), unit.automationData.target)
+            )
+          ) {
+            const tile = map.getTile(unit.automationData.target);
+            if (map.canSettleOn(tile)) {
+              map.newBarbarianCampAt(unit.automationData.target);
+              return world.removeUnit(unit);
+            } else {
+              unit.automationData.target = this.center;
+              delete this.settleTarget;
+            }
+          }
+        }
       }
 
       if (!('wanderTarget' in unit.automationData)) {
@@ -248,15 +300,16 @@ export class BarbarianCamp extends UnitController {
         }
 
         if (stepsTaken === 0) {
-          if (!(currentTarget.x === unit.automationData.wanderTarget.x && currentTarget.y === unit.automationData.wanderTarget.y)) {
-            currentTarget = unit.automationData.wanderTarget;
-            continue;
-          }
-          // If there is no movement we can make towards our target, let switch to a new one.
+          // If there is no movement we can make towards our target, let's switch to a new one.
           unit.automationData.wanderTarget = {
             x: world.random.randInt(0, map.width),
             y: world.random.randInt(0, map.height),
           };
+
+          if (!(currentTarget.x === unit.automationData.wanderTarget.x && currentTarget.y === unit.automationData.wanderTarget.y)) {
+            currentTarget = unit.automationData.wanderTarget;
+            continue;
+          }
         }
         break;
       }

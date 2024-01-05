@@ -104,6 +104,7 @@ interface Tile {
   owner?: {
     civID: number,
     name: string,
+    isBarbarian: boolean,
   };
   visible: boolean;
   walls: Wall[];

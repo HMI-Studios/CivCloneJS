@@ -38,6 +38,7 @@ class City {
         return {
             name: this.name,
             civID: this.civID,
+            isBarbarian: this instanceof BarbarianCamp,
         };
     }
     getTiles() {
@@ -105,25 +106,35 @@ class BarbarianCamp extends UnitController {
         super.turn(world, map);
         const camp = map.getTile(this.center).improvement;
         if (!camp.errand) {
-            let raidMode;
-            if (this.raidTarget && !this.settleTarget) {
-                raidMode = true;
-            }
-            else if (!this.raidTarget && this.settleTarget) {
-                raidMode = false;
-            }
-            else {
-                raidMode = Boolean(world.random.randInt(0, 1));
-            }
-            if (raidMode) {
-                // TODO
-            }
-            else {
+            if (!this.units.some(unit => unit.type === 'scout')) {
                 map.startErrandAt(this.center, camp, {
                     type: errand_1.ErrandType.UNIT_TRAINING,
-                    option: 'settler',
+                    option: 'scout',
                     location: this.center,
                 });
+            }
+            else {
+                let raidMode;
+                raidMode = true;
+                if (!this.raidTarget && this.settleTarget) {
+                    raidMode = false;
+                }
+                else if (this.settleTarget) {
+                    raidMode = Boolean(world.random.randInt(0, 1));
+                }
+                if (this.units.some(unit => unit.type === 'settler')) {
+                    raidMode = true;
+                }
+                if (raidMode) {
+                    // TODO
+                }
+                else {
+                    map.startErrandAt(this.center, camp, {
+                        type: errand_1.ErrandType.UNIT_TRAINING,
+                        option: 'settler',
+                        location: this.center,
+                    });
+                }
             }
         }
         this.units.forEach(unit => {
@@ -132,10 +143,15 @@ class BarbarianCamp extends UnitController {
             const visibleCoords = map.getVisibleTilesCoords(unit, unit.visionRange);
             const canSeeCamp = (0, utils_1.arrayIncludesCoords)(visibleCoords, this.center);
             if (unit.type === 'scout') {
+                const MAX_SCOUTING_TURNS = 15;
                 if (!('turnsSinceCampSpotted' in unit.automationData)) {
                     unit.automationData.turnsSinceCampSpotted = 0;
                 }
                 unit.automationData.turnsSinceCampSpotted++;
+                if (unit.automationData.turnsSinceCampSpotted > MAX_SCOUTING_TURNS) {
+                    unit.automationData.target = this.center;
+                    delete unit.automationData.wanderTarget;
+                }
                 visibleCoords.forEach(coords => {
                     var _a, _b;
                     const tile = map.getTile(coords);
@@ -146,17 +162,56 @@ class BarbarianCamp extends UnitController {
                                 unit.automationData.target = this.center;
                                 delete unit.automationData.wanderTarget;
                             }
-                            else if (unit.automationData.target) {
+                            else {
                                 this.raidTarget = (_a = unit.automationData.raidTarget) !== null && _a !== void 0 ? _a : this.raidTarget;
                                 this.settleTarget = (_b = unit.automationData.settleTarget) !== null && _b !== void 0 ? _b : this.settleTarget;
+                                delete unit.automationData.raidTarget;
+                                delete unit.automationData.settleTarget;
                             }
                         }
                     }
                     if (unit.automationData.turnsSinceCampSpotted > 3 && !canSeeCamp) {
                         if (map.canSettleOn(tile) && !unit.automationData.settleTarget) {
+                            unit.automationData.settleTarget = coords;
                         }
                     }
                 });
+            }
+            else if (unit.type === 'settler') {
+                if (!unit.automationData.target) {
+                    if (canSeeCamp) {
+                        if (this.settleTarget)
+                            unit.automationData.target = this.settleTarget;
+                        else
+                            return;
+                    }
+                    else {
+                        unit.automationData.target = this.center;
+                    }
+                }
+                else {
+                    visibleCoords.forEach(coords => {
+                        var _a;
+                        const tile = map.getTile(coords);
+                        if (!unit.automationData.target) {
+                            if (((_a = tile.unit) === null || _a === void 0 ? void 0 : _a.cityID) === this.id && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
+                                unit.automationData.target = tile.unit.automationData.settleTarget;
+                            }
+                        }
+                    });
+                    if (unit.automationData.target && ((unit.coords.x === unit.automationData.target.x && unit.coords.y === unit.automationData.target.y) ||
+                        (0, utils_1.arrayIncludesCoords)((0, utils_1.getAdjacentCoords)(unit.coords), unit.automationData.target))) {
+                        const tile = map.getTile(unit.automationData.target);
+                        if (map.canSettleOn(tile)) {
+                            map.newBarbarianCampAt(unit.automationData.target);
+                            return world.removeUnit(unit);
+                        }
+                        else {
+                            unit.automationData.target = this.center;
+                            delete this.settleTarget;
+                        }
+                    }
+                }
             }
             if (!('wanderTarget' in unit.automationData)) {
                 unit.automationData.wanderTarget = {
@@ -171,7 +226,6 @@ class BarbarianCamp extends UnitController {
             let currentTarget = (_a = unit.automationData.target) !== null && _a !== void 0 ? _a : unit.automationData.wanderTarget;
             let stepsTaken = 0;
             let i = 0;
-            console.log(unit.coords, unit.automationData);
             while (unit.movement > 0) {
                 i++;
                 const adjacentCoords = (0, utils_1.getAdjacentCoords)(unit.coords);
@@ -192,7 +246,6 @@ class BarbarianCamp extends UnitController {
                     delete unit.automationData.wanderTarget;
                     break;
                 }
-                console.log(directRoute, altRoutes);
                 if (directRoute && map.areValidCoords(directRoute) && this.moveUnit(unit, directRoute)) {
                     stepsTaken++;
                     continue;
@@ -211,15 +264,15 @@ class BarbarianCamp extends UnitController {
                     }
                 }
                 if (stepsTaken === 0) {
-                    if (!(currentTarget.x === unit.automationData.wanderTarget.x && currentTarget.y === unit.automationData.wanderTarget.y)) {
-                        currentTarget = unit.automationData.wanderTarget;
-                        continue;
-                    }
-                    // If there is no movement we can make towards our target, let switch to a new one.
+                    // If there is no movement we can make towards our target, let's switch to a new one.
                     unit.automationData.wanderTarget = {
                         x: world.random.randInt(0, map.width),
                         y: world.random.randInt(0, map.height),
                     };
+                    if (!(currentTarget.x === unit.automationData.wanderTarget.x && currentTarget.y === unit.automationData.wanderTarget.y)) {
+                        currentTarget = unit.automationData.wanderTarget;
+                        continue;
+                    }
                 }
                 break;
             }

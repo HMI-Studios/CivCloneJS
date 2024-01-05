@@ -66,6 +66,7 @@ WorkErrand.errandActionEffects = {
         tile.improvement = new improvement_1.Improvement(action.option, tile.baseYield);
     },
     [ErrandType.UNIT_TRAINING]: (world, map, tile, action) => {
+        console.log(tile, action);
         if (!(tile.owner && action.location))
             return;
         const newUnit = new unit_1.Unit(action.option, action.location, tile.owner.civID, tile.owner.civID ? undefined : tile.owner.id);

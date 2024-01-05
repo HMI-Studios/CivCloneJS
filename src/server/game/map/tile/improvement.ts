@@ -23,6 +23,7 @@ export interface ImprovementConstructionCost {
 export class Improvement {
   static yieldTable: { [improvement: string]: Yield } = {
     'settlement': new Yield({food: 2, production: 2}),
+    'barbarian_camp': new Yield({food: 2, production: 2}),
     'encampment': new Yield({production: 1}),
     'campus': new Yield({science: 5}),
   
@@ -33,6 +34,7 @@ export class Improvement {
   
   static storeCapTable: { [improvement: string]: YieldParams } = {
     'settlement': {food: 20, production: 2},
+    'barbarian_camp': {food: 20, production: 2},
     'encampment': {food: 10, production: 1},
   
     'farm': {food: 20},

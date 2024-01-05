@@ -482,6 +482,8 @@ export class Map {
     const camp: BarbarianCamp = new BarbarianCamp(cityID, coords);
     this.cities.push(camp);
 
+    this.setTileOwner(coords, camp, false);
+
     this.buildImprovementAt(coords, 'barbarian_camp');
     return cityID;
   }

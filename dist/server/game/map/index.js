@@ -387,6 +387,7 @@ class Map {
         const cityID = this.cities.length;
         const camp = new city_1.BarbarianCamp(cityID, coords);
         this.cities.push(camp);
+        this.setTileOwner(coords, camp, false);
         this.buildImprovementAt(coords, 'barbarian_camp');
         return cityID;
     }

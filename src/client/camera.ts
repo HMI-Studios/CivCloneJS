@@ -358,7 +358,7 @@ class Camera {
             }
           }
 
-          if (tile.owner) {
+          if (tile.owner && !tile.owner.isBarbarian) {
             const neighbors = world.getNeighbors({x, y}, false);
             ctx.beginPath();
             ctx.lineWidth = margin * 2;
