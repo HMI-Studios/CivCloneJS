@@ -47,11 +47,11 @@ export class World {
       this.updateCivTileVisibility(civID);
     }
 
-    const barbarianTribes = 25; // Make this depend on map size
+    const barbarianTribes = Math.ceil(map.height * map.width / 1500);
     for (let i = 0; i < barbarianTribes; i++) {
       this.getStartLocaltion(([settlerCoords, _, scoutCoords]) => {
         const cityID = this.map.newBarbarianCampAt(settlerCoords);
-        if (cityID) this.addUnit(new Unit('scout', scoutCoords, undefined, cityID));
+        if (cityID !== null) this.addUnit(new Unit('scout', scoutCoords, undefined, cityID));
       });
     }
 
