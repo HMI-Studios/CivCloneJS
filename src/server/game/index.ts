@@ -5,8 +5,8 @@ import { SAVE_LOCATION } from '../config';
 
 import { World } from './world';
 import { Player } from './player';
-import { Map } from './map';
 import { EventMsg, PlayerData } from '../utils';
+import { PerlinWorldGenerator } from './map/generator';
 
 interface MetaData {
   gameName: string,
@@ -22,8 +22,8 @@ export class Game {
   metaData: MetaData;
   hasStarted: boolean;
 
-  constructor(map?: Map, options?: { playerCount: number, ownerName?: string, gameName?: string }) {
-    if (!(map && options)) {
+  constructor(generator?: PerlinWorldGenerator, options?: { playerCount: number, ownerName?: string, gameName?: string, isManualSeed?: boolean }) {
+    if (!(generator && options)) {
       // If no arguments are provided, this is part of a call to Game.import
       return
     }
@@ -31,7 +31,29 @@ export class Game {
     let { gameName } = options;
     if (!gameName) gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
 
-    this.world = new World(map, playerCount);
+    let tries = 0;
+    const maxTries = options.isManualSeed ? 1 : 10;
+    while (!this.world && !(tries > maxTries)) {
+      tries++;
+      try {
+        this.world = new World(generator.generate(), playerCount);
+      } catch (err) {
+        if (err.type === 'mapError') {
+          generator.reseed();
+          console.warn(`Retrying map generation.`)
+          if (tries+1 > maxTries) {
+            console.error('Map generation failed.');
+            throw {
+              type: 'mapError',
+              code: 'generationFailed',
+              msg: `Could not generate map! (gave up after ${tries} tries)`,
+              reason: err,
+            };
+          }
+          else continue;
+        }
+      }
+    }
 
     this.players = {};
     this.playerCount = playerCount;

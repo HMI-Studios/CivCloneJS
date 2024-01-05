@@ -37,8 +37,7 @@ const MOUNTAIN = new biome_1.TileType('mountain', 5, {});
 const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, {}, null, false, false, true);
 class PerlinWorldGenerator {
     constructor(seed, { width, height }) {
-        this.seed = seed;
-        this.random = new random_1.Random(seed);
+        this.reseed(seed);
         this.simplex = new simplex_noise_1.default(this.random.randFloat);
         this.width = width;
         this.height = height;
@@ -99,6 +98,10 @@ class PerlinWorldGenerator {
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
             ]),
         };
+    }
+    reseed(seed) {
+        this.seed = seed !== null && seed !== void 0 ? seed : Math.floor(Math.random() * 9007199254740991);
+        this.random = new random_1.Random(this.seed);
     }
     getBiome(temp, humidity) {
         if (temp < 5)
@@ -200,7 +203,7 @@ class PerlinWorldGenerator {
                 i++;
             }
         }
-        console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`);
+        console.log(`Map generation completed in ${new Date().getTime() - startTime}ms with seed ${this.seed}.`);
         return map;
     }
 }

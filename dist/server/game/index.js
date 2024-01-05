@@ -39,8 +39,8 @@ const config_1 = require("../config");
 const world_1 = require("./world");
 const player_1 = require("./player");
 class Game {
-    constructor(map, options) {
-        if (!(map && options)) {
+    constructor(generator, options) {
+        if (!(generator && options)) {
             // If no arguments are provided, this is part of a call to Game.import
             return;
         }
@@ -48,7 +48,31 @@ class Game {
         let { gameName } = options;
         if (!gameName)
             gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
-        this.world = new world_1.World(map, playerCount);
+        let tries = 0;
+        const maxTries = options.isManualSeed ? 1 : 10;
+        while (!this.world && !(tries > maxTries)) {
+            tries++;
+            try {
+                this.world = new world_1.World(generator.generate(), playerCount);
+            }
+            catch (err) {
+                if (err.type === 'mapError') {
+                    generator.reseed();
+                    console.warn(`Retrying map generation.`);
+                    if (tries + 1 > maxTries) {
+                        console.error('Map generation failed.');
+                        throw {
+                            type: 'mapError',
+                            code: 'generationFailed',
+                            msg: `Could not generate map! (gave up after ${tries} tries)`,
+                            reason: err,
+                        };
+                    }
+                    else
+                        continue;
+                }
+            }
+        }
         this.players = {};
         this.playerCount = playerCount;
         this.metaData = {

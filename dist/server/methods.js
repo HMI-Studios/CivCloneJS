@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeAction = exports.getConnData = exports.games = exports.connData = exports.connections = void 0;
 const player_1 = require("./game/player");
@@ -20,47 +11,14 @@ exports.connData = [];
 const sendTo = (ws, msg) => {
     ws.send(JSON.stringify(msg));
 };
-exports.games = {
-    0: new game_1.Game(
-    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new generator_1.PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(), {
-        gameName: 'singleplayer unsaved test',
-        playerCount: 1,
-    }),
-    // 1: new Game(
-    //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
-    //   {
-    //     gameName: 'singleplayer test',
-    //     playerCount: 1,
-    //   }
-    // ),
-    // 2: new Game(
-    //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
-    //   {
-    //     gameName: 'multiplayer test',
-    //     playerCount: 2,
-    //   }
-    // ),
-};
-// games[1].save();
-// games[2].save();
-(() => __awaiter(void 0, void 0, void 0, function* () {
-    exports.games[1] = yield game_1.Game.load('singleplayer test');
-    // games[2] = await Game.load('no units test')
-    exports.games[2] = yield game_1.Game.load('multiplayer test');
-}))();
+exports.games = {};
 const createGame = (username, playerCount, mapOptions, options) => {
-    var _a;
     const newID = Object.keys(exports.games)[Object.keys(exports.games).length - 1] + 1;
-    exports.games[newID] = new game_1.Game(new generator_1.PerlinWorldGenerator((_a = options.seed) !== null && _a !== void 0 ? _a : Math.floor(Math.random() * 9007199254740991), mapOptions).generate(), {
+    exports.games[newID] = new game_1.Game(new generator_1.PerlinWorldGenerator(options.seed, mapOptions), {
         playerCount,
         ownerName: username,
         gameName: options.gameName,
+        isManualSeed: 'seed' in options,
     });
 };
 const getConnData = (ws) => {
@@ -150,7 +108,16 @@ const methods = {
     createGame: (ws, playerCount, mapOptions, options) => {
         const username = getUsername(ws);
         if (username && playerCount && mapOptions) {
-            createGame(username, playerCount, mapOptions, options !== null && options !== void 0 ? options : {});
+            try {
+                createGame(username, playerCount, mapOptions, options !== null && options !== void 0 ? options : {});
+            }
+            catch (err) {
+                sendTo(ws, {
+                    error: [
+                        ['serverError', [err]],
+                    ],
+                });
+            }
         }
         methods.getGames(ws);
     },

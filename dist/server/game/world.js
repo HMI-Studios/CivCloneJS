@@ -9,11 +9,11 @@ const leader_1 = require("./leader");
 const DAMAGE_MULTIPLIER = 20;
 class World {
     constructor(map, civsCount) {
-        this.random = new random_1.Random(42);
         this.updates = [];
         if (!(map && civsCount)) {
             return;
         }
+        this.random = new random_1.Random(map.seed);
         this.map = map;
         this.civsCount = civsCount;
         this.civs = {};
@@ -22,12 +22,12 @@ class World {
             this.civs[civID] = new civilization_1.Civilization();
             this.getStartLocaltion(([settlerCoords, builderCoords, scoutCoords]) => {
                 this.addUnit(new unit_1.Unit('settler', settlerCoords, civID));
-                this.addUnit(new unit_1.Unit('builder', builderCoords, civID));
-                this.addUnit(new unit_1.Unit('scout', scoutCoords, civID));
+                // this.addUnit(new Unit('builder', builderCoords, civID));
+                // this.addUnit(new Unit('scout', scoutCoords, civID));
             });
             this.updateCivTileVisibility(civID);
         }
-        const barbarianTribes = 10; // Make this depend on map size
+        const barbarianTribes = 100; // Make this depend on map size
         for (let i = 0; i < barbarianTribes; i++) {
             this.getStartLocaltion(([settlerCoords, _, scoutCoords]) => {
                 const cityID = this.map.newBarbarianCampAt(settlerCoords);
@@ -64,7 +64,11 @@ class World {
             }
         }
         if (!start_location_successful) {
-            throw 'Error: couldn\'t find legal start location! (gave up after 1000 tries)';
+            throw {
+                type: 'mapError',
+                code: 'noStartLocation',
+                msg: 'Error: couldn\'t find legal start location! (gave up after 1000 tries)',
+            };
         }
     }
     export() {
