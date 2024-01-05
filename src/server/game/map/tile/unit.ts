@@ -139,6 +139,7 @@ export class Unit {
   isBarbarian?: boolean;
 
   public knowledge: KnowledgeMap;
+  public automationData: { [key: string]: any };
 
   static makeCatalog(types: string[]): UnitTypeCost[] {
     return types.map(type => (
@@ -162,6 +163,7 @@ export class Unit {
     this.coords = coords;
     this.alive = true;
     this.knowledge = knowledge ?? {};
+    this.automationData = {};
     if (Unit.cloakTable[type]) {
       this.cloaked = false;
     }

@@ -18,10 +18,13 @@ export class World {
   civsCount: number;
   leaderPool: { [leaderID: number]: Leader };
   updates: { (civID: number): Event }[];
+  random: Random;
 
   public currentTurn: number;
 
   constructor(map?: Map, civsCount?: number) {
+    this.random = new Random(42);
+
     this.updates = [];
 
     if (!(map && civsCount)) {
@@ -64,11 +67,10 @@ export class World {
   }
 
   getStartLocaltion(callback: (coords: [Coords, Coords, Coords]) => void): void {
-    const random = new Random(42);
     let start_location_successful = false;
     for (let i = 0; i < 1000; i++) {
-      const x = random.randInt(0, this.map.width-1);
-      const y = random.randInt(0, this.map.height-1);
+      const x = this.random.randInt(0, this.map.width-1);
+      const y = this.random.randInt(0, this.map.height-1);
 
       const settlerCoords = { x, y };
       const builderCoords = { x: x + 1, y: y + 1 };

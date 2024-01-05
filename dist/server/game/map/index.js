@@ -71,6 +71,9 @@ class Map {
             y: Math.floor(pos / this.width),
         };
     }
+    areValidCoords(coords) {
+        return coords.y >= 0 && coords.y < this.height;
+    }
     getUpdates() {
         return this.updates.splice(0);
     }
@@ -506,6 +509,7 @@ class Map {
                 }
             }
         });
+        this.cities.forEach(city => city.turn(world, this));
         // Traders
         const traderResets = [];
         for (let i = 0; i < this.traders.length; i++) {

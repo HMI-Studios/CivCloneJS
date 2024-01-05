@@ -47,6 +47,7 @@ class Unit {
         this.coords = coords;
         this.alive = true;
         this.knowledge = knowledge !== null && knowledge !== void 0 ? knowledge : {};
+        this.automationData = {};
         if (Unit.cloakTable[type]) {
             this.cloaked = false;
         }

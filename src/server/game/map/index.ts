@@ -88,6 +88,10 @@ export class Map {
     };
   }
 
+  public areValidCoords(coords: Coords) {
+    return coords.y >= 0 && coords.y < this.height;
+  }
+
   getUpdates(): { (civID: number): Event }[] {
     return this.updates.splice(0);
   }
@@ -618,6 +622,8 @@ export class Map {
         }
       }
     });
+
+    this.cities.forEach(city => city.turn(world, this));
 
     // Traders
     const traderResets: (() => void)[] = [];

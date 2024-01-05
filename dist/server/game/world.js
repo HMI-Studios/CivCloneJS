@@ -9,6 +9,7 @@ const leader_1 = require("./leader");
 const DAMAGE_MULTIPLIER = 20;
 class World {
     constructor(map, civsCount) {
+        this.random = new random_1.Random(42);
         this.updates = [];
         if (!(map && civsCount)) {
             return;
@@ -21,8 +22,8 @@ class World {
             this.civs[civID] = new civilization_1.Civilization();
             this.getStartLocaltion(([settlerCoords, builderCoords, scoutCoords]) => {
                 this.addUnit(new unit_1.Unit('settler', settlerCoords, civID));
-                this.addUnit(new unit_1.Unit('builder', builderCoords, civID));
-                this.addUnit(new unit_1.Unit('scout', scoutCoords, civID));
+                // this.addUnit(new Unit('builder', builderCoords, civID));
+                // this.addUnit(new Unit('scout', scoutCoords, civID));
             });
             this.updateCivTileVisibility(civID);
         }
@@ -41,11 +42,10 @@ class World {
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
     }
     getStartLocaltion(callback) {
-        const random = new random_1.Random(42);
         let start_location_successful = false;
         for (let i = 0; i < 1000; i++) {
-            const x = random.randInt(0, this.map.width - 1);
-            const y = random.randInt(0, this.map.height - 1);
+            const x = this.random.randInt(0, this.map.width - 1);
+            const y = this.random.randInt(0, this.map.height - 1);
             const settlerCoords = { x, y };
             const builderCoords = { x: x + 1, y: y + 1 };
             const scoutCoords = { x: x - 1, y: y + 1 };
