@@ -37,10 +37,14 @@ const MOUNTAIN = new biome_1.TileType('mountain', 5, {});
 const MOUNTAIN_SPRING = new biome_1.TileType('mountain', 5, {}, null, false, false, true);
 class PerlinWorldGenerator {
     constructor(seed, { width, height }) {
-        this.reseed(seed);
-        this.simplex = new simplex_noise_1.default(this.random.randFloat);
         this.width = width;
         this.height = height;
+        this.reseed(seed);
+    }
+    reseed(seed) {
+        this.seed = seed !== null && seed !== void 0 ? seed : Math.floor(Math.random() * 9007199254740991);
+        this.random = new random_1.Random(this.seed);
+        this.simplex = new simplex_noise_1.default(this.random.randFloat);
         // Elevation Constants - Make these configurable later
         const OCEAN_LEVEL = 45;
         const COAST_LEVEL = 55;
@@ -98,10 +102,6 @@ class PerlinWorldGenerator {
                 [MOUNTAIN_LEVEL, new biome_1.TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
             ]),
         };
-    }
-    reseed(seed) {
-        this.seed = seed !== null && seed !== void 0 ? seed : Math.floor(Math.random() * 9007199254740991);
-        this.random = new random_1.Random(this.seed);
     }
     getBiome(temp, humidity) {
         if (temp < 5)

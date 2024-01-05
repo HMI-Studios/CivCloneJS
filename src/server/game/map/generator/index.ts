@@ -48,87 +48,87 @@ export class PerlinWorldGenerator {
   private biomes: { [key: string]: Biome }
 
   constructor(seed: number | undefined, { width, height }: MapOptions) {
-    this.reseed(seed);
-    this.simplex = new SimplexNoise(this.random.randFloat);
     this.width = width;
     this.height = height;
-    
-    // Elevation Constants - Make these configurable later
-    const OCEAN_LEVEL = 45;
-    const COAST_LEVEL = 55;
-    const PLAINS_LEVEL = 60;
-    const HILLS_LEVEL = 80;
-    const HIGHLANDS_LEVEL = 90;
-    const MOUNTAIN_LEVEL = 98;
-    
-    this.seaLevel = COAST_LEVEL;
-    
-    // Define Biomes
-    this.biomes = {
-      'plains': new Biome(this.random,
-        OCEAN, [
-          [OCEAN_LEVEL, SHALLOW_OCEAN],
-          [COAST_LEVEL, GRASS_LOWLANDS],
-          [PLAINS_LEVEL, GRASS_PLAINS],
-          [HILLS_LEVEL, new TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
-          [HIGHLANDS_LEVEL, new TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
-          [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
-        ]
-      ),
-      'temperate_forest': new Biome(this.random,
-        OCEAN, [
-          [OCEAN_LEVEL, SHALLOW_OCEAN],
-          [COAST_LEVEL, TEMPERATE_FOREST_LOWLANDS],
-          [PLAINS_LEVEL, TEMPERATE_FOREST_PLAINS],
-          [HILLS_LEVEL, new TilePool([[TEMPERATE_FOREST_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
-          [HIGHLANDS_LEVEL, new TilePool([[TEMPERATE_FOREST_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
-          [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
-        ]
-      ),
-      'tundra': new Biome(this.random,
-        OCEAN, [
-          [OCEAN_LEVEL, SHALLOW_OCEAN],
-          [OCEAN_LEVEL + 5, FROZEN_RIVER],
-          [COAST_LEVEL, SNOW_PLAINS],
-          [HILLS_LEVEL, SNOW_HILLS],
-          [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
-          [MOUNTAIN_LEVEL, MOUNTAIN],
-        ]
-      ),
-      'arctic': new Biome(this.random,
-        FROZEN_OCEAN, [
-          [OCEAN_LEVEL, SHALLOW_FROZEN_OCEAN],
-          [COAST_LEVEL, SNOW_PLAINS],
-          [HILLS_LEVEL, SNOW_HILLS],
-          [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
-          [MOUNTAIN_LEVEL, MOUNTAIN],
-        ]
-      ),
-      'desert': new Biome(this.random,
-        OCEAN, [
-          [OCEAN_LEVEL, SHALLOW_OCEAN],
-          [COAST_LEVEL, DESERT_PLAINS],
-          [HILLS_LEVEL, DESERT_HILLS],
-          [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
-          [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
-        ]
-      ),
-      'mild_desert': new Biome(this.random,
-        OCEAN, [
-          [OCEAN_LEVEL, SHALLOW_OCEAN],
-          [COAST_LEVEL, new TilePool([[DESERT_PLAINS, 3], [GRASS_LOWLANDS, 1]])], // TODO - replace grass lowlands with desert lowlands
-          [PLAINS_LEVEL, DESERT_PLAINS],
-          [HILLS_LEVEL, DESERT_HILLS],
-          [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
-          [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
-        ]
-      ),
-    };
+    this.reseed(seed);
   }
 
   reseed(seed?: number): void {
     this.seed = seed ?? Math.floor(Math.random() * 9007199254740991);
     this.random = new Random(this.seed);
+    this.simplex = new SimplexNoise(this.random.randFloat);
+
+     // Elevation Constants - Make these configurable later
+     const OCEAN_LEVEL = 45;
+     const COAST_LEVEL = 55;
+     const PLAINS_LEVEL = 60;
+     const HILLS_LEVEL = 80;
+     const HIGHLANDS_LEVEL = 90;
+     const MOUNTAIN_LEVEL = 98;
+     
+     this.seaLevel = COAST_LEVEL;
+     
+     // Define Biomes
+     this.biomes = {
+       'plains': new Biome(this.random,
+         OCEAN, [
+           [OCEAN_LEVEL, SHALLOW_OCEAN],
+           [COAST_LEVEL, GRASS_LOWLANDS],
+           [PLAINS_LEVEL, GRASS_PLAINS],
+           [HILLS_LEVEL, new TilePool([[GRASS_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
+           [HIGHLANDS_LEVEL, new TilePool([[GRASS_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
+           [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
+         ]
+       ),
+       'temperate_forest': new Biome(this.random,
+         OCEAN, [
+           [OCEAN_LEVEL, SHALLOW_OCEAN],
+           [COAST_LEVEL, TEMPERATE_FOREST_LOWLANDS],
+           [PLAINS_LEVEL, TEMPERATE_FOREST_PLAINS],
+           [HILLS_LEVEL, new TilePool([[TEMPERATE_FOREST_HILLS, 100], [MOUNTAIN_SPRING, 1]])],
+           [HIGHLANDS_LEVEL, new TilePool([[TEMPERATE_FOREST_MOUNTAINS, 100], [MOUNTAIN_SPRING, 1]])],
+           [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 20], [MOUNTAIN_SPRING, 1]])],
+         ]
+       ),
+       'tundra': new Biome(this.random,
+         OCEAN, [
+           [OCEAN_LEVEL, SHALLOW_OCEAN],
+           [OCEAN_LEVEL + 5, FROZEN_RIVER],
+           [COAST_LEVEL, SNOW_PLAINS],
+           [HILLS_LEVEL, SNOW_HILLS],
+           [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
+           [MOUNTAIN_LEVEL, MOUNTAIN],
+         ]
+       ),
+       'arctic': new Biome(this.random,
+         FROZEN_OCEAN, [
+           [OCEAN_LEVEL, SHALLOW_FROZEN_OCEAN],
+           [COAST_LEVEL, SNOW_PLAINS],
+           [HILLS_LEVEL, SNOW_HILLS],
+           [HIGHLANDS_LEVEL, SNOW_MOUNTAINS],
+           [MOUNTAIN_LEVEL, MOUNTAIN],
+         ]
+       ),
+       'desert': new Biome(this.random,
+         OCEAN, [
+           [OCEAN_LEVEL, SHALLOW_OCEAN],
+           [COAST_LEVEL, DESERT_PLAINS],
+           [HILLS_LEVEL, DESERT_HILLS],
+           [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
+           [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
+         ]
+       ),
+       'mild_desert': new Biome(this.random,
+         OCEAN, [
+           [OCEAN_LEVEL, SHALLOW_OCEAN],
+           [COAST_LEVEL, new TilePool([[DESERT_PLAINS, 3], [GRASS_LOWLANDS, 1]])], // TODO - replace grass lowlands with desert lowlands
+           [PLAINS_LEVEL, DESERT_PLAINS],
+           [HILLS_LEVEL, DESERT_HILLS],
+           [HIGHLANDS_LEVEL, DESERT_MOUNTAINS],
+           [MOUNTAIN_LEVEL, new TilePool([[MOUNTAIN, 15], [MOUNTAIN_SPRING, 1]])],
+         ]
+       ),
+     };
   }
 
   getBiome(temp: number, humidity: number): Biome {

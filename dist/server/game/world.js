@@ -27,7 +27,7 @@ class World {
             });
             this.updateCivTileVisibility(civID);
         }
-        const barbarianTribes = 100; // Make this depend on map size
+        const barbarianTribes = 25; // Make this depend on map size
         for (let i = 0; i < barbarianTribes; i++) {
             this.getStartLocaltion(([settlerCoords, _, scoutCoords]) => {
                 const cityID = this.map.newBarbarianCampAt(settlerCoords);
