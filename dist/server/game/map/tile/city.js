@@ -112,10 +112,6 @@ class BarbarianCamp extends UnitController {
                     x: world.random.randInt(0, map.width - 1),
                     y: world.random.randInt(0, map.height - 1),
                 };
-                unit.automationData.wanderTarget = {
-                    x: 33,
-                    y: 33,
-                };
             }
             const currentTarget = (_a = unit.automationData.target) !== null && _a !== void 0 ? _a : unit.automationData.wanderTarget;
             let stepsTaken = 0;
@@ -152,10 +148,10 @@ class BarbarianCamp extends UnitController {
                 }
                 if (stepsTaken === 0) {
                     // If there is no movement we can make towards our target, let switch to a new one.
-                    // unit.automationData.wanderTarget = {
-                    //   x: world.random.randInt(0, map.width),
-                    //   y: world.random.randInt(0, map.height),
-                    // };
+                    unit.automationData.wanderTarget = {
+                        x: world.random.randInt(0, map.width),
+                        y: world.random.randInt(0, map.height),
+                    };
                 }
                 break;
             }

@@ -18,9 +18,10 @@ const TRADER_CAPACITY = {
     science: 5,
 };
 class Map {
-    constructor(height, width) {
+    constructor(height, width, seed) {
         this.height = height;
         this.width = width;
+        this.seed = seed;
         this.tiles = new Array(height * width);
         this.cities = [];
         this.traders = [];
@@ -30,6 +31,7 @@ class Map {
         return {
             height: this.height,
             width: this.width,
+            seed: this.seed,
             tiles: this.tiles.map(tile => tile.export()),
             cities: this.cities.map(city => city.export()),
             traders: this.traders.map(trader => trader.export()),
@@ -43,7 +45,7 @@ class Map {
      * @returns
      */
     static import(world, data) {
-        const map = new Map(data.height, data.width);
+        const map = new Map(data.height, data.width, data.seed);
         map.tiles = data.tiles.map(tileData => tile_1.Tile.import(tileData));
         map.cities = data.cities.map(cityData => {
             const city = city_1.City.import(cityData);

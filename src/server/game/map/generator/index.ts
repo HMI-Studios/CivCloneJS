@@ -40,6 +40,7 @@ const MOUNTAIN_SPRING = new TileType('mountain', 5, {}, null, false, false, true
 export class PerlinWorldGenerator {
 
   private random: Random;
+  private seed: number;
   private simplex: SimplexNoise;
   private width: number;
   private height: number;
@@ -47,6 +48,7 @@ export class PerlinWorldGenerator {
   private biomes: { [key: string]: Biome }
 
   constructor(seed: number, { width, height }: MapOptions) {
+    this.seed = seed;
     this.random = new Random(seed);
     this.simplex = new SimplexNoise(this.random.randFloat);
     this.width = width;
@@ -220,7 +222,7 @@ export class PerlinWorldGenerator {
       river.generate(tileTypeMap, heightMap, RIVER);
     }
 
-    const map = new Map(height, width);
+    const map = new Map(height, width, this.seed);
 
     let i = 0;
     for (let y = 0; y < height; y++) {

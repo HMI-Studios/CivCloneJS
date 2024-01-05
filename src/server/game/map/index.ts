@@ -25,15 +25,17 @@ export interface MapOptions {
 export class Map {
   height: number;
   width: number;
+  seed: number;
   cities: City[];
   traders: Trader[];
   updates: { (civID: number): Event }[];
 
   private tiles: Tile[];
 
-  constructor(height: number, width: number) {
+  constructor(height: number, width: number, seed: number) {
     this.height = height;
     this.width = width;
+    this.seed = seed;
     this.tiles = new Array(height*width);
     this.cities = [];
     this.traders = [];
@@ -44,6 +46,7 @@ export class Map {
     return {
       height: this.height,
       width: this.width,
+      seed: this.seed,
       tiles: this.tiles.map(tile => tile.export()),
       cities: this.cities.map(city => city.export()),
       traders: this.traders.map(trader => trader.export()),
@@ -58,7 +61,7 @@ export class Map {
    * @returns 
    */
   static import(world: World, data: any): Map {
-    const map = new Map(data.height, data.width);
+    const map = new Map(data.height, data.width, data.seed);
     map.tiles = data.tiles.map(tileData => Tile.import(tileData));
     map.cities = data.cities.map(cityData => {
       const city = City.import(cityData);

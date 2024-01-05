@@ -23,13 +23,12 @@ export class World {
   public currentTurn: number;
 
   constructor(map?: Map, civsCount?: number) {
-    this.random = new Random(42);
-
     this.updates = [];
 
     if (!(map && civsCount)) {
       return
     }
+    this.random = new Random(map.seed);
     this.map = map;
 
     this.civsCount = civsCount;
