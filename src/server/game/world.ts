@@ -40,8 +40,8 @@ export class World {
 
       this.getStartLocaltion(([settlerCoords, builderCoords, scoutCoords]) => {
         this.addUnit(new Unit('settler', settlerCoords, civID));
-        this.addUnit(new Unit('builder', builderCoords, civID));
-        this.addUnit(new Unit('scout', scoutCoords, civID));
+        // this.addUnit(new Unit('builder', builderCoords, civID));
+        // this.addUnit(new Unit('scout', scoutCoords, civID));
       });
 
       this.updateCivTileVisibility(civID);

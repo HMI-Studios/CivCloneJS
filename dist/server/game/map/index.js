@@ -384,9 +384,9 @@ class Map {
         const tile = this.getTile(coords);
         if (!this.canSettleOn(tile))
             return null;
-        const camp = new city_1.BarbarianCamp(coords);
+        const cityID = this.cities.length;
+        const camp = new city_1.BarbarianCamp(cityID, coords);
         this.cities.push(camp);
-        const cityID = this.cities.length - 1;
         this.buildImprovementAt(coords, 'barbarian_camp');
         return cityID;
     }
@@ -394,7 +394,8 @@ class Map {
         const tile = this.getTile(coords);
         if (!this.canSettleOn(tile))
             return false;
-        const city = new city_1.City(coords, name, civID);
+        const cityID = this.cities.length;
+        const city = new city_1.City(cityID, coords, name, civID);
         this.cities.push(city);
         for (const neighbor of this.getNeighborsCoords(coords)) {
             this.setTileOwner(neighbor, city, false);
