@@ -6,6 +6,7 @@ const game_1 = require("./game");
 const generator_1 = require("./game/map/generator");
 const unit_1 = require("./game/map/tile/unit");
 const utils_1 = require("./utils");
+const wall_1 = require("./game/map/tile/wall");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -303,6 +304,7 @@ const methods = {
         }
     },
     moveUnit: (ws, srcCoords, path, attack) => {
+        var _a;
         const username = getUsername(ws);
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
@@ -326,7 +328,8 @@ const methods = {
                     }
                     break;
                 }
-                if (src.walls[(0, utils_1.getDirection)(unit.coords, dstCoords)])
+                const returnDirection = (0, utils_1.getDirection)(unit.coords, dstCoords);
+                if (src.walls[returnDirection] && ((_a = src.walls[returnDirection]) === null || _a === void 0 ? void 0 : _a.type) !== wall_1.WallType.OPEN_GATE)
                     break;
                 unit.movement -= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords));
                 map.moveUnitTo(unit, dstCoords);

@@ -327,9 +327,12 @@ class World {
       for (const adjPos of this.getNeighbors(atPos)) {
 
         const tile = this.getTile(adjPos);
+        const atTile = this.getTile(atPos);
         if (tile.unit && tile.unit.civID === this.player.civID) continue;
-        if (tile.walls[this.getDirection(adjPos, atPos)]) continue;
-        if (this.getTile(atPos).walls[this.getDirection(atPos, adjPos)]) continue;
+        const adjDirection = this.getDirection(adjPos, atPos);
+        const atDirection = this.getDirection(atPos, adjPos);
+        if (tile.walls[adjDirection] && tile.walls[adjDirection].type !== WallType.OPEN_GATE) continue;
+        if (atTile.walls[atDirection] && atTile.walls[atDirection].type !== WallType.OPEN_GATE) continue;
 
         const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
         if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {

@@ -5,6 +5,7 @@ const unit_1 = require("./unit");
 const improvement_1 = require("./improvement");
 const yield_1 = require("./yield");
 const knowledge_1 = require("./knowledge");
+const wall_1 = require("./wall");
 class Tile {
     constructor(type, tileHeight, baseYield) {
         this.movementCost = Tile.movementCostTable[type];
@@ -66,7 +67,8 @@ class Tile {
     }
     getMovementCost(unit, direction) {
         const mode = unit.getMovementClass();
-        if (this.walls[direction] !== null)
+        const wall = this.walls[direction];
+        if (wall !== null && wall.type !== wall_1.WallType.OPEN_GATE)
             return Infinity;
         return mode > -1 ? this.movementCost[mode] || Infinity : 1;
     }
