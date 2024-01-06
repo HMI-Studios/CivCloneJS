@@ -55,6 +55,8 @@ interface Improvement {
 enum WallType {
   CLIFF,
   WALL,
+  OPEN_GATE,
+  CLOSED_GATE,
 }
 
 interface Wall {

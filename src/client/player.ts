@@ -23,7 +23,7 @@ const errandTypeTable: { [type: number]: string } = {
 const unitActionsTable: { [unit: string]: string[] } = {
   'settler': ['settleCity'],
   'scout': [],
-  'builder': ['build', 'buildWall'],
+  'builder': ['build', 'buildWall', 'buildGate'],
   'warrior': [],
   'slinger': [],
   'archer': [],
@@ -470,6 +470,24 @@ class UI {
         actionBtn.bindCallback(() => {
           world.on.event.buildWall(pos, (selectedPos: Coords) => {
             world.sendActions([unitActionsFnTable[action](pos, selectedPos, WallType.WALL)]);
+          });
+        });
+  
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
+
+        continue;
+      }
+
+      if (action === 'buildGate') {
+        const actionBtn = new Button(
+          this.createElement('button'),
+          {
+            text: `${translate(`unit.action.${action}`)}`,
+          }
+        );
+        actionBtn.bindCallback(() => {
+          world.on.event.buildWall(pos, (selectedPos: Coords) => {
+            world.sendActions([unitActionsFnTable['buildWall'](pos, selectedPos, WallType.OPEN_GATE)]);
           });
         });
   
