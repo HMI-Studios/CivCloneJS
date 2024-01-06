@@ -304,7 +304,6 @@ const methods = {
         }
     },
     moveUnit: (ws, srcCoords, path, attack) => {
-        var _a;
         const username = getUsername(ws);
         const gameID = getGameID(ws);
         const game = exports.games[gameID];
@@ -317,7 +316,12 @@ const methods = {
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
                 const unit = src.unit;
-                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords)))) {
+                if (!unit || unit.civID !== civID) {
+                    game.sendUpdates();
+                    return;
+                }
+                const movementCost = map.getStepMovementCost(unit.coords, dstCoords, unit.movementClass);
+                if (unit.movement < movementCost) {
                     game.sendUpdates();
                     return;
                 }
@@ -328,10 +332,7 @@ const methods = {
                     }
                     break;
                 }
-                const returnDirection = (0, utils_1.getDirection)(unit.coords, dstCoords);
-                if (src.walls[returnDirection] && ((_a = src.walls[returnDirection]) === null || _a === void 0 ? void 0 : _a.type) !== wall_1.WallType.OPEN_GATE)
-                    break;
-                unit.movement -= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords));
+                unit.movement -= movementCost;
                 map.moveUnitTo(unit, dstCoords);
                 src = dst;
                 finalCoords = dstCoords;
@@ -440,7 +441,7 @@ const methods = {
             const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
             if (unit && unit.civID === civID) {
                 const direction = (0, utils_1.getDirection)(coords, facingCoords);
-                const wall = tile.walls[direction];
+                const wall = tile.getWall(direction);
                 if (wall && wall.type === (isOpen ? wall_1.WallType.CLOSED_GATE : wall_1.WallType.OPEN_GATE)) {
                     if (isOpen) {
                         wall.type = wall_1.WallType.OPEN_GATE;

@@ -380,7 +380,14 @@ const methods: {
 
         const unit = src.unit;
 
-        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords))) ) {
+        if (!unit || unit.civID !== civID) {
+          game.sendUpdates();
+          return;
+        }
+
+        const movementCost = map.getStepMovementCost(unit.coords, dstCoords, unit.movementClass);
+
+        if (unit.movement < movementCost) {
           game.sendUpdates();
           return;
         }
@@ -393,10 +400,7 @@ const methods: {
           break;
         }
 
-        const returnDirection = getDirection(unit.coords, dstCoords);
-        if (src.walls[returnDirection] && src.walls[returnDirection]?.type !== WallType.OPEN_GATE) break;
-
-        unit.movement -= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords));
+        unit.movement -= movementCost;
         map.moveUnitTo(unit, dstCoords);
 
         src = dst;
@@ -530,7 +534,7 @@ const methods: {
 
       if (unit && unit.civID === civID) {
         const direction = getDirection(coords, facingCoords);
-        const wall = tile.walls[direction];
+        const wall = tile.getWall(direction);
         if (wall && wall.type === (isOpen ? WallType.CLOSED_GATE : WallType.OPEN_GATE)) {
           if (isOpen) {
             wall.type = WallType.OPEN_GATE;

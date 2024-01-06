@@ -20,6 +20,7 @@ var WallType;
     WallType[WallType["WALL"] = 1] = "WALL";
     WallType[WallType["OPEN_GATE"] = 2] = "OPEN_GATE";
     WallType[WallType["CLOSED_GATE"] = 3] = "CLOSED_GATE";
+    WallType[WallType["WALL_RUIN"] = 4] = "WALL_RUIN";
 })(WallType || (WallType = {}));
 var ErrandType;
 (function (ErrandType) {

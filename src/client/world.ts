@@ -57,6 +57,7 @@ enum WallType {
   WALL,
   OPEN_GATE,
   CLOSED_GATE,
+  WALL_RUIN,
 }
 
 interface Wall {

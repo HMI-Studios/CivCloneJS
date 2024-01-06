@@ -65,13 +65,6 @@ class Tile {
         var _a;
         return Object.assign(Object.assign({}, this.getDiscoveredData()), { unit: (_a = this.unit) === null || _a === void 0 ? void 0 : _a.getData(civID), visible: true });
     }
-    getMovementCost(unit, direction) {
-        const mode = unit.getMovementClass();
-        const wall = this.walls[direction];
-        if (wall !== null && wall.type !== wall_1.WallType.OPEN_GATE)
-            return Infinity;
-        return mode > -1 ? this.movementCost[mode] || Infinity : 1;
-    }
     /**
      *
      * @returns the total elevation of this tile plus the height of any improvemnts on it, rounded to the nearest unit.
@@ -97,8 +90,15 @@ class Tile {
     clearVisibility(civID) {
         this.visibleTo[civID] = 0;
     }
+    getWall(direction) {
+        return this.walls[direction];
+    }
     setWall(direction, type) {
         this.walls[direction] = { type };
+    }
+    hasBlockingWall(direction) {
+        const wall = this.walls[direction];
+        return wall !== null && wall.type !== wall_1.WallType.OPEN_GATE && wall.type !== wall_1.WallType.WALL_RUIN;
     }
     canSupply(requirement) {
         return !!this.improvement && (this.improvement.yield.canSupply(requirement));

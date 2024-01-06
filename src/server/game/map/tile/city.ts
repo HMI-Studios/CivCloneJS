@@ -111,7 +111,7 @@ export class UnitController extends City {
   moveUnit(unit: Unit, toPos: Coords, allowCombat?: boolean): boolean {
     const tile = this.map.getTile(toPos);
     if (!tile) return false;
-    const movementCost = tile.getMovementCost(unit, getDirection(toPos, unit.coords));
+    const movementCost = this.map.getStepMovementCost(unit.coords, toPos, unit.movementClass);
     if (unit.movement < movementCost) return false;
     if (tile.unit) {
       if (!allowCombat) return false;

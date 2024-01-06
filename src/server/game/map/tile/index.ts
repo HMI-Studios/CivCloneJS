@@ -45,7 +45,8 @@ export class Tile {
     'mountain': [0, 0],
   };
 
-  movementCost: [number, number];
+  public movementCost: [number, number];
+
   type: string;
   elevation: number;
 
@@ -53,7 +54,7 @@ export class Tile {
   improvement?: Improvement;
   owner?: City;
 
-  walls: [
+  private walls: [
     Wall | null,
     Wall | null,
     Wall | null,
@@ -134,13 +135,6 @@ export class Tile {
     }
   }
 
-  getMovementCost(unit: Unit, direction: number): number {
-    const mode = unit.getMovementClass();
-    const wall = this.walls[direction];
-    if (wall !== null && wall.type !== WallType.OPEN_GATE) return Infinity;
-    return mode > -1 ? this.movementCost[mode] || Infinity : 1;
-  }
-
   /**
    * 
    * @returns the total elevation of this tile plus the height of any improvemnts on it, rounded to the nearest unit.
@@ -171,8 +165,17 @@ export class Tile {
     this.visibleTo[civID] = 0;
   }
 
+  getWall(direction: number): Wall | null {
+    return this.walls[direction];
+  }
+
   setWall(direction: number, type: number): void {
     this.walls[direction] = { type };
+  }
+
+  hasBlockingWall(direction: number): boolean {
+    const wall = this.walls[direction];
+    return wall !== null && wall.type !== WallType.OPEN_GATE && wall.type !== WallType.WALL_RUIN;
   }
 
   canSupply(requirement: YieldParams): boolean {
