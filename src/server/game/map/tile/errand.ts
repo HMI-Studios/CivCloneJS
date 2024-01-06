@@ -44,7 +44,6 @@ export class WorkErrand {
       tile.improvement = new Improvement(action.option, tile.baseYield);
     },
     [ErrandType.UNIT_TRAINING]: (world, map, tile, action) => {
-      console.log(tile, action)
       if (!(tile.owner && action.location)) return;
       const newUnit = new Unit(action.option, action.location, tile.owner.civID, tile.owner.civID ? undefined : tile.owner.id);
       if (tile.unit) {

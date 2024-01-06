@@ -22,8 +22,8 @@ class World {
             this.civs[civID] = new civilization_1.Civilization();
             this.getStartLocaltion(([settlerCoords, builderCoords, scoutCoords]) => {
                 this.addUnit(new unit_1.Unit('settler', settlerCoords, civID));
-                // this.addUnit(new Unit('builder', builderCoords, civID));
-                // this.addUnit(new Unit('scout', scoutCoords, civID));
+                this.addUnit(new unit_1.Unit('builder', builderCoords, civID));
+                this.addUnit(new unit_1.Unit('scout', scoutCoords, civID));
             });
             this.updateCivTileVisibility(civID);
         }

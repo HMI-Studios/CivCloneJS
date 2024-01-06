@@ -74,14 +74,21 @@ class City {
 }
 exports.City = City;
 class UnitController extends City {
-    moveUnit(unit, toPos) {
+    moveUnit(unit, toPos, allowCombat) {
         const tile = this.map.getTile(toPos);
         if (!tile)
             return false;
         const movementCost = tile.getMovementCost(unit, (0, utils_1.getDirection)(toPos, unit.coords));
         if (!(unit.movement < movementCost)) {
-            if (tile.unit)
-                return false;
+            if (tile.unit) {
+                if (!allowCombat)
+                    return false;
+                else {
+                    this.world.meleeCombat(unit, tile.unit);
+                    unit.movement = 0;
+                    return true;
+                }
+            }
             this.map.moveUnitTo(unit, toPos);
             unit.movement -= movementCost;
             return true;
@@ -92,21 +99,39 @@ class UnitController extends City {
     }
     turn(world, map) {
         super.turn(world, map);
-        if (!this.map) {
+        if (!this.world)
+            this.world = world;
+        if (!this.map)
             this.map = map;
-        }
     }
 }
 exports.UnitController = UnitController;
 class BarbarianCamp extends UnitController {
     constructor(id, center) {
         super(id, center, 'camp', undefined);
+        this.danger = false;
     }
     turn(world, map) {
         super.turn(world, map);
         const camp = map.getTile(this.center).improvement;
+        const neighborhoodCoords = map.getNeighborsCoords(this.center, 5);
+        const neighborhoodTiles = neighborhoodCoords.map(coords => map.getTile(coords));
+        this.danger = false;
+        for (const tile of neighborhoodTiles) {
+            if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
+                this.danger = true;
+                break;
+            }
+        }
         if (!camp.errand) {
-            if (!this.units.some(unit => unit.type === 'scout')) {
+            if (this.danger) {
+                map.startErrandAt(this.center, camp, {
+                    type: errand_1.ErrandType.UNIT_TRAINING,
+                    option: 'warrior',
+                    location: this.center,
+                });
+            }
+            else if (!this.units.some(unit => unit.type === 'scout')) {
                 map.startErrandAt(this.center, camp, {
                     type: errand_1.ErrandType.UNIT_TRAINING,
                     option: 'scout',
@@ -140,7 +165,7 @@ class BarbarianCamp extends UnitController {
         this.units.forEach(unit => {
             var _a;
             unit.newTurn();
-            const visibleCoords = map.getVisibleTilesCoords(unit, unit.visionRange);
+            const visibleCoords = map.getVisibleTilesCoords(unit);
             const canSeeCamp = (0, utils_1.arrayIncludesCoords)(visibleCoords, this.center);
             if (unit.type === 'scout') {
                 const MAX_SCOUTING_TURNS = 15;
@@ -170,7 +195,7 @@ class BarbarianCamp extends UnitController {
                             }
                         }
                     }
-                    if (unit.automationData.turnsSinceCampSpotted > 3 && !canSeeCamp) {
+                    if (unit.automationData.turnsSinceCampSpotted > 7 && !canSeeCamp) {
                         if (map.canSettleOn(tile) && !unit.automationData.settleTarget) {
                             unit.automationData.settleTarget = coords;
                         }
@@ -198,11 +223,14 @@ class BarbarianCamp extends UnitController {
                                 unit.automationData.target = tile.unit.automationData.settleTarget;
                             }
                         }
+                        if (tile.unit && tile.unit.cityID !== this.id) {
+                            unit.automationData.target = this.center;
+                        }
                     });
                     if (unit.automationData.target && ((unit.coords.x === unit.automationData.target.x && unit.coords.y === unit.automationData.target.y) ||
                         (0, utils_1.arrayIncludesCoords)((0, utils_1.getAdjacentCoords)(unit.coords), unit.automationData.target))) {
                         const tile = map.getTile(unit.automationData.target);
-                        if (map.canSettleOn(tile)) {
+                        if (!canSeeCamp && map.canSettleOn(tile)) {
                             map.newBarbarianCampAt(unit.automationData.target);
                             return world.removeUnit(unit);
                         }
@@ -212,6 +240,18 @@ class BarbarianCamp extends UnitController {
                         }
                     }
                 }
+            }
+            else if (unit.type === 'warrior') {
+                if (!unit.automationData.target) {
+                    unit.automationData.target = neighborhoodCoords[world.random.randInt(0, neighborhoodCoords.length - 1)];
+                }
+                visibleCoords.forEach(coords => {
+                    const tile = map.getTile(coords);
+                    if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
+                        unit.automationData.target = coords;
+                        return;
+                    }
+                });
             }
             if (!('wanderTarget' in unit.automationData)) {
                 unit.automationData.wanderTarget = {
@@ -246,14 +286,14 @@ class BarbarianCamp extends UnitController {
                     delete unit.automationData.wanderTarget;
                     break;
                 }
-                if (directRoute && map.areValidCoords(directRoute) && this.moveUnit(unit, directRoute)) {
+                if (directRoute && map.areValidCoords(directRoute) && this.moveUnit(unit, directRoute, true)) {
                     stepsTaken++;
                     continue;
                 }
                 else {
                     let didMove = false;
                     for (const dst of altRoutes) {
-                        if (map.areValidCoords(dst) && this.moveUnit(unit, dst)) {
+                        if (map.areValidCoords(dst) && this.moveUnit(unit, dst, true)) {
                             stepsTaken++;
                             didMove = true;
                             break;
