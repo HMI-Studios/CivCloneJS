@@ -267,7 +267,7 @@ class BarbarianCamp extends UnitController {
             while (unit.movement > 0) {
                 i++;
                 const adjacentCoords = (0, utils_1.getAdjacentCoords)(unit.coords);
-                const [targetXDiff, targetYDiff] = (0, utils_1.getSmallesCoordsDiff)(map, unit.coords, currentTarget);
+                const [targetXDiff, targetYDiff] = (0, utils_1.getSmallestCoordsDiff)(map, unit.coords, currentTarget);
                 let directRoute = null;
                 const altRoutes = [];
                 for (const coord of adjacentCoords) {

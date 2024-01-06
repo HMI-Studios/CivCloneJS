@@ -87,7 +87,7 @@ export const arrayIncludesCoords = (array: Coords[], {x, y}: Coords): boolean =>
   return false;
 };
 
-export const getSmallesCoordsDiff = (map: Map, pos: Coords, target: Coords): [number, number] => {
+export const getSmallestCoordsDiff = (map: Map, pos: Coords, target: Coords): [number, number] => {
   const { width } = map;
   const [posX, posY] = [mod(pos.x, width), pos.y];
   const [targetX, targetY] = [target.x, target.y];

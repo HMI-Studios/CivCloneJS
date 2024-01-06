@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSmallesCoordsDiff = exports.arrayIncludesCoords = exports.getDirection = exports.getCoordInDirection = exports.getAdjacentCoords = exports.mod = void 0;
+exports.getSmallestCoordsDiff = exports.arrayIncludesCoords = exports.getDirection = exports.getCoordInDirection = exports.getAdjacentCoords = exports.mod = void 0;
 const mod = (a, b) => {
     if (a >= 0) {
         return a % b;
@@ -74,7 +74,7 @@ const arrayIncludesCoords = (array, { x, y }) => {
     return false;
 };
 exports.arrayIncludesCoords = arrayIncludesCoords;
-const getSmallesCoordsDiff = (map, pos, target) => {
+const getSmallestCoordsDiff = (map, pos, target) => {
     const { width } = map;
     const [posX, posY] = [(0, exports.mod)(pos.x, width), pos.y];
     const [targetX, targetY] = [target.x, target.y];
@@ -83,5 +83,5 @@ const getSmallesCoordsDiff = (map, pos, target) => {
     const altXDiff = altTargetX - posX;
     return [(Math.abs(xDiff) <= Math.abs(altXDiff)) ? (xDiff) : (altXDiff), targetY - posY];
 };
-exports.getSmallesCoordsDiff = getSmallesCoordsDiff;
+exports.getSmallestCoordsDiff = getSmallestCoordsDiff;
 //# sourceMappingURL=index.js.map

@@ -1,6 +1,6 @@
 import { Tile } from ".";
 import { Map } from "..";
-import { arrayIncludesCoords, getAdjacentCoords, getCoordInDirection, getDirection, getSmallesCoordsDiff, mod } from "../../../utils";
+import { arrayIncludesCoords, getAdjacentCoords, getCoordInDirection, getDirection, getSmallestCoordsDiff, mod } from "../../../utils";
 import { World, Coords } from "../../world";
 import { ErrandType } from "./errand";
 import { Improvement } from "./improvement";
@@ -302,7 +302,7 @@ export class BarbarianCamp extends UnitController {
       while (unit.movement > 0) {
         i++;
         const adjacentCoords = getAdjacentCoords(unit.coords);
-        const [targetXDiff, targetYDiff] = getSmallesCoordsDiff(map, unit.coords, currentTarget);
+        const [targetXDiff, targetYDiff] = getSmallestCoordsDiff(map, unit.coords, currentTarget);
 
         let directRoute: Coords | null = null;
         const altRoutes: Coords[] = [];
