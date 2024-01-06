@@ -13,46 +13,63 @@ class World {
         if (!(map && civsCount)) {
             return;
         }
+        this.random = new random_1.Random(map.seed);
         this.map = map;
         this.civsCount = civsCount;
         this.civs = {};
         this.leaderPool = {};
         for (let civID = 0; civID < this.civsCount; civID++) {
             this.civs[civID] = new civilization_1.Civilization();
-            const random = new random_1.Random(42);
-            let start_location_successful = false;
-            for (let i = 0; i < 1000; i++) {
-                const x = random.randInt(0, map.width - 1);
-                const y = random.randInt(0, map.height - 1);
-                const settler_coords = { x, y };
-                const builder_coords = { x: x + 1, y: y + 1 };
-                const scout_coords = { x: x - 1, y: y + 1 };
-                let legal_start_location = true;
-                for (const coords of [settler_coords, builder_coords, scout_coords]) {
-                    const tile = this.map.getTile(coords);
-                    if (!tile || tile.unit || !this.map.canSettleOn(tile)) {
-                        legal_start_location = false;
-                        break;
-                    }
-                }
-                if (legal_start_location) {
-                    this.addUnit(new unit_1.Unit('settler', civID, settler_coords));
-                    this.addUnit(new unit_1.Unit('builder', civID, builder_coords));
-                    this.addUnit(new unit_1.Unit('scout', civID, scout_coords));
-                    start_location_successful = true;
-                    break;
-                }
-            }
-            if (!start_location_successful) {
-                console.error("Error: couldn't find legal start location! (gave up after 1000 tries)");
-            }
+            this.getStartLocaltion(([settlerCoords, builderCoords, scoutCoords]) => {
+                this.addUnit(new unit_1.Unit('settler', settlerCoords, civID));
+                this.addUnit(new unit_1.Unit('builder', builderCoords, civID));
+                this.addUnit(new unit_1.Unit('scout', scoutCoords, civID));
+            });
             this.updateCivTileVisibility(civID);
+        }
+        const barbarianTribes = Math.ceil(map.height * map.width / 1500);
+        for (let i = 0; i < barbarianTribes; i++) {
+            this.getStartLocaltion(([settlerCoords, _, scoutCoords]) => {
+                const cityID = this.map.newBarbarianCampAt(settlerCoords);
+                if (cityID !== null)
+                    this.addUnit(new unit_1.Unit('scout', scoutCoords, undefined, cityID));
+            });
         }
         for (let i = 0; i < leader_1.leaderTemplates.length; i++) {
             this.leaderPool[i] = new leader_1.Leader(i);
         }
         this.currentTurn = 1;
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
+    }
+    getStartLocaltion(callback) {
+        let start_location_successful = false;
+        for (let i = 0; i < 1000; i++) {
+            const x = this.random.randInt(0, this.map.width - 1);
+            const y = this.random.randInt(0, this.map.height - 1);
+            const settlerCoords = { x, y };
+            const builderCoords = { x: x + 1, y: y + 1 };
+            const scoutCoords = { x: x - 1, y: y + 1 };
+            let legal_start_location = true;
+            for (const coords of [settlerCoords, builderCoords, scoutCoords]) {
+                const tile = this.map.getTile(coords);
+                if (!tile || tile.unit || !this.map.canSettleOn(tile)) {
+                    legal_start_location = false;
+                    break;
+                }
+            }
+            if (legal_start_location) {
+                callback([settlerCoords, builderCoords, scoutCoords]);
+                start_location_successful = true;
+                break;
+            }
+        }
+        if (!start_location_successful) {
+            throw {
+                type: 'mapError',
+                code: 'noStartLocation',
+                msg: 'Error: couldn\'t find legal start location! (gave up after 1000 tries)',
+            };
+        }
     }
     export() {
         const exportedCivs = {};
@@ -184,17 +201,24 @@ class World {
     // map, civs
     addUnit(unit) {
         if (this.map.isInBounds(unit.coords)) {
-            this.civs[unit.civID].addUnit(unit);
+            if (unit.civID !== undefined)
+                this.civs[unit.civID].addUnit(unit);
+            else if (unit.cityID !== undefined)
+                this.map.cities[unit.cityID].addUnit(unit);
             this.map.getTile(unit.coords).setUnit(unit);
         }
     }
     // map, civs
     removeUnit(unit) {
-        this.civs[unit.civID].removeUnit(unit);
+        if (unit.civID !== undefined)
+            this.civs[unit.civID].removeUnit(unit);
+        else if (unit.cityID !== undefined)
+            this.map.cities[unit.cityID].removeUnit(unit);
         this.updates.push(() => ['unitKilled', [unit.coords, unit]]);
         this.map.getTile(unit.coords).setUnit(undefined);
         // TODO: make this more intelligent
-        this.updateCivTileVisibility(unit.civID);
+        if (unit.civID !== undefined)
+            this.updateCivTileVisibility(unit.civID);
         this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);
     }
     rangedCombat(attacker, defender) {

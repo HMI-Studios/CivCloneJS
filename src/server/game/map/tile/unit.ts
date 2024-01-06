@@ -12,11 +12,12 @@ export interface UnitData {
   type: string,
   hp: number,
   movement: number,
-  civID: number,
+  civID?: number,
   promotionClass: PromotionClass,
   attackRange?: number,
   knowledge: KnowledgeMap,
   cloaked?: boolean,
+  isBarbarian?: boolean,
 }
 
 export enum MovementClass {
@@ -130,12 +131,15 @@ export class Unit {
   combatStats: [number, number, number];
   attackRange?: number;
   visionRange: number;
-  civID: number;
+  civID?: number;
+  cityID?: number;
   coords: Coords;
   alive: boolean;
   cloaked?: boolean;
+  isBarbarian?: boolean;
 
   public knowledge: KnowledgeMap;
+  public automationData: { [key: string]: any };
 
   static makeCatalog(types: string[]): UnitTypeCost[] {
     return types.map(type => (
@@ -143,7 +147,7 @@ export class Unit {
     ));
   }
 
-  constructor(type: string, civID: number, coords: Coords, knowledge?: KnowledgeMap) {
+  constructor(type: string, coords: Coords, civID?: number, cityID?: number, knowledge?: KnowledgeMap) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -155,9 +159,11 @@ export class Unit {
     }
     this.visionRange = Unit.visionRangeTable[type] ?? Unit.visionRangeTable.default;
     this.civID = civID;
+    this.cityID = cityID;
     this.coords = coords;
     this.alive = true;
     this.knowledge = knowledge ?? {};
+    this.automationData = {};
     if (Unit.cloakTable[type]) {
       this.cloaked = false;
     }
@@ -169,6 +175,7 @@ export class Unit {
       hp: this.hp,
       movement: this.movement,
       civID: this.civID,
+      cityID: this.cityID,
       coords: this.coords,
       alive: this.alive,
       knowledge: this.knowledge,
@@ -177,7 +184,7 @@ export class Unit {
   }
 
   static import(data: any): Unit {
-    const unit = new Unit(data.type, data.civID, data.coords);
+    const unit = new Unit(data.type, data.coords, data.civID, data.cityID, data.knowledge);
     unit.hp = data.hp;
     unit.movement = data.movement;
     unit.promotionClass = Unit.promotionClassTable[unit.type];
@@ -204,6 +211,7 @@ export class Unit {
       attackRange: this.attackRange,
       knowledge: this.knowledge,
       cloaked: this.cloaked,
+      isBarbarian: this.isBarbarian,
     } : undefined;
   }
   
@@ -213,6 +221,10 @@ export class Unit {
 
   setDead(): void {
     this.alive = false;
+  }
+
+  setBarbarian(isBarbarian: boolean): void {
+    this.isBarbarian = isBarbarian;
   }
 
   isDead(): boolean {

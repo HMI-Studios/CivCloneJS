@@ -159,6 +159,7 @@ class Improvement {
 exports.Improvement = Improvement;
 Improvement.yieldTable = {
     'settlement': new yield_1.Yield({ food: 2, production: 2 }),
+    'barbarian_camp': new yield_1.Yield({ food: 2, production: 2 }),
     'encampment': new yield_1.Yield({ production: 1 }),
     'campus': new yield_1.Yield({ science: 5 }),
     'farm': new yield_1.Yield({ food: 1 }),
@@ -166,6 +167,7 @@ Improvement.yieldTable = {
 };
 Improvement.storeCapTable = {
     'settlement': { food: 20, production: 2 },
+    'barbarian_camp': { food: 20, production: 2 },
     'encampment': { food: 10, production: 1 },
     'farm': { food: 20 },
 };

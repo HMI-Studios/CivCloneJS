@@ -1,6 +1,6 @@
 import { Coords, World } from '../world';
 import { MovementClass, PromotionClass, Unit } from './tile/unit';
-import { City } from './tile/city';
+import { BarbarianCamp, City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
 import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection, getDirection } from '../../utils';
@@ -25,15 +25,17 @@ export interface MapOptions {
 export class Map {
   height: number;
   width: number;
+  seed: number;
   cities: City[];
   traders: Trader[];
   updates: { (civID: number): Event }[];
 
   private tiles: Tile[];
 
-  constructor(height: number, width: number) {
+  constructor(height: number, width: number, seed: number) {
     this.height = height;
     this.width = width;
+    this.seed = seed;
     this.tiles = new Array(height*width);
     this.cities = [];
     this.traders = [];
@@ -44,6 +46,7 @@ export class Map {
     return {
       height: this.height,
       width: this.width,
+      seed: this.seed,
       tiles: this.tiles.map(tile => tile.export()),
       cities: this.cities.map(city => city.export()),
       traders: this.traders.map(trader => trader.export()),
@@ -58,7 +61,7 @@ export class Map {
    * @returns 
    */
   static import(world: World, data: any): Map {
-    const map = new Map(data.height, data.width);
+    const map = new Map(data.height, data.width, data.seed);
     map.tiles = data.tiles.map(tileData => Tile.import(tileData));
     map.cities = data.cities.map(cityData => {
       const city = City.import(cityData);
@@ -86,6 +89,10 @@ export class Map {
       x: mod(pos, this.width),
 		  y: Math.floor(pos / this.width),
     };
+  }
+
+  public areValidCoords(coords: Coords) {
+    return coords.y >= 0 && coords.y < this.height;
   }
 
   getUpdates(): { (civID: number): Event }[] {
@@ -296,10 +303,14 @@ export class Map {
     if (tile.owner) {
       if (!overwrite) return;
       tile.owner?.removeTile(coords);
-      tile.setVisibility(tile.owner.civID, false);
+      if (tile.owner.civID) {
+        tile.setVisibility(tile.owner.civID, false);
+      }
     }
     tile.owner = owner;
-    tile.setVisibility(owner.civID, true);
+    if (owner.civID) {
+      tile.setVisibility(owner.civID, true);
+    }
     owner.addTile(coords);
   }
 
@@ -344,7 +355,7 @@ export class Map {
     // mark tiles currently visible by unit as unseen
     const srcVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of srcVisible) {
-      this.setTileVisibility(unit.civID, visibleCoords, false);
+      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, false);
     }
 
     this.getTile(unit.coords).setUnit(undefined);
@@ -356,7 +367,7 @@ export class Map {
     // mark tiles now visible by unit as seen
     const newVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of newVisible) {
-      this.setTileVisibility(unit.civID, visibleCoords, true);
+      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, true);
     }
   }
 
@@ -462,11 +473,26 @@ export class Map {
     );
   }
 
+  newBarbarianCampAt(coords: Coords): number | null {
+    const tile = this.getTile(coords);
+    if (!this.canSettleOn(tile)) return null;
+
+    const cityID = this.cities.length;
+    const camp: BarbarianCamp = new BarbarianCamp(cityID, coords);
+    this.cities.push(camp);
+
+    this.setTileOwner(coords, camp, false);
+
+    this.buildImprovementAt(coords, 'barbarian_camp');
+    return cityID;
+  }
+
   settleCityAt(coords: Coords, name: string, civID: number, settler: Unit): boolean {
     const tile = this.getTile(coords);
     if (!this.canSettleOn(tile)) return false;
 
-    const city: City = new City(coords, name, civID);
+    const cityID = this.cities.length;
+    const city: City = new City(cityID, coords, name, civID);
     this.cities.push(city);
 
     for (const neighbor of this.getNeighborsCoords(coords)) {
@@ -506,7 +532,7 @@ export class Map {
     );
   }
 
-  buildImprovementAt(coords: Coords, type: string, ownerID: number, knowledges?: KnowledgeMap): void {
+  buildImprovementAt(coords: Coords, type: string, ownerID?: number, knowledges?: KnowledgeMap): void {
     const tile = this.getTile(coords);
     if (tile.owner?.civID !== ownerID) return;
     if (!this.canBuildOn(tile)) return;
@@ -601,6 +627,8 @@ export class Map {
         }
       }
     });
+
+    this.cities.forEach(city => city.turn(world, this));
 
     // Traders
     const traderResets: (() => void)[] = [];

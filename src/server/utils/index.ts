@@ -1,3 +1,4 @@
+import { Map } from '../game/map';
 import { Coords } from '../game/world';
 
 export type Event = [string, unknown[]];
@@ -77,11 +78,21 @@ export const getDirection = (origin: Coords, target: Coords): number => {
   });
 
   return direction;
-}
+};
 
 export const arrayIncludesCoords = (array: Coords[], {x, y}: Coords): boolean => {
   for (const coords of array) {
     if (coords.x === x && coords.y === y) return true;
   }
   return false;
+};
+
+export const getSmallestCoordsDiff = (map: Map, pos: Coords, target: Coords): [number, number] => {
+  const { width } = map;
+  const [posX, posY] = [mod(pos.x, width), pos.y];
+  const [targetX, targetY] = [target.x, target.y];
+  const altTargetX = targetX < posX ? (targetX + width) : (targetX - width);
+  const xDiff = targetX - posX;
+  const altXDiff = altTargetX - posX;
+  return [(Math.abs(xDiff) <= Math.abs(altXDiff)) ? (xDiff) : (altXDiff), targetY - posY];
 };

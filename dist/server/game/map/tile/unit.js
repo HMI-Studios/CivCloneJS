@@ -30,7 +30,7 @@ var PromotionEra;
     PromotionEra[PromotionEra["ALL"] = 9] = "ALL";
 })(PromotionEra = exports.PromotionEra || (exports.PromotionEra = {}));
 class Unit {
-    constructor(type, civID, coords, knowledge) {
+    constructor(type, coords, civID, cityID, knowledge) {
         var _a;
         this.type = type;
         this.hp = 100;
@@ -43,9 +43,11 @@ class Unit {
         }
         this.visionRange = (_a = Unit.visionRangeTable[type]) !== null && _a !== void 0 ? _a : Unit.visionRangeTable.default;
         this.civID = civID;
+        this.cityID = cityID;
         this.coords = coords;
         this.alive = true;
         this.knowledge = knowledge !== null && knowledge !== void 0 ? knowledge : {};
+        this.automationData = {};
         if (Unit.cloakTable[type]) {
             this.cloaked = false;
         }
@@ -59,6 +61,7 @@ class Unit {
             hp: this.hp,
             movement: this.movement,
             civID: this.civID,
+            cityID: this.cityID,
             coords: this.coords,
             alive: this.alive,
             knowledge: this.knowledge,
@@ -66,7 +69,7 @@ class Unit {
         };
     }
     static import(data) {
-        const unit = new Unit(data.type, data.civID, data.coords);
+        const unit = new Unit(data.type, data.coords, data.civID, data.cityID, data.knowledge);
         unit.hp = data.hp;
         unit.movement = data.movement;
         unit.promotionClass = Unit.promotionClassTable[unit.type];
@@ -92,6 +95,7 @@ class Unit {
             attackRange: this.attackRange,
             knowledge: this.knowledge,
             cloaked: this.cloaked,
+            isBarbarian: this.isBarbarian,
         } : undefined;
     }
     getMovementClass() {
@@ -99,6 +103,9 @@ class Unit {
     }
     setDead() {
         this.alive = false;
+    }
+    setBarbarian(isBarbarian) {
+        this.isBarbarian = isBarbarian;
     }
     isDead() {
         return !this.alive;

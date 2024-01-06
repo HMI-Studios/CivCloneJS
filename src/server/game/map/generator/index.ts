@@ -40,17 +40,23 @@ const MOUNTAIN_SPRING = new TileType('mountain', 5, {}, null, false, false, true
 export class PerlinWorldGenerator {
 
   private random: Random;
+  private seed: number;
   private simplex: SimplexNoise;
   private width: number;
   private height: number;
   private seaLevel: number;
   private biomes: { [key: string]: Biome }
 
-  constructor(seed: number, { width, height }: MapOptions) {
-    this.random = new Random(seed);
-    this.simplex = new SimplexNoise(this.random.randFloat);
+  constructor(seed: number | undefined, { width, height }: MapOptions) {
     this.width = width;
     this.height = height;
+    this.reseed(seed);
+  }
+
+  reseed(seed?: number): void {
+    this.seed = seed ?? Math.floor(Math.random() * 9007199254740991);
+    this.random = new Random(this.seed);
+    this.simplex = new SimplexNoise(this.random.randFloat);
 
     // Elevation Constants - Make these configurable later
     const OCEAN_LEVEL = 45;
@@ -59,9 +65,9 @@ export class PerlinWorldGenerator {
     const HILLS_LEVEL = 80;
     const HIGHLANDS_LEVEL = 90;
     const MOUNTAIN_LEVEL = 98;
-
+    
     this.seaLevel = COAST_LEVEL;
-
+    
     // Define Biomes
     this.biomes = {
       'plains': new Biome(this.random,
@@ -220,7 +226,7 @@ export class PerlinWorldGenerator {
       river.generate(tileTypeMap, heightMap, RIVER);
     }
 
-    const map = new Map(height, width);
+    const map = new Map(height, width, this.seed);
 
     let i = 0;
     for (let y = 0; y < height; y++) {
@@ -235,7 +241,7 @@ export class PerlinWorldGenerator {
       }
     }
 
-    console.log(`Map generation completed in ${new Date().getTime() - startTime}ms.`)
+    console.log(`Map generation completed in ${new Date().getTime() - startTime}ms with seed ${this.seed}.`)
     return map;
   }
 }

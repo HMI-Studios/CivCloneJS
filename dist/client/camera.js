@@ -120,7 +120,7 @@ class Camera {
     }
     // The `render` and `renderUnit` methods are exempt from using Coord type, as they must store the `x` and `y` variables separately.
     renderUnit(world, unit, x, y) {
-        var _a;
+        var _a, _b, _c;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height, civs } = world;
         const UNIT_WIDTH = (74 * 0.2);
@@ -134,12 +134,12 @@ class Camera {
         if (unit.cloaked)
             ctx.globalAlpha = 0.5;
         // Unit Color Background
-        ctx.fillStyle = civs[unit.civID].color;
+        ctx.fillStyle = (_b = (_a = civs[unit.civID]) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : (unit.isBarbarian ? '#F00' : '#333');
         ctx.beginPath();
         ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
         ctx.arc((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
         ctx.fill();
-        ctx.drawImage(((_a = textures.unit[unit.type]) !== null && _a !== void 0 ? _a : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
+        ctx.drawImage(((_c = textures.unit[unit.type]) !== null && _c !== void 0 ? _c : textures.missing), (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_HEIGHT * zoom);
         ctx.globalAlpha = 1;
     }
     drawTileLine(x1, y1, x2, y2) {
@@ -251,7 +251,7 @@ class Camera {
                             }
                         }
                     }
-                    if (tile.owner) {
+                    if (tile.owner && !tile.owner.isBarbarian) {
                         const neighbors = world.getNeighbors({ x, y }, false);
                         ctx.beginPath();
                         ctx.lineWidth = margin * 2;

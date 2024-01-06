@@ -20,51 +20,17 @@ const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }) => {
   ws.send(JSON.stringify(msg));
 };
 
-export const games: { [gameID: number] : Game } = {
-  0: new Game(
-    // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-    // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-    new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
-    {
-      gameName: 'singleplayer unsaved test',
-      playerCount: 1,
-    }
-  ),
-  // 1: new Game(
-  //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-  //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-  //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
-  //   {
-  //     gameName: 'singleplayer test',
-  //     playerCount: 1,
-  //   }
-  // ),
-  // 2: new Game(
-  //   // new Map(38, 38, JSON.parse(fs.readFileSync( path.join(__dirname, 'saves/0.json') ).toString()).map),
-  //   // new Map(38, 38, ...new WorldGenerator(3634, 38, 38).generate(0.5, 0.9, 1)),
-  //   new PerlinWorldGenerator(1, { width: 20, height: 20 }).generate(),
-  //   {
-  //     gameName: 'multiplayer test',
-  //     playerCount: 2,
-  //   }
-  // ),
-};
-// games[1].save();
-// games[2].save();
-(async () => {
-  games[1] = await Game.load('singleplayer test')
-  // games[2] = await Game.load('no units test')
-  games[2] = await Game.load('multiplayer test')
-})()
+export const games: { [gameID: number] : Game } = {};
 
 const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
   const newID = Object.keys(games)[Object.keys(games).length - 1] + 1;
   games[newID] = new Game(
-    new PerlinWorldGenerator(options.seed ?? Math.floor(Math.random() * 9007199254740991), mapOptions).generate(),
+    new PerlinWorldGenerator(options.seed, mapOptions),
     {
       playerCount,
       ownerName: username,
       gameName: options.gameName,
+      isManualSeed: 'seed' in options,
     }
   );
 };
@@ -162,7 +128,15 @@ const methods: {
   createGame: (ws: WebSocket, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
     const username = getUsername(ws);
     if (username && playerCount && mapOptions) {
-      createGame(username, playerCount, mapOptions, options ?? {});
+      try {
+        createGame(username, playerCount, mapOptions, options ?? {});
+      } catch (err) {
+        sendTo(ws, {
+          error: [
+            ['serverError', [err]],
+          ],
+        });
+      }
     }
     
     methods.getGames(ws);

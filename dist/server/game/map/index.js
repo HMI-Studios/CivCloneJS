@@ -18,9 +18,10 @@ const TRADER_CAPACITY = {
     science: 5,
 };
 class Map {
-    constructor(height, width) {
+    constructor(height, width, seed) {
         this.height = height;
         this.width = width;
+        this.seed = seed;
         this.tiles = new Array(height * width);
         this.cities = [];
         this.traders = [];
@@ -30,6 +31,7 @@ class Map {
         return {
             height: this.height,
             width: this.width,
+            seed: this.seed,
             tiles: this.tiles.map(tile => tile.export()),
             cities: this.cities.map(city => city.export()),
             traders: this.traders.map(trader => trader.export()),
@@ -43,7 +45,7 @@ class Map {
      * @returns
      */
     static import(world, data) {
-        const map = new Map(data.height, data.width);
+        const map = new Map(data.height, data.width, data.seed);
         map.tiles = data.tiles.map(tileData => tile_1.Tile.import(tileData));
         map.cities = data.cities.map(cityData => {
             const city = city_1.City.import(cityData);
@@ -70,6 +72,9 @@ class Map {
             x: (0, utils_1.mod)(pos, this.width),
             y: Math.floor(pos / this.width),
         };
+    }
+    areValidCoords(coords) {
+        return coords.y >= 0 && coords.y < this.height;
     }
     getUpdates() {
         return this.updates.splice(0);
@@ -219,10 +224,14 @@ class Map {
             if (!overwrite)
                 return;
             (_a = tile.owner) === null || _a === void 0 ? void 0 : _a.removeTile(coords);
-            tile.setVisibility(tile.owner.civID, false);
+            if (tile.owner.civID) {
+                tile.setVisibility(tile.owner.civID, false);
+            }
         }
         tile.owner = owner;
-        tile.setVisibility(owner.civID, true);
+        if (owner.civID) {
+            tile.setVisibility(owner.civID, true);
+        }
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {
@@ -262,7 +271,8 @@ class Map {
         // mark tiles currently visible by unit as unseen
         const srcVisible = this.getVisibleTilesCoords(unit);
         for (const visibleCoords of srcVisible) {
-            this.setTileVisibility(unit.civID, visibleCoords, false);
+            if (unit.civID !== undefined)
+                this.setTileVisibility(unit.civID, visibleCoords, false);
         }
         this.getTile(unit.coords).setUnit(undefined);
         this.tileUpdate(unit.coords);
@@ -272,7 +282,8 @@ class Map {
         // mark tiles now visible by unit as seen
         const newVisible = this.getVisibleTilesCoords(unit);
         for (const visibleCoords of newVisible) {
-            this.setTileVisibility(unit.civID, visibleCoords, true);
+            if (unit.civID !== undefined)
+                this.setTileVisibility(unit.civID, visibleCoords, true);
         }
     }
     addTrader(trader) {
@@ -368,11 +379,23 @@ class Map {
             tile.type !== 'frozen_coastal' &&
             tile.type !== 'river');
     }
+    newBarbarianCampAt(coords) {
+        const tile = this.getTile(coords);
+        if (!this.canSettleOn(tile))
+            return null;
+        const cityID = this.cities.length;
+        const camp = new city_1.BarbarianCamp(cityID, coords);
+        this.cities.push(camp);
+        this.setTileOwner(coords, camp, false);
+        this.buildImprovementAt(coords, 'barbarian_camp');
+        return cityID;
+    }
     settleCityAt(coords, name, civID, settler) {
         const tile = this.getTile(coords);
         if (!this.canSettleOn(tile))
             return false;
-        const city = new city_1.City(coords, name, civID);
+        const cityID = this.cities.length;
+        const city = new city_1.City(cityID, coords, name, civID);
         this.cities.push(city);
         for (const neighbor of this.getNeighborsCoords(coords)) {
             this.setTileOwner(neighbor, city, false);
@@ -489,6 +512,7 @@ class Map {
                 }
             }
         });
+        this.cities.forEach(city => city.turn(world, this));
         // Traders
         const traderResets = [];
         for (let i = 0; i < this.traders.length; i++) {

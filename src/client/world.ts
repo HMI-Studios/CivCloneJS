@@ -26,6 +26,7 @@ interface Unit {
   promotionClass: PromotionClass;
   knowledge: KnowledgeMap;
   cloaked?: boolean;
+  isBarbarian?: boolean;
 }
 
 interface RangedUnit extends Unit {
@@ -103,6 +104,7 @@ interface Tile {
   owner?: {
     civID: number,
     name: string,
+    isBarbarian: boolean,
   };
   visible: boolean;
   walls: Wall[];
