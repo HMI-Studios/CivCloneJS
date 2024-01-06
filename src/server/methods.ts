@@ -515,6 +515,35 @@ const methods: {
     }
   },
 
+  setGateOpen: (ws: WebSocket, coords: Coords, facingCoords: Coords, isOpen: boolean) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile?.unit;
+
+      if (unit && unit.civID === civID) {
+        const direction = getDirection(coords, facingCoords);
+        const wall = tile.walls[direction];
+        if (wall && wall.type === (isOpen ? WallType.CLOSED_GATE : WallType.OPEN_GATE)) {
+          if (isOpen) {
+            wall.type = WallType.OPEN_GATE;
+          } else {
+            wall.type = WallType.CLOSED_GATE;
+          }
+          map.tileUpdate(coords);
+          game.sendUpdates();
+        }
+      }
+    }
+  },
+
   getTraders: (ws: WebSocket) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);

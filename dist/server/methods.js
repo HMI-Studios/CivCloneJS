@@ -429,6 +429,31 @@ const methods = {
             }
         }
     },
+    setGateOpen: (ws, coords, facingCoords, isOpen) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if (unit && unit.civID === civID) {
+                const direction = (0, utils_1.getDirection)(coords, facingCoords);
+                const wall = tile.walls[direction];
+                if (wall && wall.type === (isOpen ? wall_1.WallType.CLOSED_GATE : wall_1.WallType.OPEN_GATE)) {
+                    if (isOpen) {
+                        wall.type = wall_1.WallType.OPEN_GATE;
+                    }
+                    else {
+                        wall.type = wall_1.WallType.CLOSED_GATE;
+                    }
+                    map.tileUpdate(coords);
+                    game.sendUpdates();
+                }
+            }
+        }
+    },
     getTraders: (ws) => {
         const username = getUsername(ws);
         const gameID = getGameID(ws);
