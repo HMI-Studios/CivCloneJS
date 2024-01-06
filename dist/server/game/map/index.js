@@ -235,7 +235,6 @@ class Map {
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {
-        return tile.getVisibleData(civID);
         if (tile.discoveredBy[civID]) {
             if (tile.visibleTo[civID]) {
                 return tile.getVisibleData(civID);
