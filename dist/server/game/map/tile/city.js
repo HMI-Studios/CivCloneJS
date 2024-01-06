@@ -79,23 +79,18 @@ class UnitController extends City {
         if (!tile)
             return false;
         const movementCost = tile.getMovementCost(unit, (0, utils_1.getDirection)(toPos, unit.coords));
-        if (!(unit.movement < movementCost)) {
-            if (tile.unit) {
-                if (!allowCombat)
-                    return false;
-                else {
-                    this.world.meleeCombat(unit, tile.unit);
-                    unit.movement = 0;
-                    return true;
-                }
-            }
-            this.map.moveUnitTo(unit, toPos);
-            unit.movement -= movementCost;
+        if (unit.movement < movementCost)
+            return false;
+        if (tile.unit) {
+            if (!allowCombat)
+                return false;
+            this.world.meleeCombat(unit, tile.unit);
+            unit.movement = 0;
             return true;
         }
-        else {
-            return false;
-        }
+        this.map.moveUnitTo(unit, toPos);
+        unit.movement -= movementCost;
+        return true;
     }
     turn(world, map) {
         super.turn(world, map);
@@ -111,9 +106,50 @@ class BarbarianCamp extends UnitController {
         super(id, center, 'camp', undefined);
         this.danger = false;
     }
+    handleErrands() {
+        const camp = this.map.getTile(this.center).improvement;
+        if (camp.errand)
+            return;
+        if (this.danger) {
+            this.map.startErrandAt(this.center, camp, {
+                type: errand_1.ErrandType.UNIT_TRAINING,
+                option: 'warrior',
+                location: this.center,
+            });
+        }
+        else if (!this.units.some(unit => unit.type === 'scout')) {
+            this.map.startErrandAt(this.center, camp, {
+                type: errand_1.ErrandType.UNIT_TRAINING,
+                option: 'scout',
+                location: this.center,
+            });
+        }
+        else {
+            let raidMode;
+            raidMode = true;
+            if (!this.raidTarget && this.settleTarget) {
+                raidMode = false;
+            }
+            else if (this.settleTarget) {
+                raidMode = Boolean(this.world.random.randInt(0, 1));
+            }
+            if (this.units.some(unit => unit.type === 'settler')) {
+                raidMode = true;
+            }
+            if (raidMode) {
+                // TODO
+            }
+            else {
+                this.map.startErrandAt(this.center, camp, {
+                    type: errand_1.ErrandType.UNIT_TRAINING,
+                    option: 'settler',
+                    location: this.center,
+                });
+            }
+        }
+    }
     turn(world, map) {
         super.turn(world, map);
-        const camp = map.getTile(this.center).improvement;
         const neighborhoodCoords = map.getNeighborsCoords(this.center, 5);
         const neighborhoodTiles = neighborhoodCoords.map(coords => map.getTile(coords));
         this.danger = false;
@@ -123,45 +159,7 @@ class BarbarianCamp extends UnitController {
                 break;
             }
         }
-        if (!camp.errand) {
-            if (this.danger) {
-                map.startErrandAt(this.center, camp, {
-                    type: errand_1.ErrandType.UNIT_TRAINING,
-                    option: 'warrior',
-                    location: this.center,
-                });
-            }
-            else if (!this.units.some(unit => unit.type === 'scout')) {
-                map.startErrandAt(this.center, camp, {
-                    type: errand_1.ErrandType.UNIT_TRAINING,
-                    option: 'scout',
-                    location: this.center,
-                });
-            }
-            else {
-                let raidMode;
-                raidMode = true;
-                if (!this.raidTarget && this.settleTarget) {
-                    raidMode = false;
-                }
-                else if (this.settleTarget) {
-                    raidMode = Boolean(world.random.randInt(0, 1));
-                }
-                if (this.units.some(unit => unit.type === 'settler')) {
-                    raidMode = true;
-                }
-                if (raidMode) {
-                    // TODO
-                }
-                else {
-                    map.startErrandAt(this.center, camp, {
-                        type: errand_1.ErrandType.UNIT_TRAINING,
-                        option: 'settler',
-                        location: this.center,
-                    });
-                }
-            }
-        }
+        this.handleErrands();
         this.units.forEach(unit => {
             var _a;
             unit.newTurn();
