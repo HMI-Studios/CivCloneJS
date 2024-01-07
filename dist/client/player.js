@@ -4,14 +4,15 @@ const errandTypeTable = {
     2: 'knowledge',
     3: 'civic',
 };
+const commonUnitActions = ['openGate', 'closeGate'];
 const unitActionsTable = {
-    'settler': ['settleCity'],
-    'scout': [],
-    'builder': ['build', 'buildWall'],
-    'warrior': [],
-    'slinger': [],
-    'archer': [],
-    'spy': ['stealKnowledge', 'cloak', 'decloak'],
+    'settler': [...commonUnitActions, 'settleCity'],
+    'scout': [...commonUnitActions],
+    'builder': [...commonUnitActions, 'build', 'buildWall', 'buildGate'],
+    'warrior': [...commonUnitActions],
+    'slinger': [...commonUnitActions],
+    'archer': [...commonUnitActions],
+    'spy': [...commonUnitActions, 'stealKnowledge', 'cloak', 'decloak'],
 };
 const unitActionsFnTable = {
     'settleCity': (pos) => {
@@ -31,6 +32,12 @@ const unitActionsFnTable = {
     'decloak': (pos) => {
         return ['setCloak', [pos, false]];
     },
+    'openGate': (pos, towards) => {
+        return ['setGateOpen', [pos, towards, true]];
+    },
+    'closeGate': (pos, towards) => {
+        return ['setGateOpen', [pos, towards, false]];
+    },
 };
 const unitActionsAvailabilityTable = {
     'settleCity': (world, pos) => {
@@ -46,6 +53,14 @@ const unitActionsAvailabilityTable = {
         var _a;
         const tile = world.getTile(pos);
         return (_a = tile.unit.cloaked) !== null && _a !== void 0 ? _a : false;
+    },
+    'openGate': (world, pos) => {
+        const tile = world.getTile(pos);
+        return tile.walls.some(wall => (wall && wall.type === WallType.CLOSED_GATE));
+    },
+    'closeGate': (world, pos) => {
+        const tile = world.getTile(pos);
+        return tile.walls.some(wall => (wall && wall.type === WallType.OPEN_GATE));
     },
 };
 const iconPathTable = {
@@ -387,7 +402,43 @@ class UI {
                 this.elements.unitActionsMenu.appendChild(actionBtn.element);
                 continue;
             }
+            if (action === 'buildGate') {
+                const actionBtn = new Button(this.createElement('button'), {
+                    text: `${translate(`unit.action.${action}`)}`,
+                });
+                actionBtn.bindCallback(() => {
+                    world.on.event.buildWall(pos, (selectedPos) => {
+                        world.sendActions([unitActionsFnTable['buildWall'](pos, selectedPos, WallType.OPEN_GATE)]);
+                    });
+                });
+                this.elements.unitActionsMenu.appendChild(actionBtn.element);
+                continue;
+            }
             if (action in unitActionsAvailabilityTable && !unitActionsAvailabilityTable[action](world, pos)) {
+                continue;
+            }
+            if (action === 'openGate') {
+                const actionBtn = new Button(this.createElement('button'), {
+                    text: `${translate(`unit.action.${action}`)}`,
+                });
+                actionBtn.bindCallback(() => {
+                    world.on.event.buildWall(pos, (selectedPos) => {
+                        world.sendActions([unitActionsFnTable[action](pos, selectedPos)]);
+                    });
+                });
+                this.elements.unitActionsMenu.appendChild(actionBtn.element);
+                continue;
+            }
+            if (action === 'closeGate') {
+                const actionBtn = new Button(this.createElement('button'), {
+                    text: `${translate(`unit.action.${action}`)}`,
+                });
+                actionBtn.bindCallback(() => {
+                    world.on.event.buildWall(pos, (selectedPos) => {
+                        world.sendActions([unitActionsFnTable[action](pos, selectedPos)]);
+                    });
+                });
+                this.elements.unitActionsMenu.appendChild(actionBtn.element);
                 continue;
             }
             const actionBtn = new Button(this.createElement('button'), {

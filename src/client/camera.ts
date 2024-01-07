@@ -82,12 +82,26 @@ class Camera {
         encampment: this.loadOverlayTexture('improvement_encampment'),
         campus: this.loadOverlayTexture('improvement_campus'),
 
-        walls_0: this.loadOverlayTexture('walls_0'),
-        walls_1: this.loadOverlayTexture('walls_1'),
-        walls_2: this.loadOverlayTexture('walls_2'),
-        walls_3: this.loadOverlayTexture('walls_3'),
-        walls_4: this.loadOverlayTexture('walls_4'),
-        walls_5: this.loadOverlayTexture('walls_5'),
+        wall_1_0: this.loadOverlayTexture('walls_0'),
+        wall_1_1: this.loadOverlayTexture('walls_1'),
+        wall_1_2: this.loadOverlayTexture('walls_2'),
+        wall_1_3: this.loadOverlayTexture('walls_3'),
+        wall_1_4: this.loadOverlayTexture('walls_4'),
+        wall_1_5: this.loadOverlayTexture('walls_5'),
+
+        wall_2_0: this.loadOverlayTexture('open_gate_0'),
+        wall_2_1: this.loadOverlayTexture('open_gate_1'),
+        wall_2_2: this.loadOverlayTexture('open_gate_2'),
+        wall_2_3: this.loadOverlayTexture('open_gate_3'),
+        wall_2_4: this.loadOverlayTexture('open_gate_4'),
+        wall_2_5: this.loadOverlayTexture('open_gate_5'),
+
+        wall_3_0: this.loadOverlayTexture('closed_gate_0'),
+        wall_3_1: this.loadOverlayTexture('closed_gate_1'),
+        wall_3_2: this.loadOverlayTexture('closed_gate_2'),
+        wall_3_3: this.loadOverlayTexture('closed_gate_3'),
+        wall_3_4: this.loadOverlayTexture('closed_gate_4'),
+        wall_3_5: this.loadOverlayTexture('closed_gate_5'),
 
         farm: this.loadOverlayTexture('improvement_farm'),
 
@@ -346,7 +360,7 @@ class Camera {
           if (hasWalls) {
             for (const i of [0, 5, 1]) {
               if (tile.walls[i] !== null) {
-                const overlay = textures.improvements[`walls_${i}`] ?? textures.missing_overlay;
+                const overlay = textures.improvements[`wall_${tile.walls[i].type}_${i}`] ?? textures.missing_overlay;
                 ctx.drawImage(
                   overlay.texture as CanvasImageSource,
                   (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,
@@ -466,7 +480,7 @@ class Camera {
           if (hasWalls) {
             for (const i of [2, 3, 4]) {
               if (tile.walls[i] !== null) {
-                const overlay = textures.improvements[`walls_${i}`] ?? textures.missing_overlay;
+                const overlay = textures.improvements[`wall_${tile.walls[i].type}_${i}`] ?? textures.missing_overlay;
                 ctx.drawImage(
                   overlay.texture as CanvasImageSource,
                   (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom,

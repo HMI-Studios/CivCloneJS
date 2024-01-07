@@ -6,6 +6,7 @@ const game_1 = require("./game");
 const generator_1 = require("./game/map/generator");
 const unit_1 = require("./game/map/tile/unit");
 const utils_1 = require("./utils");
+const wall_1 = require("./game/map/tile/wall");
 exports.connections = [];
 exports.connData = [];
 const sendTo = (ws, msg) => {
@@ -315,7 +316,12 @@ const methods = {
             for (const dstCoords of path) {
                 const dst = map.getTile(dstCoords);
                 const unit = src.unit;
-                if (!unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords)))) {
+                if (!unit || unit.civID !== civID) {
+                    game.sendUpdates();
+                    return;
+                }
+                const movementCost = map.getStepMovementCost(unit.coords, dstCoords, unit.movementClass);
+                if (unit.movement < movementCost) {
                     game.sendUpdates();
                     return;
                 }
@@ -326,9 +332,7 @@ const methods = {
                     }
                     break;
                 }
-                if (src.walls[(0, utils_1.getDirection)(unit.coords, dstCoords)])
-                    break;
-                unit.movement -= dst.getMovementCost(unit, (0, utils_1.getDirection)(dstCoords, unit.coords));
+                unit.movement -= movementCost;
                 map.moveUnitTo(unit, dstCoords);
                 src = dst;
                 finalCoords = dstCoords;
@@ -423,6 +427,31 @@ const methods = {
                 tile.setWall((0, utils_1.getDirection)(coords, facingCoords), type);
                 map.tileUpdate(coords);
                 game.sendUpdates();
+            }
+        }
+    },
+    setGateOpen: (ws, coords, facingCoords, isOpen) => {
+        const username = getUsername(ws);
+        const gameID = getGameID(ws);
+        const game = exports.games[gameID];
+        const civID = game.players[username].civID;
+        if (game) {
+            const map = game.world.map;
+            const tile = map.getTile(coords);
+            const unit = tile === null || tile === void 0 ? void 0 : tile.unit;
+            if (unit && unit.civID === civID) {
+                const direction = (0, utils_1.getDirection)(coords, facingCoords);
+                const wall = tile.getWall(direction);
+                if (wall && wall.type === (isOpen ? wall_1.WallType.CLOSED_GATE : wall_1.WallType.OPEN_GATE)) {
+                    if (isOpen) {
+                        wall.type = wall_1.WallType.OPEN_GATE;
+                    }
+                    else {
+                        wall.type = wall_1.WallType.CLOSED_GATE;
+                    }
+                    map.tileUpdate(coords);
+                    game.sendUpdates();
+                }
             }
         }
     },

@@ -18,6 +18,9 @@ var WallType;
 (function (WallType) {
     WallType[WallType["CLIFF"] = 0] = "CLIFF";
     WallType[WallType["WALL"] = 1] = "WALL";
+    WallType[WallType["OPEN_GATE"] = 2] = "OPEN_GATE";
+    WallType[WallType["CLOSED_GATE"] = 3] = "CLOSED_GATE";
+    WallType[WallType["WALL_RUIN"] = 4] = "WALL_RUIN";
 })(WallType || (WallType = {}));
 var ErrandType;
 (function (ErrandType) {
@@ -179,11 +182,14 @@ class World {
             const atPos = queue.shift();
             for (const adjPos of this.getNeighbors(atPos)) {
                 const tile = this.getTile(adjPos);
+                const atTile = this.getTile(atPos);
                 if (tile.unit && tile.unit.civID === this.player.civID)
                     continue;
-                if (tile.walls[this.getDirection(adjPos, atPos)])
+                const adjDirection = this.getDirection(adjPos, atPos);
+                const atDirection = this.getDirection(atPos, adjPos);
+                if (tile.walls[adjDirection] && tile.walls[adjDirection].type !== WallType.OPEN_GATE)
                     continue;
-                if (this.getTile(atPos).walls[this.getDirection(atPos, adjPos)])
+                if (atTile.walls[atDirection] && atTile.walls[atDirection].type !== WallType.OPEN_GATE)
                     continue;
                 const movementCost = mode > -1 ? tile.movementCost[mode] || Infinity : 1;
                 if (!(this.posIndex(adjPos) in dst) || dst[this.posIndex(adjPos)] > dst[this.posIndex(atPos)] + movementCost) {

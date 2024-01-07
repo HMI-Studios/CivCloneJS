@@ -87,7 +87,11 @@
       "skipTurn": "Skip",
       "settleCity": "Settle City",
       "build": "Build",
-      "stealKnowledge": "Steal Tech"
+      "stealKnowledge": "Steal Tech",
+      "buildWall": "Build Wall",
+      "buildGate": "Build Gate",
+      "openGate": "Open Gate",
+      "closeGate": "Close Gate"
     }
   },
   "tile": {

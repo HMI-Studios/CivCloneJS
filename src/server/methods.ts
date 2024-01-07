@@ -5,6 +5,7 @@ import { Game } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
 import { PromotionClass } from './game/map/tile/unit';
 import { getDirection } from './utils';
+import { WallType } from './game/map/tile/wall';
 
 interface ConnectionData {
   ws: WebSocket,
@@ -379,7 +380,14 @@ const methods: {
 
         const unit = src.unit;
 
-        if ( !unit || unit.civID !== civID || !(unit.movement >= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords))) ) {
+        if (!unit || unit.civID !== civID) {
+          game.sendUpdates();
+          return;
+        }
+
+        const movementCost = map.getStepMovementCost(unit.coords, dstCoords, unit.movementClass);
+
+        if (unit.movement < movementCost) {
           game.sendUpdates();
           return;
         }
@@ -392,9 +400,7 @@ const methods: {
           break;
         }
 
-        if (src.walls[getDirection(unit.coords, dstCoords)]) break;
-
-        unit.movement -= dst.getMovementCost(unit, getDirection(dstCoords, unit.coords));
+        unit.movement -= movementCost;
         map.moveUnitTo(unit, dstCoords);
 
         src = dst;
@@ -509,6 +515,35 @@ const methods: {
         tile.setWall(getDirection(coords, facingCoords), type);
         map.tileUpdate(coords);
         game.sendUpdates();
+      }
+    }
+  },
+
+  setGateOpen: (ws: WebSocket, coords: Coords, facingCoords: Coords, isOpen: boolean) => {
+    const username = getUsername(ws);
+    const gameID = getGameID(ws);
+
+    const game = games[gameID];
+    const civID = game.players[username].civID;
+
+    if (game) {
+      const map = game.world.map;
+
+      const tile = map.getTile(coords);
+      const unit = tile?.unit;
+
+      if (unit && unit.civID === civID) {
+        const direction = getDirection(coords, facingCoords);
+        const wall = tile.getWall(direction);
+        if (wall && wall.type === (isOpen ? WallType.CLOSED_GATE : WallType.OPEN_GATE)) {
+          if (isOpen) {
+            wall.type = WallType.OPEN_GATE;
+          } else {
+            wall.type = WallType.CLOSED_GATE;
+          }
+          map.tileUpdate(coords);
+          game.sendUpdates();
+        }
       }
     }
   },

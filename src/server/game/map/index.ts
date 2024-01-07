@@ -95,6 +95,10 @@ export class Map {
     return coords.y >= 0 && coords.y < this.height;
   }
 
+  public areSameCoords(pos1: Coords, pos2: Coords): boolean {
+    return mod(pos1.x, this.width) === mod(pos2.x, this.width) && pos1.y === pos2.y;
+  }
+
   getUpdates(): { (civID: number): Event }[] {
     return this.updates.splice(0);
   }
@@ -130,7 +134,7 @@ export class Map {
         if (!filter || filter(tile, coords)) {
           tileSet.add(tile);
           coordList.push(coords);
-          rangeMap[this.pos(coords)] = r
+          rangeMap[this.pos(coords)] = r;
         }
       }
       for (const coord of getAdjacentCoords(coords)) {
@@ -144,22 +148,33 @@ export class Map {
 
   getNeighborsCoords(coords: Coords, r = 1, options?: {
     filter?: (tile: Tile, coords: Coords) => boolean,
+    excludeCenter?: boolean,
   }): Coords[] {
     const coordList: Coords[] = [];
-    this.getNeighborsRecurse(coords, r, new Set(), coordList, {}, options?.filter);
+    let filter = options?.filter;
+    if (options?.excludeCenter) {
+      filter = (tile: Tile, coordsToFilter: Coords) => {
+        let filterResult = options.filter ? options.filter(tile, coordsToFilter) : true;
+        return !this.areSameCoords(coordsToFilter, coords) && filterResult;
+      };
+    }
+    this.getNeighborsRecurse(coords, r, new Set(), coordList, {}, filter);
 
     return coordList;
   }
 
-  getStepMovementCost(atPos: Coords, atTile: Tile, adjPos: Coords, adjTile: Tile, mode: MovementClass): number {
+  getStepMovementCost(atPos: Coords, adjPos: Coords, mode: MovementClass): number {
     if (mode === MovementClass.AIR) return 1;
+
+    const atTile = this.getTile(atPos);
+    const adjTile = this.getTile(adjPos);
     
     // PATH BLOCKING LOGIC HERE
-    // if (tile.unit && tile.unit.civID === this.player.civID) return 0;
-    if (adjTile.walls[getDirection(adjPos, atPos)] !== null) return 0;
-    if (atTile.walls[getDirection(atPos, adjPos)] !== null) return 0;
+    // if (tile.unit && tile.unit.civID === this.player.civID) return Infinity;
+    if (adjTile.hasBlockingWall(getDirection(adjPos, atPos))) return Infinity;
+    if (atTile.hasBlockingWall(getDirection(atPos, adjPos))) return Infinity;
 
-    return adjTile.movementCost[mode];
+    return adjTile.movementCost[mode] ?? Infinity;
   }
 
   getPathTree(srcPos: Coords, range: number, mode: MovementClass): [{[key: string]: Coords}, {[key: string]: number}] {
@@ -175,13 +190,10 @@ export class Map {
 
     while (queue.length) {
       const atPos = queue.shift() as Coords;
-      const atTile = this.getTile(atPos);
 
-      for (const adjPos of this.getNeighborsCoords(atPos)) {
+      for (const adjPos of this.getNeighborsCoords(atPos, 1, { excludeCenter: true })) {
 
-        const tile = this.getTile(adjPos);
-
-        const movementCost = this.getStepMovementCost(atPos, atTile, adjPos, tile, mode) || Infinity;
+        const movementCost = this.getStepMovementCost(atPos, adjPos, mode);
         if (!(this.pos(adjPos) in dst) || dst[this.pos(adjPos)] > dst[this.pos(atPos)] + movementCost) {
           dst[this.pos(adjPos)] = dst[this.pos(atPos)] + movementCost;
 
@@ -408,14 +420,13 @@ export class Map {
 
   validateRoute(route: Route, mode: MovementClass): boolean {
     const [ path, maximumLength ] = route;
-    let previousPosTile: [Coords, Tile] | null = null;
+    let previousPos: Coords | null = null;
     let length = 0;
     for (const pos of path) {
-      const tile = this.getTile(pos);
-      if (previousPosTile !== null) {
-        length += this.getStepMovementCost(...previousPosTile, pos, tile, mode) || Infinity;
+      if (previousPos !== null) {
+        length += this.getStepMovementCost(previousPos, pos, mode);
       }
-      previousPosTile = [pos, tile];
+      previousPos = pos;
     }
     return length <= maximumLength;
   }

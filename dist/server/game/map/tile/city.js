@@ -78,7 +78,7 @@ class UnitController extends City {
         const tile = this.map.getTile(toPos);
         if (!tile)
             return false;
-        const movementCost = tile.getMovementCost(unit, (0, utils_1.getDirection)(toPos, unit.coords));
+        const movementCost = this.map.getStepMovementCost(unit.coords, toPos, unit.movementClass);
         if (unit.movement < movementCost)
             return false;
         if (tile.unit) {

@@ -20,14 +20,16 @@ const errandTypeTable: { [type: number]: string } = {
   3: 'civic',
 }
 
+const commonUnitActions: string[] = ['openGate', 'closeGate'];
+
 const unitActionsTable: { [unit: string]: string[] } = {
-  'settler': ['settleCity'],
-  'scout': [],
-  'builder': ['build', 'buildWall'],
-  'warrior': [],
-  'slinger': [],
-  'archer': [],
-  'spy': ['stealKnowledge', 'cloak', 'decloak'],
+  'settler': [...commonUnitActions, 'settleCity'],
+  'scout': [...commonUnitActions],
+  'builder': [...commonUnitActions, 'build', 'buildWall', 'buildGate'],
+  'warrior': [...commonUnitActions],
+  'slinger': [...commonUnitActions],
+  'archer': [...commonUnitActions],
+  'spy': [...commonUnitActions, 'stealKnowledge', 'cloak', 'decloak'],
 };
 
 const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [string, unknown[]] } = {
@@ -48,6 +50,12 @@ const unitActionsFnTable: { [action: string]: (pos: Coords, ...args: any) => [st
   'decloak': (pos: Coords): [string, unknown[]] => {
     return ['setCloak', [pos, false]];
   },
+  'openGate': (pos: Coords, towards: Coords): [string, unknown[]] => {
+    return ['setGateOpen', [pos, towards, true]];
+  },
+  'closeGate': (pos: Coords, towards: Coords): [string, unknown[]] => {
+    return ['setGateOpen', [pos, towards, false]];
+  },
 };
 
 const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coords) => boolean } = {
@@ -62,6 +70,14 @@ const unitActionsAvailabilityTable: { [action: string]: (world: World, pos: Coor
   'decloak': (world: World, pos: Coords): boolean => {
     const tile = world.getTile(pos);
     return tile.unit.cloaked ?? false;
+  },
+  'openGate': (world: World, pos: Coords): boolean => {
+    const tile = world.getTile(pos);
+    return tile.walls.some(wall => (wall && wall.type === WallType.CLOSED_GATE));
+  },
+  'closeGate': (world: World, pos: Coords): boolean => {
+    const tile = world.getTile(pos);
+    return tile.walls.some(wall => (wall && wall.type === WallType.OPEN_GATE));
   },
 };
 
@@ -478,7 +494,61 @@ class UI {
         continue;
       }
 
+      if (action === 'buildGate') {
+        const actionBtn = new Button(
+          this.createElement('button'),
+          {
+            text: `${translate(`unit.action.${action}`)}`,
+          }
+        );
+        actionBtn.bindCallback(() => {
+          world.on.event.buildWall(pos, (selectedPos: Coords) => {
+            world.sendActions([unitActionsFnTable['buildWall'](pos, selectedPos, WallType.OPEN_GATE)]);
+          });
+        });
+  
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
+
+        continue;
+      }
+
       if (action in unitActionsAvailabilityTable && !unitActionsAvailabilityTable[action](world, pos)) {
+        continue;
+      }
+
+      if (action === 'openGate') {
+        const actionBtn = new Button(
+          this.createElement('button'),
+          {
+            text: `${translate(`unit.action.${action}`)}`,
+          }
+        );
+        actionBtn.bindCallback(() => {
+          world.on.event.buildWall(pos, (selectedPos: Coords) => {
+            world.sendActions([unitActionsFnTable[action](pos, selectedPos)]);
+          });
+        });
+  
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
+
+        continue;
+      }
+
+      if (action === 'closeGate') {
+        const actionBtn = new Button(
+          this.createElement('button'),
+          {
+            text: `${translate(`unit.action.${action}`)}`,
+          }
+        );
+        actionBtn.bindCallback(() => {
+          world.on.event.buildWall(pos, (selectedPos: Coords) => {
+            world.sendActions([unitActionsFnTable[action](pos, selectedPos)]);
+          });
+        });
+  
+        this.elements.unitActionsMenu.appendChild(actionBtn.element);
+
         continue;
       }
 
