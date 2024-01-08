@@ -1,0 +1,3989 @@
+{
+  "world": {
+    "map": {
+      "height": 20,
+      "width": 20,
+      "tiles": [
+        {
+          "type": "mountain",
+          "elevation": 103.53526022451925,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 99.70535247643916,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 96.23604078466684,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 93.28688240398603,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 91.79062277604667,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 91.70828473189839,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 92.47854408847088,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 93.91724066136857,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 96.2373130330283,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 100.14213530299851,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 105.20155016621703,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 97.2582801402738,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 89.95881568223406,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 84.60901325979503,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 81.63802032922436,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 80.50032417858439,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 81.2997414370861,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 84.50043358699587,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 89.24151722654126,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 95.3779444786025,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 96.1148548591054,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 104.00370044034875,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 99.6107772105048,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 96.31096213619746,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 94.88199765667406,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 94.88974508846107,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 95.74838221887111,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 97.62323733629577,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 100.69963835053306,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 105.08385675893206,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 97.70724834206584,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_mountains",
+          "elevation": 90.04626925611957,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 82.92155581096297,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_plains",
+          "elevation": 77.82825815686869,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_plains",
+          "elevation": 75.2474902762052,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_plains",
+          "elevation": 74.3403451133061,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_plains",
+          "elevation": 74.99490316363998,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_plains",
+          "elevation": 77.90097316032872,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 82.6305602588395,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "snow_hills",
+          "elevation": 88.6249591431346,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 89.36926369320778,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 95.54228934540266,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 101.30397940200967,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 99.26618514557633,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 97.92869180277157,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 98.12631464805266,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 99.20556842436007,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 101.60739353590765,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 104.01413890915015,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 97.90627470616306,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 91.01458941170215,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 83.53680175008377,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 76.65642966099165,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 71.99895640524345,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 70.04256921149688,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 69.68508217485582,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 70.38370461286956,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 73.04092555769593,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 77.58492977885436,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 83.13662491384751,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 83.16154277108919,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 87.85193046971446,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 92.6255437094713,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 97.62258128632088,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 101.64686780683994,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 101.73361311903454,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 103.00160754005978,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "mountain",
+          "elevation": 100.40606257316699,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 96.233171792421,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 90.90569221762922,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 84.2316111192903,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 76.9141572349571,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 70.59670479504412,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 66.60359559181349,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 65.26631403594213,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 65.55265637740673,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 66.76463175702119,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 69.60697146336653,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 73.74692944984628,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 78.40647368361809,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 77.62267525733425,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 81.4309050876829,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 85.60182280262602,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 90.15269516298615,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 93.98099928230975,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 95.58784120508129,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 94.76242618756672,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_mountains",
+          "elevation": 92.15552891149918,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 88.48715716403129,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 83.49940275020947,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 76.90367892011272,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 69.89206012137514,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 64.41036717398538,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 61.264591521790614,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 60.503728062092854,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 61.35295892177265,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 63.358522138270054,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 66.69266197376803,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 70.45541233697227,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 74.062908635806,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 72.90910408054488,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 76.35719602480772,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 80.25867222603819,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 84.4365188347132,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 87.61839569087473,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 88.54263977943889,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 87.37767408378258,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 84.85321534594458,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 81.37703544993872,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 76.47063698129877,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 70.02299678360573,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 63.51544788138243,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 58.870773994012396,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 56.59702461160161,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 56.4177832494997,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.627060525938504,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 60.1709268628772,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 63.80991260707633,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 67.19337051144313,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 70.00031091104685,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 69.10222977914025,
+          "improvement": {
+            "type": "campus",
+            "pillaged": false,
+            "yield": {
+              "food": 0,
+              "production": 0,
+              "science": 4
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "science": 20,
+              "capacity": {
+                "food": 4,
+                "production": 0
+              }
+            }
+          },
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 72.61631499771141,
+          "improvement": {
+            "type": "encampment",
+            "pillaged": false,
+            "yield": {
+              "food": 4,
+              "production": 1
+            },
+            "storage": {
+              "food": 4,
+              "production": 1,
+              "capacity": {
+                "food": 10,
+                "production": 1
+              }
+            }
+          },
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 76.45369800541646,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 80.33636851788876,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 82.99906097205104,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 83.30566660481318,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_hills",
+          "elevation": 81.74322051938624,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 79.23707679417727,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 75.92978549002251,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 71.16419085326342,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 65.02154848989984,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 59.1798614335196,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 55.26590496313256,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 3,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.70947213930525,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.01871366127586,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.37250871532887,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.78269358477826,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 61.11414819377893,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 63.97471619522348,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 66.30539816591593,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 66.04615338980892,
+          "improvement": {
+            "type": "settlement",
+            "pillaged": false,
+            "yield": {
+              "food": 6,
+              "production": 2
+            },
+            "storage": {
+              "food": 20,
+              "production": 2,
+              "capacity": {
+                "food": 20,
+                "production": 2
+              }
+            }
+          },
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 69.91937039632779,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 73.77238811338134,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 77.42486281550171,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 79.81084426417988,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 79.72721624459332,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 77.87039484320745,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 75.44395413452838,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 72.3093527698481,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 67.76017918764322,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 62.06686797602189,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.023866548723575,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.82489715809234,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.674649351946314,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.10785430624551,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.25844910816182,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.914068550628535,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 58.36168556278801,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 60.69551401625648,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 62.89518276719648,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 63.4472710024498,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 67.64455793551457,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 71.4588018264032,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 74.8956376353121,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 77.22490866429351,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 77.1425908371651,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 75.15005773886327,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 72.50608394700565,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 69.46077778360723,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 65.31037410916052,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 60.2629373602417,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 56.02106136093924,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.33267437849981,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.2263951707917,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.368659952160165,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.98658461264218,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.64154252129324,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.00822841489651,
+          "improvement": {
+            "type": "forest",
+            "pillaged": false,
+            "isNatural": true,
+            "yield": {
+              "food": 0,
+              "production": 0
+            },
+            "storage": {
+              "food": 0,
+              "production": 0,
+              "capacity": {}
+            }
+          },
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.03174293197662,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 59.69311195135864,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 61.1285706657006,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 65.40377438259551,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 69.0237741716503,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 72.22806268684678,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 74.55145124691475,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 74.67367843178613,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 72.27509265076857,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 68.93753012172739,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 65.85213818114185,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 62.45067942121708,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 58.41941139272255,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.71223899837413,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.02114237007157,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.6180119306603,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.363051649094835,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.48241066399171,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.23462794500201,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.71261379740074,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.848517911630545,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 56.54854251824691,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 58.858269908602665,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 63.249086950914965,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 66.54472970673878,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 69.51288028332853,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 71.75717518943125,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 71.65152186368421,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 68.52833615318357,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 64.51103942488623,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 61.41013962568598,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 58.79419287149281,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 55.68671330771219,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.102383810390826,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.854275805309484,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 46.871764915034305,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 46.33804542208996,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 46.25617020840527,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.735317547593255,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.99993922886196,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.5444580206288,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.34950917983154,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 56.42479706519873,
+          "discoveredBy": {
+            "0": true
+          },
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 61.03566317682544,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 64.09292205672126,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 66.82607556023858,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 68.85963598515804,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 68.22761291312807,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 64.5908005764456,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 60.40194343636372,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 57.524815505178154,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "desert",
+          "elevation": 55.4316728100936,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 1,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.750718624752146,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 49.011080958409806,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.05264345230622,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.382289375980456,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.601263792325135,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.519175618379315,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.24551494726593,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.858325423413895,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 44.83196478958053,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.295809400453514,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.82871705615053,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 58.52492494787717,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 61.45500852248529,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 63.96343936150631,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 65.72372202694777,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 64.85858907500487,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 61.37996412243319,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.70754136519597,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.35395518946037,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.59407615507931,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.0743563017361,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.257398217639725,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.85834298733633,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.61807359537928,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.51949304589806,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.397009726300574,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.33869684067938,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.13807675190586,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.139358542531575,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.598475579287054,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.47216964480313,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.949541844291026,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 58.708124409639886,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 60.94135100841124,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 62.437859382538896,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "plains",
+          "elevation": 61.74116997672775,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 4,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 59.033693064999895,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 56.31271446061009,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.593562103739266,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.13335223334952,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.92065559030643,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.468484728181586,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 43.173064460097315,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.637258717387795,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.10204279056295,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 37.662992370584,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 37.44742787457274,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.07489795047464,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 40.700246760817315,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.651245721681136,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.100474268667696,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.96091219355598,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 56.2402595564556,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.890678123266994,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 58.95118357764978,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 58.624233486862465,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 57.00463397027256,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.35814714497778,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.10302646290891,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.796952775043295,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.06483199003726,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.427986750407804,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 44.771580378196745,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.2758791481913,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.324863417715264,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.49476773924715,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.058878242448344,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.531914121401066,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 40.79460830781106,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.071319993629324,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.07390748226269,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.996268216333256,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.42955682977239,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.059117562706426,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.37009790845215,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "grass_lowlands",
+          "elevation": 55.2676108187306,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 5,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 54.56191424918448,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.67180195180041,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.53170421024607,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.2986457846515,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.23483022985228,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.641582575828295,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.931318460085194,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.84276504437008,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 40.709235015832554,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.66377084238364,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.18044785443907,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.86921815878368,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.279174401930824,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 46.048436925895444,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.96586846835053,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.950905276574865,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.35177102079305,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.72275328810087,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.096357920097994,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.87898187914756,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.58526044060975,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.805054869771325,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 49.34466102997252,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.00513965865747,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.63504537304057,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.18225534324689,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.50931879692253,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 43.12257722632516,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.0514531109957,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.75398365146401,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.426633899188474,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 40.86375650024308,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 44.05138994891766,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.77837085341609,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 51.890243904282904,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.25739009457545,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.71827837767621,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 50.999992944331375,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 49.51932723180047,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.950409446134884,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 48.634643647967366,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.747932435089055,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.91783262003098,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 44.19231225036825,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 43.94558890809899,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 44.428725942323474,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 43.99761692441593,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.46772691172515,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 40.33758789624649,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.5196583830874,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 38.56375787937265,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.02321018236232,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.08052820252908,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 49.04040827377958,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.1203600838095,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 53.14549047121111,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 52.095845666585014,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 49.847787214715254,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.89144912305569,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 47.04311578035289,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 46.72591206595988,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.9479202584328,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 44.04171043246324,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.82408384618834,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.12009023090542,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.007937125529395,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 42.60585689156728,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 41.89558942001292,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 39.73778103533094,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 37.452301967888474,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 37.72325267174389,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "ocean",
+          "elevation": 40.88178054264095,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 45.29854151595949,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "river",
+          "elevation": 49.34251292075892,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 2,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 51.28869741555011,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 52.244238601979156,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 51.33214347167884,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 49.28640342640008,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 47.413410058520014,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 46.56173456767238,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 46.37168617777973,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 45.84395911943177,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 44.03010740591485,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 41.55417094570246,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 40.348694123665844,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 41.00167165004838,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 41.966321885480404,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 41.860456382705344,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 39.98425912774523,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 37.638021163985755,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 37.882977033764405,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 41.035587553296395,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 45.07618904904889,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        },
+        {
+          "type": "frozen_ocean",
+          "elevation": 48.706628944304015,
+          "discoveredBy": {},
+          "baseYield": {
+            "food": 0,
+            "production": 0
+          }
+        }
+      ],
+      "cities": [
+        {
+          "center": {
+            "x": 0,
+            "y": 7
+          },
+          "name": "Test City",
+          "civID": 0,
+          "tiles": [
+            {
+              "x": 0,
+              "y": 7
+            },
+            {
+              "x": 0,
+              "y": 7
+            },
+            {
+              "x": 1,
+              "y": 7
+            },
+            {
+              "x": 1,
+              "y": 6
+            },
+            {
+              "x": 0,
+              "y": 6
+            },
+            {
+              "x": 0,
+              "y": 8
+            },
+            {
+              "x": -1,
+              "y": 6
+            },
+            {
+              "x": -1,
+              "y": 7
+            }
+          ]
+        }
+      ],
+      "traders": []
+    },
+    "civs": {
+      "0": {
+        "units": [],
+        "turnActive": true,
+        "turnFinished": false
+      }
+    },
+    "civsCount": 1,
+    "leaderPool": {
+      "0": {
+        "id": 0,
+        "color": "#820000",
+        "textColor": "#ccc",
+        "secondaryColor": "#820000",
+        "name": "Rokun",
+        "civID": 0
+      },
+      "1": {
+        "id": 1,
+        "color": "#0a2ead",
+        "textColor": "#ccc",
+        "secondaryColor": "#0a2ead",
+        "name": "Azura",
+        "civID": null
+      },
+      "2": {
+        "id": 2,
+        "color": "#03a300",
+        "textColor": "#222",
+        "secondaryColor": "#03a300",
+        "name": "Vertos",
+        "civID": null
+      },
+      "3": {
+        "id": 3,
+        "color": "#bd9a02",
+        "textColor": "#222",
+        "secondaryColor": "#bd9a02",
+        "name": "Solei",
+        "civID": null
+      },
+      "4": {
+        "id": 4,
+        "color": "#560e8a",
+        "textColor": "#ccc",
+        "secondaryColor": "#560e8a",
+        "name": "Imperius",
+        "civID": null
+      },
+      "5": {
+        "id": 5,
+        "color": "#bd7400",
+        "textColor": "#333",
+        "secondaryColor": "#bd7400",
+        "name": "Baranog",
+        "civID": null
+      }
+    }
+  },
+  "players": {
+    "heine": {
+      "civID": 0
+    }
+  },
+  "playerCount": 1,
+  "metaData": {
+    "gameName": "no units test",
+    "playerCount": 1,
+    "playersConnected": 1
+  },
+  "hasStarted": true
+}
