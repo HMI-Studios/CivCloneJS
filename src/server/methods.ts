@@ -23,7 +23,7 @@ const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }) => {
 
 export const games: { [gameID: number] : Game } = {};
 
-const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
+const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed: number | null, gameName?: string }) => {
   const newID = Object.keys(games)[Object.keys(games).length - 1] + 1;
   games[newID] = new Game(
     new PerlinWorldGenerator(options.seed, mapOptions),
@@ -31,7 +31,7 @@ const createGame = (username: string, playerCount: number, mapOptions: MapOption
       playerCount,
       ownerName: username,
       gameName: options.gameName,
-      isManualSeed: 'seed' in options,
+      isManualSeed: options.seed !== null,
     }
   );
 };
@@ -126,11 +126,11 @@ const methods: {
     }
   },
 
-  createGame: (ws: WebSocket, playerCount: number, mapOptions: MapOptions, options: { seed?: number, gameName?: string }) => {
+  createGame: (ws: WebSocket, playerCount: number, mapOptions: MapOptions, options: { seed: number | null, gameName?: string }) => {
     const username = getUsername(ws);
     if (username && playerCount && mapOptions) {
       try {
-        createGame(username, playerCount, mapOptions, options ?? {});
+        createGame(username, playerCount, mapOptions, options);
       } catch (err) {
         sendTo(ws, {
           error: [

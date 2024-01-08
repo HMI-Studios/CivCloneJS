@@ -40,14 +40,13 @@ const world_1 = require("./world");
 const player_1 = require("./player");
 class Game {
     constructor(generator, options) {
+        var _a;
         if (!(generator && options)) {
             // If no arguments are provided, this is part of a call to Game.import
             return;
         }
         const { playerCount, ownerName } = options;
-        let { gameName } = options;
-        if (!gameName)
-            gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
+        const gameName = (_a = options.gameName) !== null && _a !== void 0 ? _a : (ownerName ? `${ownerName}'s game` : 'Untitled Game');
         let tries = 0;
         const maxTries = options.isManualSeed ? 1 : 10;
         while (!this.world && !(tries > maxTries)) {
@@ -57,7 +56,7 @@ class Game {
             }
             catch (err) {
                 if (err.type === 'mapError') {
-                    generator.reseed();
+                    generator.reseed(null);
                     console.warn(`Retrying map generation.`);
                     if (tries + 1 > maxTries) {
                         console.error('Map generation failed.');
@@ -68,8 +67,6 @@ class Game {
                             reason: err,
                         };
                     }
-                    else
-                        continue;
                 }
             }
         }
@@ -245,12 +242,10 @@ class Game {
             delete freeCivs[this.players[player].civID];
         }
         const freeIDs = Object.keys(freeCivs).map(Number);
-        if (freeIDs.length > 0) {
-            return Math.min(...freeIDs);
-        }
-        else {
+        if (!freeIDs.length) {
             return null;
         }
+        return Math.min(...freeIDs);
     }
     forEachCivID(callback) {
         for (let civID = 0; civID < this.playerCount; civID++) {

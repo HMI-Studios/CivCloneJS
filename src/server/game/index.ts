@@ -38,7 +38,7 @@ export class Game {
         this.world = new World(generator.generate(), playerCount);
       } catch (err) {
         if (err.type === 'mapError') {
-          generator.reseed();
+          generator.reseed(null);
           console.warn(`Retrying map generation.`)
           if (tries+1 > maxTries) {
             console.error('Map generation failed.');

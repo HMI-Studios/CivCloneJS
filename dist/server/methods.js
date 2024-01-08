@@ -19,7 +19,7 @@ const createGame = (username, playerCount, mapOptions, options) => {
         playerCount,
         ownerName: username,
         gameName: options.gameName,
-        isManualSeed: 'seed' in options,
+        isManualSeed: options.seed !== null,
     });
 };
 const getConnData = (ws) => {
@@ -53,9 +53,7 @@ const getGameID = (ws) => {
         });
         throw 'Invalid Game ID';
     }
-    else {
-        return gameID;
-    }
+    return gameID;
 };
 const executeAction = (ws, action, ...args) => {
     try {
@@ -110,7 +108,7 @@ const methods = {
         const username = getUsername(ws);
         if (username && playerCount && mapOptions) {
             try {
-                createGame(username, playerCount, mapOptions, options !== null && options !== void 0 ? options : {});
+                createGame(username, playerCount, mapOptions, options);
             }
             catch (err) {
                 sendTo(ws, {

@@ -47,13 +47,13 @@ export class PerlinWorldGenerator {
   private seaLevel: number;
   private biomes: { [key: string]: Biome }
 
-  constructor(seed: number | undefined, { width, height }: MapOptions) {
+  constructor(seed: number | null, { width, height }: MapOptions) {
     this.width = width;
     this.height = height;
     this.reseed(seed);
   }
 
-  reseed(seed?: number): void {
+  reseed(seed: number | null): void {
     this.seed = seed ?? Math.floor(Math.random() * 9007199254740991);
     this.random = new Random(this.seed);
     this.simplex = new SimplexNoise(this.random.randFloat);
