@@ -13,9 +13,7 @@ export class Player {
   }
 
   export() {
-    return {
-      civID: this.civID,
-    };
+    return { civID: this.civID };
   }
 
   static import(data: any): Player {
@@ -27,9 +25,7 @@ export class Player {
   }
 
   getData(): PlayerData {
-    return {
-      civID: this.civID
-    };
+    return { civID: this.civID };
   }
   
   reset(connection: WebSocket | null): void {

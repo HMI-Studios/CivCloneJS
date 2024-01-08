@@ -66,9 +66,9 @@ const getGameID = (ws: WebSocket): number => {
       ],
     });
     throw 'Invalid Game ID';
-  } else {
-    return gameID;
   }
+
+  return gameID;
 };
 
 export const executeAction = (ws: WebSocket, action: string, ...args: unknown[]) => {

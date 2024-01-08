@@ -15,15 +15,11 @@ export class Random {
   }
 
   public randFloat(from?: number, to?: number): number {
-    if (from !== undefined) {
-      if (to !== undefined) {
-        return this._randNumber(from, to);
-      } else {
-        return this._randNumber(0, from);
-      }
-    } else {
-      return this._randNumber(0, 1);
+    if (from !== undefined && to === undefined) {
+      return this._randNumber(0, from);
     }
+
+    return this._randNumber(from ?? 0, from ?? 1);
   }
 
   public randInt(from?: number, to?: number): number {
