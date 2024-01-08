@@ -345,9 +345,9 @@ export class KnowledgeBucket {
         if (!(name in knowledges)) return false;
       }
       return true;
-    } else {
-      return this.source.hasKnowledges(knowledgeNames);
     }
+
+    return this.source.hasKnowledges(knowledgeNames);
   }
 
   /**

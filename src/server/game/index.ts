@@ -28,8 +28,7 @@ export class Game {
       return
     }
     const { playerCount, ownerName } = options;
-    let { gameName } = options;
-    if (!gameName) gameName = ownerName ? `${ownerName}'s game` : 'Untitled Game';
+    const gameName = options.gameName ?? (ownerName ? `${ownerName}'s game` : 'Untitled Game');
 
     let tries = 0;
     const maxTries = options.isManualSeed ? 1 : 10;
@@ -50,7 +49,6 @@ export class Game {
               reason: err,
             };
           }
-          else continue;
         }
       }
     }
@@ -102,7 +100,7 @@ export class Game {
     await fs.writeFile(path.join(SAVE_LOCATION, `${this.metaData.gameName}.json`), JSON.stringify(this.export()));
   }
 
-  static async load(saveFile): Promise<Game> {
+  static async load(saveFile: string): Promise<Game> {
     const data = await fs.readFile(path.join(SAVE_LOCATION, `${saveFile}.json`), { encoding: 'utf8' });
     return Game.import(JSON.parse(data));
   }
@@ -252,11 +250,11 @@ export class Game {
 
     const freeIDs = Object.keys(freeCivs).map(Number);
 
-    if (freeIDs.length > 0) {
-      return Math.min(...freeIDs);
-    } else {
+    if (!freeIDs.length) {
       return null;
     }
+
+    return Math.min(...freeIDs);
   }
 
   forEachCivID(callback: (civID: number) => void): void {

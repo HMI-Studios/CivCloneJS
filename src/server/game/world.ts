@@ -28,6 +28,7 @@ export class World {
     if (!(map && civsCount)) {
       return
     }
+
     this.random = new Random(map.seed);
     this.map = map;
 
@@ -167,20 +168,21 @@ export class World {
   // leaders, civs
   setCivLeader(civID: number, leaderID: number): boolean {
     const leader = this.leaderPool[leaderID];
-    if (leader && !leader.isTaken()) {
-      if (this.civs[civID].leader) {
-        this.civs[civID].leader?.unselect();
-      }
-      this.civs[civID].leader = leader;
-      leader.select(civID);
-      for (const unit of this.civs[civID].getUnits()) {
-        unit.knowledge = {};
-        unit.updateKnowledge(leader.startingKnowledge);
-      }
-      return true;
-    } else {
+    if (!leader || leader.isTaken()) {
       return false;
     }
+
+    if (this.civs[civID].leader) {
+      this.civs[civID].leader?.unselect();
+    }
+    this.civs[civID].leader = leader;
+    leader.select(civID);
+    for (const unit of this.civs[civID].getUnits()) {
+      unit.knowledge = {};
+      unit.updateKnowledge(leader.startingKnowledge);
+    }
+
+    return true;
   }
 
   // civs
