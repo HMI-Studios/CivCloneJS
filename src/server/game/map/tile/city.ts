@@ -142,7 +142,7 @@ export class BarbarianCamp extends UnitController {
   }
 
   handleErrands() {
-    const camp = this.map.getTile(this.center).improvement as Improvement;
+    const camp = this.map.getTileOrThrow(this.center).improvement as Improvement;
     if (camp.errand) return;
 
     if (this.danger) {
@@ -184,7 +184,7 @@ export class BarbarianCamp extends UnitController {
     super.turn(world, map);
 
     const neighborhoodCoords = map.getNeighborsCoords(this.center, 5);
-    const neighborhoodTiles = neighborhoodCoords.map(coords => map.getTile(coords));
+    const neighborhoodTiles = neighborhoodCoords.map(coords => map.getTileOrThrow(coords));
     this.danger = false;
     for (const tile of neighborhoodTiles) {
       if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
@@ -212,7 +212,7 @@ export class BarbarianCamp extends UnitController {
           delete unit.automationData.wanderTarget;
         }
         visibleCoords.forEach(coords => {
-          const tile = map.getTile(coords);
+          const tile = map.getTileOrThrow(coords);
           if (tile.improvement) {
             if (tile.improvement.type === 'barbarian_camp') {
               unit.automationData.turnsSinceCampSpotted = 0;
@@ -243,7 +243,7 @@ export class BarbarianCamp extends UnitController {
           }
         } else {
           visibleCoords.forEach(coords => {
-            const tile = map.getTile(coords);
+            const tile = map.getTileOrThrow(coords);
             if (!unit.automationData.target) {
               if (tile.unit?.cityID === this.id && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
                 unit.automationData.target = tile.unit.automationData.settleTarget;
@@ -259,7 +259,7 @@ export class BarbarianCamp extends UnitController {
               arrayIncludesCoords(getAdjacentCoords(unit.coords), unit.automationData.target)
             )
           ) {
-            const tile = map.getTile(unit.automationData.target);
+            const tile = map.getTileOrThrow(unit.automationData.target);
             if (!canSeeCamp && map.canSettleOn(tile)) {
               map.newBarbarianCampAt(unit.automationData.target);
               return world.removeUnit(unit);
@@ -274,7 +274,7 @@ export class BarbarianCamp extends UnitController {
           unit.automationData.target = neighborhoodCoords[world.random.randInt(0, neighborhoodCoords.length - 1)];
         }
         visibleCoords.forEach(coords => {
-          const tile = map.getTile(coords);
+          const tile = map.getTileOrThrow(coords);
           if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
             unit.automationData.target = coords;
             return;

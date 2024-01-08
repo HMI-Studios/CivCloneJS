@@ -10,6 +10,7 @@ const trade_1 = require("./trade");
 const yield_1 = require("./tile/yield");
 const errand_1 = require("./tile/errand");
 const knowledge_1 = require("./tile/knowledge");
+const error_1 = require("../../utils/error");
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE?
 const TRADER_SPEED = 1;
 const TRADER_CAPACITY = {
@@ -85,6 +86,12 @@ class Map {
     getTile(coords) {
         return this.tiles[this.pos(coords)];
     }
+    getTileOrThrow(coords) {
+        const tile = this.getTile(coords);
+        if (!tile)
+            throw new error_1.InvalidCoordsError(`Bad coords: ${(0, utils_1.coordsRepr)(coords)}`);
+        return tile;
+    }
     setTile(coords, tile) {
         this.tiles[this.pos(coords)] = tile;
     }
@@ -96,23 +103,33 @@ class Map {
         }
     }
     getNeighborsRecurse(coords, r, tileSet, coordList, rangeMap, filter) {
+        if (r < 0)
+            return;
         const tile = this.getTile(coords);
-        if (r >= 0 && tile) {
-            if (!tileSet.has(tile)) {
-                if (!filter || filter(tile, coords)) {
-                    tileSet.add(tile);
-                    coordList.push(coords);
-                    rangeMap[this.pos(coords)] = r;
-                }
+        if (!tile)
+            return;
+        if (!tileSet.has(tile)) {
+            if (!filter || filter(tile, coords)) {
+                tileSet.add(tile);
+                coordList.push(coords);
+                rangeMap[this.pos(coords)] = r;
             }
-            for (const coord of (0, utils_1.getAdjacentCoords)(coords)) {
-                const pos = this.pos(coord);
-                if (!rangeMap[pos] || rangeMap[pos] < r - 1) {
-                    this.getNeighborsRecurse(coord, r - 1, tileSet, coordList, rangeMap, filter);
-                }
+        }
+        for (const coord of (0, utils_1.getAdjacentCoords)(coords)) {
+            const pos = this.pos(coord);
+            if (!rangeMap[pos] || rangeMap[pos] < r - 1) {
+                this.getNeighborsRecurse(coord, r - 1, tileSet, coordList, rangeMap, filter);
             }
         }
     }
+    /**
+     *
+     * @param coords
+     * @param r
+     * @param options
+     * @returns A list of coords. Since the internal _getNeighborsRecurse function fetches the tile for each coord
+     * and validates it, all coords in this list are guaranteed to be on the map.
+     */
     getNeighborsCoords(coords, r = 1, options) {
         const coordList = [];
         let filter = options === null || options === void 0 ? void 0 : options.filter;
@@ -131,6 +148,9 @@ class Map {
             return 1;
         const atTile = this.getTile(atPos);
         const adjTile = this.getTile(adjPos);
+        if (!(atTile && adjTile)) {
+            throw new error_1.InvalidCoordsError(`Error calculating movement cost from ${(0, utils_1.coordsRepr)(atPos)} to ${(0, utils_1.coordsRepr)(adjPos)}: one or both of the given coords are invalid.`);
+        }
         // PATH BLOCKING LOGIC HERE
         // if (tile.unit && tile.unit.civID === this.player.civID) return Infinity;
         if (adjTile.hasBlockingWall((0, utils_1.getDirection)(adjPos, atPos)))
@@ -162,46 +182,54 @@ class Map {
         return [paths, dst];
     }
     getVisibleTilesRecurse(coords, maxElevation, slope, r, direction, coordsArray, tileSet, stepsUntilSpread, stepLength) {
+        if (r <= 0)
+            return;
         const tile = this.getTile(coords);
-        if (r > 0) {
-            if (!tileSet.has(tile) && tile.getTotalElevation() >= maxElevation) {
-                coordsArray.push(coords);
-                tileSet.add(tile);
+        if (!tile)
+            return;
+        if (!tileSet.has(tile) && tile.getTotalElevation() >= maxElevation) {
+            coordsArray.push(coords);
+            tileSet.add(tile);
+        }
+        if (stepsUntilSpread === 0) {
+            const newLeftCoords = (0, utils_1.getCoordInDirection)(coords, direction - 1);
+            const newLeftTile = this.getTile(newLeftCoords);
+            if (newLeftTile) {
+                const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
             }
-            if (stepsUntilSpread === 0) {
-                const newLeftCoords = (0, utils_1.getCoordInDirection)(coords, direction - 1);
-                const newLeftTile = this.getTile(newLeftCoords);
-                if (newLeftTile) {
-                    const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
-                    this.getVisibleTilesRecurse(newLeftCoords, maxElevation + slope, Math.max(slope, newLeftSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
-                }
-                const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
-                const newTile = this.getTile(newCoords);
-                if (newTile) {
-                    const newSlope = newTile.getTotalElevation() - maxElevation;
-                    this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
-                }
-                const newRightCoords = (0, utils_1.getCoordInDirection)(coords, direction + 1);
-                const newRightTile = this.getTile(newRightCoords);
-                if (newRightTile) {
-                    const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
-                    this.getVisibleTilesRecurse(newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
-                }
+            const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
+            const newTile = this.getTile(newCoords);
+            if (newTile) {
+                const newSlope = newTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
             }
-            else {
-                const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
-                const newTile = this.getTile(newCoords);
-                if (newTile) {
-                    const newSlope = newTile.getTotalElevation() - maxElevation;
-                    this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
-                }
+            const newRightCoords = (0, utils_1.getCoordInDirection)(coords, direction + 1);
+            const newRightTile = this.getTile(newRightCoords);
+            if (newRightTile) {
+                const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newRightCoords, maxElevation + slope, Math.max(slope, newRightSlope), r - 1, direction, coordsArray, tileSet, stepLength, stepLength);
+            }
+        }
+        else {
+            const newCoords = (0, utils_1.getCoordInDirection)(coords, direction);
+            const newTile = this.getTile(newCoords);
+            if (newTile) {
+                const newSlope = newTile.getTotalElevation() - maxElevation;
+                this.getVisibleTilesRecurse(newCoords, maxElevation + slope, Math.max(slope, newSlope), r - 1, direction, coordsArray, tileSet, stepsUntilSpread - 1, stepLength);
             }
         }
     }
+    /**
+     *
+     * @param unit
+     * @param range
+     * @returns A list of coords visible to the unit. These coords are all guaranteed to be on the map.
+     */
     getVisibleTilesCoords(unit, range) {
         const coordsArray = [];
         const tileSet = new Set();
-        const tile = this.getTile(unit.coords);
+        const tile = this.getTileOrThrow(unit.coords);
         coordsArray.push(unit.coords);
         tileSet.add(tile);
         for (let direction = 0; direction < 6; direction++) {
@@ -210,7 +238,7 @@ class Map {
             if (!newTile)
                 continue;
             const slope = newTile.getTotalElevation() - tile.getTotalElevation();
-            this.getVisibleTilesRecurse(newCoords, this.getTile(unit.coords).getTotalElevation() + slope, slope, range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
+            this.getVisibleTilesRecurse(newCoords, tile.getTotalElevation() + slope, slope, range !== null && range !== void 0 ? range : unit.visionRange, direction, coordsArray, tileSet, 0, 1);
         }
         return coordsArray;
     }
@@ -230,7 +258,7 @@ class Map {
     }
     setTileOwner(coords, owner, overwrite) {
         var _a;
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (tile.owner) {
             if (!overwrite)
                 return;
@@ -246,16 +274,14 @@ class Map {
         owner.addTile(coords);
     }
     getCivTile(civID, tile) {
-        if (tile.discoveredBy[civID]) {
-            if (tile.visibleTo[civID]) {
-                return tile.getVisibleData(civID);
-            }
-            else {
-                return tile.getDiscoveredData();
-            }
+        if (!tile.discoveredBy[civID]) {
+            return null;
+        }
+        if (tile.visibleTo[civID]) {
+            return tile.getVisibleData(civID);
         }
         else {
-            return null;
+            return tile.getDiscoveredData();
         }
     }
     getCivMap(civID) {
@@ -267,7 +293,7 @@ class Map {
         return this.traders.filter((trader) => trader.civID === civID).map(trader => trader.getData());
     }
     setTileVisibility(civID, coords, visible) {
-        this.getTile(coords).setVisibility(civID, visible);
+        this.getTileOrThrow(coords).setVisibility(civID, visible);
         this.tileUpdate(coords);
     }
     isInBounds({ x, y }) {
@@ -275,7 +301,7 @@ class Map {
     }
     tileUpdate(coords) {
         // if (coords.x === null && coords.y === null) return;
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         this.updates.push((civID) => ['tileUpdate', [coords, this.getCivTile(civID, tile)]]);
     }
     moveUnitTo(unit, coords) {
@@ -285,10 +311,10 @@ class Map {
             if (unit.civID !== undefined)
                 this.setTileVisibility(unit.civID, visibleCoords, false);
         }
-        this.getTile(unit.coords).setUnit(undefined);
+        this.getTileOrThrow(unit.coords).setUnit(undefined);
         this.tileUpdate(unit.coords);
         unit.coords = coords;
-        this.getTile(coords).setUnit(unit);
+        this.getTileOrThrow(coords).setUnit(unit);
         this.tileUpdate(coords);
         // mark tiles now visible by unit as seen
         const newVisible = this.getVisibleTilesCoords(unit);
@@ -349,17 +375,17 @@ class Map {
         const sourcePos = oldPath[0];
         const sinkPos = oldPath[oldPath.length - 1];
         const [pathTree, dst] = this.getPathTree(sinkPos, range, trader.movementClass);
-        const sourceTile = this.getTile(sourcePos);
-        if (sourceTile.improvement) {
-            const route = this.findRoute(pathTree, dst, this.pos(sourcePos), sinkPos);
-            if (!route)
-                return;
-            const sinkTile = this.getTile(sinkPos);
-            if (!sinkTile.improvement)
-                return;
-            this.addTrader(new trade_1.Trader(trader.civID, route, sourceTile.improvement, sinkTile.improvement, TRADER_SPEED, TRADER_CAPACITY, // TODO - this is not correct, but it will work for now.
-            trader.movementClass));
-        }
+        const sourceTile = this.getTileOrThrow(sourcePos);
+        if (!sourceTile.improvement)
+            return;
+        const sinkTile = this.getTileOrThrow(sinkPos);
+        if (!sinkTile.improvement)
+            return;
+        const route = this.findRoute(pathTree, dst, this.pos(sourcePos), sinkPos);
+        if (!route)
+            return;
+        this.addTrader(new trade_1.Trader(trader.civID, route, sourceTile.improvement, sinkTile.improvement, TRADER_SPEED, TRADER_CAPACITY, // TODO - this is not correct, but it will work for now.
+        trader.movementClass));
     }
     createTradeRoutes(civID, coords, sink, requirement, range = 5, mode = 0) {
         var _a;
@@ -390,7 +416,7 @@ class Map {
             tile.type !== 'river');
     }
     newBarbarianCampAt(coords) {
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (!this.canSettleOn(tile))
             return null;
         const cityID = this.cities.length;
@@ -401,7 +427,7 @@ class Map {
         return cityID;
     }
     settleCityAt(coords, name, civID, settler) {
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (!this.canSettleOn(tile))
             return false;
         const cityID = this.cities.length;
@@ -420,7 +446,7 @@ class Map {
     }
     startConstructionAt(coords, improvementType, ownerID, builder) {
         var _a;
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
         tile.improvement = new improvement_1.Improvement('worksite', tile.baseYield);
@@ -438,7 +464,7 @@ class Map {
     }
     buildImprovementAt(coords, type, ownerID, knowledges) {
         var _a;
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== ownerID)
             return;
         if (!this.canBuildOn(tile))
@@ -448,7 +474,7 @@ class Map {
     }
     trainUnitAt(coords, unitType, ownerID) {
         var _a;
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === ownerID && tile.improvement) {
             if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
                 if (!tile.improvement.errand) {
@@ -467,7 +493,7 @@ class Map {
     }
     researchKnowledgeAt(coords, knowledgeName, ownerID) {
         var _a;
-        const tile = this.getTile(coords);
+        const tile = this.getTileOrThrow(coords);
         if (((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) === ownerID && tile.improvement) {
             // Note that this check technically allows the client to "cheat": research errands can begin without
             // the prerequesites having been fulfilled. These errands will simply do nothing when completed.

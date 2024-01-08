@@ -290,9 +290,7 @@ class KnowledgeBucket {
             }
             return true;
         }
-        else {
-            return this.source.hasKnowledges(knowledgeNames);
-        }
+        return this.source.hasKnowledges(knowledgeNames);
     }
     /**
      *

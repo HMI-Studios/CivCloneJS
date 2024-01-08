@@ -329,10 +329,10 @@ const methods: {
       const world = game.world;
       const map = world.map;
 
-      const src = map.getTile(srcCoords);
+      const src = map.getTileOrThrow(srcCoords);
       const unit = src.unit;
 
-      const target = map.getTile(targetCoords);
+      const target = map.getTileOrThrow(targetCoords);
 
       if ( !unit || unit.civID !== civID ) {
         game.sendUpdates();
@@ -372,11 +372,11 @@ const methods: {
       const world = game.world;
       const map = world.map;
 
-      let src = map.getTile(srcCoords);
+      let src = map.getTileOrThrow(srcCoords);
       let finalCoords = srcCoords;
 
       for (const dstCoords of path) {
-        const dst = map.getTile(dstCoords);
+        const dst = map.getTileOrThrow(dstCoords);
 
         const unit = src.unit;
 
@@ -410,7 +410,7 @@ const methods: {
       if (attack) {
         const unit = src.unit;
         if (unit) {
-          const target = map.getTile(path[path.length - 1]);
+          const target = map.getTileOrThrow(path[path.length - 1]);
           if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
             world.meleeCombat(unit, target.unit);
             unit.movement = 0;
@@ -467,7 +467,7 @@ const methods: {
 
     if (game) {
       const map = game.world.map;
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       if (tile.owner?.civID === civID && tile.unit && map.canBuildOn(tile)) {
         game.sendToCiv(civID, {
           update: [
@@ -488,7 +488,7 @@ const methods: {
     if (game) {
       const map = game.world.map;
 
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID && !tile.improvement) {
@@ -508,7 +508,7 @@ const methods: {
     if (game) {
       const map = game.world.map;
 
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID) {
@@ -579,7 +579,7 @@ const methods: {
 
     if (game) {
       const map = game.world.map;
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       if (tile.owner?.civID === civID && tile.improvement) {
         game.sendToCiv(civID, {
           update: [
@@ -620,7 +620,7 @@ const methods: {
 
     if (game) {
       const map = game.world.map;
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       if (tile.owner?.civID === civID && tile.improvement) {
         game.sendToCiv(civID, {
           update: [
@@ -658,7 +658,7 @@ const methods: {
     if (game) {
       const map = game.world.map;
 
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       const unit = tile.unit;
       if (unit && unit.civID === civID) {
         const tileKnowledgeMap = tile.improvement?.knowledge?.getKnowledgeMap();
@@ -682,7 +682,7 @@ const methods: {
     if (game) {
       const map = game.world.map;
 
-      const tile = map.getTile(coords);
+      const tile = map.getTileOrThrow(coords);
       const unit = tile.unit;
       if (unit && unit.civID === civID && unit.movement) {
         unit.setCloak(cloaked);

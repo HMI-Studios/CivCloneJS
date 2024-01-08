@@ -38,6 +38,7 @@ const path = __importStar(require("path"));
 const config_1 = require("../config");
 const world_1 = require("./world");
 const player_1 = require("./player");
+const error_1 = require("../utils/error");
 class Game {
     constructor(generator, options) {
         var _a;
@@ -55,19 +56,16 @@ class Game {
                 this.world = new world_1.World(generator.generate(), playerCount);
             }
             catch (err) {
-                if (err.type === 'mapError') {
+                if (err instanceof error_1.MapError) {
                     generator.reseed(null);
                     console.warn(`Retrying map generation.`);
                     if (tries + 1 > maxTries) {
                         console.error('Map generation failed.');
-                        throw {
-                            type: 'mapError',
-                            code: 'generationFailed',
-                            msg: `Could not generate map! (gave up after ${tries} tries)`,
-                            reason: err,
-                        };
+                        throw new error_1.GenerationFailed(`Could not generate map! (gave up after ${tries} tries)`);
                     }
                 }
+                else
+                    throw err;
             }
         }
         this.players = {};

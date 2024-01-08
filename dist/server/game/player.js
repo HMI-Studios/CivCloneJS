@@ -8,9 +8,7 @@ class Player {
         this.connection = connection;
     }
     export() {
-        return {
-            civID: this.civID,
-        };
+        return { civID: this.civID };
     }
     static import(data) {
         return new Player(data.civID, null);
@@ -19,9 +17,7 @@ class Player {
         return this.connection === null;
     }
     getData() {
-        return {
-            civID: this.civID
-        };
+        return { civID: this.civID };
     }
     reset(connection) {
         this.ready = false;

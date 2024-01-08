@@ -3,11 +3,12 @@ import { MovementClass, PromotionClass, Unit } from './tile/unit';
 import { BarbarianCamp, City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
-import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection, getDirection } from '../../utils';
+import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection, getDirection, coordsRepr } from '../../utils';
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandType } from './tile/errand';
 import { KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
+import { InvalidCoordsError } from '../../utils/error';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE?
 const TRADER_SPEED = 1;
@@ -107,6 +108,12 @@ export class Map {
     return this.tiles[this.pos(coords)];
   }
 
+  getTileOrThrow(coords: Coords): Tile {
+    const tile = this.getTile(coords);
+    if (!tile) throw new InvalidCoordsError(`Bad coords: ${coordsRepr(coords)}`);
+    return tile;
+  }
+
   setTile(coords: Coords, tile: Tile): void {
     this.tiles[this.pos(coords)] = tile;
   }
@@ -149,6 +156,14 @@ export class Map {
     }
   }
 
+  /**
+   * 
+   * @param coords 
+   * @param r 
+   * @param options
+   * @returns A list of coords. Since the internal _getNeighborsRecurse function fetches the tile for each coord
+   * and validates it, all coords in this list are guaranteed to be on the map.
+   */
   getNeighborsCoords(coords: Coords, r = 1, options?: {
     filter?: (tile: Tile, coords: Coords) => boolean,
     excludeCenter?: boolean,
@@ -171,6 +186,11 @@ export class Map {
 
     const atTile = this.getTile(atPos);
     const adjTile = this.getTile(adjPos);
+    if (!(atTile && adjTile)) {
+      throw new InvalidCoordsError(
+        `Error calculating movement cost from ${coordsRepr(atPos)} to ${coordsRepr(adjPos)}: one or both of the given coords are invalid.`
+      );
+    }
     
     // PATH BLOCKING LOGIC HERE
     // if (tile.unit && tile.unit.civID === this.player.civID) return Infinity;
@@ -273,11 +293,17 @@ export class Map {
     }
   }
 
+  /**
+   * 
+   * @param unit 
+   * @param range 
+   * @returns A list of coords visible to the unit. These coords are all guaranteed to be on the map.
+   */
   getVisibleTilesCoords(unit: Unit, range?: number): Coords[] {
     const coordsArray: Coords[] = [];
     const tileSet: Set<Tile> = new Set();
 
-    const tile = this.getTile(unit.coords);
+    const tile = this.getTileOrThrow(unit.coords);
 
     coordsArray.push(unit.coords);
     tileSet.add(tile);
@@ -289,7 +315,7 @@ export class Map {
 
       this.getVisibleTilesRecurse(
         newCoords,
-        this.getTile(unit.coords).getTotalElevation() + slope,
+        tile.getTotalElevation() + slope,
         slope,
         range ?? unit.visionRange,
         direction,
@@ -317,7 +343,7 @@ export class Map {
   }
 
   setTileOwner(coords: Coords, owner: City, overwrite: boolean): void {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
     if (tile.owner) {
       if (!overwrite) return;
       tile.owner?.removeTile(coords);
@@ -355,7 +381,7 @@ export class Map {
   }
 
   setTileVisibility(civID: number, coords: Coords, visible: boolean) {
-    this.getTile(coords).setVisibility(civID, visible);
+    this.getTileOrThrow(coords).setVisibility(civID, visible);
     this.tileUpdate(coords);
   }
 
@@ -363,9 +389,9 @@ export class Map {
     return mod(x, this.width) >= 0 && mod(x, this.width) < this.width && y >= 0 && y < this.height;
   }
 
-  tileUpdate(coords: Coords) {
+  tileUpdate(coords: Coords): void {
     // if (coords.x === null && coords.y === null) return;
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
     this.updates.push( (civID: number) => ['tileUpdate', [ coords, this.getCivTile(civID, tile) ]] );
   }
 
@@ -376,10 +402,10 @@ export class Map {
       if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, false);
     }
 
-    this.getTile(unit.coords).setUnit(undefined);
+    this.getTileOrThrow(unit.coords).setUnit(undefined);
     this.tileUpdate(unit.coords);
     unit.coords = coords;
-    this.getTile(coords).setUnit(unit);
+    this.getTileOrThrow(coords).setUnit(unit);
     this.tileUpdate(coords);
 
     // mark tiles now visible by unit as seen
@@ -442,24 +468,23 @@ export class Map {
     const sourcePos = oldPath[0];
     const sinkPos = oldPath[oldPath.length - 1];
     const [pathTree, dst] = this.getPathTree(sinkPos, range, trader.movementClass);
-    const sourceTile = this.getTile(sourcePos);
-    if (sourceTile.improvement) {
-      const route = this.findRoute(pathTree, dst, this.pos(sourcePos), sinkPos);
-      if (!route) return;
-      const sinkTile = this.getTile(sinkPos);
-      if (!sinkTile.improvement) return;
-      this.addTrader(
-        new Trader(
-          trader.civID,
-          route,
-          sourceTile.improvement,
-          sinkTile.improvement,
-          TRADER_SPEED,
-          TRADER_CAPACITY, // TODO - this is not correct, but it will work for now.
-          trader.movementClass
-        )
-      );
-    }
+    const sourceTile = this.getTileOrThrow(sourcePos);
+    if (!sourceTile.improvement) return;
+    const sinkTile = this.getTileOrThrow(sinkPos);
+    if (!sinkTile.improvement) return;
+    const route = this.findRoute(pathTree, dst, this.pos(sourcePos), sinkPos);
+    if (!route) return;
+    this.addTrader(
+      new Trader(
+        trader.civID,
+        route,
+        sourceTile.improvement,
+        sinkTile.improvement,
+        TRADER_SPEED,
+        TRADER_CAPACITY, // TODO - this is not correct, but it will work for now.
+        trader.movementClass
+      )
+    );
   }
 
   createTradeRoutes(civID: number, coords: Coords, sink: Improvement, requirement: YieldParams, range = 5, mode = 0): void {
@@ -491,7 +516,7 @@ export class Map {
   }
 
   newBarbarianCampAt(coords: Coords): number | null {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
     if (!this.canSettleOn(tile)) return null;
 
     const cityID = this.cities.length;
@@ -505,7 +530,7 @@ export class Map {
   }
 
   settleCityAt(coords: Coords, name: string, civID: number, settler: Unit): boolean {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
     if (!this.canSettleOn(tile)) return false;
 
     const cityID = this.cities.length;
@@ -528,7 +553,7 @@ export class Map {
   }
 
   startConstructionAt(coords: Coords, improvementType: string, ownerID: number, builder: Unit): void {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
     if (tile.owner?.civID !== ownerID) return;
     
     tile.improvement = new Improvement('worksite', tile.baseYield);
@@ -550,7 +575,7 @@ export class Map {
   }
 
   buildImprovementAt(coords: Coords, type: string, ownerID?: number, knowledges?: KnowledgeMap): void {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
     if (tile.owner?.civID !== ownerID) return;
     if (!this.canBuildOn(tile)) return;
 
@@ -560,7 +585,7 @@ export class Map {
   }
 
   trainUnitAt(coords: Coords, unitType: string, ownerID: number): void {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
 
     if (tile.owner?.civID === ownerID && tile.improvement) {
       if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
@@ -581,7 +606,7 @@ export class Map {
   }
 
   researchKnowledgeAt(coords: Coords, knowledgeName: string, ownerID: number): void {
-    const tile = this.getTile(coords);
+    const tile = this.getTileOrThrow(coords);
 
     if (tile.owner?.civID === ownerID && tile.improvement) {
 

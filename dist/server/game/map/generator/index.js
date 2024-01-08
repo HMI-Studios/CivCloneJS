@@ -203,7 +203,7 @@ class PerlinWorldGenerator {
                 i++;
             }
         }
-        console.log(`Map generation completed in ${new Date().getTime() - startTime}ms with seed ${this.seed}.`);
+        console.log(`${this.width}x${this.height} map generation completed in ${new Date().getTime() - startTime}ms with seed ${this.seed}.`);
         return map;
     }
 }

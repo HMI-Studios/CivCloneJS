@@ -7,6 +7,7 @@ import { World } from './world';
 import { Player } from './player';
 import { EventMsg, PlayerData } from '../utils';
 import { PerlinWorldGenerator } from './map/generator';
+import { GenerationFailed, MapError } from '../utils/error';
 
 interface MetaData {
   gameName: string,
@@ -37,19 +38,14 @@ export class Game {
       try {
         this.world = new World(generator.generate(), playerCount);
       } catch (err) {
-        if (err.type === 'mapError') {
+        if (err instanceof MapError) {
           generator.reseed(null);
           console.warn(`Retrying map generation.`)
           if (tries+1 > maxTries) {
             console.error('Map generation failed.');
-            throw {
-              type: 'mapError',
-              code: 'generationFailed',
-              msg: `Could not generate map! (gave up after ${tries} tries)`,
-              reason: err,
-            };
+            throw new GenerationFailed(`Could not generate map! (gave up after ${tries} tries)`);
           }
-        }
+        } else throw err;
       }
     }
 

@@ -36,8 +36,8 @@ class Trader {
      */
     static import(map, { civID, path, speed, length, expired, turnsElapsed, storage, movementClass }) {
         // This is safe, since a Route is guaranteed to always start at the source and end at the sink.
-        const source = map.getTile(path[0]);
-        const sink = map.getTile(path[path.length - 1]);
+        const source = map.getTileOrThrow(path[0]);
+        const sink = map.getTileOrThrow(path[path.length - 1]);
         if (source.improvement && sink.improvement) {
             const capacity = storage.capacity;
             delete storage.capacity;

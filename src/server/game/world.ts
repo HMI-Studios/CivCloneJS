@@ -4,6 +4,7 @@ import { Civilization, CivilizationData } from './civilization';
 import { Event } from '../utils';
 import { Random } from '../utils/random';
 import { Leader, LeaderData, leaderTemplates } from './leader';
+import { NoStartLocation } from '../utils/error';
 
 export interface Coords {
   x: number;
@@ -67,7 +68,6 @@ export class World {
   }
 
   getStartLocaltion(callback: (coords: [Coords, Coords, Coords]) => void): void {
-    let start_location_successful = false;
     for (let i = 0; i < 1000; i++) {
       const x = this.random.randInt(0, this.map.width-1);
       const y = this.random.randInt(0, this.map.height-1);
@@ -87,18 +87,11 @@ export class World {
 
       if (legal_start_location) {
         callback([settlerCoords, builderCoords, scoutCoords]);
-        start_location_successful = true;
-        break;
+        return;
       }
     }
 
-    if (!start_location_successful) {
-      throw {
-        type: 'mapError',
-        code: 'noStartLocation',
-        msg: 'Error: couldn\'t find legal start location! (gave up after 1000 tries)',
-      };
-    }
+    throw new NoStartLocation('Error: couldn\'t find legal start location! (gave up after 1000 tries)');
   }
 
   export() {
@@ -216,14 +209,14 @@ export class World {
       for (const neighbor of this.map.getNeighborsCoords(coords, 1, { filter: (tile) => {
         return tile.owner?.civID !== civID;
       } })) {
-        const tile = this.map.getTile(neighbor);
+        const tile = this.map.getTileOrThrow(neighbor);
         tile.setVisibility(civID, true);
       }
     }
     const civ = this.civs[civID];
     for (const unit of civ.units) {
       for (const coords of this.map.getVisibleTilesCoords(unit)) {
-        const tile = this.map.getTile(coords);
+        const tile = this.map.getTileOrThrow(coords);
         tile.setVisibility(civID, true);
       }
     }
@@ -244,7 +237,7 @@ export class World {
     if (this.map.isInBounds(unit.coords)) {
       if (unit.civID !== undefined) this.civs[unit.civID].addUnit(unit);
       else if (unit.cityID !== undefined) this.map.cities[unit.cityID].addUnit(unit);
-      this.map.getTile(unit.coords).setUnit(unit);
+      this.map.getTileOrThrow(unit.coords).setUnit(unit);
     }
   }
 
@@ -253,7 +246,7 @@ export class World {
     if (unit.civID !== undefined) this.civs[unit.civID].removeUnit(unit);
     else if (unit.cityID !== undefined) this.map.cities[unit.cityID].removeUnit(unit);
     this.updates.push(() => ['unitKilled', [ unit.coords, unit ]]);
-    this.map.getTile(unit.coords).setUnit(undefined);
+    this.map.getTileOrThrow(unit.coords).setUnit(undefined);
     // TODO: make this more intelligent
     if (unit.civID !== undefined) this.updateCivTileVisibility(unit.civID)
     this.updates.push((civID) => ['setMap', [this.map.getCivMap(civID)]]);

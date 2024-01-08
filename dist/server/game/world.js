@@ -6,6 +6,7 @@ const unit_1 = require("./map/tile/unit");
 const civilization_1 = require("./civilization");
 const random_1 = require("../utils/random");
 const leader_1 = require("./leader");
+const error_1 = require("../utils/error");
 const DAMAGE_MULTIPLIER = 20;
 class World {
     constructor(map, civsCount) {
@@ -42,10 +43,10 @@ class World {
         // this.colorPool = colorList.reduce((obj: { [color: string]: boolean }, color: string) => ({...obj, [color]: true}), {});
     }
     getStartLocaltion(callback) {
-        let start_location_successful = false;
         for (let i = 0; i < 1000; i++) {
             const x = this.random.randInt(0, this.map.width - 1);
             const y = this.random.randInt(0, this.map.height - 1);
+            console.log(x, y, this.map.width, this.map.height);
             const settlerCoords = { x, y };
             const builderCoords = { x: x + 1, y: y + 1 };
             const scoutCoords = { x: x - 1, y: y + 1 };
@@ -59,17 +60,10 @@ class World {
             }
             if (legal_start_location) {
                 callback([settlerCoords, builderCoords, scoutCoords]);
-                start_location_successful = true;
-                break;
+                return;
             }
         }
-        if (!start_location_successful) {
-            throw {
-                type: 'mapError',
-                code: 'noStartLocation',
-                msg: 'Error: couldn\'t find legal start location! (gave up after 1000 tries)',
-            };
-        }
+        throw new error_1.NoStartLocation('Error: couldn\'t find legal start location! (gave up after 1000 tries)');
     }
     export() {
         const exportedCivs = {};
@@ -133,21 +127,19 @@ class World {
     setCivLeader(civID, leaderID) {
         var _a;
         const leader = this.leaderPool[leaderID];
-        if (leader && !leader.isTaken()) {
-            if (this.civs[civID].leader) {
-                (_a = this.civs[civID].leader) === null || _a === void 0 ? void 0 : _a.unselect();
-            }
-            this.civs[civID].leader = leader;
-            leader.select(civID);
-            for (const unit of this.civs[civID].getUnits()) {
-                unit.knowledge = {};
-                unit.updateKnowledge(leader.startingKnowledge);
-            }
-            return true;
-        }
-        else {
+        if (!leader || leader.isTaken()) {
             return false;
         }
+        if (this.civs[civID].leader) {
+            (_a = this.civs[civID].leader) === null || _a === void 0 ? void 0 : _a.unselect();
+        }
+        this.civs[civID].leader = leader;
+        leader.select(civID);
+        for (const unit of this.civs[civID].getUnits()) {
+            unit.knowledge = {};
+            unit.updateKnowledge(leader.startingKnowledge);
+        }
+        return true;
     }
     // civs
     getCiv(civID) {
@@ -178,14 +170,14 @@ class World {
                     var _a;
                     return ((_a = tile.owner) === null || _a === void 0 ? void 0 : _a.civID) !== civID;
                 } })) {
-                const tile = this.map.getTile(neighbor);
+                const tile = this.map.getTileOrThrow(neighbor);
                 tile.setVisibility(civID, true);
             }
         }
         const civ = this.civs[civID];
         for (const unit of civ.units) {
             for (const coords of this.map.getVisibleTilesCoords(unit)) {
-                const tile = this.map.getTile(coords);
+                const tile = this.map.getTileOrThrow(coords);
                 tile.setVisibility(civID, true);
             }
         }
@@ -205,7 +197,7 @@ class World {
                 this.civs[unit.civID].addUnit(unit);
             else if (unit.cityID !== undefined)
                 this.map.cities[unit.cityID].addUnit(unit);
-            this.map.getTile(unit.coords).setUnit(unit);
+            this.map.getTileOrThrow(unit.coords).setUnit(unit);
         }
     }
     // map, civs
@@ -215,7 +207,7 @@ class World {
         else if (unit.cityID !== undefined)
             this.map.cities[unit.cityID].removeUnit(unit);
         this.updates.push(() => ['unitKilled', [unit.coords, unit]]);
-        this.map.getTile(unit.coords).setUnit(undefined);
+        this.map.getTileOrThrow(unit.coords).setUnit(undefined);
         // TODO: make this more intelligent
         if (unit.civID !== undefined)
             this.updateCivTileVisibility(unit.civID);
