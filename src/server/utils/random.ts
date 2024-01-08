@@ -19,7 +19,7 @@ export class Random {
       return this._randNumber(0, from);
     }
 
-    return this._randNumber(from ?? 0, from ?? 1);
+    return this._randNumber(from ?? 0, to ?? 1);
   }
 
   public randInt(from?: number, to?: number): number {

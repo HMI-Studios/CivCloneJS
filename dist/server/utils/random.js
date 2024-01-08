@@ -13,17 +13,10 @@ class Random {
         return ((this.prevRand / 2147483648) * (to - from)) + from;
     }
     randFloat(from, to) {
-        if (from !== undefined) {
-            if (to !== undefined) {
-                return this._randNumber(from, to);
-            }
-            else {
-                return this._randNumber(0, from);
-            }
+        if (from !== undefined && to === undefined) {
+            return this._randNumber(0, from);
         }
-        else {
-            return this._randNumber(0, 1);
-        }
+        return this._randNumber(from !== null && from !== void 0 ? from : 0, to !== null && to !== void 0 ? to : 1);
     }
     randInt(from, to) {
         return Math.round(this.randFloat(from, to));
