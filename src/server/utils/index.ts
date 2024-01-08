@@ -96,3 +96,7 @@ export const getSmallestCoordsDiff = (map: Map, pos: Coords, target: Coords): [n
   const altXDiff = altTargetX - posX;
   return [(Math.abs(xDiff) <= Math.abs(altXDiff)) ? (xDiff) : (altXDiff), targetY - posY];
 };
+
+export const coordsRepr = (coords: Coords): string => {
+  return `${coords.x}, ${coords.y}`;
+};
