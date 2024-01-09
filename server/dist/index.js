@@ -31,9 +31,9 @@ const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 const config_1 = require("./config");
 const path_1 = __importDefault(require("path"));
-app.use(`${config_1.ADDR_PREFIX}`, express_1.default.static(path_1.default.join(__dirname, '../client')));
-app.use(`${config_1.ADDR_PREFIX}/src`, express_1.default.static(path_1.default.join(__dirname, '../../src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
-app.use(`${config_1.ADDR_PREFIX}/docs`, express_1.default.static(path_1.default.join(__dirname, '../docs')));
+app.use(`${config_1.ADDR_PREFIX}`, express_1.default.static(config_1.CLIENT_BUILD_LOCATION));
+app.use(`${config_1.ADDR_PREFIX}/src`, express_1.default.static(path_1.default.join(__dirname, '../../client/src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
+app.use(`${config_1.ADDR_PREFIX}/docs`, express_1.default.static(config_1.DOCS_BUILD_LOCATION));
 const server = app.listen(config_1.PORT, () => {
     console.log(`Server listening at http://localhost:${config_1.PORT}`);
 });

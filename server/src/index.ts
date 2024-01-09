@@ -3,12 +3,12 @@ import * as WebSocket from 'ws';
 
 import express from 'express';
 const app = express();
-import { PORT, ADDR_PREFIX, DEBUG } from './config';
+import { PORT, ADDR_PREFIX, DEBUG, CLIENT_BUILD_LOCATION, DOCS_BUILD_LOCATION } from './config';
 
 import path from 'path';
-app.use(`${ADDR_PREFIX}`, express.static(path.join(__dirname, '../client')));
-app.use(`${ADDR_PREFIX}/src`, express.static(path.join(__dirname, '../../src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
-app.use(`${ADDR_PREFIX}/docs`, express.static(path.join(__dirname, '../docs')));
+app.use(`${ADDR_PREFIX}`, express.static(CLIENT_BUILD_LOCATION));
+app.use(`${ADDR_PREFIX}/src`, express.static(path.join(__dirname, '../../client/src'))); // FOR DEBUGGING - REMOVE IN PRODUCTION!
+app.use(`${ADDR_PREFIX}/docs`, express.static(DOCS_BUILD_LOCATION));
 
 const server = app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
