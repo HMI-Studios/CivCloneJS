@@ -1,9 +1,7 @@
 package-lock.json
 node_modules
 
-server/dist/config.js
-server/dist/config.js.map
-dist/server/saves
+server/dist/*
 server/src/config.ts
 
 *.js.map
