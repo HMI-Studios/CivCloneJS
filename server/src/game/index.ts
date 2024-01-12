@@ -102,8 +102,7 @@ export class Game {
     const playerCount = data.playerCount;
     const metaData = data.metaData;
     const hasStarted = data.hasStarted;
-    const game = new Game([world, players, playerCount, metaData, hasStarted]);
-    return game;
+    return new Game([world, players, playerCount, metaData, hasStarted]);
   }
 
   async save() {
