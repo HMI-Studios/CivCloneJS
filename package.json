@@ -4,9 +4,11 @@
   "description": "A turn-based strategy game based on the Civilization game series",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/server",
-    "dev": "nodemon dist/server",
-    "build": "npx tsc"
+    "start": "node server/dist",
+    "dev": "nodemon --watch server/dist server/dist/index.js",
+    "build-client": "npx tsc -p client/",
+    "build-server": "npx tsc -p server/",
+    "build": "npm run build-client && npm run build-server"
   },
   "repository": {
     "type": "git",
