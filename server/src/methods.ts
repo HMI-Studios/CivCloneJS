@@ -25,13 +25,19 @@ const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }) => {
 export const games: { [gameID: number] : Game } = {};
 (async () => {
   const game = await Game.load('singleplayer test')
-  const newID = Number(Object.keys(games)[Object.keys(games).length - 1]) + 1;
-  games[newID] = game;
+  games[newID()] = game;
 })()
 
+function newID(): number {
+  if (Object.keys(games).length) {
+    return Number(Object.keys(games)[Object.keys(games).length - 1]) + 1;
+  } else {
+    return 1;
+  }
+}
+
 const createGame = (username: string, playerCount: number, mapOptions: MapOptions, options: { seed: number | null, gameName?: string }) => {
-  const newID = Number(Object.keys(games)[Object.keys(games).length - 1]) + 1;
-  games[newID] = new Game([
+  games[newID()] = new Game([
     new PerlinWorldGenerator(options.seed, mapOptions),
     {
       playerCount,
