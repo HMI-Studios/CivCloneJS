@@ -2,6 +2,8 @@ let camera: Camera;
 let ui: UI;
 let world: World;
 
+const VERSION = [0, 1, 0];
+
 const resize = () => {
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');

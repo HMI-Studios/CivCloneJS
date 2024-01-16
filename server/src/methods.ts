@@ -1,4 +1,5 @@
 import * as WebSocket from 'ws';
+import WebSocketManager from './game/connection';
 import { Player } from './game/player';
 import { Map, MapOptions } from './game/map';
 import { Game, GameData } from './game';
@@ -9,16 +10,17 @@ import { WallType } from './game/map/tile/wall';
 import { Coords } from './game/world';
 
 interface ConnectionData {
-  ws: WebSocket,
+  ws: WebSocketManager,
   ip?: string,
   username: string | null,
   gameID: number | null,
 }
 
-export const connections: WebSocket[] = [];
+export const sockets: WebSocket[] = [];
+export const connections: WebSocketManager[] = [];
 export const connData: ConnectionData[] = [];
 
-const sendTo = (ws: WebSocket, msg: { [key: string]: unknown }) => {
+const sendTo = (ws: WebSocketManager, msg: { [key: string]: unknown }) => {
   ws.send(JSON.stringify(msg));
 };
 
@@ -48,12 +50,12 @@ const createGame = (username: string, playerCount: number, mapOptions: MapOption
   ]);
 };
 
-export const getConnData = (ws: WebSocket): ConnectionData => {
+export const getConnData = (ws: WebSocketManager): ConnectionData => {
   const connIndex = connections.indexOf(ws);
   return connData[connIndex];
 };
 
-const getUsername = (ws: WebSocket): string => {
+const getUsername = (ws: WebSocketManager): string => {
   const connIndex = connections.indexOf(ws);
   const username = connData[connIndex].username;
   if (!username) {
@@ -68,7 +70,7 @@ const getUsername = (ws: WebSocket): string => {
   }
 };
 
-const getGameID = (ws: WebSocket): number => {
+const getGameID = (ws: WebSocketManager): number => {
   const connIndex = connections.indexOf(ws);
   const gameID = connData[connIndex].gameID;
   if (!gameID) {
@@ -83,7 +85,7 @@ const getGameID = (ws: WebSocket): number => {
   return gameID;
 };
 
-export const executeAction = (ws: WebSocket, action: string, ...args: unknown[]) => {
+export const executeAction = (ws: WebSocketManager, action: string, ...args: unknown[]) => {
   try {
     methods[action](ws, ...args);
   } catch(error) {
@@ -94,27 +96,27 @@ export const executeAction = (ws: WebSocket, action: string, ...args: unknown[])
 const methods: {
   [key: string]: (...args: any[]) => void;
 } = {
-  listMethods: (ws: WebSocket) => {
+  listMethods: (ws: WebSocketManager) => {
     sendTo(ws, { update: [
       ['methodList', [Object.keys(methods)]],
     ] });
   },
 
   // TODO - DEBUG ONLY! REMOVE IN PROD!
-  memCheck: (ws: WebSocket) => {
+  memCheck: (ws: WebSocketManager) => {
     sendTo(ws, { update: [
       ['debug', [process.memoryUsage()]],
     ] });
   },
 
-  setPlayer: (ws: WebSocket, username: string) => {
+  setPlayer: (ws: WebSocketManager, username: string) => {
     getConnData(ws).username = username;
     sendTo(ws, { update: [
       ['currentUser', [username]],
     ] });
   },
 
-  verifyPlayer: (ws: WebSocket) => {
+  verifyPlayer: (ws: WebSocketManager) => {
     try {
       const username = getUsername(ws);
       sendTo(ws, { update: [
@@ -125,7 +127,7 @@ const methods: {
     }
   },
 
-  exportGame: (ws: WebSocket) => {
+  exportGame: (ws: WebSocketManager) => {
     const gameID = getGameID(ws);
     const game = games[gameID];
     if (game) {
@@ -138,7 +140,7 @@ const methods: {
     }
   },
 
-  createGame: (ws: WebSocket, playerCount: number, mapOptions: MapOptions, options: { seed: number | null, gameName?: string }) => {
+  createGame: (ws: WebSocketManager, playerCount: number, mapOptions: MapOptions, options: { seed: number | null, gameName?: string }) => {
     const username = getUsername(ws);
     if (username && playerCount && mapOptions) {
       try {
@@ -155,7 +157,7 @@ const methods: {
     methods.getGames(ws);
   },
 
-  joinGame: (ws: WebSocket, gameID: number) => {
+  joinGame: (ws: WebSocketManager, gameID: number) => {
     const game = games[gameID];
 
     const username = getUsername(ws);
@@ -209,7 +211,7 @@ const methods: {
     }
   },
 
-  getGames: (ws: WebSocket) => {
+  getGames: (ws: WebSocketManager) => {
     const gameList: { [id: number]: GameData } = {};
     for (const gameID in games) {
       gameList[gameID] = games[gameID].getMetaData();
@@ -222,7 +224,7 @@ const methods: {
     });
   },
 
-  setLeader: (ws: WebSocket, leaderID: number) => {
+  setLeader: (ws: WebSocketManager, leaderID: number) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -247,7 +249,7 @@ const methods: {
     }
   },
 
-  ready: (ws: WebSocket, state: boolean) => {
+  ready: (ws: WebSocketManager, state: boolean) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -277,7 +279,7 @@ const methods: {
 
   // Deprecated
   // TODO: replace with turnFinished
-  endTurn: (ws: WebSocket) => {
+  endTurn: (ws: WebSocketManager) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -293,7 +295,7 @@ const methods: {
     return;
   },
 
-  turnFinished: (ws: WebSocket, state: boolean) => {
+  turnFinished: (ws: WebSocketManager, state: boolean) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -330,7 +332,7 @@ const methods: {
     }
   },
 
-  attack: (ws: WebSocket, srcCoords: Coords, targetCoords: Coords) => {
+  attack: (ws: WebSocketManager, srcCoords: Coords, targetCoords: Coords) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -373,7 +375,7 @@ const methods: {
     }
   },
 
-  moveUnit: (ws: WebSocket, srcCoords: Coords, path: Coords[], attack: boolean) => {
+  moveUnit: (ws: WebSocketManager, srcCoords: Coords, path: Coords[], attack: boolean) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -440,7 +442,7 @@ const methods: {
     }
   },
 
-  settleCity: (ws: WebSocket, coords: Coords, name: string) => {
+  settleCity: (ws: WebSocketManager, coords: Coords, name: string) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -470,7 +472,7 @@ const methods: {
    * The list of improvements the builder on the given coords is able to build
    * @param coords 
    */
-  getImprovementCatalog: (ws: WebSocket, coords: Coords) => {
+  getImprovementCatalog: (ws: WebSocketManager, coords: Coords) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -490,7 +492,7 @@ const methods: {
     }
   },
 
-  buildImprovement: (ws: WebSocket, coords: Coords, type: string) => {
+  buildImprovement: (ws: WebSocketManager, coords: Coords, type: string) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -510,7 +512,7 @@ const methods: {
     }
   },
 
-  buildWall: (ws: WebSocket, coords: Coords, facingCoords: Coords, type: number) => {
+  buildWall: (ws: WebSocketManager, coords: Coords, facingCoords: Coords, type: number) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -531,7 +533,7 @@ const methods: {
     }
   },
 
-  setGateOpen: (ws: WebSocket, coords: Coords, facingCoords: Coords, isOpen: boolean) => {
+  setGateOpen: (ws: WebSocketManager, coords: Coords, facingCoords: Coords, isOpen: boolean) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -560,7 +562,7 @@ const methods: {
     }
   },
 
-  getTraders: (ws: WebSocket) => {
+  getTraders: (ws: WebSocketManager) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -582,7 +584,7 @@ const methods: {
    * The list of units the given improvement is able to build
    * @param coords 
    */
-  getUnitCatalog: (ws: WebSocket, coords: Coords) => {
+  getUnitCatalog: (ws: WebSocketManager, coords: Coords) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -602,7 +604,7 @@ const methods: {
     }
   },
 
-  trainUnit: (ws: WebSocket, coords: Coords, type: string) => {
+  trainUnit: (ws: WebSocketManager, coords: Coords, type: string) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -623,7 +625,7 @@ const methods: {
    * The list of units the given improvement is able to build
    * @param coords 
    */
-  getKnowledgeCatalog: (ws: WebSocket, coords: Coords) => {
+  getKnowledgeCatalog: (ws: WebSocketManager, coords: Coords) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -643,7 +645,7 @@ const methods: {
     }
   },
 
-  researchKnowledge: (ws: WebSocket, coords: Coords, name: string) => {
+  researchKnowledge: (ws: WebSocketManager, coords: Coords, name: string) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -660,7 +662,7 @@ const methods: {
     }
   },
 
-  stealKnowledge: (ws: WebSocket, coords: Coords) => {
+  stealKnowledge: (ws: WebSocketManager, coords: Coords) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 
@@ -684,7 +686,7 @@ const methods: {
     }
   },
 
-  setCloak: (ws: WebSocket, coords: Coords, cloaked: boolean) => {
+  setCloak: (ws: WebSocketManager, coords: Coords, cloaked: boolean) => {
     const username = getUsername(ws);
     const gameID = getGameID(ws);
 

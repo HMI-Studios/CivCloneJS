@@ -1,12 +1,13 @@
 import * as WebSocket from 'ws';
 import { PlayerData } from '../utils';
+import WebSocketManager from './connection';
 
 export class Player {
   civID: number;
   ready: boolean;
-  private connection: WebSocket | null;
+  private connection: WebSocketManager | null;
 
-  constructor(civID: number, connection: WebSocket | null) {
+  constructor(civID: number, connection: WebSocketManager | null) {
     this.civID = civID;
     this.ready = false;
     this.connection = connection;
@@ -28,7 +29,7 @@ export class Player {
     return { civID: this.civID };
   }
   
-  reset(connection: WebSocket | null): void {
+  reset(connection: WebSocketManager | null): void {
     this.ready = false;
     this.connection = connection;
   }

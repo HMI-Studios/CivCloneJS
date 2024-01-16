@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 let camera;
 let ui;
 let world;
+const VERSION = [0, 1, 0];
 const resize = () => {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');

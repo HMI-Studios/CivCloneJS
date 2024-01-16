@@ -360,6 +360,8 @@ export class Map {
   }
 
   private getTileDataByCiv(civID: number, tile: Tile): TileData | null {
+    return tile.getDiscoveredData();
+
     if (!tile.discoveredBy[civID]) {
       return null;
     }

@@ -484,6 +484,13 @@ class World {
       }
       this.socket.addEventListener('message', (event) => {
         let data;
+        if (event.data === 'state_version') {
+          return this.socket.send(`html,${VERSION.join(',')}`);
+        } else if (event.data === 'max_packet_size') {
+          return this.socket.send('-1');
+        } else if (event.data === 'handshake_complete') {
+          return resolve();
+        }
         try {
           data = JSON.parse(event.data);
         } catch (err) {
@@ -494,7 +501,6 @@ class World {
       }, { signal: controller.signal });
       this.socket.addEventListener('open', (/*event: Event*/) => {
         this.socketDidOpen = true;
-        resolve();
       }, { signal: controller.signal });
       this.socket.addEventListener('close', async (/*event: Event*/) => {
         if (this.socketDidOpen) {
