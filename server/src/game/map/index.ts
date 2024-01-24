@@ -3,7 +3,7 @@ import { MovementClass, PromotionClass, Unit } from './tile/unit';
 import { BarbarianCamp, City } from './tile/city';
 import { Tile, TileData } from './tile';
 import { Improvement, Worksite } from './tile/improvement';
-import { getAdjacentCoords, mod, Event, arrayIncludesCoords, getCoordInDirection, getDirection, coordsRepr } from '../../utils';
+import { getAdjacentCoords, mod, Event, arrayIncludesCoords, coordsRepr } from '../../utils';
 import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandAction, ErrandType } from './tile/errand';
@@ -128,6 +128,49 @@ export class Map {
     }
   }
 
+  /**
+   * 
+   * @param param0 
+   * @returns a list of coords around the given coord, with 0 <= x < this.width
+   */
+  private getCoordsDial({x, y}: Coords): Coords[] {
+    return mod(x, 2) === 1 ? 
+    [
+      { x: mod(x, this.width),   y: y+1 },
+      { x: mod(x+1, this.width), y: y+1 },
+      { x: mod(x+1, this.width), y: y   },
+      { x: mod(x, this.width),   y: y-1 },
+      { x: mod(x-1, this.width), y: y   },
+      { x: mod(x-1, this.width), y: y+1 },
+    ] :
+    [
+      { x: mod(x, this.width),   y: y+1 },
+      { x: mod(x+1, this.width), y: y   },
+      { x: mod(x+1, this.width), y: y-1 },
+      { x: mod(x, this.width),   y: y-1 },
+      { x: mod(x-1, this.width), y: y-1 },
+      { x: mod(x-1, this.width), y: y   },
+    ];
+  }
+  
+  public getCoordInDirection(coords: Coords, direction: number): Coords {
+    const coordsDial = this.getCoordsDial(coords);
+    
+    return coordsDial[mod(direction, 6)];
+  };
+  
+  public getDirection(origin: Coords, target: Coords): number {
+    const coordsDial = this.getCoordsDial(origin);
+    let direction = -1;
+    coordsDial.forEach((coords, i) => {
+      if (coords.x === mod(target.x, this.width) && coords.y === mod(target.y, this.width)) {
+        direction = i;
+      }
+    });
+  
+    return direction;
+  };
+
   private getNeighborsRecurse(
     coords: Coords,
     r: number,
@@ -195,8 +238,8 @@ export class Map {
     
     // PATH BLOCKING LOGIC HERE
     // if (tile.unit && tile.unit.civID === this.player.civID) return Infinity;
-    if (adjTile.hasBlockingWall(getDirection(adjPos, atPos))) return Infinity;
-    if (atTile.hasBlockingWall(getDirection(atPos, adjPos))) return Infinity;
+    if (adjTile.hasBlockingWall(this.getDirection(adjPos, atPos))) return Infinity;
+    if (atTile.hasBlockingWall(this.getDirection(atPos, adjPos))) return Infinity;
 
     return adjTile.movementCost[mode] ?? Infinity;
   }
@@ -254,7 +297,7 @@ export class Map {
     }
 
     if (stepsUntilSpread === 0) {
-      const newLeftCoords = getCoordInDirection(coords, direction-1);
+      const newLeftCoords = this.getCoordInDirection(coords, direction-1);
       const newLeftTile = this.getTile(newLeftCoords);
       if (newLeftTile) {
         const newLeftSlope = newLeftTile.getTotalElevation() - maxElevation;
@@ -263,7 +306,7 @@ export class Map {
           r-1, direction, coordsArray, tileSet, stepLength, stepLength
         );
       }
-      const newCoords = getCoordInDirection(coords, direction);
+      const newCoords = this.getCoordInDirection(coords, direction);
       const newTile = this.getTile(newCoords);
       if (newTile) {
         const newSlope = newTile.getTotalElevation() - maxElevation;
@@ -272,7 +315,7 @@ export class Map {
           r-1, direction, coordsArray, tileSet, stepLength, stepLength
         );
       }
-      const newRightCoords = getCoordInDirection(coords, direction+1);
+      const newRightCoords = this.getCoordInDirection(coords, direction+1);
       const newRightTile = this.getTile(newRightCoords);
       if (newRightTile) {
         const newRightSlope = newRightTile.getTotalElevation() - maxElevation;
@@ -282,7 +325,7 @@ export class Map {
         );
       }
     } else {
-      const newCoords = getCoordInDirection(coords, direction);
+      const newCoords = this.getCoordInDirection(coords, direction);
       const newTile = this.getTile(newCoords);
       if (newTile) {
         const newSlope = newTile.getTotalElevation() - maxElevation;
@@ -309,7 +352,7 @@ export class Map {
     coordsArray.push(unit.coords);
     tileSet.add(tile);
     for (let direction = 0; direction < 6; direction++) {
-      const newCoords = getCoordInDirection(unit.coords, direction);
+      const newCoords = this.getCoordInDirection(unit.coords, direction);
       const newTile = this.getTile(newCoords);
       if (!newTile) continue;
       const slope = newTile.getTotalElevation() - tile.getTotalElevation();
@@ -360,8 +403,6 @@ export class Map {
   }
 
   private getTileDataByCiv(civID: number, tile: Tile): TileData | null {
-    return tile.getDiscoveredData();
-
     if (!tile.discoveredBy[civID]) {
       return null;
     }

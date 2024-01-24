@@ -484,6 +484,7 @@ class World {
       }
       this.socket.addEventListener('message', (event) => {
         let data;
+        /* Handshake */
         if (event.data === 'state_version') {
           return this.socket.send(`html,${VERSION.join(',')}`);
         } else if (event.data === 'max_packet_size') {

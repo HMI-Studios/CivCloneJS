@@ -5,7 +5,7 @@ import { Map, MapOptions } from './game/map';
 import { Game, GameData } from './game';
 import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
 import { PromotionClass } from './game/map/tile/unit';
-import { PlayerData, getDirection } from './utils';
+import { PlayerData } from './utils';
 import { WallType } from './game/map/tile/wall';
 import { Coords } from './game/world';
 
@@ -526,7 +526,7 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit?.type === 'builder' && unit?.civID === civID) {
-        tile.setWall(getDirection(coords, facingCoords), type);
+        tile.setWall(map.getDirection(coords, facingCoords), type);
         map.tileUpdate(coords);
         game.sendUpdates();
       }
@@ -547,7 +547,7 @@ const methods: {
       const unit = tile?.unit;
 
       if (unit && unit.civID === civID) {
-        const direction = getDirection(coords, facingCoords);
+        const direction = map.getDirection(coords, facingCoords);
         const wall = tile.getWall(direction);
         if (wall && wall.type === (isOpen ? WallType.CLOSED_GATE : WallType.OPEN_GATE)) {
           if (isOpen) {
