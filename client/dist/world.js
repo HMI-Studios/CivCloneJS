@@ -331,7 +331,7 @@ class World {
                 }
                 this.socket.addEventListener('message', (event) => {
                     let data;
-                    console.log(event.data);
+                    /* Handshake */
                     if (event.data === 'state_version') {
                         return this.socket.send(`html,${VERSION.join(',')}`);
                     }
@@ -618,6 +618,7 @@ class World {
                 location.reload();
             }));
             yield this.login();
+            this.verifyPlayer();
             const mainMenuFns = {
                 createGame: () => __awaiter(this, void 0, void 0, function* () {
                     ui.hideMainMenu();

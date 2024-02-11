@@ -789,6 +789,7 @@ class World {
     });
 
     await this.login();
+    this.verifyPlayer();
 
     const mainMenuFns = {
       createGame: async () => {

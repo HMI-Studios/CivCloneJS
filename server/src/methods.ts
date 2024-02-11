@@ -124,14 +124,10 @@ const methods: {
   },
 
   verifyPlayer: (ws: WebSocketManager) => {
-    try {
-      const username = getUsername(ws);
-      sendTo(ws, { update: [
-        ['currentUser', [username]],
-      ] });
-    } catch (err) {
-      console.error(err);
-    }
+    const username = getUsername(ws);
+    sendTo(ws, { update: [
+      ['currentUser', [username]],
+    ] });
   },
 
   exportGame: (ws: WebSocketManager) => {
