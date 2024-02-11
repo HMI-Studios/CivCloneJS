@@ -8,6 +8,7 @@ import { PromotionClass } from './game/map/tile/unit';
 import { PlayerData } from './utils';
 import { WallType } from './game/map/tile/wall';
 import { Coords } from './game/world';
+import { FrontendError } from './utils/error';
 
 interface ConnectionData {
   ws: WebSocketManager,
@@ -59,12 +60,7 @@ const getUsername = (ws: WebSocketManager): string => {
   const connIndex = connections.indexOf(ws);
   const username = connData[connIndex].username;
   if (!username) {
-    sendTo(ws, {
-      error: [
-        ['invalidUsername', ['username is null; please provide a username.']],
-      ],
-    });
-    throw 'Invalid Username';
+    throw new FrontendError('invalidUsername', 'username is null; please provide a username.');
   } else {
     return username;
   }
@@ -74,16 +70,21 @@ const getGameID = (ws: WebSocketManager): number => {
   const connIndex = connections.indexOf(ws);
   const gameID = connData[connIndex].gameID;
   if (!gameID) {
-    sendTo(ws, {
-      error: [
-        ['invalidGameID', ['gameID is null; please provide a gameID.']],
-      ],
-    });
-    throw 'Invalid Game ID';
+    throw new FrontendError('invalidGameID', 'gameID is null; please provide a gameID.');
   }
 
   return gameID;
 };
+
+const getGameInfo = (ws: WebSocketManager): [Game, Player] => {
+  const username = getUsername(ws);
+  const gameID = getGameID(ws);
+  const game = games[gameID];
+  if (!game) throw new FrontendError('invalidGameID', `gameID is ${gameID}; no such game found.`);
+  const player = game.getPlayer(username);
+  if (!player) throw new FrontendError('invalidUsername', `username is ${username}; no such user found in this game.`);
+  return [game, player];
+}
 
 export const executeAction = (ws: WebSocketManager, action: string, ...args: unknown[]) => {
   try {
@@ -169,7 +170,7 @@ const methods: {
       getConnData(ws).gameID = gameID;
       
       if (isRejoin) {
-        const player = game.getPlayer(username);
+        const player = game.getPlayer(username) as Player; // Safe, since `isRejoin` is only true if the player exists.
         player.reset(ws);
       } else {
         game.connectPlayer(username, new Player(civID, ws));
@@ -226,121 +227,87 @@ const methods: {
   },
 
   setLeader: (ws: WebSocketManager, leaderID: number) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID]
-    game.setLeader(game.getPlayer(username), leaderID);
+    const [game, player] = getGameInfo(ws);
+    game.setLeader(player, leaderID);
   },
 
   ready: (ws: WebSocketManager, state: boolean) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.setReady(game.getPlayer(username), state);
+    const [game, player] = getGameInfo(ws);
+    game.setReady(player, state);
   },
 
   turnFinished: (ws: WebSocketManager, state: boolean) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.setTurnFinished(game.getPlayer(username), state);
+    const [game, player] = getGameInfo(ws);
+    game.setTurnFinished(player, state);
   },
 
   attack: (ws: WebSocketManager, srcCoords: Coords, targetCoords: Coords) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.playerUnitCombat(game.getPlayer(username), srcCoords, targetCoords);
+    const [game, player] = getGameInfo(ws);
+    game.playerUnitCombat(player, srcCoords, targetCoords);
   },
 
   moveUnit: (ws: WebSocketManager, srcCoords: Coords, path: Coords[], attack: boolean) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.playerUnitMovement(game.getPlayer(username), srcCoords, path, attack);
+    const [game, player] = getGameInfo(ws);
+    game.playerUnitMovement(player, srcCoords, path, attack);
   },
 
   settleCity: (ws: WebSocketManager, coords: Coords, name: string) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.settleCityAt(game.getPlayer(username), coords, name);
+    const [game, player] = getGameInfo(ws);
+    game.settleCityAt(player, coords, name);
   },
 
   getImprovementCatalog: (ws: WebSocketManager, coords: Coords) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.getImprovementCatalog(game.getPlayer(username), coords);
+    const [game, player] = getGameInfo(ws);
+    game.getImprovementCatalog(player, coords);
   },
 
   buildImprovement: (ws: WebSocketManager, coords: Coords, type: string) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.buildImprovement(game.getPlayer(username), coords, type);
+    const [game, player] = getGameInfo(ws);
+    game.buildImprovement(player, coords, type);
   },
 
   buildWall: (ws: WebSocketManager, coords: Coords, facingCoords: Coords, type: number) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.buildWall(game.getPlayer(username), coords, facingCoords, type);
+    const [game, player] = getGameInfo(ws);
+    game.buildWall(player, coords, facingCoords, type);
   },
 
   setGateOpen: (ws: WebSocketManager, coords: Coords, facingCoords: Coords, isOpen: boolean) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.setGateOpen(game.getPlayer(username), coords, facingCoords, isOpen);
+    const [game, player] = getGameInfo(ws);
+    game.setGateOpen(player, coords, facingCoords, isOpen);
   },
 
   getTraders: (ws: WebSocketManager) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.getPlayerTraders(game.getPlayer(username));
+    const [game, player] = getGameInfo(ws);
+    game.getPlayerTraders(player);
   },
 
   getUnitCatalog: (ws: WebSocketManager, coords: Coords) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.getUnitCatalog(game.getPlayer(username), coords);
+    const [game, player] = getGameInfo(ws);
+    game.getUnitCatalog(player, coords);
   },
 
   trainUnit: (ws: WebSocketManager, coords: Coords, type: string) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.trainPlayerUnit(game.getPlayer(username), coords, type);
+    const [game, player] = getGameInfo(ws);
+    game.trainPlayerUnit(player, coords, type);
   },
 
   getKnowledgeCatalog: (ws: WebSocketManager, coords: Coords) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.getKnowledgeCatalog(game.getPlayer(username), coords);
+    const [game, player] = getGameInfo(ws);
+    game.getKnowledgeCatalog(player, coords);
   },
 
   researchKnowledge: (ws: WebSocketManager, coords: Coords, name: string) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.researchKnowledge(game.getPlayer(username), coords, name);
+    const [game, player] = getGameInfo(ws);
+    game.researchKnowledge(player, coords, name);
   },
 
   stealKnowledge: (ws: WebSocketManager, coords: Coords) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.stealKnowledge(game.getPlayer(username), coords);
+    const [game, player] = getGameInfo(ws);
+    game.stealKnowledge(player, coords);
   },
 
   setCloak: (ws: WebSocketManager, coords: Coords, cloaked: boolean) => {
-    const username = getUsername(ws);
-    const gameID = getGameID(ws);
-    const game = games[gameID];
-    game.setPlayerUnitCloak(game.getPlayer(username), coords, cloaked);
+    const [game, player] = getGameInfo(ws);
+    game.setPlayerUnitCloak(player, coords, cloaked);
   },
 };

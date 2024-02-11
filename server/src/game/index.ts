@@ -216,7 +216,7 @@ export class Game {
     return username in this.players;
   }
 
-  public getPlayer(username: string): Player {
+  public getPlayer(username: string): Player | undefined {
     return this.players[username];
   }
 
