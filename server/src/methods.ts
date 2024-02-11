@@ -90,7 +90,13 @@ export const executeAction = (ws: WebSocketManager, action: string, ...args: unk
   try {
     methods[action](ws, ...args);
   } catch(error) {
-    console.error(error);
+    if (error instanceof FrontendError) {
+      sendTo(ws, {
+        error: [error.getPacket()],
+      });
+    } else {
+      console.error(error);
+    }
   }
 };
 
