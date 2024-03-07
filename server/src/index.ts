@@ -16,11 +16,21 @@ const server = app.listen(PORT, () => {
 
 const wss = new WebSocket.Server({ server });
 
-import { executeAction, connections, connData, getConnData } from './methods';
+import { executeAction, sockets, connections, connData, getConnData } from './methods';
 import { EventMsg } from './utils';
+import WebSocketManager from './game/connection';
 
-wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+wss.on('connection', async (sock: WebSocket, req: IncomingMessage) => {
 
+  const ws = new WebSocketManager(sock);
+  try {
+    await ws.handshake;
+    console.log('Handshake successful: ', req.socket.remoteAddress);
+  } catch (err) {
+    console.error('Handshake failed:', err, req.socket.remoteAddress);
+    return sock.close()
+  }
+  sockets.push(sock);
   connections.push(ws);
   connData.push({
     ws: ws,
@@ -29,7 +39,7 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     gameID: null,
   });
 
-  ws.on('message', (message: string) => {
+  ws.onMessage((message: string) => {
     let data: EventMsg;
 
     try {

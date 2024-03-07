@@ -1,6 +1,6 @@
 import { Tile } from ".";
 import { Map } from "..";
-import { arrayIncludesCoords, getAdjacentCoords, getCoordInDirection, getDirection, getSmallestCoordsDiff, mod } from "../../../utils";
+import { arrayIncludesCoords, getAdjacentCoords, getSmallestCoordsDiff } from "../../../utils";
 import { World, Coords } from "../../world";
 import { ErrandType } from "./errand";
 import { Improvement } from "./improvement";

@@ -4,7 +4,6 @@ import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
 import { Knowledge, KnowledgeBucket } from './knowledge';
 import { Wall, WallType } from './wall';
-import { getDirection } from '../../../utils';
 
 export interface TileData {
   type: string;
