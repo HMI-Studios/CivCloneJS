@@ -38,6 +38,10 @@ export class Leader {
     }
   }
 
+  getDomainIDs(): string[] {
+    return this.domains.map(domain => domain instanceof Civilization ? `civ_${domain.id}` : `city_${domain.id}`);
+  }
+
   newTurn() {
     this.turnActive = true;
     this.turnFinished = false;

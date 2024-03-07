@@ -12,7 +12,7 @@ export interface UnitData {
   type: string,
   hp: number,
   movement: number,
-  civID?: number,
+  domainID: string,
   promotionClass: PromotionClass,
   attackRange?: number,
   knowledge: KnowledgeMap,
@@ -131,8 +131,7 @@ export class Unit {
   combatStats: [number, number, number];
   attackRange?: number;
   visionRange: number;
-  civID?: number;
-  cityID?: number;
+  domainID: string;
   coords: Coords;
   alive: boolean;
   cloaked?: boolean;
@@ -147,7 +146,7 @@ export class Unit {
     ));
   }
 
-  constructor(type: string, coords: Coords, civID?: number, cityID?: number, knowledge?: KnowledgeMap) {
+  constructor(type: string, coords: Coords, domainID: string, knowledge?: KnowledgeMap) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -158,8 +157,7 @@ export class Unit {
       this.attackRange = Unit.attackRangeTable[type];
     }
     this.visionRange = Unit.visionRangeTable[type] ?? Unit.visionRangeTable.default;
-    this.civID = civID;
-    this.cityID = cityID;
+    this.domainID = domainID;
     this.coords = coords;
     this.alive = true;
     this.knowledge = knowledge ?? {};
@@ -174,8 +172,7 @@ export class Unit {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
-      civID: this.civID,
-      cityID: this.cityID,
+      domainID: this.domainID,
       coords: this.coords,
       alive: this.alive,
       knowledge: this.knowledge,
@@ -184,7 +181,7 @@ export class Unit {
   }
 
   static import(data: any): Unit {
-    const unit = new Unit(data.type, data.coords, data.civID, data.cityID, data.knowledge);
+    const unit = new Unit(data.type, data.coords, data.domainID, data.knowledge);
     unit.hp = data.hp;
     unit.movement = data.movement;
     unit.promotionClass = Unit.promotionClassTable[unit.type];
@@ -201,12 +198,12 @@ export class Unit {
     return unit;
   }
 
-  getData(civID: number): UnitData | undefined {
-    return !this.cloaked || civID === this.civID ? {
+  getData(domainID: string): UnitData | undefined {
+    return !this.cloaked || domainID === this.domainID ? {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
-      civID: this.civID,
+      domainID: this.domainID,
       promotionClass: this.promotionClass,
       attackRange: this.attackRange,
       knowledge: this.knowledge,

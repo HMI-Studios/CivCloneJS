@@ -62,8 +62,8 @@ export class Tile {
     Wall | null,
   ];
 
-  discoveredBy: { [civID: number]: boolean };
-  visibleTo: { [civID: number]: number };
+  discoveredBy: { [domainID: string]: boolean };
+  visibleTo: { [domainID: string]: number };
 
   public baseYield: Yield;
 
@@ -126,10 +126,10 @@ export class Tile {
     };
   }
 
-  getVisibleData(civID: number): TileData {
+  getVisibleData(domainID: string): TileData {
     return {
       ...this.getDiscoveredData(),
-      unit: this.unit?.getData(civID),
+      unit: this.unit?.getData(domainID),
       visible: true,
     }
   }
@@ -148,20 +148,29 @@ export class Tile {
     this.unit = unit;
   }
 
-  setVisibility(civID: number, visible: boolean): void {
+  /**
+   * 
+   * @param domainID can be both a civID or a cityID. To differentiate these, this value must be prefixed with either `civ_` or `city_`.
+   * @param visible 
+   */
+  setVisibility(domainID: string, visible: boolean): void {
     if (visible) {
-      this.visibleTo[civID]++;
+      this.visibleTo[domainID]++;
     } else {
-      this.visibleTo[civID]--;
+      this.visibleTo[domainID]--;
     }
 
-    if (visible && !this.discoveredBy[civID]) {
-      this.discoveredBy[civID] = true;
+    if (visible && !this.discoveredBy[domainID]) {
+      this.discoveredBy[domainID] = true;
     }
   }
 
-  clearVisibility(civID: number): void {
-    this.visibleTo[civID] = 0;
+  /**
+   * 
+   * @param domainID can be both a civID or a cityID. To differentiate these, this value must be prefixed with either `civ_` or `city_`.
+   */
+  clearVisibility(domainID: string): void {
+    this.visibleTo[domainID] = 0;
   }
 
   getWall(direction: number): Wall | null {
