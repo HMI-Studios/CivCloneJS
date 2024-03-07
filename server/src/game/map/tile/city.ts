@@ -63,6 +63,10 @@ export class City {
     };
   }
 
+  public getDomainID(): string {
+    return `city_${this.id}`;
+  }
+
   getTiles(): Set<Coords> {
     return this.tiles;
   }
@@ -95,6 +99,10 @@ export class City {
     if (unitIndex > -1) {
       this.units.splice(unitIndex, 1);
     }
+  }
+
+  ownsUnit(unit: Unit): boolean {
+    return unit.domainID === `city_${this.id}` || (this.civID !== undefined && unit.domainID === `civ_${this.civID}`);
   }
 
   turn(world: World, map: Map): void {
@@ -187,7 +195,7 @@ export class BarbarianCamp extends UnitController {
     const neighborhoodTiles = neighborhoodCoords.map(coords => map.getTileOrThrow(coords));
     this.danger = false;
     for (const tile of neighborhoodTiles) {
-      if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
+      if (tile.unit && (!this.ownsUnit(tile.unit) && !tile.unit.isBarbarian)) {
         this.danger = true;
         break;
       }
@@ -245,11 +253,11 @@ export class BarbarianCamp extends UnitController {
           visibleCoords.forEach(coords => {
             const tile = map.getTileOrThrow(coords);
             if (!unit.automationData.target) {
-              if (tile.unit?.cityID === this.id && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
+              if (tile.unit && this.ownsUnit(tile.unit) && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
                 unit.automationData.target = tile.unit.automationData.settleTarget;
               }
             }
-            if (tile.unit && tile.unit.cityID !== this.id) {
+            if (tile.unit && this.ownsUnit(tile.unit)) {
               unit.automationData.target = this.center;
             }
           });
@@ -275,7 +283,7 @@ export class BarbarianCamp extends UnitController {
         }
         visibleCoords.forEach(coords => {
           const tile = map.getTileOrThrow(coords);
-          if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
+          if (tile.unit && (!this.ownsUnit(tile.unit) && !tile.unit.isBarbarian)) {
             unit.automationData.target = coords;
             return;
           }

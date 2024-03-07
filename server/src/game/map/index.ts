@@ -9,6 +9,8 @@ import { Yield, YieldParams } from './tile/yield';
 import { ErrandAction, ErrandType } from './tile/errand';
 import { KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
 import { InvalidCoordsError } from '../../utils/error';
+import { Civilization } from '../civilization';
+import { Leader } from '../leader';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE?
 const TRADER_SPEED = 1;
@@ -29,7 +31,7 @@ export class Map {
   seed: number;
   cities: City[];
   traders: Trader[];
-  updates: { (civID: number): Event }[];
+  updates: { (domainIDs: string[]): Event }[];
 
   private tiles: Tile[];
 
@@ -101,7 +103,7 @@ export class Map {
     return mod(pos1.x, this.width) === mod(pos2.x, this.width) && pos1.y === pos2.y;
   }
 
-  getUpdates(): { (civID: number): Event }[] {
+  getUpdates(): { (domainIDs: string[]): Event }[] {
     return this.updates.splice(0);
   }
 
@@ -392,31 +394,41 @@ export class Map {
       if (!overwrite) return;
       tile.owner?.removeTile(coords);
       if (tile.owner.civID) {
-        tile.setVisibility(tile.owner.civID, false);
+        tile.setVisibility(`city_${tile.owner.id}`, false);
       }
     }
     tile.owner = owner;
     if (owner.civID) {
-      tile.setVisibility(owner.civID, true);
+      tile.setVisibility(`city_${tile.owner.id}`, true);
     }
     owner.addTile(coords);
   }
 
-  private getTileDataByCiv(civID: number, tile: Tile): TileData | null {
-    if (!tile.discoveredBy[civID]) {
-      return null;
-    }
+  private getTileDataByDomainIDs(domainIDs: string[], tile: Tile): TileData | null {
+    let data = null;
+    for (const domainID of domainIDs) {
+      if (!tile.discoveredBy[domainID]) continue;
 
-    if (tile.visibleTo[civID]) {
-      return tile.getVisibleData(civID);
-    } else {
-      return tile.getDiscoveredData();
+      if (tile.visibleTo[domainID]) {
+        data = tile.getVisibleData(domainID);
+        return data;
+      } else {
+        data = tile.getDiscoveredData();
+      }
     }
+    return data;
+  }
+
+  public getMapByLeader(leader: Leader): (TileData | null)[] {
+    const domainIDs = leader.getDomainIDs();
+    return this.tiles.map((tile) => {
+      return this.getTileDataByDomainIDs(domainIDs, tile);
+    });
   }
 
   getCivMap(civID: number): (TileData | null)[] {
     return this.tiles.map((tile) => {
-      return this.getTileDataByCiv(civID, tile);
+      return this.getTileDataByDomainIDs([`civ_${civID}`], tile);
     });
   }
 
@@ -424,8 +436,8 @@ export class Map {
     return this.traders.filter((trader) => trader.civID === civID).map(trader => trader.getData());
   }
 
-  setTileVisibility(civID: number, coords: Coords, visible: boolean) {
-    this.getTileOrThrow(coords).setVisibility(civID, visible);
+  setTileVisibility(domainID: string, coords: Coords, visible: boolean) {
+    this.getTileOrThrow(coords).setVisibility(domainID, visible);
     this.tileUpdate(coords);
   }
 
@@ -436,14 +448,14 @@ export class Map {
   tileUpdate(coords: Coords): void {
     // if (coords.x === null && coords.y === null) return;
     const tile = this.getTileOrThrow(coords);
-    this.updates.push( (civID: number) => ['tileUpdate', [ coords, this.getTileDataByCiv(civID, tile) ]] );
+    this.updates.push( (domainIDs: string[]) => ['tileUpdate', [ coords, this.getTileDataByDomainIDs(domainIDs, tile) ]] );
   }
 
   moveUnitTo(unit: Unit, coords: Coords): void {
     // mark tiles currently visible by unit as unseen
     const srcVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of srcVisible) {
-      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, false);
+      if (unit.domainID !== undefined) this.setTileVisibility(unit.domainID, visibleCoords, false);
     }
 
     this.getTileOrThrow(unit.coords).setUnit(undefined);
@@ -455,7 +467,7 @@ export class Map {
     // mark tiles now visible by unit as seen
     const newVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of newVisible) {
-      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, true);
+      if (unit.domainID !== undefined) this.setTileVisibility(unit.domainID, visibleCoords, true);
     }
   }
 
@@ -706,7 +718,7 @@ export class Map {
         if (tile.improvement.knowledge) {
           this.updateImprovementLinks(world, tile, coords, tile.improvement);
 
-          if (tile.unit && tile.unit.civID === tile.owner?.civID) {
+          if (tile.unit && tile.owner?.ownsUnit(tile.unit)) {
             const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
             tile.unit.updateKnowledge(tileKnowledgeMap);
           }
