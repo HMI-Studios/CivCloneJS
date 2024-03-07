@@ -19,7 +19,7 @@ export const civTemplates = [
 ];
 
 export interface CivilizationData {
-  id: number;
+  templateID: number;
   color: string;
   textColor: string;
   secondaryColor: string;
@@ -28,7 +28,7 @@ export interface CivilizationData {
 }
 
 export class Civilization {
-  private id: number;
+  private templateID: number;
   private color: string;
   private textColor: string;
   private secondaryColor: string;
@@ -38,9 +38,9 @@ export class Civilization {
   public units: Unit[];
   public startingKnowledge: KnowledgeMap;
 
-  constructor(id: number) {
-    const { color, textColor, name, startingKnowledge } = civTemplates[id];
-    this.id = id;
+  constructor(templateID: number) {
+    const { color, textColor, name, startingKnowledge } = civTemplates[templateID];
+    this.templateID = templateID;
     this.color = color;
     this.textColor = textColor;
     this.secondaryColor = color;
@@ -56,7 +56,7 @@ export class Civilization {
 
   export() {
     return {
-      id: this.id,
+      templateID: this.templateID,
       color: this.color,
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
@@ -67,7 +67,7 @@ export class Civilization {
   }
 
   static import(data: any): Civilization {
-    const civ = new Civilization(data.id);
+    const civ = new Civilization(data.templateID);
     civ.color = data.color;
     civ.textColor = data.textColor;
     civ.secondaryColor = data.secondaryColor;
@@ -91,7 +91,7 @@ export class Civilization {
 
   getData(): CivilizationData {
     return {
-      id: this.id,
+      templateID: this.templateID,
       color: this.color,
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
