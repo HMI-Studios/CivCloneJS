@@ -8,13 +8,11 @@ export interface LeaderData {
 }
 
 export class Leader {
-  units: Unit[];
   domains: (Civilization | City)[];
   turnActive: boolean;
   turnFinished: boolean;
 
   constructor() {
-    this.units = [];
     this.domains = [];
     this.turnActive = false;
     this.turnFinished = false;
@@ -22,7 +20,6 @@ export class Leader {
 
   export() {
     return {
-      units: this.units.map(unit => unit.export()),
       turnActive: this.turnActive,
       turnFinished: this.turnFinished,
     };
@@ -30,7 +27,6 @@ export class Leader {
 
   static import(data: any): Leader {
     const leader =  new Leader();
-    leader.units = data.units.map((unitData: any) => Unit.import(unitData));
     leader.turnActive = data.turnActive;
     leader.turnFinished = data.turnFinished;
     return leader;
@@ -46,8 +42,10 @@ export class Leader {
     this.turnActive = true;
     this.turnFinished = false;
 
-    for (const unit of this.units) {
-      unit.newTurn();
+    for (const domain of this.domains) {
+      for (const unit of domain.units) {
+        unit.newTurn();
+      }
     }
   }
 
@@ -56,21 +54,16 @@ export class Leader {
   }
 
   getUnits(): Unit[] {
-    return this.units;
+    const units: Unit[] = [];
+    for (const domain of this.domains) {
+      for (const unit of domain.units) {
+        units.push(unit);
+      }
+    }
+    return units;
   }
 
   getUnitPositions(): Coords[] {
-    return this.units.map(unit => unit.coords);
-  }
-
-  addUnit(unit: Unit): void {
-    this.units.push(unit);
-  }
-
-  removeUnit(unit: Unit): void {
-    const unitIndex = this.units.indexOf(unit);
-    if (unitIndex > -1) {
-      this.units.splice(unitIndex, 1);
-    }
+    return this.getUnits().map(unit => unit.coords);
   }
 }

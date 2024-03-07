@@ -1,4 +1,6 @@
 import { KnowledgeMap } from './map/tile/knowledge';
+import { Unit } from './map/tile/unit';
+import { Coords } from './world';
 
 const DEFAULT_START_KNOWLEDGE = {
   'start': 100,
@@ -33,6 +35,7 @@ export class Civilization {
   private name: string;
   private leaderID: number | null;
 
+  public units: Unit[];
   public startingKnowledge: KnowledgeMap;
 
   constructor(id: number) {
@@ -44,9 +47,22 @@ export class Civilization {
     this.name = name;
     this.leaderID = null;
 
+    this.units = [];
     this.startingKnowledge = {
       ...DEFAULT_START_KNOWLEDGE,
       ...startingKnowledge,
+    };
+  }
+
+  export() {
+    return {
+      id: this.id,
+      color: this.color,
+      textColor: this.textColor,
+      secondaryColor: this.secondaryColor,
+      name: this.name,
+      leaderID: this.leaderID,
+      units: this.units.map(unit => unit.export()),
     };
   }
 
@@ -57,6 +73,7 @@ export class Civilization {
     civ.secondaryColor = data.secondaryColor;
     civ.name = data.name;
     civ.leaderID = null;
+    civ.units = data.units.map((unitData: any) => Unit.import(unitData));
     return civ;
   }
 
@@ -81,5 +98,24 @@ export class Civilization {
       name: this.name,
       leaderID: this.leaderID,
     };
+  }
+
+  getUnits(): Unit[] {
+    return this.units;
+  }
+
+  getUnitPositions(): Coords[] {
+    return this.units.map(unit => unit.coords);
+  }
+
+  addUnit(unit: Unit): void {
+    this.units.push(unit);
+  }
+
+  removeUnit(unit: Unit): void {
+    const unitIndex = this.units.indexOf(unit);
+    if (unitIndex > -1) {
+      this.units.splice(unitIndex, 1);
+    }
   }
 }
