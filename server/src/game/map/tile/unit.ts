@@ -1,4 +1,5 @@
 import { getAdjacentCoords } from '../../../utils';
+import { DomainID, compareDomainIDs } from '../../leader';
 import { Coords } from '../../world';
 import { KnowledgeBucket, KnowledgeMap } from './knowledge';
 import { Yield } from './yield';
@@ -12,7 +13,7 @@ export interface UnitData {
   type: string,
   hp: number,
   movement: number,
-  domainID: string,
+  domainID: DomainID,
   promotionClass: PromotionClass,
   attackRange?: number,
   knowledge: KnowledgeMap,
@@ -131,7 +132,7 @@ export class Unit {
   combatStats: [number, number, number];
   attackRange?: number;
   visionRange: number;
-  domainID: string;
+  domainID: DomainID;
   coords: Coords;
   alive: boolean;
   cloaked?: boolean;
@@ -146,7 +147,7 @@ export class Unit {
     ));
   }
 
-  constructor(type: string, coords: Coords, domainID: string, knowledge?: KnowledgeMap) {
+  constructor(type: string, coords: Coords, domainID: DomainID, knowledge?: KnowledgeMap) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -198,8 +199,8 @@ export class Unit {
     return unit;
   }
 
-  getData(domainID: string): UnitData | undefined {
-    return !this.cloaked || domainID === this.domainID ? {
+  getData(domainID: DomainID): UnitData | undefined {
+    return !this.cloaked || compareDomainIDs(domainID, this.domainID) ? {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
