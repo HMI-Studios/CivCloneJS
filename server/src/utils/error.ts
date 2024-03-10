@@ -8,12 +8,15 @@ class BaseError extends Error {
   }
 }
 
+export class InternalServerError extends BaseError {}
+
 export class MapError extends BaseError {}
 export class GenerationFailed extends MapError {}
 export class NoStartLocation extends MapError {}
 
 export class ValueError extends BaseError {}
 export class InvalidCoordsError extends ValueError {}
+export class IllegalCoordsError extends ValueError {}
 
 export class FrontendError extends BaseError {
   errName: string;
