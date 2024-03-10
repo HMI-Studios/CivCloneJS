@@ -27,8 +27,8 @@ const sendTo = (ws: WebSocketManager, msg: { [key: string]: unknown }) => {
 
 export const games: { [gameID: number] : Game } = {};
 (async () => {
-  const game = await Game.load('singleplayer test')
-  games[newID()] = game;
+  // const game = await Game.load('singleplayer test')
+  // games[newID()] = game;
 })()
 
 function newID(): number {
@@ -50,6 +50,21 @@ const createGame = (username: string, playerCount: number, mapOptions: MapOption
     }
   ]);
 };
+
+(async () => {
+  createGame(
+    'system',
+    1,
+    {
+      width: 100,
+      height: 100,
+    },
+    {
+      seed: null,
+      gameName: 'random seed test',
+    }
+  )
+})
 
 export const getConnData = (ws: WebSocketManager): ConnectionData => {
   const connIndex = connections.indexOf(ws);
@@ -228,9 +243,10 @@ const methods: {
     });
   },
 
-  setLeader: (ws: WebSocketManager, leaderID: number) => {
+  // TODO - rename to selectCiv
+  setLeader: (ws: WebSocketManager, civTemplateID: number) => {
     const [game, player] = getGameInfo(ws);
-    game.setLeader(player, leaderID);
+    game.selectCiv(player, civTemplateID);
   },
 
   ready: (ws: WebSocketManager, state: boolean) => {
