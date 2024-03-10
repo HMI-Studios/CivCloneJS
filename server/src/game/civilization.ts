@@ -1,3 +1,4 @@
+import { Domain, DomainID, DomainType, Leader } from './leader';
 import { KnowledgeMap } from './map/tile/knowledge';
 import { Unit } from './map/tile/unit';
 import { Coords } from './world';
@@ -25,33 +26,27 @@ export interface CivilizationData {
   textColor: string;
   secondaryColor: string;
   name: string;
-  leaderID: number | null;
+  leader: Leader | null;
 }
 
-export class Civilization {
-  public id: number;
-
+export class Civilization extends Domain {
   private templateID: number;
   private color: string;
   private textColor: string;
   private secondaryColor: string;
   private name: string;
-  private leaderID: number | null;
 
-  public units: Unit[];
   public startingKnowledge: KnowledgeMap;
 
   constructor(id: number, templateID: number) {
-    this.id = id;
+    super(id, DomainType.CIVILIZATION);
     const { color, textColor, name, startingKnowledge } = civTemplates[templateID];
     this.templateID = templateID;
     this.color = color;
     this.textColor = textColor;
     this.secondaryColor = color;
     this.name = name;
-    this.leaderID = null;
 
-    this.units = [];
     this.startingKnowledge = {
       ...DEFAULT_START_KNOWLEDGE,
       ...startingKnowledge,
@@ -66,7 +61,7 @@ export class Civilization {
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
       name: this.name,
-      leaderID: this.leaderID,
+      leader: this.leader,
       units: this.units.map(unit => unit.export()),
     };
   }
@@ -77,21 +72,9 @@ export class Civilization {
     civ.textColor = data.textColor;
     civ.secondaryColor = data.secondaryColor;
     civ.name = data.name;
-    civ.leaderID = null;
+    civ.leader = null;
     civ.units = data.units.map((unitData: any) => Unit.import(unitData));
     return civ;
-  }
-
-  select(leaderID: number): void {
-    this.leaderID = leaderID;
-  }
-
-  unselect(): void {
-    this.leaderID = null;
-  }
-
-  hasLeader(): boolean {
-    return this.leaderID !== null;
   }
 
   getData(): CivilizationData {
@@ -102,26 +85,7 @@ export class Civilization {
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
       name: this.name,
-      leaderID: this.leaderID,
+      leader: this.leader,
     };
-  }
-
-  getUnits(): Unit[] {
-    return this.units;
-  }
-
-  getUnitPositions(): Coords[] {
-    return this.units.map(unit => unit.coords);
-  }
-
-  addUnit(unit: Unit): void {
-    this.units.push(unit);
-  }
-
-  removeUnit(unit: Unit): void {
-    const unitIndex = this.units.indexOf(unit);
-    if (unitIndex > -1) {
-      this.units.splice(unitIndex, 1);
-    }
   }
 }

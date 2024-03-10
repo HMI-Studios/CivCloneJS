@@ -1,6 +1,7 @@
 import { Tile } from ".";
 import { Map } from "..";
 import { arrayIncludesCoords, getAdjacentCoords, getSmallestCoordsDiff } from "../../../utils";
+import { CivDomainID, Domain, DomainID, DomainType, compareDomainIDs } from "../../leader";
 import { World, Coords } from "../../world";
 import { ErrandType } from "./errand";
 import { Improvement } from "./improvement";
@@ -8,25 +9,22 @@ import { Unit } from "./unit";
 
 export interface CityData {
   name: string;
-  civID?: number;
+  civID?: CivDomainID;
   isBarbarian: boolean;
 }
 
-export class City {
-  id: number;
+export class City extends Domain {
   center: Coords;
   name: string;
-  civID?: number;
-  units: Unit[];
+  civID?: CivDomainID;
 
   private tiles: Set<Coords>;
 
-  constructor(id: number, center: Coords, name: string, civID?: number) {
-    this.id = id;
+  constructor(id: number, center: Coords, name: string, civID?: CivDomainID) {
+    super(id, DomainType.CITY);
     this.center = center;
     this.name = name;
     this.civID = civID;
-    this.units = [];
 
     this.tiles = new Set();
     this.addTile(center);
@@ -63,10 +61,6 @@ export class City {
     };
   }
 
-  public getDomainID(): string {
-    return `city_${this.id}`;
-  }
-
   getTiles(): Set<Coords> {
     return this.tiles;
   }
@@ -79,30 +73,8 @@ export class City {
     this.tiles.delete(coords);
   }
 
-  getUnits(): Unit[] {
-    return this.units;
-  }
-
-  getUnitPositions(): Coords[] {
-    return this.units.map(unit => unit.coords);
-  }
-
-  addUnit(unit: Unit): void {
-    this.units.push(unit);
-    if (this instanceof BarbarianCamp) {
-      unit.setBarbarian(true);
-    }
-  }
-
-  removeUnit(unit: Unit): void {
-    const unitIndex = this.units.indexOf(unit);
-    if (unitIndex > -1) {
-      this.units.splice(unitIndex, 1);
-    }
-  }
-
   ownsUnit(unit: Unit): boolean {
-    return unit.domainID === `city_${this.id}` || (this.civID !== undefined && unit.domainID === `civ_${this.civID}`);
+    return super.ownsUnit(unit) || (this.civID !== undefined && unit.domainID.type === DomainType.CIVILIZATION && compareDomainIDs(unit.domainID, this.civID));
   }
 
   turn(world: World, map: Map): void {
