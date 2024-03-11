@@ -45,7 +45,7 @@ export class WorkErrand {
     },
     [ErrandType.UNIT_TRAINING]: (world, map, tile, action) => {
       if (!(tile.owner && action.location)) return;
-      const newUnit = new Unit(action.option, action.location, tile.owner.civID, tile.owner.civID ? undefined : tile.owner.id);
+      const newUnit = new Unit(action.option, action.location, tile.owner.getControllingDomainID());
       if (tile.unit) {
         // if there is already a unit on this tile, we must figure something else out
       } else {
