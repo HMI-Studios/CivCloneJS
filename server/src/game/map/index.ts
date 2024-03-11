@@ -30,7 +30,7 @@ export class Map {
   seed: number;
   cities: City[];
   traders: Trader[];
-  updates: { (domainIDs: DomainID[]): Event }[];
+  updates: { (leader: Leader): Event }[];
 
   private tiles: Tile[];
 
@@ -60,8 +60,9 @@ export class Map {
    * @param data 
    * @returns 
    */
-  static import(data: any): [Map, ((world: World) => void)[]] {
+  static import(data: any): [Map, ((world: World, leaders: { [id: number]: Leader }) => void)[]] {
     const map = new Map(data.height, data.width, data.seed);
+    const callbacks: ((world: World, leaders: { [id: number]: Leader }) => void)[] = [];
     map.tiles = data.tiles.map((tileData: any) => Tile.import(tileData));
     map.cities = data.cities.map((cityData: any) => {
       const city = City.import(cityData);
@@ -69,10 +70,14 @@ export class Map {
       for (const coords of set) {
         map.setTileOwner(coords, city, false);
       }
+      callbacks.push((world: World, leaders: { [id: number]: Leader }): void => {
+        if (cityData.leader !== null) {
+          world.setDomainLeader(city.getDomainID(), leaders[cityData.leader]);
+        }
+      });
       return city;
     });
     map.traders = data.traders.map((traderData: any) => Trader.import(map, traderData));
-    const callbacks: ((world: World) => void)[] = [];
     map.forEachTile((tile, coords): void => {
       callbacks.push((world: World): void => {
         if (tile.improvement?.knowledge) {
@@ -102,7 +107,7 @@ export class Map {
     return mod(pos1.x, this.width) === mod(pos2.x, this.width) && pos1.y === pos2.y;
   }
 
-  getUpdates(): { (domainIDs: DomainID[]): Event }[] {
+  getUpdates(): { (leader: Leader): Event }[] {
     return this.updates.splice(0);
   }
 
@@ -425,14 +430,12 @@ export class Map {
     });
   }
 
-  getCivMap(civID: number): (TileData | null)[] {
-    return this.tiles.map((tile) => {
-      return this.getTileDataByDomainIDs([{type: DomainType.CIVILIZATION, subID: civID}], tile);
-    });
+  public getTraderDataByDomainID(domainID: DomainID): TraderData[] {
+    return this.traders.filter((trader) => compareDomainIDs(trader.domainID, domainID)).map(trader => trader.getData());
   }
 
-  getTraderDataByDomainID(domainID: DomainID): TraderData[] {
-    return this.traders.filter((trader) => compareDomainIDs(trader.domainID, domainID)).map(trader => trader.getData());
+  public getTraderDataByLeader(leader: Leader): TraderData[] {
+    return leader.getDomainIDs().reduce((data: TraderData[], domainID) => [...data, ...this.getTraderDataByDomainID(domainID)], []);
   }
 
   setTileVisibility(domainID: DomainID, coords: Coords, visible: boolean) {
@@ -447,7 +450,7 @@ export class Map {
   tileUpdate(coords: Coords): void {
     // if (coords.x === null && coords.y === null) return;
     const tile = this.getTileOrThrow(coords);
-    this.updates.push( (domainIDs: DomainID[]) => ['tileUpdate', [ coords, this.getTileDataByDomainIDs(domainIDs, tile) ]] );
+    this.updates.push( (leader) => ['tileUpdate', [ coords, this.getTileDataByDomainIDs(leader.getDomainIDs(), tile) ]] );
   }
 
   moveUnitTo(unit: Unit, coords: Coords): void {
@@ -580,7 +583,7 @@ export class Map {
     );
   }
 
-  newBarbarianCampAt(coords: Coords): number | null {
+  newBarbarianCampAt(coords: Coords): DomainID | null {
     const tile = this.getTileOrThrow(coords);
     if (!this.canSettleOn(tile)) return null;
 
@@ -591,7 +594,7 @@ export class Map {
     this.setTileOwner(coords, camp, false);
 
     this.buildImprovementAt(coords, 'barbarian_camp');
-    return cityID;
+    return camp.getDomainID();
   }
 
   settleCityAt(coords: Coords, name: string, leader: Leader, settler: Unit): boolean {

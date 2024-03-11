@@ -139,11 +139,11 @@ export class Game {
   }
 
   static import(data: any): Game {
-    const world = data.world === null ? null : World.import(data.world);
     const leaders: { [id: number]: Leader } = {};
     for (const leaderData of data.leaders) {
       leaders[Number(leaderData.id)] = Leader.import(leaderData);
     }
+    const world = data.world === null ? null : World.import(data.world, leaders);
     const civPool = data.civPool;
     const players: { [name: string]: Player } = {};
     for (const playerName in data.players) {
@@ -273,7 +273,7 @@ export class Game {
     const updates = this.world.getUpdates();
     this.forEachLeaderID((leaderID) => {
       this.sendToLeader(leaderID, {
-        update: updates.map(updateFn => updateFn(this.leaders[leaderID].getDomainIDs())),//.filter(update => update),
+        update: updates.map(updateFn => updateFn(this.leaders[leaderID])),//.filter(update => update),
       });
     });
   }
