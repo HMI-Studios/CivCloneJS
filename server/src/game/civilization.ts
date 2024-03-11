@@ -55,14 +55,12 @@ export class Civilization extends Domain {
 
   export() {
     return {
-      id: this.id,
+      ...super.baseExport(),
       templateID: this.templateID,
       color: this.color,
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
       name: this.name,
-      leader: this.leader,
-      units: this.units.map(unit => unit.export()),
     };
   }
 
@@ -72,8 +70,6 @@ export class Civilization extends Domain {
     civ.textColor = data.textColor;
     civ.secondaryColor = data.secondaryColor;
     civ.name = data.name;
-    civ.leader = null;
-    civ.units = data.units.map((unitData: any) => Unit.import(unitData));
     return civ;
   }
 

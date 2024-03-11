@@ -36,6 +36,7 @@ export class City extends Domain {
       tiles.push(coords)
     }
     return {
+      ...super.baseExport(),
       center: this.center,
       name: this.name,
       civID: this.civID,
@@ -45,7 +46,7 @@ export class City extends Domain {
   }
 
   static import(data: any): City {
-    const city = new (data.isBarbarian ? BarbarianCamp : City)(data.center, data.name, data.civID);
+    const city = new (data.isBarbarian ? BarbarianCamp : City)(data.id, data.center, data.name, data.civID);
     city.tiles = new Set();
     for (const coords of data.tiles) {
       city.addTile(coords);

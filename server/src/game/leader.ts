@@ -37,6 +37,19 @@ export class Domain {
     this.units = [];
     this.leader = null;
   }
+
+  protected baseExport() {
+    return {
+      id: this.id,
+      leader: this.leader?.id,
+      units: this.units.map(unit => unit.export()),
+    }
+  }
+
+  protected baseImport(data: any) {
+    // The leader is not set here, it must be set by call to World.setDomainLeader and is done during World import
+    this.units = data.units.map((unitData: any) => Unit.import(unitData));
+  }
   
   public getData(): any {
     throw new InternalServerError('Attempted illegal call to Domain.getData.');
