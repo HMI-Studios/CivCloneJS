@@ -7,7 +7,7 @@ import { Coords, World } from './world';
 import { Player, PlayerData } from './player';
 import { EventMsg } from '../utils';
 import { PerlinWorldGenerator } from './map/generator';
-import { FrontendError, GenerationFailed, InvalidSettlement, MapError } from '../utils/error';
+import { BugFixError, FrontendError, GameNotStartedError, GenerationFailed, InvalidSettlement, MapError } from '../utils/error';
 import { PromotionClass } from './map/tile/unit';
 import { WallType } from './map/tile/wall';
 import { Leader, isCivDomain } from './leader';
@@ -22,54 +22,36 @@ interface MetaData {
 
 export type GameData = MetaData & { players: {[playerName: string]: PlayerData} };
 
-type GameImportArgs = [World, { [leaderID: number]: Leader }, { [civTemplateID: number]: number | null }, { [playerName: string]: Player }, number, MetaData, boolean];
+type GameOptions = { playerCount: number, ownerName?: string, gameName?: string, isManualSeed?: boolean };
+type GameImportArgs = [World | null, { [leaderID: number]: Leader }, { [civTemplateID: number]: number | null }, { [playerName: string]: Player }, number, MetaData];
 
 export class Game {
-  world: World;
+  generator?: PerlinWorldGenerator;
+  options?: GameOptions;
+  world: World | null;
   leaders: { [leaderID: number]: Leader }
   civPool: { [civTemplateID: number]: number | null }
   private players: { [playerName: string]: Player };
   playerCount: number;
   metaData: MetaData;
-  private hasStarted: boolean;
 
-  constructor(args: [PerlinWorldGenerator, { playerCount: number, ownerName?: string, gameName?: string, isManualSeed?: boolean }] | GameImportArgs) {
-    if (args.length === 7) {
-      const [world, leaders, civPool, players, playerCount, metaData, hasStarted] = args;
+  constructor(args: [PerlinWorldGenerator, GameOptions] | GameImportArgs) {
+    if (args.length === 6) {
+      const [world, leaders, civPool, players, playerCount, metaData] = args;
       this.world = world;
       this.leaders = leaders;
       this.civPool = civPool;
       this.players = players;
       this.playerCount = playerCount;
       this.metaData = metaData;
-      this.hasStarted = hasStarted;
       return;
     }
     const [ generator, options ] = args;
+    this.generator = generator;
+    this.options = options;
+
     const { playerCount, ownerName } = options;
     const gameName = options.gameName ?? (ownerName ? `${ownerName}'s game` : 'Untitled Game');
-
-    let world: World | null = null;
-    let tries = 0;
-    const maxTries = options.isManualSeed ? 1 : 10;
-    while (!world && !(tries > maxTries)) {
-      tries++;
-      try {
-        world = new World([generator.generate(), playerCount]);
-      } catch (err) {
-        if (err instanceof MapError) {
-          generator.reseed(null);
-          console.warn(`Retrying map generation.`)
-          if (tries+1 > maxTries) {
-            console.error('Map generation failed.');
-            throw new GenerationFailed(`Could not generate map! (gave up after ${tries} tries)`);
-          }
-        } else throw err;
-      }
-    }
-
-    if (!world) throw new MapError('Map failed to generate and the error was not caught.');
-    this.world = world;
 
     this.players = {};
     this.playerCount = playerCount;
@@ -91,7 +73,46 @@ export class Game {
       playersConnected: Object.keys(this.players).length,
     };
 
-    this.hasStarted = false;
+    this.world = null;
+  }
+
+  private generateWorld(): void {
+    const { generator, options } = this;
+    if (!(generator && options)) throw new MapError('Map failed to generate: generator or other required options were missing.');
+
+    const { playerCount } = options;
+
+    const civTemplateLeaders: [number, Leader][] = [];
+    for (const templateID in this.civPool) {
+      const leaderID = this.civPool[templateID];
+      if (leaderID) civTemplateLeaders.push([Number(templateID), this.leaders[leaderID]]);
+    }
+
+    if (civTemplateLeaders.length !== playerCount) {
+      throw new BugFixError('If this is ever thrown, it means we are not enforcing all players selecting a civ before game start.');
+    }
+
+    let world: World | null = null;
+    let tries = 0;
+    const maxTries = options.isManualSeed ? 1 : 10;
+    while (!world && !(tries > maxTries)) {
+      tries++;
+      try {
+        world = new World([generator.generate(), playerCount, civTemplateLeaders]);
+      } catch (err) {
+        if (err instanceof MapError) {
+          generator.reseed(null);
+          console.warn(`Retrying map generation.`)
+          if (tries+1 > maxTries) {
+            console.error('Map generation failed.');
+            throw new GenerationFailed(`Could not generate map! (gave up after ${tries} tries)`);
+          }
+        } else throw err;
+      }
+    }
+
+    if (!world) throw new MapError('Map failed to generate and the error was not caught.');
+    this.world = world;
   }
 
   export() {
@@ -108,18 +129,17 @@ export class Game {
     }
 
     return {
-      world: this.world.export(),
+      world: this.world?.export(),
       leaders: exportedLeaders,
       civPool: this.civPool,
       players: exportedPlayers,
       playerCount: this.playerCount,
       metaData: this.metaData,
-      hasStarted: this.hasStarted,
     };
   }
 
   static import(data: any): Game {
-    const world = World.import(data.world);
+    const world = data.world === null ? null : World.import(data.world);
     const leaders: { [id: number]: Leader } = {};
     for (const leaderID in data.leaders) {
       const leaderData = data.leaders[leaderID];
@@ -133,8 +153,7 @@ export class Game {
     }
     const playerCount = data.playerCount;
     const metaData = data.metaData;
-    const hasStarted = data.hasStarted;
-    return new Game([world, leaders, civPool, players, playerCount, metaData, hasStarted]);
+    return new Game([world, leaders, civPool, players, playerCount, metaData]);
   }
 
   async save() {
@@ -144,6 +163,10 @@ export class Game {
   static async load(saveFile: string): Promise<Game> {
     const data = await fs.readFile(path.join(SAVE_LOCATION, `${saveFile}.json`), { encoding: 'utf8' });
     return Game.import(JSON.parse(data));
+  }
+
+  hasStarted(): this is Game & { world: World } {
+    return this.world !== null;
   }
 
   connectPlayer(username: string, player: Player) {
@@ -156,22 +179,29 @@ export class Game {
   }
 
   startGame(player?: Player): void {
-    if (this.hasStarted) {
+    if (this.hasStarted()) {
       if (player) {
         this.sendToLeader(player.leaderID, {
           update: [
             ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
+            // TODO - rename to leaderData
             ['civData', [ this.world.getAllCivsData() ]],
           ],
         });
         this.resumeTurnForLeader(player.leaderID);
       }
     } else {
-      this.hasStarted = true;
+      this.generateWorld();
+
+      if (!this.hasStarted()) {
+        // Something went wrong. TODO - maybe retry here?
+        return;
+      }
 
       this.sendToAll({
         update: [
           ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
+          // TODO - rename to leaderData
           ['civData', [ this.world.getAllCivsData() ]],
         ],
       });
@@ -188,6 +218,7 @@ export class Game {
   }
 
   beginTurnForLeader(leaderID: number): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leader = this.getLeader(leaderID);
     leader.newTurn();
     this.world.updateLeaderTileVisibility(leader);
@@ -195,6 +226,7 @@ export class Game {
   }
 
   resumeTurnForLeader(leaderID: number): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leader = this.getLeader(leaderID);
     this.sendToLeader(leaderID, {
       update: [
@@ -215,6 +247,8 @@ export class Game {
   }
 
   endTurn(): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
+
     // end all players' turns
     this.forEachPlayer((player: Player) => {
       if (!player.isAI()) {
@@ -236,6 +270,7 @@ export class Game {
   }
 
   sendUpdates(): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const updates = this.world.getUpdates();
     this.forEachLeaderID((leaderID) => {
       this.sendToLeader(leaderID, {
@@ -397,6 +432,7 @@ export class Game {
    * @returns 
    */
   playerUnitCombat(player: Player, srcCoords: Coords, targetCoords: Coords): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -441,6 +477,7 @@ export class Game {
    * @returns 
    */
   playerUnitMovement(player: Player, srcCoords: Coords, path: Coords[], attack: boolean) {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -501,6 +538,7 @@ export class Game {
   }
 
   setPlayerUnitCloak(player: Player, coords: Coords, cloaked: boolean): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const tile = this.world.map.getTileOrThrow(coords);
@@ -515,6 +553,7 @@ export class Game {
   }
 
   trainPlayerUnit(player: Player, coords: Coords, type: string): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     this.world.map.trainUnitAt(coords, type, leader);
@@ -522,6 +561,7 @@ export class Game {
   }
 
   settleCityAt(player: Player, coords: Coords, name: string): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -545,6 +585,7 @@ export class Game {
    * @param coords 
    */
   getImprovementCatalog(player: Player, coords: Coords): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -559,6 +600,7 @@ export class Game {
   }
 
   buildImprovement(player: Player, coords: Coords, type: string): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -572,6 +614,7 @@ export class Game {
   }
 
   buildWall(player: Player, coords: Coords, facingCoords: Coords, type: number): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -586,6 +629,7 @@ export class Game {
   }
 
   setGateOpen(player: Player, coords: Coords, facingCoords: Coords, isOpen: boolean): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
@@ -608,6 +652,7 @@ export class Game {
   }
 
   getPlayerTraders(player: Player): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     this.sendToLeader(leaderID, {
@@ -622,6 +667,7 @@ export class Game {
    * @param coords 
    */
   getUnitCatalog(player: Player, coords: Coords): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const tile = this.world.map.getTileOrThrow(coords);
@@ -639,6 +685,7 @@ export class Game {
    * @param coords 
    */
   getKnowledgeCatalog(player: Player, coords: Coords): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const tile = this.world.map.getTileOrThrow(coords);
@@ -652,6 +699,7 @@ export class Game {
   }
 
   researchKnowledge(player: Player, coords: Coords, name: string): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     this.world.map.researchKnowledgeAt(coords, name, leader);
@@ -659,6 +707,7 @@ export class Game {
   }
 
   stealKnowledge(player: Player, coords: Coords): void {
+    if (!this.hasStarted()) throw new GameNotStartedError();
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
     const map = this.world.map;
