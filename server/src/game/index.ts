@@ -193,8 +193,7 @@ export class Game {
       this.generateWorld();
 
       if (!this.hasStarted()) {
-        // Something went wrong. TODO - maybe retry here?
-        return;
+        throw new BugFixError('This should never be thrown. This means the world was not generated, and none of our previous checks caught it.');
       }
 
       this.sendToAll({
@@ -208,7 +207,8 @@ export class Game {
       this.forEachLeaderID((leaderID: number) => {
         this.sendToLeader(leaderID, {
           update: [
-            ['setMap', [this.world.map.getLeaderMap(this.getLeader(leaderID))]],
+            // Type assertion here to make the compiler happy - we've already guaranteed that world exsits.
+            ['setMap', [(this.world as World).map.getLeaderMap(this.getLeader(leaderID))]],
           ],
         });
         this.beginTurnForLeader(leaderID);
@@ -362,8 +362,7 @@ export class Game {
         this.civPool[civTemplateID] = player.leaderID;
         this.sendToAll({
           update: [
-            // TODO - rename to civPool
-            ['leaderPool', [ this.civPool, civTemplates, this.getPlayersData() ]],
+            ['civPool', [ this.civPool, civTemplates, this.getPlayersData() ]],
           ],
         });
       } else {
