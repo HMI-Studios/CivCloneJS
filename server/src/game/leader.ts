@@ -90,11 +90,13 @@ export interface LeaderData {
 }
 
 export class Leader {
+  public id: number;
   private domains: Domain[];
   turnActive: boolean;
   turnFinished: boolean;
 
-  constructor() {
+  constructor(id: number) {
+    this.id = id;
     this.domains = [];
     this.turnActive = false;
     this.turnFinished = false;
@@ -102,13 +104,14 @@ export class Leader {
 
   export() {
     return {
+      id: this.id,
       turnActive: this.turnActive,
       turnFinished: this.turnFinished,
     };
   }
 
   static import(data: any): Leader {
-    const leader =  new Leader();
+    const leader =  new Leader(data.id);
     leader.turnActive = data.turnActive;
     leader.turnFinished = data.turnFinished;
     return leader;

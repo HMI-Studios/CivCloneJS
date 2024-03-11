@@ -58,7 +58,7 @@ export class Game {
 
     this.leaders = {};
     for (let leaderID = 0; leaderID < playerCount; leaderID++) {
-      this.leaders[leaderID] = new Leader();
+      this.leaders[leaderID] = new Leader(leaderID);
     }
 
     this.civPool = {};
@@ -122,10 +122,10 @@ export class Game {
       exportedPlayers[playerName] = player.export();
     }
 
-    const exportedLeaders: { [id: number]: any } = {};
+    const exportedLeaders: any[] = [];
     for (const leaderID in this.leaders) {
       const leader = this.leaders[leaderID];
-      exportedLeaders[leaderID] = leader.export();
+      exportedLeaders.push(leader.export());
     }
 
     return {
@@ -141,9 +141,8 @@ export class Game {
   static import(data: any): Game {
     const world = data.world === null ? null : World.import(data.world);
     const leaders: { [id: number]: Leader } = {};
-    for (const leaderID in data.leaders) {
-      const leaderData = data.leaders[leaderID];
-      leaders[Number(leaderID)] = Leader.import(leaderData);
+    for (const leaderData of data.leaders) {
+      leaders[Number(leaderData.id)] = Leader.import(leaderData);
     }
     const civPool = data.civPool;
     const players: { [name: string]: Player } = {};
