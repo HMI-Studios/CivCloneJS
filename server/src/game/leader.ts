@@ -138,15 +138,24 @@ export class Leader {
     }
   }
 
-  public addDomain(domain: Domain) {
+  public addDomain(domain: Domain): void {
+    if (this.ownsDomain(domain)) return;
     this.domains.push(domain);
   }
 
-  public removeDomain(domain: Domain) {
+  public removeDomain(domain: Domain): void {
     const domainIndex = this.domains.indexOf(domain);
     if (domainIndex > -1) {
       this.domains.splice(domainIndex, 1);
     }
+  }
+
+  public clearDomains(): void {
+    this.domains = [];
+  }
+
+  public ownsDomain(domain: Domain): boolean {
+    return this.getDomainIDs().some((domainID => compareDomainIDs(domain.getDomainID(), domainID)));
   }
 
   public getDomainIDs(): DomainID[] {
@@ -191,6 +200,7 @@ export class Leader {
   }
 
   getUnitPositions(): Coords[] {
+    console.log(this.getUnits().map(unit => unit.coords))
     return this.getUnits().map(unit => unit.coords);
   }
 

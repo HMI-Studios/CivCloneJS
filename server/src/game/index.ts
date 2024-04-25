@@ -107,6 +107,11 @@ export class Game {
             console.error('Map generation failed.');
             throw new GenerationFailed(`Could not generate map! (gave up after ${tries} tries)`);
           }
+          // Reset leader domains, as these would be set by the previous attempt
+          this.forEachLeaderID((leaderID) => {
+            const leader = this.getLeader(leaderID);
+            leader.clearDomains();
+          });
         } else throw err;
       }
     }
