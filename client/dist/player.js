@@ -86,10 +86,10 @@ class UI {
             tileInfoMenu: this.createElement('div', { className: 'tileInfoMenu' }),
             sidebarMenu: this.createElement('div', { className: 'sidebarMenu' }),
         };
-        this.leaderPool = [];
-        this.takenLeaders = [];
+        this.civPool = {};
+        this.civTemplates = [];
         this.players = {};
-        this.civs = {};
+        this.leaders = {};
         this.turnActive = false;
         this.buttons = {
             mainBtn: new Button(this.createElement('button', { className: 'mainActionBtn' }), {
@@ -190,12 +190,12 @@ class UI {
         }
         return element;
     }
-    createCivItem(leader) {
+    createCivItem(civTemplate, selectedBy) {
         const civItem = this.createElement('li', { className: 'civItem' });
-        civItem.style.backgroundColor = leader.color;
-        civItem.style.color = leader.textColor;
+        civItem.style.backgroundColor = civTemplate.color;
+        civItem.style.color = civTemplate.textColor;
         const nameText = this.createElement('span');
-        nameText.innerHTML = `${leader.name}` + (leader.civID !== null ? ` - ${translate('menu.civ.selected_by')} ${this.civs[leader.civID].name}` : '');
+        nameText.innerHTML = `${civTemplate.name}` + (selectedBy !== null ? ` - ${translate('menu.civ.selected_by')} ${this.leaders[selectedBy.id].name}` : '');
         civItem.appendChild(nameText);
         return civItem;
     }
@@ -268,21 +268,22 @@ class UI {
         this.elements.civPicker.innerHTML = '';
         const selectedLeaderSlot = this.createElement('div', { className: 'selectedLeader' });
         this.elements.civPicker.appendChild(selectedLeaderSlot);
-        for (let i = 0; i < this.leaderPool.length; i++) {
-            const leader = this.leaderPool[i];
-            const civItem = this.createCivItem(leader);
-            civItem.onclick = () => {
-                callback(leader.id);
-            };
-            this.elements.civPicker.appendChild(civItem);
-        }
-        for (let i = 0; i < this.takenLeaders.length; i++) {
-            const leader = this.takenLeaders[i];
-            const civItem = this.createCivItem(leader);
-            civItem.onclick = () => {
-                alert(translate('error.civ_taken'));
-            };
-            if (leader.civID === self.civID) {
+        for (let civTemplateID = 0; civTemplateID < this.civTemplates.length; civTemplateID++) {
+            const civTemplate = this.civTemplates[civTemplateID];
+            const leaderID = this.civPool[civTemplateID];
+            const leader = leaderID !== null ? world.leaders[leaderID] : null;
+            const civItem = this.createCivItem(civTemplate, leader);
+            if (leader) {
+                civItem.onclick = () => {
+                    alert(translate('error.civ_taken'));
+                };
+            }
+            else {
+                civItem.onclick = () => {
+                    callback(civTemplateID);
+                };
+            }
+            if (leader && leader.id === self.leaderID) {
                 selectedLeaderSlot.appendChild(civItem);
             }
             else {
@@ -496,7 +497,8 @@ class UI {
         this.elements.tileInfoMenu.appendChild(tileKnowledge);
         if (tile.owner) {
             const tileOwner = this.createElement('span', { className: 'infoSpan' });
-            tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
+            // TODO
+            // tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
             this.elements.tileInfoMenu.appendChild(tileOwner);
         }
         this.root.appendChild(this.elements.tileInfoMenu);

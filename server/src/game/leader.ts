@@ -99,6 +99,7 @@ export class Domain {
 }
 
 export interface LeaderData {
+  id: number;
   domains: (CivilizationData | CityData)[];
 }
 
@@ -132,6 +133,7 @@ export class Leader {
 
   getData(): LeaderData {
     return {
+      id: this.id,
       domains: this.domains.map(domain => domain.getData()),
     }
   }

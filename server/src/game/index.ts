@@ -10,7 +10,7 @@ import { PerlinWorldGenerator } from './map/generator';
 import { BugFixError, FrontendError, GameNotStartedError, GenerationFailed, InvalidSettlement, MapError } from '../utils/error';
 import { PromotionClass } from './map/tile/unit';
 import { WallType } from './map/tile/wall';
-import { Leader, isCivDomain } from './leader';
+import { Leader, LeaderData, isCivDomain } from './leader';
 import { civTemplates } from './civilization';
 
 interface MetaData {
@@ -85,7 +85,7 @@ export class Game {
     const civTemplateLeaders: [number, Leader][] = [];
     for (const templateID in this.civPool) {
       const leaderID = this.civPool[templateID];
-      if (leaderID) civTemplateLeaders.push([Number(templateID), this.leaders[leaderID]]);
+      if (leaderID !== null) civTemplateLeaders.push([Number(templateID), this.leaders[leaderID]]);
     }
 
     if (civTemplateLeaders.length !== playerCount) {
@@ -183,7 +183,6 @@ export class Game {
         this.sendToLeader(player.leaderID, {
           update: [
             ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
-            // TODO - rename to leaderData
             ['civData', [ this.world.getAllCivsData() ]],
           ],
         });
@@ -199,7 +198,6 @@ export class Game {
       this.sendToAll({
         update: [
           ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
-          // TODO - rename to leaderData
           ['civData', [ this.world.getAllCivsData() ]],
         ],
       });
@@ -298,6 +296,14 @@ export class Game {
     return playersData;
   }
 
+  getLeadersData(): {[leaderID: number]: LeaderData} {
+    const leadersData: { [leaderID: number]: LeaderData } = {};
+    for (const leaderID in this.leaders) {
+      leadersData[leaderID] = this.leaders[leaderID].getData();
+    }
+    return leadersData;
+  }
+
   getMetaData(): GameData {
     return { ...this.metaData, players: this.getPlayersData() };
   }
@@ -359,6 +365,13 @@ export class Game {
   selectCiv(player: Player, civTemplateID: number): void {
     if (player) {
       if (this.civPool[civTemplateID] === null) {
+        // Unselect the old civ, if one is selected
+        for (const templateID in this.civPool) {
+          if (this.civPool[templateID] === player.leaderID) {
+            this.civPool[templateID] = null;
+          }
+        }
+        // Then select the new one
         this.civPool[civTemplateID] = player.leaderID;
         this.sendToAll({
           update: [
@@ -366,8 +379,7 @@ export class Game {
           ],
         });
       } else {
-        // TODO - rename to civTaken
-        throw new FrontendError('leaderTaken', 'That civilization is no longer available');
+        throw new FrontendError('civTaken', 'That civilization is no longer available');
       }
     }
   }

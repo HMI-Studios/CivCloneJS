@@ -26,7 +26,7 @@ export interface CivilizationData {
   textColor: string;
   secondaryColor: string;
   name: string;
-  leader: Leader | null;
+  leaderID: number | null;
 }
 
 export class Civilization extends Domain {
@@ -81,7 +81,7 @@ export class Civilization extends Domain {
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
       name: this.name,
-      leader: this.leader,
+      leaderID: this.leader?.id ?? null,
     };
   }
 }

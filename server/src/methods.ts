@@ -1,14 +1,12 @@
 import * as WebSocket from 'ws';
 import WebSocketManager from './game/connection';
 import { Player } from './game/player';
-import { Map, MapOptions } from './game/map';
+import { MapOptions } from './game/map';
 import { Game, GameData } from './game';
-import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
-import { PromotionClass } from './game/map/tile/unit';
-import { PlayerData } from './utils';
-import { WallType } from './game/map/tile/wall';
+import { PerlinWorldGenerator } from './game/map/generator';
 import { Coords } from './game/world';
 import { FrontendError } from './utils/error';
+import { civTemplates } from './game/civilization';
 
 interface ConnectionData {
   ws: WebSocketManager,
@@ -180,31 +178,37 @@ const methods: {
 
     const username = getUsername(ws);
 
-    const civID = game?.newPlayerCivID(username);
+    const leaderID = game?.newPlayerLeaderID(username);
     const isRejoin = game.hasPlayer(username);
 
-    if (civID !== null) {
+    if (leaderID !== null) {
       getConnData(ws).gameID = gameID;
       
       if (isRejoin) {
         const player = game.getPlayer(username) as Player; // Safe, since `isRejoin` is only true if the player exists.
         player.reset(ws);
       } else {
-        game.connectPlayer(username, new Player(civID, ws));
+        game.connectPlayer(username, new Player(leaderID, ws));
       }
 
       sendTo(ws, {
         update: [
-          ['civID', [ civID ]],
+          ['leaderID', [ leaderID ]],
         ]
       });
+
+      game.sendToAll({
+        update: [
+          ['leaderData', [ game.getLeadersData() ]],
+        ],
+      })
 
       if (isRejoin && game.canStart()) {
         game.startGame(game.getPlayer(username));
       } else {
         sendTo(ws, {
           update: [
-            ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
+            ['civPool', [ game.civPool, civTemplates, game.getPlayersData() ]],
           ],
         });
       }
@@ -243,8 +247,7 @@ const methods: {
     });
   },
 
-  // TODO - rename to selectCiv
-  setLeader: (ws: WebSocketManager, civTemplateID: number) => {
+  selectCiv: (ws: WebSocketManager, civTemplateID: number) => {
     const [game, player] = getGameInfo(ws);
     game.selectCiv(player, civTemplateID);
   },

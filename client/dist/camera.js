@@ -1,3 +1,4 @@
+const DEFAULT_COLOR = '#333';
 const [TILE_WIDTH, TILE_HEIGHT] = [28, 26];
 const X_TILE_SPACING = TILE_WIDTH * 3 / 4;
 const Y_TILE_SPACING = TILE_HEIGHT / 2;
@@ -146,7 +147,7 @@ class Camera {
         if (unit.cloaked)
             ctx.globalAlpha = 0.5;
         // Unit Color Background
-        ctx.fillStyle = (_b = (_a = civs[unit.civID]) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : (unit.isBarbarian ? '#F00' : '#333');
+        ctx.fillStyle = unit.domainID.type === DomainType.CIVILIZATION ? ((_b = (_a = civs[unit.domainID.subID]) === null || _a === void 0 ? void 0 : _a.color) !== null && _b !== void 0 ? _b : DEFAULT_COLOR) : DEFAULT_COLOR;
         ctx.beginPath();
         ctx.rect((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5) * zoom, UNIT_WIDTH * zoom, UNIT_RECT_HEIGHT * zoom);
         ctx.arc((-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5 + (UNIT_WIDTH / 2)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) + 5 + UNIT_RECT_HEIGHT) * zoom, (UNIT_WIDTH / 2) * zoom, 0, Math.PI);
@@ -268,7 +269,7 @@ class Camera {
                         ctx.beginPath();
                         ctx.lineWidth = margin * 2;
                         ctx.lineCap = 'square';
-                        ctx.strokeStyle = world.civs[tile.owner.civID].color;
+                        ctx.strokeStyle = tile.owner.civID ? world.civs[tile.owner.civID.subID].color : DEFAULT_COLOR;
                         ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
                         for (let i = 0; i < neighbors.length; i++) {
                             const neighbor = world.getTile(neighbors[i]);
@@ -279,7 +280,7 @@ class Camera {
                             else
                                 ctx.lineTo(...positions[i]);
                         }
-                        if (tile.owner.civID === world.player.civID)
+                        if (world.controlsTile(tile))
                             ctx.setLineDash([5 * zoom, 5 * zoom]);
                         ctx.stroke();
                         ctx.setLineDash([]);
@@ -308,7 +309,7 @@ class Camera {
                             console.log(x, y);
                             if (this.selectedUnitPos) {
                                 const selectedUnit = world.getTile(this.selectedUnitPos).unit;
-                                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && tile.unit.civID !== world.player.civID) {
+                                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && !world.controlsUnit(tile.unit)) {
                                     world.attack(this.selectedUnitPos, { x, y }, selectedUnit);
                                 }
                                 else if (world.posIndex({ x, y }) in this.highlightedTiles) {
@@ -320,7 +321,7 @@ class Camera {
                             }
                         }
                         ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
-                        if (tile.unit && this.mouseDownTime === 1 && tile.unit.civID === world.player.civID && ui.turnActive) {
+                        if (tile.unit && this.mouseDownTime === 1 && world.controlsUnit(tile.unit) && ui.turnActive) {
                             console.log(tile.unit);
                             this.selectUnit(world, { x, y }, tile.unit);
                         }

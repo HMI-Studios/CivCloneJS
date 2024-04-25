@@ -8,6 +8,7 @@ import { Improvement } from "./improvement";
 import { Unit } from "./unit";
 
 export interface CityData {
+  id: number;
   name: string;
   civID?: CivDomainID;
   isBarbarian: boolean;
@@ -56,6 +57,7 @@ export class City extends Domain {
 
   getData(): CityData {
     return {
+      id: this.id,
       name: this.name,
       civID: this.civID,
       isBarbarian: this instanceof BarbarianCamp,
