@@ -383,7 +383,7 @@ class Camera {
             for (let i = 0; i < neighbors.length; i++) {
               const neighbor = world.getTile(neighbors[i]);
               if (!neighbor) ctx.moveTo(...positions[i]);
-              else if (neighbor.owner?.civID === tile.owner.civID) ctx.moveTo(...positions[i]);
+              else if (compareDomainIDs(neighbor.owner?.civID, tile.owner.civID) || neighbor.owner?.id === tile.owner.id) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
             }
             if (world.controlsTile(tile)) ctx.setLineDash([5 * zoom, 5 * zoom]);

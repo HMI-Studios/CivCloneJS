@@ -175,7 +175,7 @@ class Camera {
         ctx.stroke();
     }
     render(world) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const { zoom, x: camX, y: camY, textures, ctx } = this;
         const { width, height } = world;
         const [wmX, wmY] = [camX + (mouseX / zoom), camY + (mouseY / zoom)];
@@ -275,7 +275,7 @@ class Camera {
                             const neighbor = world.getTile(neighbors[i]);
                             if (!neighbor)
                                 ctx.moveTo(...positions[i]);
-                            else if (((_c = neighbor.owner) === null || _c === void 0 ? void 0 : _c.civID) === tile.owner.civID)
+                            else if (compareDomainIDs((_c = neighbor.owner) === null || _c === void 0 ? void 0 : _c.civID, tile.owner.civID) || ((_d = neighbor.owner) === null || _d === void 0 ? void 0 : _d.id) === tile.owner.id)
                                 ctx.moveTo(...positions[i]);
                             else
                                 ctx.lineTo(...positions[i]);
@@ -329,7 +329,7 @@ class Camera {
                     if (!tile.visible)
                         ctx.globalAlpha = 0.5;
                     if (tile.improvement) {
-                        const overlay = (_d = textures.improvements[tile.improvement.type]) !== null && _d !== void 0 ? _d : textures.missing_overlay;
+                        const overlay = (_e = textures.improvements[tile.improvement.type]) !== null && _e !== void 0 ? _e : textures.missing_overlay;
                         ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
                     }
                     ctx.globalAlpha = 1;
@@ -349,7 +349,7 @@ class Camera {
                     if (hasWalls) {
                         for (const i of [2, 3, 4]) {
                             if (tile.walls[i] !== null) {
-                                const overlay = (_e = textures.improvements[`wall_${tile.walls[i].type}_${i}`]) !== null && _e !== void 0 ? _e : textures.missing_overlay;
+                                const overlay = (_f = textures.improvements[`wall_${tile.walls[i].type}_${i}`]) !== null && _f !== void 0 ? _f : textures.missing_overlay;
                                 ctx.drawImage(overlay.texture, (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING)) - overlay.offset) * zoom, TILE_WIDTH * zoom, overlay.texture.height * zoom);
                             }
                         }

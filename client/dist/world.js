@@ -70,6 +70,7 @@ const makeCivID = (id) => ({
     type: DomainType.CIVILIZATION,
 });
 const isCiv = (domain) => (domain.templateID !== undefined);
+const compareDomainIDs = (a, b) => a !== undefined && b !== undefined && a.type === b.type && a.subID === b.subID;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
     constructor() {
