@@ -195,6 +195,8 @@ export class Game {
         throw new BugFixError('This should never be thrown. This means the world was not generated, and none of our previous checks caught it.');
       }
 
+      this.sendUpdates();
+
       this.sendToAll({
         update: [
           ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],

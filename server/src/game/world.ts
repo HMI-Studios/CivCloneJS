@@ -163,6 +163,9 @@ export class World {
 
     domain.setLeader(leader);
     leader.addDomain(domain);
+
+    this.updates.push((leader) => ['leaderUpdate', [leader.id, leader.getData()]]);
+
     return true;
   }
 

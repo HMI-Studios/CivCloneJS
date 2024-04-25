@@ -155,7 +155,7 @@ export class Tile {
 
   isDiscoveredBy(domainID: DomainID): boolean {
     const key = Tile.getDomainVisibilityKey(domainID);
-    return this.discoveredBy[key];
+    return key in this.discoveredBy;
   }
 
   isVisibleTo(domainID: DomainID): boolean {
@@ -163,14 +163,18 @@ export class Tile {
     return this.visibleTo[key] > 0;
   }
 
+
   setVisibility(domainID: DomainID, visible: boolean): void {
     const key = Tile.getDomainVisibilityKey(domainID);
+
+    if (!(key in this.visibleTo)) this.visibleTo[key] = 0;
+
     if (visible) {
       this.visibleTo[key]++;
     } else {
       this.visibleTo[key]--;
     }
-    key
+
     if (visible && !this.discoveredBy[key]) {
       this.discoveredBy[key] = true;
     }

@@ -728,9 +728,6 @@ class World {
         ui.players[playerName] = { ...player, name: playerName };
         if (player.leaderID !== null) ui.leaders[player.leaderID] = { ...player, name: playerName };
       }
-      for (const civTemplateID in civPool) {
-        
-      }
       ui.setView('civPicker');
       ui.showCivPicker(civPickerFn, this.player);
     };
@@ -745,6 +742,10 @@ class World {
 
     this.on.update.leaderID = (leaderID: number): void => {
       this.player.leaderID = leaderID;
+    };
+
+    this.on.update.leaderUpdate = (leaderID: number, leaderData: Leader): void => {
+      this.leaders[leaderID] = leaderData;
     };
 
     this.on.update.tradersList = (tradeRoutes: TradeRoute[]) => {

@@ -535,8 +535,6 @@ class World {
                     if (player.leaderID !== null)
                         ui.leaders[player.leaderID] = Object.assign(Object.assign({}, player), { name: playerName });
                 }
-                for (const civTemplateID in civPool) {
-                }
                 ui.setView('civPicker');
                 ui.showCivPicker(civPickerFn, this.player);
             };
@@ -548,6 +546,9 @@ class World {
             };
             this.on.update.leaderID = (leaderID) => {
                 this.player.leaderID = leaderID;
+            };
+            this.on.update.leaderUpdate = (leaderID, leaderData) => {
+                this.leaders[leaderID] = leaderData;
             };
             this.on.update.tradersList = (tradeRoutes) => {
                 this.tradeRoutes = tradeRoutes;
