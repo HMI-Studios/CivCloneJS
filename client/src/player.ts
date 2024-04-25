@@ -609,8 +609,8 @@ class UI {
 
     if (tile.owner) {
       const tileOwner = this.createElement('span', {className: 'infoSpan'});
-      // TODO
-      // tileOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[tile.owner.civID].leader.name}`;
+      // TODO - add some sort of world.getCiv that can take an undefined ID to make this less ugly. Also, TODO make a translate string for 'Free City'.
+      tileOwner.innerText = `${translate('tile.info.owner')}: ${tile.owner.name} (${tile.owner.civID ? world.civs[tile.owner.civID?.subID].name : 'Free City'})`;
       this.elements.tileInfoMenu.appendChild(tileOwner);
     }
 
