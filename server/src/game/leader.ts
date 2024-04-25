@@ -211,6 +211,10 @@ export class Leader {
   controlsTile(tile: Tile): boolean {
     const owner = tile.owner;
     if (!owner) return false;
-    return this.domains.some(domain => (owner.getDomainID() === domain.getDomainID()));
+    return this.domains.some(domain => (
+      compareDomainIDs(owner.getDomainID(), domain.getDomainID()) || (
+        owner.civID && compareDomainIDs(owner.civID, domain.getDomainID())
+      )
+    ));
   }
 }

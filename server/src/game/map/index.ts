@@ -602,7 +602,7 @@ export class Map {
     if (!this.canSettleOn(tile)) return false;
 
     const civID = settler.domainID;
-    if (!isCivDomain(civID)) return false; // City-based settlers are not allowed.
+    if (!isCivDomain(civID)) return false; // City-based settlers are not allowed. This is a redundant check, and will usually not be relevant.
 
     const cityID = this.cities.length;
     const city: City = new City(cityID, coords, name, civID);
