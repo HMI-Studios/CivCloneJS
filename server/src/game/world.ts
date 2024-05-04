@@ -243,16 +243,14 @@ export class World {
   // map, civs
   addUnit(unit: Unit): void {
     if (this.map.isInBounds(unit.coords)) {
-      if (isCivDomain(unit.domainID)) this.getCiv(unit.domainID).addUnit(unit);
-      else if (isCityDomain(unit.domainID)) this.getCity(unit.domainID).addUnit(unit);
+      this.getDomain(unit.domainID).addUnit(unit);
       this.map.getTileOrThrow(unit.coords).setUnit(unit);
     }
   }
 
   // map, civs
   removeUnit(unit: Unit): void {
-    if (isCivDomain(unit.domainID)) this.getCiv(unit.domainID).removeUnit(unit);
-    else if (isCityDomain(unit.domainID)) this.getCity(unit.domainID).removeUnit(unit);
+    this.getDomain(unit.domainID).removeUnit(unit);
     this.updates.push(() => ['unitKilled', [ unit.coords, unit ]]);
     this.map.getTileOrThrow(unit.coords).setUnit(undefined);
     // TODO: make this more intelligent
