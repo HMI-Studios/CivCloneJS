@@ -1,11 +1,51 @@
 interface Civ {
+  id: number;
+  templateID: number;
   color: string;
-  leader: Leader;
+  textColor: string;
+  secondaryColor: string;
+  name: string;
+  leaderID: number | null;
+}
+
+type City = {
+  id: number,
+  civID?: CivDomainID,
+  name: string,
+  isBarbarian: boolean,
+};
+
+interface CivTemplate {
+  color: string;
+  name: string;
+  textColor: string;
+  startingKnowledge?: { [knowledgeName: string]: number };
+}
+
+enum DomainType {
+  CIVILIZATION,
+  CITY,
+}
+
+type DomainID = {
+  subID: number,
+  type: DomainType,
+};
+
+type SpecificTypeDomainID<T extends DomainType> = DomainID & {
+  type: T;
+};
+type CivDomainID = SpecificTypeDomainID<DomainType.CIVILIZATION>;
+type CityDomainID = SpecificTypeDomainID<DomainType.CITY>;
+
+interface Leader {
+  id: number;
+  domains: (Civ | City)[];
 }
 
 interface Player {
   name: string | null;
-  civID: number | null;
+  leaderID: number | null;
 }
 
 interface WorldEventHandlerMap {
@@ -22,7 +62,7 @@ interface Unit {
   type: string;
   hp: number;
   movement: number;
-  civID: number;
+  domainID: DomainID,
   promotionClass: PromotionClass;
   knowledge: KnowledgeMap;
   cloaked?: boolean;
@@ -104,11 +144,7 @@ interface Tile {
   movementCost: MovementCost;
   unit: Unit;
   yield: Yield,
-  owner?: {
-    civID: number,
-    name: string,
-    isBarbarian: boolean,
-  };
+  owner?: City;
   visible: boolean;
   walls: Wall[];
 }
@@ -165,6 +201,18 @@ const getCoordsDial = ({x, y}: Coords): Coords[] => {
   ];
 };
 
+const makeCityID = (id: number): CityDomainID => ({
+  subID: id,
+  type: DomainType.CITY,
+});
+const makeCivID = (id: number): CivDomainID => ({
+  subID: id,
+  type: DomainType.CIVILIZATION,
+});
+
+const isCiv = (domain: (Civ | City)): domain is Civ => ((domain as Civ).templateID !== undefined);
+const compareDomainIDs = (a?: DomainID, b?: DomainID): boolean => a !== undefined && b !== undefined && a.type === b.type && a.subID === b.subID;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
   tiles: Tile[];
@@ -178,7 +226,9 @@ class World {
   socketDidOpen: boolean;
   on: { update: WorldEventHandlerMap, error: WorldEventHandlerMap, event: WorldEventHandlerMap };
   listeners: { [name: string]: ((...args: any) => void) | null };
-  civs: { [key: string]: Civ };
+  civs: { [subID: number]: Civ };
+  cities: { [subID: number]: City };
+  leaders: { [key: string]: Leader };
   player: Player;
   tradeRoutes: TradeRoute[];
   constructor() {
@@ -197,9 +247,10 @@ class World {
     };
     this.listeners = {};
     this.civs = {};
+    this.leaders = {};
     this.player = {
       name: null,
-      civID: null,
+      leaderID: null,
     };
     this.tradeRoutes = [];
   }
@@ -264,6 +315,27 @@ class World {
     return x1;
   }
 
+  domainMatchesID(domain: (City | Civ), domainID: DomainID): boolean {
+    if (isCiv(domain)) {
+      return domainID.type === DomainType.CIVILIZATION && domain.id === domainID.subID;
+    } else {
+      return domainID.type === DomainType.CITY && domain.id === domainID.subID;
+    }
+  }
+
+  playerControlsTile(tile: Tile): boolean {
+    const { owner } = tile;
+    if (this.player.leaderID === null || !owner) return false;
+    const leader = this.leaders[this.player.leaderID];
+    return leader.domains.some(domain => this.domainMatchesID(domain, makeCityID(owner.id)) || (owner.civID && this.domainMatchesID(domain, owner.civID)));
+  }
+
+  playerControlsUnit(unit: Unit): boolean {
+    if (this.player.leaderID === null) return false;
+    const leader = this.leaders[this.player.leaderID];
+    return leader.domains.some(domain => this.domainMatchesID(domain, unit.domainID));
+  }
+
   isOcean(tile: Tile): boolean {
     return (
       tile.type === 'ocean' ||
@@ -281,7 +353,7 @@ class World {
 
   canBuildOn(tile: Tile): boolean {
     return (
-      tile.owner?.civID === this.player.civID &&
+      this.playerControlsTile(tile) &&
       !this.isOcean(tile) &&
       tile.type !== 'mountain'
     );
@@ -329,7 +401,7 @@ class World {
 
         const tile = this.getTile(adjPos);
         const atTile = this.getTile(atPos);
-        if (tile.unit && tile.unit.civID === this.player.civID) continue;
+        if (tile.unit && this.playerControlsUnit(tile.unit)) continue;
         const adjDirection = this.getDirection(adjPos, atPos);
         const atDirection = this.getDirection(atPos, adjPos);
         if (tile.walls[adjDirection] && tile.walls[adjDirection].type !== WallType.OPEN_GATE) continue;
@@ -538,9 +610,9 @@ class World {
       ]);
     };
 
-    const civPickerFn = (leaderID: number): void => {
+    const civPickerFn = (civTemplateID: number): void => {
       this.sendActions([
-        ['setLeader', [leaderID]],
+        ['selectCiv', [civTemplateID]],
       ]);
     };
 
@@ -647,26 +719,34 @@ class World {
       camera.deselectUnit(this);
     };
 
-    this.on.update.leaderPool = (leaders: Leader[], takenLeaders: Leader[], players: {[playerName: string]: Player}): void => {
-      ui.leaderPool = leaders;
-      ui.takenLeaders = takenLeaders;
+    this.on.update.civPool = (civPool: {[civTemplateID: number]: number | null}, civTemplates: CivTemplate[], players: {[playerName: string]: Player}): void => {
+      ui.civPool = civPool;
+      ui.civTemplates = civTemplates;
       ui.players = {};
-      ui.civs = {};
+      ui.leaders = {};
       for (const playerName in players) {
         const player = players[playerName];
         ui.players[playerName] = { ...player, name: playerName };
-        if (player.civID !== null) ui.civs[player.civID] = { ...player, name: playerName };
+        if (player.leaderID !== null) ui.leaders[player.leaderID] = { ...player, name: playerName };
       }
       ui.setView('civPicker');
       ui.showCivPicker(civPickerFn, this.player);
+    };
+
+    this.on.update.leaderData = (leaders: { [key: string]: Leader }) => {
+      this.leaders = leaders;
     };
 
     this.on.update.civData = (civs: { [key: string]: Civ }) => {
       this.civs = civs;
     };
 
-    this.on.update.civID = (civID: number): void => {
-      this.player.civID = civID;
+    this.on.update.leaderID = (leaderID: number): void => {
+      this.player.leaderID = leaderID;
+    };
+
+    this.on.update.leaderUpdate = (leaderID: number, leaderData: Leader): void => {
+      this.leaders[leaderID] = leaderData;
     };
 
     this.on.update.tradersList = (tradeRoutes: TradeRoute[]) => {

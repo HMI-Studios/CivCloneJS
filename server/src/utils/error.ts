@@ -1,12 +1,18 @@
 const DEBUG_MODE = false;
 
 class BaseError extends Error {
-  constructor(msg: string) {
+  constructor(msg?: string) {
     super(msg);
     this.name = this.constructor.name;
     console.error(DEBUG_MODE ? this.stack : `${this.name}: ${this.message}`);
   }
 }
+
+export class InternalServerError extends BaseError {}
+export class BugFixError extends InternalServerError {}
+
+export class IllegalCmdError extends BaseError {}
+export class GameNotStartedError extends IllegalCmdError {}
 
 export class MapError extends BaseError {}
 export class GenerationFailed extends MapError {}
@@ -14,6 +20,7 @@ export class NoStartLocation extends MapError {}
 
 export class ValueError extends BaseError {}
 export class InvalidCoordsError extends ValueError {}
+export class IllegalCoordsError extends ValueError {}
 
 export class FrontendError extends BaseError {
   errName: string;

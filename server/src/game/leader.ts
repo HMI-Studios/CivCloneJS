@@ -1,85 +1,220 @@
-import { KnowledgeMap } from './map/tile/knowledge';
+import { InternalServerError } from '../utils/error';
+import { Civilization, CivilizationData } from './civilization';
+import { Tile } from './map/tile';
+import { City, CityData } from './map/tile/city';
+import { Unit } from './map/tile/unit';
+import { Coords } from './world';
 
-const DEFAULT_START_KNOWLEDGE = {
-  'start': 100,
-  'food_0': 100,
-  'military_0': 100,
-  'science_1': 100,
+export enum DomainType {
+  CIVILIZATION,
+  CITY,
 }
 
-export const leaderTemplates = [
-  { color: '#820000', textColor: '#ccc', name: 'Rokun', startingKnowledge: { 'science_1': 0, 'military_1': 100 } }, // RICH RED
-  { color: '#0a2ead', textColor: '#ccc', name: 'Azura' }, // BLUE
-  { color: '#03a300', textColor: '#222', name: 'Vertos' }, // GREEN
-  { color: '#bd9a02', textColor: '#222', name: 'Solei' }, // SAND YELLOW
-  { color: '#560e8a', textColor: '#ccc', name: 'Imperius' }, // ROYAL PURPLE
-  { color: '#bd7400', textColor: '#333', name: 'Baranog' }, // ORANGE
-];
+export type DomainID = {
+  subID: number,
+  type: DomainType,
+};
+
+type SpecificTypeDomainID<T extends DomainType> = DomainID & {
+  type: T;
+};
+export type CivDomainID = SpecificTypeDomainID<DomainType.CIVILIZATION>;
+export type CityDomainID = SpecificTypeDomainID<DomainType.CITY>;
+
+export const compareDomainIDs = (a: DomainID, b: DomainID): boolean => a.type === b.type && a.subID === b.subID;
+export const isCivDomain = (domainID: DomainID): domainID is CivDomainID => domainID.type === DomainType.CIVILIZATION;
+export const isCityDomain = (domainID: DomainID): domainID is CityDomainID => domainID.type === DomainType.CITY;
+
+export class Domain {
+  public id: number;
+  public type: DomainType;
+  public units: Unit[];
+  protected leader: Leader | null;
+
+  constructor(id: number, type: DomainType) {
+    this.id = id;
+    this.type = type;
+    this.units = [];
+    this.leader = null;
+  }
+
+  protected baseExport() {
+    return {
+      id: this.id,
+      leader: this.leader?.id,
+      units: this.units.map(unit => unit.export()),
+    }
+  }
+
+  protected baseImport(data: any) {
+    // The leader is not set here, it must be set by call to World.setDomainLeader and is done during World import
+    this.units = data.units.map((unitData: any) => Unit.import(unitData));
+  }
+  
+  public getData(): any {
+    throw new InternalServerError('Attempted illegal call to Domain.getData.');
+  }
+
+  public getDomainID(): DomainID {
+    return {
+      subID: this.id,
+      type: this.type,
+    };
+  }
+
+  public setLeader(leader: Leader): void {
+    this.leader = leader;
+  }
+
+  public clearLeader(): void {
+    this.leader = null;
+  }
+
+  public hasLeader(): boolean {
+    return this.leader !== null;
+  }
+
+  public getUnits(): Unit[] {
+    return this.units;
+  }
+
+  public getUnitPositions(): Coords[] {
+    return this.units.map(unit => unit.coords);
+  }
+
+  public addUnit(unit: Unit): void {
+    this.units.push(unit);
+  }
+
+  public removeUnit(unit: Unit): void {
+    const unitIndex = this.units.indexOf(unit);
+    if (unitIndex > -1) {
+      this.units.splice(unitIndex, 1);
+    }
+  }
+
+  public ownsUnit(unit: Unit): boolean {
+    return compareDomainIDs(unit.domainID, this.getDomainID());
+  }
+}
 
 export interface LeaderData {
   id: number;
-  color: string;
-  textColor: string;
-  secondaryColor: string;
-  name: string;
-  civID: number | null;
+  domains: (CivilizationData | CityData)[];
 }
 
 export class Leader {
-  private id: number;
-  private color: string;
-  private textColor: string;
-  private secondaryColor: string;
-  private name: string;
-  private civID: number | null;
-
-  public startingKnowledge: KnowledgeMap;
+  public id: number;
+  private domains: Domain[];
+  turnActive: boolean;
+  turnFinished: boolean;
 
   constructor(id: number) {
-    const { color, textColor, name, startingKnowledge } = leaderTemplates[id];
     this.id = id;
-    this.color = color;
-    this.textColor = textColor;
-    this.secondaryColor = color;
-    this.name = name;
-    this.civID = null;
+    this.domains = [];
+    this.turnActive = false;
+    this.turnFinished = false;
+  }
 
-    this.startingKnowledge = {
-      ...DEFAULT_START_KNOWLEDGE,
-      ...startingKnowledge,
+  export() {
+    return {
+      id: this.id,
+      turnActive: this.turnActive,
+      turnFinished: this.turnFinished,
     };
   }
 
   static import(data: any): Leader {
-    const leader = new Leader(data.id);
-    leader.color = data.color;
-    leader.textColor = data.textColor;
-    leader.secondaryColor = data.secondaryColor;
-    leader.name = data.name;
-    leader.civID = null;
+    const leader =  new Leader(data.id);
+    leader.turnActive = data.turnActive;
+    leader.turnFinished = data.turnFinished;
     return leader;
-  }
-
-  select(civID: number): void {
-    this.civID = civID;
-  }
-
-  unselect(): void {
-    this.civID = null;
-  }
-
-  isTaken(): boolean {
-    return this.civID !== null;
   }
 
   getData(): LeaderData {
     return {
       id: this.id,
-      color: this.color,
-      textColor: this.textColor,
-      secondaryColor: this.secondaryColor,
-      name: this.name,
-      civID: this.civID,
-    };
+      domains: this.domains.map(domain => domain.getData()),
+    }
+  }
+
+  public addDomain(domain: Domain): void {
+    if (this.ownsDomain(domain)) return;
+    this.domains.push(domain);
+  }
+
+  public removeDomain(domain: Domain): void {
+    const domainIndex = this.domains.indexOf(domain);
+    if (domainIndex > -1) {
+      this.domains.splice(domainIndex, 1);
+    }
+  }
+
+  public clearDomains(): void {
+    this.domains = [];
+  }
+
+  public ownsDomain(domain: Domain): boolean {
+    return this.getDomainIDs().some((domainID => compareDomainIDs(domain.getDomainID(), domainID)));
+  }
+
+  public getDomainIDs(): DomainID[] {
+    return this.domains.map(domain => domain.getDomainID());
+  }
+
+  public forEachCivDomainID(callback: (domainID: CivDomainID) => any): void {
+    this.getDomainIDs().forEach((domainID => {
+      if (isCivDomain(domainID)) callback(domainID);
+    }));
+  }
+
+  public forEachCityDomainID(callback: (domainID: CityDomainID) => any): void {
+    this.getDomainIDs().forEach((domainID => {
+      if (isCityDomain(domainID)) callback(domainID);
+    }));
+  }
+
+  newTurn() {
+    this.turnActive = true;
+    this.turnFinished = false;
+
+    for (const domain of this.domains) {
+      for (const unit of domain.units) {
+        unit.newTurn();
+      }
+    }
+  }
+
+  endTurn() {
+    this.turnActive = false;
+  }
+
+  getUnits(): Unit[] {
+    const units: Unit[] = [];
+    for (const domain of this.domains) {
+      for (const unit of domain.units) {
+        units.push(unit);
+      }
+    }
+    return units;
+  }
+
+  getUnitPositions(): Coords[] {
+    console.log(this.getUnits().map(unit => unit.coords))
+    return this.getUnits().map(unit => unit.coords);
+  }
+
+  controlsUnit(unit: Unit): boolean {
+    return this.domains.some(domain => domain.ownsUnit(unit));
+  }
+
+  controlsTile(tile: Tile): boolean {
+    const owner = tile.owner;
+    if (!owner) return false;
+    return this.domains.some(domain => (
+      compareDomainIDs(owner.getDomainID(), domain.getDomainID()) || (
+        owner.civID && compareDomainIDs(owner.civID, domain.getDomainID())
+      )
+    ));
   }
 }

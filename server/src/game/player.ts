@@ -1,24 +1,27 @@
 import * as WebSocket from 'ws';
-import { PlayerData } from '../utils';
 import WebSocketManager from './connection';
 
+export interface PlayerData {
+  leaderID: number;
+}
+
 export class Player {
-  civID: number;
+  leaderID: number;
   ready: boolean;
   private connection: WebSocketManager | null;
 
-  constructor(civID: number, connection: WebSocketManager | null) {
-    this.civID = civID;
+  constructor(leaderID: number, connection: WebSocketManager | null) {
+    this.leaderID = leaderID;
     this.ready = false;
     this.connection = connection;
   }
 
   export() {
-    return { civID: this.civID };
+    return { leaderID: this.leaderID };
   }
 
   static import(data: any): Player {
-    return new Player(data.civID, null)
+    return new Player(data.leaderID, null)
   }
 
   isAI(): boolean {
@@ -26,7 +29,7 @@ export class Player {
   }
 
   getData(): PlayerData {
-    return { civID: this.civID };
+    return { leaderID: this.leaderID };
   }
   
   reset(connection: WebSocketManager | null): void {

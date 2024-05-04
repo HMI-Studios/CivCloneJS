@@ -8,7 +8,8 @@ import { Route, Trader, TraderData } from './trade';
 import { Yield, YieldParams } from './tile/yield';
 import { ErrandAction, ErrandType } from './tile/errand';
 import { KnowledgeMap, KNOWLEDGE_SPREAD_RANGE, KNOWLEDGE_SPREAD_SPEED } from './tile/knowledge';
-import { InvalidCoordsError } from '../../utils/error';
+import { IllegalCoordsError, InvalidCoordsError } from '../../utils/error';
+import { Leader, DomainID, DomainType, isCivDomain, compareDomainIDs } from '../leader';
 
 // MAGIC NUMBER CONSTANTS - TODO GET RID OF THESE?
 const TRADER_SPEED = 1;
@@ -29,7 +30,7 @@ export class Map {
   seed: number;
   cities: City[];
   traders: Trader[];
-  updates: { (civID: number): Event }[];
+  updates: { (leader: Leader): Event }[];
 
   private tiles: Tile[];
 
@@ -59,8 +60,9 @@ export class Map {
    * @param data 
    * @returns 
    */
-  static import(data: any): [Map, ((world: World) => void)[]] {
+  static import(data: any): [Map, ((world: World, leaders: { [id: number]: Leader }) => void)[]] {
     const map = new Map(data.height, data.width, data.seed);
+    const callbacks: ((world: World, leaders: { [id: number]: Leader }) => void)[] = [];
     map.tiles = data.tiles.map((tileData: any) => Tile.import(tileData));
     map.cities = data.cities.map((cityData: any) => {
       const city = City.import(cityData);
@@ -68,10 +70,14 @@ export class Map {
       for (const coords of set) {
         map.setTileOwner(coords, city, false);
       }
+      callbacks.push((world: World, leaders: { [id: number]: Leader }): void => {
+        if (cityData.leader !== null) {
+          world.setDomainLeader(city.getDomainID(), leaders[cityData.leader]);
+        }
+      });
       return city;
     });
     map.traders = data.traders.map((traderData: any) => Trader.import(map, traderData));
-    const callbacks: ((world: World) => void)[] = [];
     map.forEachTile((tile, coords): void => {
       callbacks.push((world: World): void => {
         if (tile.improvement?.knowledge) {
@@ -101,7 +107,7 @@ export class Map {
     return mod(pos1.x, this.width) === mod(pos2.x, this.width) && pos1.y === pos2.y;
   }
 
-  getUpdates(): { (civID: number): Event }[] {
+  getUpdates(): { (leader: Leader): Event }[] {
     return this.updates.splice(0);
   }
 
@@ -392,40 +398,48 @@ export class Map {
       if (!overwrite) return;
       tile.owner?.removeTile(coords);
       if (tile.owner.civID) {
-        tile.setVisibility(tile.owner.civID, false);
+        tile.setVisibility(tile.owner.getDomainID(), false);
       }
     }
     tile.owner = owner;
     if (owner.civID) {
-      tile.setVisibility(owner.civID, true);
+      tile.setVisibility(tile.owner.getDomainID(), true);
     }
     owner.addTile(coords);
   }
 
-  private getTileDataByCiv(civID: number, tile: Tile): TileData | null {
-    if (!tile.discoveredBy[civID]) {
-      return null;
-    }
+  private getTileDataByDomainIDs(domainIDs: DomainID[], tile: Tile): TileData | null {
+    let data = null;
+    for (const domainID of domainIDs) {
+      if (!tile.isDiscoveredBy(domainID)) continue;
 
-    if (tile.visibleTo[civID]) {
-      return tile.getVisibleData(civID);
-    } else {
-      return tile.getDiscoveredData();
+      if (tile.isVisibleTo(domainID)) {
+        data = tile.getVisibleData(domainID);
+        return data;
+      } else {
+        data = tile.getDiscoveredData();
+      }
     }
+    return data;
   }
 
-  getCivMap(civID: number): (TileData | null)[] {
+  public getLeaderMap(leader: Leader): (TileData | null)[] {
+    const domainIDs = leader.getDomainIDs();
     return this.tiles.map((tile) => {
-      return this.getTileDataByCiv(civID, tile);
+      return this.getTileDataByDomainIDs(domainIDs, tile);
     });
   }
 
-  getTraderDataByCiv(civID: number): TraderData[] {
-    return this.traders.filter((trader) => trader.civID === civID).map(trader => trader.getData());
+  public getTraderDataByDomainID(domainID: DomainID): TraderData[] {
+    return this.traders.filter((trader) => compareDomainIDs(trader.domainID, domainID)).map(trader => trader.getData());
   }
 
-  setTileVisibility(civID: number, coords: Coords, visible: boolean) {
-    this.getTileOrThrow(coords).setVisibility(civID, visible);
+  public getTraderDataByLeader(leader: Leader): TraderData[] {
+    return leader.getDomainIDs().reduce((data: TraderData[], domainID) => [...data, ...this.getTraderDataByDomainID(domainID)], []);
+  }
+
+  setTileVisibility(domainID: DomainID, coords: Coords, visible: boolean) {
+    this.getTileOrThrow(coords).setVisibility(domainID, visible);
     this.tileUpdate(coords);
   }
 
@@ -436,14 +450,14 @@ export class Map {
   tileUpdate(coords: Coords): void {
     // if (coords.x === null && coords.y === null) return;
     const tile = this.getTileOrThrow(coords);
-    this.updates.push( (civID: number) => ['tileUpdate', [ coords, this.getTileDataByCiv(civID, tile) ]] );
+    this.updates.push( (leader) => ['tileUpdate', [ coords, this.getTileDataByDomainIDs(leader.getDomainIDs(), tile) ]] );
   }
 
   moveUnitTo(unit: Unit, coords: Coords): void {
     // mark tiles currently visible by unit as unseen
     const srcVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of srcVisible) {
-      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, false);
+      if (unit.domainID !== undefined) this.setTileVisibility(unit.domainID, visibleCoords, false);
     }
 
     this.getTileOrThrow(unit.coords).setUnit(undefined);
@@ -455,7 +469,7 @@ export class Map {
     // mark tiles now visible by unit as seen
     const newVisible = this.getVisibleTilesCoords(unit);
     for (const visibleCoords of newVisible) {
-      if (unit.civID !== undefined) this.setTileVisibility(unit.civID, visibleCoords, true);
+      if (unit.domainID !== undefined) this.setTileVisibility(unit.domainID, visibleCoords, true);
     }
   }
 
@@ -520,7 +534,7 @@ export class Map {
     if (!route) return;
     this.addTrader(
       new Trader(
-        trader.civID,
+        trader.domainID,
         route,
         sourceTile.improvement,
         sinkTile.improvement,
@@ -531,7 +545,9 @@ export class Map {
     );
   }
 
-  createTradeRoutes(civID: number, coords: Coords, sink: Improvement, requirement: YieldParams, range = 5, mode = 0): void {
+  createTradeRoutes(leader: Leader, coords: Coords, sink: Improvement, requirement: YieldParams, range = 5, mode = 0): void {
+    const domainID = this.getControllingDomainID(leader, this.getTileOrThrow(coords));
+    if (!domainID) throw new IllegalCoordsError(`You do not control the tile at ${coordsRepr(coords)}!`);
     const [pathTree, dst] = this.getPathTree(coords, range, mode);
     const posKeys = Object.keys(dst).sort((a, b) => {
       if (dst[a] > dst[b]) return 1;
@@ -539,12 +555,20 @@ export class Map {
     });
     for (const pos of posKeys) {
       const tile = this.tiles[Number(pos)];
-      if (tile.owner?.civID === civID && tile.canSupply(requirement)) {
+      if (leader.controlsTile(tile) && tile.canSupply(requirement)) {
         const route = this.findRoute(pathTree, dst, Number(pos), coords);
         if (!route) continue;
-        this.addTrader(new Trader(civID, route, tile.improvement, sink, TRADER_SPEED, Yield.min(TRADER_CAPACITY, requirement), mode));
+        this.addTrader(new Trader(domainID, route, tile.improvement, sink, TRADER_SPEED, Yield.min(TRADER_CAPACITY, requirement), mode));
       }
     }
+  }
+
+  
+  getControllingDomainID(leader: Leader, tile: Tile): DomainID | null {
+    const owner = tile.owner;
+    if (!owner) return null;
+    else if (owner.civID) return owner.civID;
+    else return owner.getDomainID();
   }
 
   canSettleOn(tile: Tile): boolean {
@@ -559,7 +583,7 @@ export class Map {
     );
   }
 
-  newBarbarianCampAt(coords: Coords): number | null {
+  newBarbarianCampAt(coords: Coords): DomainID | null {
     const tile = this.getTileOrThrow(coords);
     if (!this.canSettleOn(tile)) return null;
 
@@ -570,12 +594,15 @@ export class Map {
     this.setTileOwner(coords, camp, false);
 
     this.buildImprovementAt(coords, 'barbarian_camp');
-    return cityID;
+    return camp.getDomainID();
   }
 
-  settleCityAt(coords: Coords, name: string, civID: number, settler: Unit): boolean {
+  settleCityAt(coords: Coords, name: string, leader: Leader, settler: Unit): boolean {
     const tile = this.getTileOrThrow(coords);
     if (!this.canSettleOn(tile)) return false;
+
+    const civID = settler.domainID;
+    if (!isCivDomain(civID)) return false; // City-based settlers are not allowed. This is a redundant check, and will usually not be relevant.
 
     const cityID = this.cities.length;
     const city: City = new City(cityID, coords, name, civID);
@@ -587,7 +614,7 @@ export class Map {
       this.tileUpdate(neighbor);
     }
 
-    this.buildImprovementAt(coords, 'settlement', civID, settler.knowledge);
+    this.buildImprovementAt(coords, 'settlement', leader, settler.knowledge);
     return true;
   }
 
@@ -596,16 +623,16 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  startConstructionAt(coords: Coords, improvementType: string, ownerID: number, builder: Unit): void {
+  startConstructionAt(coords: Coords, improvementType: string, leader: Leader, builder: Unit): void {
     const tile = this.getTileOrThrow(coords);
-    if (tile.owner?.civID !== ownerID) return;
+    if (!leader.controlsTile(tile)) return;
     
     tile.improvement = new Improvement(['worksite', tile.baseYield]);
     this.startErrandAt(coords, tile.improvement, {
       type: ErrandType.CONSTRUCTION,
       option: improvementType,
     });
-    this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+    this.createTradeRoutes(leader, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
 
     this.tileUpdate(coords);
   }
@@ -618,9 +645,9 @@ export class Map {
     );
   }
 
-  buildImprovementAt(coords: Coords, type: string, ownerID?: number, knowledges?: KnowledgeMap): void {
+  buildImprovementAt(coords: Coords, type: string, leader?: Leader, knowledges?: KnowledgeMap): void {
     const tile = this.getTileOrThrow(coords);
-    if (tile.owner?.civID !== ownerID) return;
+    if ((leader && !leader.controlsTile(tile)) || (!leader && !tile.owner)) return;
     if (!this.canBuildOn(tile)) return;
 
     tile.improvement = new Improvement([type, tile.baseYield, knowledges]);
@@ -628,10 +655,10 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  trainUnitAt(coords: Coords, unitType: string, ownerID: number): void {
+  trainUnitAt(coords: Coords, unitType: string, leader: Leader): void {
     const tile = this.getTileOrThrow(coords);
 
-    if (tile.owner?.civID === ownerID && tile.improvement) {
+    if (leader.controlsTile(tile) && tile.improvement) {
       if (tile.improvement.getTrainableUnitTypes().includes(unitType)) {
         if (!tile.improvement.errand) {
           // TODO - maybe change this in the future, to where new training errands overwrite old ones?
@@ -641,7 +668,7 @@ export class Map {
             option: unitType,
             location: coords,
           })
-          this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+          this.createTradeRoutes(leader, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
         }
       }
     }
@@ -649,10 +676,10 @@ export class Map {
     this.tileUpdate(coords);
   }
 
-  researchKnowledgeAt(coords: Coords, knowledgeName: string, ownerID: number): void {
+  researchKnowledgeAt(coords: Coords, knowledgeName: string, leader: Leader): void {
     const tile = this.getTileOrThrow(coords);
 
-    if (tile.owner?.civID === ownerID && tile.improvement) {
+    if (leader.controlsTile(tile) && tile.improvement) {
 
       // Note that this check technically allows the client to "cheat": research errands can begin without
       // the prerequesites having been fulfilled. These errands will simply do nothing when completed.
@@ -666,7 +693,7 @@ export class Map {
             option: knowledgeName,
             location: coords,
           })
-          this.createTradeRoutes(ownerID, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
+          this.createTradeRoutes(leader, coords, tile.improvement, (tile.improvement as Worksite).errand.cost);
         }
       }
     }
@@ -706,7 +733,7 @@ export class Map {
         if (tile.improvement.knowledge) {
           this.updateImprovementLinks(world, tile, coords, tile.improvement);
 
-          if (tile.unit && tile.unit.civID === tile.owner?.civID) {
+          if (tile.unit && tile.owner?.ownsUnit(tile.unit)) {
             const tileKnowledgeMap = tile.improvement.knowledge.getKnowledgeMap();
             tile.unit.updateKnowledge(tileKnowledgeMap);
           }

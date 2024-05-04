@@ -1,32 +1,31 @@
 import { Tile } from ".";
 import { Map } from "..";
 import { arrayIncludesCoords, getAdjacentCoords, getSmallestCoordsDiff } from "../../../utils";
+import { CivDomainID, Domain, DomainID, DomainType, compareDomainIDs } from "../../leader";
 import { World, Coords } from "../../world";
 import { ErrandType } from "./errand";
 import { Improvement } from "./improvement";
 import { Unit } from "./unit";
 
 export interface CityData {
+  id: number;
   name: string;
-  civID?: number;
+  civID?: CivDomainID;
   isBarbarian: boolean;
 }
 
-export class City {
-  id: number;
+export class City extends Domain {
   center: Coords;
   name: string;
-  civID?: number;
-  units: Unit[];
+  civID?: CivDomainID;
 
   private tiles: Set<Coords>;
 
-  constructor(id: number, center: Coords, name: string, civID?: number) {
-    this.id = id;
+  constructor(id: number, center: Coords, name: string, civID?: CivDomainID) {
+    super(id, DomainType.CITY);
     this.center = center;
     this.name = name;
     this.civID = civID;
-    this.units = [];
 
     this.tiles = new Set();
     this.addTile(center);
@@ -38,6 +37,7 @@ export class City {
       tiles.push(coords)
     }
     return {
+      ...super.baseExport(),
       center: this.center,
       name: this.name,
       civID: this.civID,
@@ -47,7 +47,7 @@ export class City {
   }
 
   static import(data: any): City {
-    const city = new (data.isBarbarian ? BarbarianCamp : City)(data.center, data.name, data.civID);
+    const city = new (data.isBarbarian ? BarbarianCamp : City)(data.id, data.center, data.name, data.civID);
     city.tiles = new Set();
     for (const coords of data.tiles) {
       city.addTile(coords);
@@ -57,6 +57,7 @@ export class City {
 
   getData(): CityData {
     return {
+      id: this.id,
       name: this.name,
       civID: this.civID,
       isBarbarian: this instanceof BarbarianCamp,
@@ -67,6 +68,14 @@ export class City {
     return this.tiles;
   }
 
+  /**
+   * 
+   * @returns the "controlling" domainID: if this a city state, return the city's own ID. Else, return the parent Civ's ID.
+   */
+  getControllingDomainID(): DomainID {
+    return this.civID ?? this.getDomainID();
+  }
+
   addTile(coords: Coords) {
     this.tiles.add(coords);
   }
@@ -75,26 +84,8 @@ export class City {
     this.tiles.delete(coords);
   }
 
-  getUnits(): Unit[] {
-    return this.units;
-  }
-
-  getUnitPositions(): Coords[] {
-    return this.units.map(unit => unit.coords);
-  }
-
-  addUnit(unit: Unit): void {
-    this.units.push(unit);
-    if (this instanceof BarbarianCamp) {
-      unit.setBarbarian(true);
-    }
-  }
-
-  removeUnit(unit: Unit): void {
-    const unitIndex = this.units.indexOf(unit);
-    if (unitIndex > -1) {
-      this.units.splice(unitIndex, 1);
-    }
+  ownsUnit(unit: Unit): boolean {
+    return super.ownsUnit(unit) || (this.civID !== undefined && unit.domainID.type === DomainType.CIVILIZATION && compareDomainIDs(unit.domainID, this.civID));
   }
 
   turn(world: World, map: Map): void {
@@ -187,7 +178,7 @@ export class BarbarianCamp extends UnitController {
     const neighborhoodTiles = neighborhoodCoords.map(coords => map.getTileOrThrow(coords));
     this.danger = false;
     for (const tile of neighborhoodTiles) {
-      if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
+      if (tile.unit && (!this.ownsUnit(tile.unit) && !tile.unit.isBarbarian)) {
         this.danger = true;
         break;
       }
@@ -245,11 +236,11 @@ export class BarbarianCamp extends UnitController {
           visibleCoords.forEach(coords => {
             const tile = map.getTileOrThrow(coords);
             if (!unit.automationData.target) {
-              if (tile.unit?.cityID === this.id && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
+              if (tile.unit && this.ownsUnit(tile.unit) && tile.unit.type === 'scout' && tile.unit.automationData.settleTarget) {
                 unit.automationData.target = tile.unit.automationData.settleTarget;
               }
             }
-            if (tile.unit && tile.unit.cityID !== this.id) {
+            if (tile.unit && this.ownsUnit(tile.unit)) {
               unit.automationData.target = this.center;
             }
           });
@@ -275,7 +266,7 @@ export class BarbarianCamp extends UnitController {
         }
         visibleCoords.forEach(coords => {
           const tile = map.getTileOrThrow(coords);
-          if (tile.unit && (tile.unit.civID !== undefined || (tile.unit.cityID !== this.id || !tile.unit.isBarbarian))) {
+          if (tile.unit && (!this.ownsUnit(tile.unit) && !tile.unit.isBarbarian)) {
             unit.automationData.target = coords;
             return;
           }

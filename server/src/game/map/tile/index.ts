@@ -4,6 +4,7 @@ import { City, CityData } from './city';
 import { Yield, YieldParams } from './yield';
 import { Knowledge, KnowledgeBucket } from './knowledge';
 import { Wall, WallType } from './wall';
+import { DomainID } from '../../leader';
 
 export interface TileData {
   type: string;
@@ -25,6 +26,10 @@ export interface TileData {
 }
 
 export class Tile {
+  static getDomainVisibilityKey(domainID: DomainID): string {
+    return `${domainID.type}/${domainID.subID}`;
+  }
+
   static movementCostTable: { [type: string]: [number, number] } = {
     // tile name: [land mp, water mp] (0 = impassable)
     'ocean': [0, 1],
@@ -62,8 +67,8 @@ export class Tile {
     Wall | null,
   ];
 
-  discoveredBy: { [civID: number]: boolean };
-  visibleTo: { [civID: number]: number };
+  private discoveredBy: { [domainKey: string]: boolean };
+  private visibleTo: { [domainKey: string]: number };
 
   public baseYield: Yield;
 
@@ -126,10 +131,10 @@ export class Tile {
     };
   }
 
-  getVisibleData(civID: number): TileData {
+  getVisibleData(domainID: DomainID): TileData {
     return {
       ...this.getDiscoveredData(),
-      unit: this.unit?.getData(civID),
+      unit: this.unit?.getData(domainID),
       visible: true,
     }
   }
@@ -148,20 +153,36 @@ export class Tile {
     this.unit = unit;
   }
 
-  setVisibility(civID: number, visible: boolean): void {
+  isDiscoveredBy(domainID: DomainID): boolean {
+    const key = Tile.getDomainVisibilityKey(domainID);
+    return key in this.discoveredBy;
+  }
+
+  isVisibleTo(domainID: DomainID): boolean {
+    const key = Tile.getDomainVisibilityKey(domainID);
+    return this.visibleTo[key] > 0;
+  }
+
+
+  setVisibility(domainID: DomainID, visible: boolean): void {
+    const key = Tile.getDomainVisibilityKey(domainID);
+
+    if (!(key in this.visibleTo)) this.visibleTo[key] = 0;
+
     if (visible) {
-      this.visibleTo[civID]++;
+      this.visibleTo[key]++;
     } else {
-      this.visibleTo[civID]--;
+      this.visibleTo[key]--;
     }
 
-    if (visible && !this.discoveredBy[civID]) {
-      this.discoveredBy[civID] = true;
+    if (visible && !this.discoveredBy[key]) {
+      this.discoveredBy[key] = true;
     }
   }
 
-  clearVisibility(civID: number): void {
-    this.visibleTo[civID] = 0;
+  clearVisibility(domainID: DomainID): void {
+    const key = Tile.getDomainVisibilityKey(domainID);
+    this.visibleTo[key] = 0;
   }
 
   getWall(direction: number): Wall | null {

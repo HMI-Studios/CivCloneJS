@@ -1,14 +1,12 @@
 import * as WebSocket from 'ws';
 import WebSocketManager from './game/connection';
 import { Player } from './game/player';
-import { Map, MapOptions } from './game/map';
+import { MapOptions } from './game/map';
 import { Game, GameData } from './game';
-import { PerlinWorldGenerator, WorldGenerator } from './game/map/generator';
-import { PromotionClass } from './game/map/tile/unit';
-import { PlayerData } from './utils';
-import { WallType } from './game/map/tile/wall';
+import { PerlinWorldGenerator } from './game/map/generator';
 import { Coords } from './game/world';
 import { FrontendError } from './utils/error';
+import { civTemplates } from './game/civilization';
 
 interface ConnectionData {
   ws: WebSocketManager,
@@ -27,8 +25,8 @@ const sendTo = (ws: WebSocketManager, msg: { [key: string]: unknown }) => {
 
 export const games: { [gameID: number] : Game } = {};
 (async () => {
-  const game = await Game.load('singleplayer test')
-  games[newID()] = game;
+  // const game = await Game.load('singleplayer test')
+  // games[newID()] = game;
 })()
 
 function newID(): number {
@@ -50,6 +48,21 @@ const createGame = (username: string, playerCount: number, mapOptions: MapOption
     }
   ]);
 };
+
+(async () => {
+  createGame(
+    'system',
+    1,
+    {
+      width: 100,
+      height: 100,
+    },
+    {
+      seed: null,
+      gameName: 'random seed test',
+    }
+  )
+})
 
 export const getConnData = (ws: WebSocketManager): ConnectionData => {
   const connIndex = connections.indexOf(ws);
@@ -165,31 +178,37 @@ const methods: {
 
     const username = getUsername(ws);
 
-    const civID = game?.newPlayerCivID(username);
+    const leaderID = game?.newPlayerLeaderID(username);
     const isRejoin = game.hasPlayer(username);
 
-    if (civID !== null) {
+    if (leaderID !== null) {
       getConnData(ws).gameID = gameID;
       
       if (isRejoin) {
         const player = game.getPlayer(username) as Player; // Safe, since `isRejoin` is only true if the player exists.
         player.reset(ws);
       } else {
-        game.connectPlayer(username, new Player(civID, ws));
+        game.connectPlayer(username, new Player(leaderID, ws));
       }
 
       sendTo(ws, {
         update: [
-          ['civID', [ civID ]],
+          ['leaderID', [ leaderID ]],
         ]
       });
+
+      game.sendToAll({
+        update: [
+          ['leaderData', [ game.getLeadersData() ]],
+        ],
+      })
 
       if (isRejoin && game.canStart()) {
         game.startGame(game.getPlayer(username));
       } else {
         sendTo(ws, {
           update: [
-            ['leaderPool', [ ...game.world.getLeaderPool(), game.getPlayersData() ]],
+            ['civPool', [ game.civPool, civTemplates, game.getPlayersData() ]],
           ],
         });
       }
@@ -228,9 +247,9 @@ const methods: {
     });
   },
 
-  setLeader: (ws: WebSocketManager, leaderID: number) => {
+  selectCiv: (ws: WebSocketManager, civTemplateID: number) => {
     const [game, player] = getGameInfo(ws);
-    game.setLeader(player, leaderID);
+    game.selectCiv(player, civTemplateID);
   },
 
   ready: (ws: WebSocketManager, state: boolean) => {
