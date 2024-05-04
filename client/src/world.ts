@@ -323,14 +323,14 @@ class World {
     }
   }
 
-  controlsTile(tile: Tile): boolean {
+  playerControlsTile(tile: Tile): boolean {
     const { owner } = tile;
     if (this.player.leaderID === null || !owner) return false;
     const leader = this.leaders[this.player.leaderID];
     return leader.domains.some(domain => this.domainMatchesID(domain, makeCityID(owner.id)) || (owner.civID && this.domainMatchesID(domain, owner.civID)));
   }
 
-  controlsUnit(unit: Unit): boolean {
+  playerControlsUnit(unit: Unit): boolean {
     if (this.player.leaderID === null) return false;
     const leader = this.leaders[this.player.leaderID];
     return leader.domains.some(domain => this.domainMatchesID(domain, unit.domainID));
@@ -353,7 +353,7 @@ class World {
 
   canBuildOn(tile: Tile): boolean {
     return (
-      this.controlsTile(tile) &&
+      this.playerControlsTile(tile) &&
       !this.isOcean(tile) &&
       tile.type !== 'mountain'
     );
@@ -401,7 +401,7 @@ class World {
 
         const tile = this.getTile(adjPos);
         const atTile = this.getTile(atPos);
-        if (tile.unit && this.controlsUnit(tile.unit)) continue;
+        if (tile.unit && this.playerControlsUnit(tile.unit)) continue;
         const adjDirection = this.getDirection(adjPos, atPos);
         const atDirection = this.getDirection(atPos, adjPos);
         if (tile.walls[adjDirection] && tile.walls[adjDirection].type !== WallType.OPEN_GATE) continue;

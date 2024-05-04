@@ -280,7 +280,7 @@ class Camera {
                             else
                                 ctx.lineTo(...positions[i]);
                         }
-                        if (world.controlsTile(tile))
+                        if (world.playerControlsTile(tile))
                             ctx.setLineDash([5 * zoom, 5 * zoom]);
                         ctx.stroke();
                         ctx.setLineDash([]);
@@ -309,7 +309,7 @@ class Camera {
                             console.log(x, y);
                             if (this.selectedUnitPos) {
                                 const selectedUnit = world.getTile(this.selectedUnitPos).unit;
-                                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && !world.controlsUnit(tile.unit)) {
+                                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && !world.playerControlsUnit(tile.unit)) {
                                     world.attack(this.selectedUnitPos, { x, y }, selectedUnit);
                                 }
                                 else if (world.posIndex({ x, y }) in this.highlightedTiles) {
@@ -321,7 +321,7 @@ class Camera {
                             }
                         }
                         ctx.drawImage(textures['selector'], (-camX + ((x - (width / 2)) * X_TILE_SPACING)) * zoom, (camY - (((y - (height / 2)) * TILE_HEIGHT) + (mod(x, 2) * Y_TILE_SPACING))) * zoom, TILE_WIDTH * zoom, TILE_HEIGHT * zoom);
-                        if (tile.unit && this.mouseDownTime === 1 && world.controlsUnit(tile.unit) && ui.turnActive) {
+                        if (tile.unit && this.mouseDownTime === 1 && world.playerControlsUnit(tile.unit) && ui.turnActive) {
                             console.log(tile.unit);
                             this.selectUnit(world, { x, y }, tile.unit);
                         }

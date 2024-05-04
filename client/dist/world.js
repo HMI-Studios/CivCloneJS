@@ -161,14 +161,14 @@ class World {
             return domainID.type === DomainType.CITY && domain.id === domainID.subID;
         }
     }
-    controlsTile(tile) {
+    playerControlsTile(tile) {
         const { owner } = tile;
         if (this.player.leaderID === null || !owner)
             return false;
         const leader = this.leaders[this.player.leaderID];
         return leader.domains.some(domain => this.domainMatchesID(domain, makeCityID(owner.id)) || (owner.civID && this.domainMatchesID(domain, owner.civID)));
     }
-    controlsUnit(unit) {
+    playerControlsUnit(unit) {
         if (this.player.leaderID === null)
             return false;
         const leader = this.leaders[this.player.leaderID];
@@ -183,7 +183,7 @@ class World {
             tile.type === 'frozen_river');
     }
     canBuildOn(tile) {
-        return (this.controlsTile(tile) &&
+        return (this.playerControlsTile(tile) &&
             !this.isOcean(tile) &&
             tile.type !== 'mountain');
     }
@@ -219,7 +219,7 @@ class World {
             for (const adjPos of this.getNeighbors(atPos)) {
                 const tile = this.getTile(adjPos);
                 const atTile = this.getTile(atPos);
-                if (tile.unit && this.controlsUnit(tile.unit))
+                if (tile.unit && this.playerControlsUnit(tile.unit))
                     continue;
                 const adjDirection = this.getDirection(adjPos, atPos);
                 const atDirection = this.getDirection(atPos, adjPos);

@@ -386,7 +386,7 @@ class Camera {
               else if (compareDomainIDs(neighbor.owner?.civID, tile.owner.civID) || neighbor.owner?.id === tile.owner.id) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
             }
-            if (world.controlsTile(tile)) ctx.setLineDash([5 * zoom, 5 * zoom]);
+            if (world.playerControlsTile(tile)) ctx.setLineDash([5 * zoom, 5 * zoom]);
             ctx.stroke();
             ctx.setLineDash([]);
           }
@@ -424,7 +424,7 @@ class Camera {
 
               if (this.selectedUnitPos) {
                 const selectedUnit = world.getTile(this.selectedUnitPos).unit;
-                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && !world.controlsUnit(tile.unit)) {
+                if (tile.unit && selectedUnit.promotionClass === PromotionClass.RANGED && !world.playerControlsUnit(tile.unit)) {
                   world.attack(this.selectedUnitPos, {x, y}, selectedUnit as RangedUnit);
                 } else if (world.posIndex({x, y}) in this.highlightedTiles) {
                   world.moveUnit(this.selectedUnitPos, {x, y}, this.highlightedTiles, !!tile.unit);
@@ -442,7 +442,7 @@ class Camera {
               TILE_HEIGHT * zoom
             );
 
-            if (tile.unit && this.mouseDownTime === 1 && world.controlsUnit(tile.unit) && ui.turnActive) {
+            if (tile.unit && this.mouseDownTime === 1 && world.playerControlsUnit(tile.unit) && ui.turnActive) {
               console.log(tile.unit);
               this.selectUnit(world, { x, y }, tile.unit);
             }
