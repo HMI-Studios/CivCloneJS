@@ -73,8 +73,7 @@ export class City extends Domain {
    * @returns the "controlling" domainID: if this a city state, return the city's own ID. Else, return the parent Civ's ID.
    */
   getControllingDomainID(): DomainID {
-    if (!this.civID) return this.getDomainID();
-    else return this.civID;
+    return this.civID ?? this.getDomainID();
   }
 
   addTile(coords: Coords) {
