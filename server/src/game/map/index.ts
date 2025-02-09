@@ -619,6 +619,7 @@ export class Map {
   }
 
   startErrandAt(coords: Coords, improvement: Improvement, errand: ErrandAction): void {
+    // TODO validate all this data, probably?
     improvement.startErrand(errand);
     this.tileUpdate(coords);
   }

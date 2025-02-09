@@ -7,7 +7,7 @@ import { Coords, World } from './world';
 import { Player, PlayerData } from './player';
 import { EventMsg } from '../utils';
 import { PerlinWorldGenerator } from './map/generator';
-import { BugFixError, FrontendError, GameNotStartedError, GenerationFailed, InvalidSettlement, MapError } from '../utils/error';
+import { BugFixError, FrontendError, GameNotStartedError, GenerationFailed, ImportError, InvalidSettlement, MapError } from '../utils/error';
 import { PromotionClass } from './map/tile/unit';
 import { WallType } from './map/tile/wall';
 import { Leader, LeaderData, isCivDomain } from './leader';
@@ -23,13 +23,13 @@ interface MetaData {
 export type GameData = MetaData & { players: {[playerName: string]: PlayerData} };
 
 type GameOptions = { playerCount: number, ownerName?: string, gameName?: string, isManualSeed?: boolean };
-type GameImportArgs = [World | null, { [leaderID: number]: Leader }, { [civTemplateID: number]: number | null }, { [playerName: string]: Player }, number, MetaData];
+type GameImportArgs = [World | null, Leader[], { [civTemplateID: number]: number | null }, { [playerName: string]: Player }, number, MetaData];
 
 export class Game {
   generator?: PerlinWorldGenerator;
   options?: GameOptions;
   world: World | null;
-  leaders: { [leaderID: number]: Leader }
+  leaders: Leader[];
   civPool: { [civTemplateID: number]: number | null }
   private players: { [playerName: string]: Player };
   playerCount: number;
@@ -56,7 +56,7 @@ export class Game {
     this.players = {};
     this.playerCount = playerCount;
 
-    this.leaders = {};
+    this.leaders = [];
     for (let leaderID = 0; leaderID < playerCount; leaderID++) {
       this.leaders[leaderID] = new Leader(leaderID);
     }
@@ -144,10 +144,12 @@ export class Game {
   }
 
   static import(data: any): Game {
-    const leaders: { [id: number]: Leader } = {};
+    const leaders: (Leader | undefined)[] = [];
     for (const leaderData of data.leaders) {
+      while (leaders.length < Number(leaderData.id)) leaders.push(undefined);
       leaders[Number(leaderData.id)] = Leader.import(leaderData);
     }
+    if (!leaders.every((leader): leader is Leader => leader !== undefined)) throw new ImportError('Not all leaders were sucessfully imported!');
     const world = data.world === null ? null : World.import(data.world, leaders);
     const civPool = data.civPool;
     const players: { [name: string]: Player } = {};
@@ -209,14 +211,14 @@ export class Game {
         ],
       });
 
-      this.forEachLeaderID((leaderID: number) => {
-        this.sendToLeader(leaderID, {
+      this.forEachPlayer((player: Player) => {
+        this.sendToLeader(player.leaderID, {
           update: [
             // Type assertion here to make the compiler happy - we've already guaranteed that world exsits.
-            ['setMap', [(this.world as World).map.getLeaderMap(this.getLeader(leaderID))]],
+            ['setMap', [(this.world as World).map.getLeaderMap(this.getLeader(player.leaderID))]],
           ],
         });
-        this.beginTurnForLeader(leaderID);
+        this.beginTurnForLeader(player.leaderID);
       });
     }
   }
@@ -255,8 +257,15 @@ export class Game {
 
     // end all players' turns
     this.forEachPlayer((player: Player) => {
-      if (!player.isAI()) {
+      if (!player.isAbsent()) {
         this.endTurnForLeader(player.leaderID);
+      }
+    });
+
+    // Absent players
+    this.forEachPlayer((player: Player, username: string) => {
+      if (player.isAbsent()) {
+        console.log(`${username} is absent!`)
       }
     });
 
@@ -267,18 +276,25 @@ export class Game {
 
     // begin all players' turns
     this.forEachPlayer((player: Player) => {
-      if (!player.isAI()) {
+      if (!player.isAbsent()) {
         this.beginTurnForLeader(player.leaderID);
       }
     });
+
+    // TODO remove this
+    // In case we have only AIs in the game, try to finish player's turns
+    // This should not be allowed really, but it's useful for testing
+    setTimeout(() => {
+      this.tryEndTurn();
+    }, 1000);
   }
 
   sendUpdates(): void {
     if (!this.hasStarted()) throw new GameNotStartedError();
     const updates = this.world.getUpdates();
-    this.forEachLeaderID((leaderID) => {
-      this.sendToLeader(leaderID, {
-        update: updates.map(updateFn => updateFn(this.leaders[leaderID])),//.filter(update => update),
+    this.forEachPlayer((player) => {
+      this.sendToLeader(player.leaderID, {
+        update: updates.map(updateFn => updateFn(this.leaders[player.leaderID])),//.filter(update => update),
       });
     });
   }
@@ -337,9 +353,10 @@ export class Game {
     player.send(JSON.stringify(msg));
   }
 
-  forEachPlayer(callback: (player: Player) => void): void {
+  forEachPlayer(callback: (player: Player, username: string) => boolean | void): void {
     for (const playerName in this.players) {
-      callback(this.players[playerName]);
+      const shouldBreak = callback(this.players[playerName], playerName);
+      if (shouldBreak) break;
     }
   }
 
@@ -364,7 +381,7 @@ export class Game {
   }
 
   forEachLeaderID(callback: (leaderID: number) => void): void {
-    for (let leaderID = 0; leaderID < this.playerCount; leaderID++) {
+    for (let leaderID = 0; leaderID < this.leaders.length; leaderID++) {
       callback(leaderID);
     }
   }
@@ -408,7 +425,14 @@ export class Game {
     }
   }
 
-  setTurnFinished(player: Player, state: boolean): void {
+  public disconnectPlayer(player: Player): void {
+    console.log('Player disconnected.');
+    player.reset(null);
+    player.ready = true;
+    this.setTurnFinished(player, true);
+  }
+
+  public setTurnFinished(player: Player, state: boolean): void {
     const leaderID = player.leaderID;
     const leader = this.leaders[leaderID];
 
@@ -424,16 +448,19 @@ export class Game {
 
     // mark leader as finished/unfinished
     leader.turnFinished = state;
+    this.tryEndTurn();
+  }
 
+  private tryEndTurn(): void {
     // see if all players are finished...
     let finished = true;
-    for (let leaderID = 0; leaderID < this.playerCount; leaderID++) {
-      const leader = this.leaders[leaderID];
-      if (leader.turnActive && !leader.turnFinished) {
+    this.forEachPlayer((player) => {
+      const leader = this.leaders[player.leaderID];
+      if (!player.isAbsent() && leader.turnActive && !leader.turnFinished) {
         finished = false;
-        break;
+        return true;
       }
-    }
+    });
 
     // if so, end the turn
     if (finished) {

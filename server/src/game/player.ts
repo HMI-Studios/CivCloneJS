@@ -1,4 +1,3 @@
-import * as WebSocket from 'ws';
 import WebSocketManager from './connection';
 
 export interface PlayerData {
@@ -24,7 +23,7 @@ export class Player {
     return new Player(data.leaderID, null)
   }
 
-  isAI(): boolean {
+  isAbsent(): boolean {
     return this.connection === null;
   }
 
@@ -39,7 +38,6 @@ export class Player {
 
   send(msg: string): void {
     if (!this.connection) {
-      // TODO - do AI things
       return;
     } else {
       this.connection.send(msg);

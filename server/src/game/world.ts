@@ -84,16 +84,16 @@ export class World {
       const builderCoords = { x: x + 1, y: y + 1 };
       const   scoutCoords = { x: x - 1, y: y + 1 };
 
-      let legal_start_location = true;
+      let legalStartLocation = true;
       for (const coords of [settlerCoords, builderCoords, scoutCoords]) {
         const tile = this.map.getTile(coords);
         if (!tile || tile.unit || !this.map.canSettleOn(tile)) {
-          legal_start_location = false;
+          legalStartLocation = false;
           break;
         }
       }
 
-      if (legal_start_location) {
+      if (legalStartLocation) {
         callback([settlerCoords, builderCoords, scoutCoords]);
         return;
       }

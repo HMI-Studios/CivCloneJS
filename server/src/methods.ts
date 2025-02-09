@@ -234,6 +234,11 @@ const methods: {
     }
   },
 
+  leaveGame: (ws: WebSocketManager) => {
+    const [game, player] = getGameInfo(ws);
+    game.disconnectPlayer(player);
+  },
+
   getGames: (ws: WebSocketManager) => {
     const gameList: { [id: number]: GameData } = {};
     for (const gameID in games) {
