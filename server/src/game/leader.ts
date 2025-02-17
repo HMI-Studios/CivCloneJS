@@ -1,9 +1,10 @@
 import { InternalServerError } from '../utils/error';
-import { Civilization, CivilizationData } from './civilization';
+import { CivilizationData } from './civilization';
+import { Map } from './map';
 import { Tile } from './map/tile';
-import { City, CityData } from './map/tile/city';
+import { CityData } from './map/tile/city';
 import { Unit } from './map/tile/unit';
-import { Coords } from './world';
+import { Coords, World } from './world';
 
 export enum DomainType {
   CIVILIZATION,
@@ -95,6 +96,10 @@ export class Domain {
 
   public ownsUnit(unit: Unit): boolean {
     return compareDomainIDs(unit.domainID, this.getDomainID());
+  }
+  
+  public turn(world: World, map: Map): void {
+    // By default, do nothing (for now)
   }
 }
 

@@ -1,7 +1,5 @@
-import { Domain, DomainID, DomainType, Leader } from './leader';
+import { Domain, DomainType } from './leader';
 import { KnowledgeMap } from './map/tile/knowledge';
-import { Unit } from './map/tile/unit';
-import { Coords } from './world';
 
 const DEFAULT_START_KNOWLEDGE = {
   'start': 100,

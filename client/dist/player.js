@@ -352,13 +352,25 @@ class UI {
         returnBtn.onclick = () => callbacks.return();
         returnBtn.innerText = `${translate('buttons.return')} ${translate('menu.main.title')}`;
         this.elements.gameList.appendChild(returnBtn);
-        for (const gameID in gameList) {
-            const { gameName, playersConnected, playerCount } = gameList[gameID];
-            const gameBtn = this.createElement('button');
-            gameBtn.innerText = `${gameName} - ${playersConnected} / ${playerCount} ${translate('menu.game.list.players')}`;
-            gameBtn.onclick = () => callbacks.joinGame(gameID);
-            this.elements.gameList.appendChild(gameBtn);
-        }
+        const gamesTable = this.createElement('table', { children: [
+                ...Object.keys(gameList).map((gameID) => {
+                    const { gameName, playersConnected, playerCount } = gameList[gameID];
+                    const joinBtn = this.createElement('button', { attrs: {
+                            innerText: translate('menu.game.list.join'),
+                            onclick: () => callbacks.joinGame(gameID),
+                        } });
+                    const specBtn = this.createElement('button', { attrs: {
+                            innerText: translate('menu.game.list.spectate'),
+                            onclick: () => callbacks.spectateGame(gameID),
+                        } });
+                    return this.createElement('tr', { children: [
+                            this.createElement('td', { attrs: { innerText: `${gameName} - ${playersConnected} / ${playerCount} ${translate('menu.game.list.players')}` } }),
+                            this.createElement('td', { children: [joinBtn] }),
+                            this.createElement('td', { children: [specBtn] }),
+                        ] });
+                }),
+            ] });
+        this.elements.gameList.appendChild(gamesTable);
         this.elements.centerModal.appendChild(this.elements.gameList);
         this.root.appendChild(this.elements.centerModal);
     }

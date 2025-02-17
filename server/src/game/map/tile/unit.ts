@@ -199,8 +199,8 @@ export class Unit {
     return unit;
   }
 
-  getData(domainID: DomainID): UnitData | undefined {
-    return !this.cloaked || compareDomainIDs(domainID, this.domainID) ? {
+  getData(domainID: DomainID | null): UnitData | undefined {
+    return !this.cloaked || domainID === null || compareDomainIDs(domainID, this.domainID) ? {
       type: this.type,
       hp: this.hp,
       movement: this.movement,

@@ -131,7 +131,7 @@ export class Tile {
     };
   }
 
-  getVisibleData(domainID: DomainID): TileData {
+  getVisibleData(domainID: DomainID | null): TileData {
     return {
       ...this.getDiscoveredData(),
       unit: this.unit?.getData(domainID),

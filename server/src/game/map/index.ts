@@ -430,6 +430,16 @@ export class Map {
     });
   }
 
+  private getSpectatorTileData(tile: Tile): TileData {
+    return tile.getVisibleData(null);
+  }
+
+  public getSpectatorMap(): TileData[] {
+    return this.tiles.map((tile) => {
+      return this.getSpectatorTileData(tile);
+    });
+  }
+
   public getTraderDataByDomainID(domainID: DomainID): TraderData[] {
     return this.traders.filter((trader) => compareDomainIDs(trader.domainID, domainID)).map(trader => trader.getData());
   }

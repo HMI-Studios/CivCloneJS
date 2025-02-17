@@ -233,6 +233,12 @@ const methods: {
       ] });
     }
   },
+  
+  spectateGame: (ws: WebSocketManager, gameID: number) => {
+    const game = games[gameID];
+    const username = getUsername(ws);
+    game?.connectSpectator(username, ws);
+  },
 
   leaveGame: (ws: WebSocketManager) => {
     const [game, player] = getGameInfo(ws);

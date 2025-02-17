@@ -27,7 +27,9 @@
     "game": {
       "list": {
         "active": "Active Games",
-        "players": "players connected"
+        "players": "players connected",
+        "join": "Join",
+        "spectate": "Spectate"
       },
       "new": {
         "query": "New Game:",

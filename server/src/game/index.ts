@@ -18,6 +18,7 @@ interface MetaData {
   ownerName?: string,
   playerCount: number,
   playersConnected: number,
+  spectatorsConnected: number,
 }
 
 export type GameData = MetaData & { players: {[playerName: string]: PlayerData} };
@@ -32,10 +33,13 @@ export class Game {
   leaders: Leader[];
   civPool: { [civTemplateID: number]: number | null }
   private players: { [playerName: string]: Player };
+  private spectators: { [playerName: string]: WebSocketManager };
   playerCount: number;
   metaData: MetaData;
 
   constructor(args: [PerlinWorldGenerator, GameOptions] | GameImportArgs) {
+    this.spectators = {};
+    
     if (args.length === 6) {
       const [world, leaders, civPool, players, playerCount, metaData] = args;
       this.world = world;
@@ -71,6 +75,7 @@ export class Game {
       ownerName,
       playerCount,
       playersConnected: Object.keys(this.players).length,
+      spectatorsConnected: Object.keys(this.spectators).length,
     };
 
     this.world = null;
@@ -162,11 +167,11 @@ export class Game {
     return new Game([world, leaders, civPool, players, playerCount, metaData]);
   }
 
-  async save() {
+  public async save() {
     await fs.writeFile(path.join(SAVE_LOCATION, `${this.metaData.gameName}.json`), JSON.stringify(this.export()));
   }
 
-  static async load(saveFile: string): Promise<Game> {
+  public static async load(saveFile: string): Promise<Game> {
     const data = await fs.readFile(path.join(SAVE_LOCATION, `${saveFile}.json`), { encoding: 'utf8' });
     return Game.import(JSON.parse(data));
   }
@@ -175,16 +180,29 @@ export class Game {
     return this.world !== null;
   }
 
-  connectPlayer(username: string, player: Player) {
+  public connectPlayer(username: string, player: Player) {
     this.players[username] = player;
     this.metaData = { ...this.metaData, playersConnected: Object.keys(this.players).length };
+  }
+
+  public connectSpectator(username: string, ws: WebSocketManager): void {
+    this.spectators[username] = ws;
+    this.metaData = { ...this.metaData, spectatorsConnected: Object.keys(this.spectators).length };
+    if (this.hasStarted()) {
+      this.sendToSpectator(username, {
+        update: [
+          ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
+          ['civData', [ this.world.getAllCivsData() ]],
+        ],
+      });
+    }
   }
 
   public canStart(): boolean {
     return Object.values(this.players).every((player: Player) => player.ready);
   }
 
-  startGame(player?: Player): void {
+  public startGame(player?: Player): void {
     if (this.hasStarted()) {
       if (player) {
         this.sendToLeader(player.leaderID, {
@@ -211,6 +229,13 @@ export class Game {
         ],
       });
 
+      this.sendToSpectators({
+        update: [
+          ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
+          ['civData', [ this.world.getAllCivsData() ]],
+        ],
+      });
+
       this.forEachPlayer((player: Player) => {
         this.sendToLeader(player.leaderID, {
           update: [
@@ -219,6 +244,12 @@ export class Game {
           ],
         });
         this.beginTurnForLeader(player.leaderID);
+      });
+
+      this.sendToSpectators({
+        update: [
+          ['setMap', [this.world.map.getSpectatorMap()]],
+        ],
       });
     }
   }
@@ -273,6 +304,13 @@ export class Game {
 
     // Run end-of-turn updates
     this.world.turn();
+
+    // Send map to spectators
+    this.sendToSpectators({
+      update: [
+        ['setMap', [this.world.map.getSpectatorMap()]],
+      ],
+    });
 
     // begin all players' turns
     this.forEachPlayer((player: Player) => {
@@ -335,7 +373,19 @@ export class Game {
     return this.leaders[leaderID];
   }
 
-  sendToAll(msg: EventMsg): void {
+  public sendToSpectators(msg: EventMsg): void {
+    for (const username in this.spectators) {
+      const ws = this.spectators[username];
+      ws.send(JSON.stringify(msg));
+    }
+  }
+
+  public sendToSpectator(username: string, msg: EventMsg): void {
+    const ws = this.spectators[username];
+    ws.send(JSON.stringify(msg));
+  }
+
+  public sendToAll(msg: EventMsg): void {
     for (const playerName in this.players) {
       const player = this.players[playerName];
       player.send(JSON.stringify(msg));

@@ -454,6 +454,17 @@ class World {
                                 ui.showCivPicker(civPickerFn, this.player);
                             }
                         },
+                        spectateGame: (gameID) => {
+                            if (gameID !== null) {
+                                this.sendActions([
+                                    ['spectateGame', [gameID]],
+                                ]);
+                                ui.hideGameList();
+                                ui.setView('civPicker');
+                                ui.showReadyBtn(readyFn);
+                                ui.showCivPicker(civPickerFn, this.player);
+                            }
+                        },
                         return: () => {
                             ui.hideGameList();
                             ui.setView('mainMenu');
