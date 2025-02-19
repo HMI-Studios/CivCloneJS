@@ -83,10 +83,9 @@ class UI {
 
   root: HTMLElement;
   elements: { [key: string]: HTMLElement };
-  civPool: {[civTemplateID: number]: number | null};
+  civPool: {[civTemplateID: number]: string | null};
   civTemplates: CivTemplate[];
   players: {[playerName: string]: Player};
-  leaders: {[leaderID: string]: Player};
   turnActive: boolean;
   buttons: { [key: string]: Button };
   textInputs: { [key: string]: TextInput };
@@ -112,7 +111,6 @@ class UI {
     this.civPool = {};
     this.civTemplates = [];
     this.players = {};
-    this.leaders = {};
     this.turnActive = false;
 
     this.buttons = {
@@ -224,12 +222,12 @@ class UI {
     return element;
   }
 
-  createCivItem(civTemplate: CivTemplate, selectedBy: Leader | null): HTMLElement {
+  createCivItem(civTemplate: CivTemplate, selectedBy: Player | null): HTMLElement {
     const civItem = this.createElement('li', {className: 'civItem'});
     civItem.style.backgroundColor = civTemplate.color;
     civItem.style.color = civTemplate.textColor;
     const nameText = this.createElement('span');
-    nameText.innerHTML = `${civTemplate.name}` + (selectedBy !== null ? ` - ${translate('menu.civ.selected_by')} ${this.leaders[selectedBy.id].name}` : '');
+    nameText.innerHTML = `${civTemplate.name}` + (selectedBy !== null ? ` - ${translate('menu.civ.selected_by')} ${selectedBy.name}` : '');
     civItem.appendChild(nameText);
     return civItem;
   }
@@ -305,14 +303,14 @@ class UI {
 
   showCivPicker(callback: (civTemplateID: number) => void, self: Player): void {
     this.elements.civPicker.innerHTML = '';
-    const selectedLeaderSlot = this.createElement('div', {className: 'selectedLeader'});
-    this.elements.civPicker.appendChild(selectedLeaderSlot);
+    const selectedCivSlot = this.createElement('div', {className: 'selectedCiv'});
+    this.elements.civPicker.appendChild(selectedCivSlot);
     for (let civTemplateID = 0; civTemplateID < this.civTemplates.length; civTemplateID++) {
       const civTemplate = this.civTemplates[civTemplateID];
-      const leaderID: number | null = this.civPool[civTemplateID];
-      const leader: Leader | null = leaderID !== null ? world.leaders[leaderID] : null;
-      const civItem = this.createCivItem(civTemplate, leader);
-      if (leader) {
+      const playerName: string | null = this.civPool[civTemplateID];
+      const player: Player | null = playerName !== null ? ui.players[playerName] : null;
+      const civItem = this.createCivItem(civTemplate, player);
+      if (player) {
         civItem.onclick = () => {
           alert(translate('error.civ_taken'))
         };
@@ -321,8 +319,8 @@ class UI {
           callback(civTemplateID);
         };
       }
-      if (leader && leader.id === self.leaderID) {
-        selectedLeaderSlot.appendChild(civItem);
+      if (player && player.name === self.name) {
+        selectedCivSlot.appendChild(civItem);
       } else {
         this.elements.civPicker.appendChild(civItem);
       }
@@ -589,11 +587,14 @@ class UI {
     unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
     const unitKnowledge = this.createElement('span', {className: 'infoSpan'});
     unitKnowledge.innerText = JSON.stringify(unit.knowledge);
+    const unitOwner = this.createElement('span', {className: 'infoSpan'});
+    unitOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[unit.civID].name}`;
 
     this.elements.unitInfoMenu.appendChild(unitName);
     this.elements.unitInfoMenu.appendChild(unitHP);
     this.elements.unitInfoMenu.appendChild(unitMovement);
     this.elements.unitInfoMenu.appendChild(unitKnowledge);
+    this.elements.tileInfoMenu.appendChild(unitOwner);
     this.root.appendChild(this.elements.unitInfoMenu);
   }
 
@@ -621,8 +622,7 @@ class UI {
 
     if (tile.owner) {
       const tileOwner = this.createElement('span', {className: 'infoSpan'});
-      // TODO - add some sort of world.getCiv that can take an undefined ID to make this less ugly. Also, TODO make a translate string for 'Free City'.
-      tileOwner.innerText = `${translate('tile.info.owner')}: ${tile.owner.name} (${tile.owner.civID ? world.civs[tile.owner.civID?.subID].name : 'Free City'})`;
+      tileOwner.innerText = `${translate('tile.info.owner')}: ${tile.owner.name} (${world.civs[tile.owner.civID].name})`;
       this.elements.tileInfoMenu.appendChild(tileOwner);
     }
 
