@@ -10,8 +10,10 @@ import { PerlinWorldGenerator } from './map/generator';
 import { BugFixError, FrontendError, GameNotStartedError, GenerationFailed, ImportError, InvalidSettlement, MapError } from '../utils/error';
 import { PromotionClass } from './map/tile/unit';
 import { WallType } from './map/tile/wall';
-import { Leader, LeaderData, isCivDomain } from './leader';
-import { civTemplates } from './civilization';
+import { Civilization, civTemplates } from './civilization';
+import WebSocketManager from './connection';
+import { King } from '../ai/king';
+import { Map } from './map';
 
 interface MetaData {
   gameName: string,
@@ -24,14 +26,13 @@ interface MetaData {
 export type GameData = MetaData & { players: {[playerName: string]: PlayerData} };
 
 type GameOptions = { playerCount: number, ownerName?: string, gameName?: string, isManualSeed?: boolean };
-type GameImportArgs = [World | null, Leader[], { [civTemplateID: number]: number | null }, { [playerName: string]: Player }, number, MetaData];
+type GameImportArgs = [World | null, { [civTemplateID: number]: string | null }, { [playerName: string]: Player }, number, MetaData];
 
 export class Game {
   generator?: PerlinWorldGenerator;
   options?: GameOptions;
   world: World | null;
-  leaders: Leader[];
-  civPool: { [civTemplateID: number]: number | null }
+  civPool: { [civTemplateID: number]: string | null }
   private players: { [playerName: string]: Player };
   private spectators: { [playerName: string]: WebSocketManager };
   playerCount: number;
@@ -40,10 +41,9 @@ export class Game {
   constructor(args: [PerlinWorldGenerator, GameOptions] | GameImportArgs) {
     this.spectators = {};
     
-    if (args.length === 6) {
-      const [world, leaders, civPool, players, playerCount, metaData] = args;
+    if (args.length === 5) {
+      const [world, civPool, players, playerCount, metaData] = args;
       this.world = world;
-      this.leaders = leaders;
       this.civPool = civPool;
       this.players = players;
       this.playerCount = playerCount;
@@ -59,11 +59,6 @@ export class Game {
 
     this.players = {};
     this.playerCount = playerCount;
-
-    this.leaders = [];
-    for (let leaderID = 0; leaderID < playerCount; leaderID++) {
-      this.leaders[leaderID] = new Leader(leaderID);
-    }
 
     this.civPool = {};
     for (let i = 0; i < civTemplates.length; i++) {
@@ -87,13 +82,13 @@ export class Game {
 
     const { playerCount } = options;
 
-    const civTemplateLeaders: [number, Leader][] = [];
+    const civTemplatePlayers: [number, Player][] = [];
     for (const templateID in this.civPool) {
-      const leaderID = this.civPool[templateID];
-      if (leaderID !== null) civTemplateLeaders.push([Number(templateID), this.leaders[leaderID]]);
+      const username = this.civPool[templateID];
+      if (username !== null) civTemplatePlayers.push([Number(templateID), this.players[username]]);
     }
 
-    if (civTemplateLeaders.length !== playerCount) {
+    if (civTemplatePlayers.length !== playerCount) {
       throw new BugFixError('If this is ever thrown, it means we are not enforcing all players selecting a civ before game start.');
     }
 
@@ -103,7 +98,7 @@ export class Game {
     while (!world && !(tries > maxTries)) {
       tries++;
       try {
-        world = new World([generator.generate(), playerCount, civTemplateLeaders]);
+        world = new World([generator.generate(), playerCount, civTemplatePlayers]);
       } catch (err) {
         if (err instanceof MapError) {
           generator.reseed(null);
@@ -112,11 +107,6 @@ export class Game {
             console.error('Map generation failed.');
             throw new GenerationFailed(`Could not generate map! (gave up after ${tries} tries)`);
           }
-          // Reset leader domains, as these would be set by the previous attempt
-          this.forEachLeaderID((leaderID) => {
-            const leader = this.getLeader(leaderID);
-            leader.clearDomains();
-          });
         } else throw err;
       }
     }
@@ -132,15 +122,8 @@ export class Game {
       exportedPlayers[playerName] = player.export();
     }
 
-    const exportedLeaders: any[] = [];
-    for (const leaderID in this.leaders) {
-      const leader = this.leaders[leaderID];
-      exportedLeaders.push(leader.export());
-    }
-
     return {
       world: this.world?.export(),
-      leaders: exportedLeaders,
       civPool: this.civPool,
       players: exportedPlayers,
       playerCount: this.playerCount,
@@ -149,22 +132,16 @@ export class Game {
   }
 
   static import(data: any): Game {
-    const leaders: (Leader | undefined)[] = [];
-    for (const leaderData of data.leaders) {
-      while (leaders.length < Number(leaderData.id)) leaders.push(undefined);
-      leaders[Number(leaderData.id)] = Leader.import(leaderData);
-    }
-    if (!leaders.every((leader): leader is Leader => leader !== undefined)) throw new ImportError('Not all leaders were sucessfully imported!');
-    const world = data.world === null ? null : World.import(data.world, leaders);
+    const world = data.world === null ? null : World.import(data.world);
     const civPool = data.civPool;
     const players: { [name: string]: Player } = {};
     for (const playerName in data.players) {
       const playerData = data.players[playerName];
-      players[playerName] = Player.import(playerData);
+      players[playerName] = Player.import(playerName, playerData);
     }
     const playerCount = data.playerCount;
     const metaData = data.metaData;
-    return new Game([world, leaders, civPool, players, playerCount, metaData]);
+    return new Game([world, civPool, players, playerCount, metaData]);
   }
 
   public async save() {
@@ -192,7 +169,7 @@ export class Game {
       this.sendToSpectator(username, {
         update: [
           ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
-          ['civData', [ this.world.getAllCivsData() ]],
+          ['civData', [ this.world.getAllCivsData(), this.getPlayersData() ]],
         ],
       });
     }
@@ -205,13 +182,13 @@ export class Game {
   public startGame(player?: Player): void {
     if (this.hasStarted()) {
       if (player) {
-        this.sendToLeader(player.leaderID, {
+        this.sendToPlayer(player, {
           update: [
             ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
-            ['civData', [ this.world.getAllCivsData() ]],
+            ['civData', [ this.world.getAllCivsData(), this.getPlayersData() ]],
           ],
         });
-        this.resumeTurnForLeader(player.leaderID);
+        this.resumeTurnForPlayer(player);
       }
     } else {
       this.generateWorld();
@@ -225,25 +202,25 @@ export class Game {
       this.sendToAll({
         update: [
           ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
-          ['civData', [ this.world.getAllCivsData() ]],
+          ['civData', [ this.world.getAllCivsData(), this.getPlayersData() ]],
         ],
       });
 
       this.sendToSpectators({
         update: [
           ['beginGame', [ [this.world.map.width, this.world.map.height], this.playerCount ]],
-          ['civData', [ this.world.getAllCivsData() ]],
+          ['civData', [ this.world.getAllCivsData(), this.getPlayersData() ]],
         ],
       });
 
       this.forEachPlayer((player: Player) => {
-        this.sendToLeader(player.leaderID, {
+        const [world, civ] = this.getPlayerWorldAndCiv(player);
+        this.sendToPlayer(player, {
           update: [
-            // Type assertion here to make the compiler happy - we've already guaranteed that world exsits.
-            ['setMap', [(this.world as World).map.getLeaderMap(this.getLeader(player.leaderID))]],
+            ['setMap', [world.map.getMapByCivID(civ.id)]],
           ],
         });
-        this.beginTurnForLeader(player.leaderID);
+        this.beginTurnForPlayer(player);
       });
 
       this.sendToSpectators({
@@ -254,29 +231,28 @@ export class Game {
     }
   }
 
-  beginTurnForLeader(leaderID: number): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leader = this.getLeader(leaderID);
-    leader.newTurn();
-    this.world.updateLeaderTileVisibility(leader);
-    this.resumeTurnForLeader(leaderID);
+  private beginTurnForPlayer(player: Player): void {
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    civ.newTurn();
+    world.updateCivTileVisibility(civ.id);
+    this.resumeTurnForPlayer(player);
   }
 
-  resumeTurnForLeader(leaderID: number): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leader = this.getLeader(leaderID);
-    this.sendToLeader(leaderID, {
+  private resumeTurnForPlayer(player: Player): void {
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    this.sendToPlayer(player, {
       update: [
-        ['setMap', [this.world.map.getLeaderMap(leader)]],
-        ['unitPositions', [leader.getUnitPositions()]],
+        ['setMap', [world.map.getMapByCivID(civ.id)]],
+        ['unitPositions', [civ.getUnitPositions()]],
         ['beginTurn', []],
       ],
     });
   }
 
-  endTurnForLeader(leaderID: number): void {
-    this.leaders[leaderID].endTurn();
-    this.sendToLeader(leaderID, {
+  private endTurnForPlayer(player: Player): void {
+    const [_, civ] = this.getPlayerWorldAndCiv(player);
+    civ.endTurn();
+    this.sendToPlayer(player, {
       update: [
         ['endTurn', []],
       ],
@@ -289,7 +265,7 @@ export class Game {
     // end all players' turns
     this.forEachPlayer((player: Player) => {
       if (!player.isAbsent()) {
-        this.endTurnForLeader(player.leaderID);
+        this.endTurnForPlayer(player);
       }
     });
 
@@ -297,6 +273,13 @@ export class Game {
     this.forEachPlayer((player: Player, username: string) => {
       if (player.isAbsent()) {
         console.log(`${username} is absent!`)
+        if (player.ai === null) {
+          const [world, civ] = this.getPlayerWorldAndCiv(player);
+          player.ai = new King(world, world.map, civ);
+        }
+        player.ai.takeTurn();
+      } else if (player.ai !== null) {
+        player.ai = null;
       }
     });
 
@@ -315,7 +298,7 @@ export class Game {
     // begin all players' turns
     this.forEachPlayer((player: Player) => {
       if (!player.isAbsent()) {
-        this.beginTurnForLeader(player.leaderID);
+        this.beginTurnForPlayer(player);
       }
     });
 
@@ -331,8 +314,9 @@ export class Game {
     if (!this.hasStarted()) throw new GameNotStartedError();
     const updates = this.world.getUpdates();
     this.forEachPlayer((player) => {
-      this.sendToLeader(player.leaderID, {
-        update: updates.map(updateFn => updateFn(this.leaders[player.leaderID])),//.filter(update => update),
+      const [_, civ] = this.getPlayerWorldAndCiv(player);
+      this.sendToPlayer(player, {
+        update: updates.map(updateFn => updateFn(civ.id)),//.filter(update => update),
       });
     });
   }
@@ -357,20 +341,8 @@ export class Game {
     return playersData;
   }
 
-  getLeadersData(): {[leaderID: number]: LeaderData} {
-    const leadersData: { [leaderID: number]: LeaderData } = {};
-    for (const leaderID in this.leaders) {
-      leadersData[leaderID] = this.leaders[leaderID].getData();
-    }
-    return leadersData;
-  }
-
   getMetaData(): GameData {
     return { ...this.metaData, players: this.getPlayersData() };
-  }
-
-  public getLeader(leaderID: number): Leader {
-    return this.leaders[leaderID];
   }
 
   public sendToSpectators(msg: EventMsg): void {
@@ -392,14 +364,7 @@ export class Game {
     }
   }
 
-  sendToLeader(leaderID: number, msg: EventMsg): void {
-    const player = Object.values(this.players).find(player => player.leaderID === leaderID);
-
-    if (!player) {
-      console.error("Error: Could not find player for Leader #" + leaderID);
-      return;
-    }
-
+  sendToPlayer(player: Player, msg: EventMsg): void {
     player.send(JSON.stringify(msg));
   }
 
@@ -410,30 +375,8 @@ export class Game {
     }
   }
 
-  public newPlayerLeaderID(username: string): number | null {
-    const freeLeaders: { [id: number]: boolean } = {};
-    for (let i = 0; i < this.playerCount; i++) {
-      freeLeaders[i] = true;
-    }
-
-    for (const playerName in this.players) {
-      if (username === playerName) return this.players[playerName].leaderID;
-      delete freeLeaders[this.players[playerName].leaderID];
-    }
-
-    const freeIDs = Object.keys(freeLeaders).map(Number);
-
-    if (!freeIDs.length) {
-      return null;
-    }
-
-    return Math.min(...freeIDs);
-  }
-
-  forEachLeaderID(callback: (leaderID: number) => void): void {
-    for (let leaderID = 0; leaderID < this.leaders.length; leaderID++) {
-      callback(leaderID);
-    }
+  public canJoinGame(username: string): boolean {
+    return username in this.players || Object.keys(this.players).length < this.playerCount;
   }
 
   selectCiv(player: Player, civTemplateID: number): void {
@@ -441,12 +384,12 @@ export class Game {
       if (this.civPool[civTemplateID] === null) {
         // Unselect the old civ, if one is selected
         for (const templateID in this.civPool) {
-          if (this.civPool[templateID] === player.leaderID) {
+          if (this.civPool[templateID] === player.username) {
             this.civPool[templateID] = null;
           }
         }
         // Then select the new one
-        this.civPool[civTemplateID] = player.leaderID;
+        this.civPool[civTemplateID] = player.username;
         this.sendToAll({
           update: [
             ['civPool', [ this.civPool, civTemplates, this.getPlayersData() ]],
@@ -461,7 +404,7 @@ export class Game {
   setReady(player: Player, state: boolean): void {
     if (player) {
 
-      if (!Object.values(this.civPool).includes(player.leaderID)) {
+      if (!Object.values(this.civPool).includes(player.username)) {
         throw new FrontendError('notReady', 'Please select a civilization');
       }
 
@@ -483,11 +426,10 @@ export class Game {
   }
 
   public setTurnFinished(player: Player, state: boolean): void {
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
+    const [_, civ] = this.getPlayerWorldAndCiv(player);
 
-    if (!leader.turnActive) {
-      this.sendToLeader(leaderID, {
+    if (!civ.turnActive) {
+      this.sendToPlayer(player, {
         error: [
           ['turnExpired', []],
         ],
@@ -496,8 +438,8 @@ export class Game {
       return;
     }
 
-    // mark leader as finished/unfinished
-    leader.turnFinished = state;
+    // mark civ as finished/unfinished
+    civ.turnFinished = state;
     this.tryEndTurn();
   }
 
@@ -505,8 +447,8 @@ export class Game {
     // see if all players are finished...
     let finished = true;
     this.forEachPlayer((player) => {
-      const leader = this.leaders[player.leaderID];
-      if (!player.isAbsent() && leader.turnActive && !leader.turnFinished) {
+      const [_, civ] = this.getPlayerWorldAndCiv(player);
+      if (!player.isAbsent() && civ.turnActive && !civ.turnFinished) {
         finished = false;
         return true;
       }
@@ -519,6 +461,17 @@ export class Game {
   }
 
   /**
+   * Returns the player's civilization (and the world), throws error if none is found
+   * (the game probably hasn't started yet in this case).
+   * @param player
+   * @throws GameNotStartedError
+   */
+  private getPlayerWorldAndCiv(player: Player): [World, Civilization] {
+    if (!this.hasStarted() || player.civID === null) throw new GameNotStartedError();
+    return [this.world, this.world.getCiv(player.civID)];
+  }
+
+  /**
    * Handles all combat *not* handled by world.playerUnitMovement.
    * @param player 
    * @param srcCoords 
@@ -526,27 +479,25 @@ export class Game {
    * @returns 
    */
   playerUnitCombat(player: Player, srcCoords: Coords, targetCoords: Coords): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
 
     const src = map.getTileOrThrow(srcCoords);
     const unit = src.unit;
 
     const target = map.getTileOrThrow(targetCoords);
 
-    if ( !unit || !leader.controlsUnit(unit) ) {
+    if ( !unit || !civ.ownsUnit(unit) ) {
       this.sendUpdates();
       return;
     }
 
     if (target.unit && map.canUnitAttack(unit, target.unit) && unit.movement > 0) {
       if (unit.promotionClass === PromotionClass.RANGED) {
-        this.world.rangedCombat(unit, target.unit);
+        world.rangedCombat(unit, target.unit);
         unit.movement = 0;
       } else {
-        this.world.meleeCombat(unit, target.unit);
+        world.meleeCombat(unit, target.unit);
         unit.movement = 0;
       }
     }
@@ -555,7 +506,7 @@ export class Game {
 
     // In case we later support units being moved as a result of them attacking,
     // we want to send a unit position update here. It also simplifies frontend logic.
-    this.sendToLeader(leaderID, {
+    this.sendToPlayer(player, {
       update: [
         ['unitPositionUpdate', [srcCoords, unit.coords]],
       ],
@@ -571,10 +522,8 @@ export class Game {
    * @returns 
    */
   playerUnitMovement(player: Player, srcCoords: Coords, path: Coords[], attack: boolean) {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
 
     let src = map.getTileOrThrow(srcCoords);
     let finalCoords = srcCoords;
@@ -584,7 +533,7 @@ export class Game {
 
       const unit = src.unit;
 
-      if (!unit || !leader.controlsUnit(unit)) {
+      if (!unit || !civ.ownsUnit(unit)) {
         this.sendUpdates();
         return;
       }
@@ -616,7 +565,7 @@ export class Game {
       if (unit) {
         const target = map.getTileOrThrow(path[path.length - 1]);
         if (target.unit && unit.isAdjacentTo(target.unit.coords)) {
-          this.world.meleeCombat(unit, target.unit);
+          world.meleeCombat(unit, target.unit);
           unit.movement = 0;
         }
       }
@@ -624,7 +573,7 @@ export class Game {
 
     this.sendUpdates();
 
-    this.sendToLeader(leaderID, {
+    this.sendToPlayer(player, {
       update: [
         ['unitPositionUpdate', [srcCoords, finalCoords]],
       ],
@@ -632,40 +581,34 @@ export class Game {
   }
 
   setPlayerUnitCloak(player: Player, coords: Coords, cloaked: boolean): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const tile = this.world.map.getTileOrThrow(coords);
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const tile = world.map.getTileOrThrow(coords);
     const unit = tile.unit;
-    if (unit && leader.controlsUnit(unit) && unit.movement) {
+    if (unit && civ.ownsUnit(unit) && unit.movement) {
       unit.setCloak(cloaked);
       unit.movement = 0;
       
-      this.world.map.tileUpdate(unit.coords);
+      world.map.tileUpdate(unit.coords);
       this.sendUpdates();
     }
   }
 
   trainPlayerUnit(player: Player, coords: Coords, type: string): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    this.world.map.trainUnitAt(coords, type, leader);
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    world.map.trainUnitAt(coords, type, civ);
     this.sendUpdates();
   }
 
   settleCityAt(player: Player, coords: Coords, name: string): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
 
     const unit = map.getTile(coords)?.unit;
-    if (unit?.type === 'settler' && leader.controlsUnit(unit) && isCivDomain(unit.domainID)) {
-      const settlementSuccessful = map.settleCityAt(coords, name, leader, unit);
+    if (unit?.type === 'settler' && civ.ownsUnit(unit)) {
+      const settlementSuccessful = map.settleCityAt(coords, name, civ, unit);
 
       if (settlementSuccessful) {
-        this.world.removeUnit(unit);
+        world.removeUnit(unit);
       } else {
         throw new InvalidSettlement('You cannot settle a city here!');
       }
@@ -679,13 +622,11 @@ export class Game {
    * @param coords 
    */
   getImprovementCatalog(player: Player, coords: Coords): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
     const tile = map.getTileOrThrow(coords);
-    if (leader.controlsTile(tile) && tile.unit && map.canBuildOn(tile)) {
-      this.sendToLeader(leaderID, {
+    if (civ.controlsTile(tile) && tile.unit && map.canBuildOn(tile)) {
+      this.sendToPlayer(player, {
         update: [
           ['improvementCatalog', [coords, tile.getImprovementCatalog()]],
         ],
@@ -694,28 +635,24 @@ export class Game {
   }
 
   buildImprovement(player: Player, coords: Coords, type: string): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
     const tile = map.getTileOrThrow(coords);
     const unit = tile?.unit;
 
-    if (unit?.type === 'builder' && leader.controlsUnit(unit) && !tile.improvement) {
-      map.startConstructionAt(coords, type, leader, unit);
+    if (unit?.type === 'builder' && civ.ownsUnit(unit) && !tile.improvement) {
+      map.startConstructionAt(coords, type, civ, unit);
       this.sendUpdates();
     }
   }
 
   buildWall(player: Player, coords: Coords, facingCoords: Coords, type: number): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
     const tile = map.getTileOrThrow(coords);
     const unit = tile?.unit;
 
-    if (unit?.type === 'builder' && leader.controlsUnit(unit)) {
+    if (unit?.type === 'builder' && civ.ownsUnit(unit)) {
       tile.setWall(map.getDirection(coords, facingCoords), type);
       map.tileUpdate(coords);
       this.sendUpdates();
@@ -723,14 +660,12 @@ export class Game {
   }
 
   setGateOpen(player: Player, coords: Coords, facingCoords: Coords, isOpen: boolean): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
     const tile = map.getTile(coords);
     const unit = tile?.unit;
 
-    if (unit && leader.controlsUnit(unit)) {
+    if (unit && civ.ownsUnit(unit)) {
       const direction = map.getDirection(coords, facingCoords);
       const wall = tile.getWall(direction);
       if (wall && wall.type === (isOpen ? WallType.CLOSED_GATE : WallType.OPEN_GATE)) {
@@ -746,12 +681,10 @@ export class Game {
   }
 
   getPlayerTraders(player: Player): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    this.sendToLeader(leaderID, {
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    this.sendToPlayer(player, {
       update: [
-        ['tradersList', [this.world.map.getTraderDataByLeader(leader)]],
+        ['tradersList', [world.map.getTraderDataByCiv(civ)]],
       ],
     });
   }
@@ -761,12 +694,10 @@ export class Game {
    * @param coords 
    */
   getUnitCatalog(player: Player, coords: Coords): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const tile = this.world.map.getTileOrThrow(coords);
-    if (leader.controlsTile(tile) && tile.improvement) {
-      this.sendToLeader(leaderID, {
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const tile = world.map.getTileOrThrow(coords);
+    if (civ.controlsTile(tile) && tile.improvement) {
+      this.sendToPlayer(player, {
         update: [
           ['unitCatalog', [coords, tile.getUnitCatalog()]],
         ],
@@ -779,12 +710,10 @@ export class Game {
    * @param coords 
    */
   getKnowledgeCatalog(player: Player, coords: Coords): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const tile = this.world.map.getTileOrThrow(coords);
-    if (leader.controlsTile(tile) && tile.improvement) {
-      this.sendToLeader(leaderID, {
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const tile = world.map.getTileOrThrow(coords);
+    if (civ.controlsTile(tile) && tile.improvement) {
+      this.sendToPlayer(player, {
         update: [
           ['knowledgeCatalog', [coords, tile.getKnowledgeCatalog()]],
         ],
@@ -793,22 +722,18 @@ export class Game {
   }
 
   researchKnowledge(player: Player, coords: Coords, name: string): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    this.world.map.researchKnowledgeAt(coords, name, leader);
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    world.map.researchKnowledgeAt(coords, name, civ);
     this.sendUpdates();
   }
 
   stealKnowledge(player: Player, coords: Coords): void {
-    if (!this.hasStarted()) throw new GameNotStartedError();
-    const leaderID = player.leaderID;
-    const leader = this.leaders[leaderID];
-    const map = this.world.map;
+    const [world, civ] = this.getPlayerWorldAndCiv(player);
+    const map = world.map;
 
     const tile = map.getTileOrThrow(coords);
     const unit = tile.unit;
-    if (unit && leader.controlsUnit(unit)) {
+    if (unit && civ.ownsUnit(unit)) {
       const tileKnowledgeMap = tile.improvement?.knowledge?.getKnowledgeMap();
       if (tileKnowledgeMap) unit.updateKnowledge(tileKnowledgeMap);
       // TODO - spy invisiblity stuff + possibility of being discovered here

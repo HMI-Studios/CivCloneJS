@@ -1,5 +1,7 @@
-import { Domain, DomainType } from './leader';
+import { Tile } from './map/tile';
 import { KnowledgeMap } from './map/tile/knowledge';
+import { Unit } from './map/tile/unit';
+import { Coords } from './world';
 
 const DEFAULT_START_KNOWLEDGE = {
   'start': 100,
@@ -24,10 +26,14 @@ export interface CivilizationData {
   textColor: string;
   secondaryColor: string;
   name: string;
-  leaderID: number | null;
 }
 
-export class Civilization extends Domain {
+export class Civilization {
+  public id: number;
+  public turnActive: boolean;
+  public turnFinished: boolean;
+  private substates: Civilization[];
+  private units: Unit[];
   private templateID: number;
   private color: string;
   private textColor: string;
@@ -37,7 +43,11 @@ export class Civilization extends Domain {
   public startingKnowledge: KnowledgeMap;
 
   constructor(id: number, templateID: number) {
-    super(id, DomainType.CIVILIZATION);
+    this.id = id;
+    this.turnActive = false;
+    this.turnFinished = false;
+    this.substates = [];
+    this.units = [];
     const { color, textColor, name, startingKnowledge } = civTemplates[templateID];
     this.templateID = templateID;
     this.color = color;
@@ -51,9 +61,12 @@ export class Civilization extends Domain {
     };
   }
 
-  export() {
+  public export() {
     return {
-      ...super.baseExport(),
+      id: this.id,
+      turnActive: this.turnActive,
+      turnFinished: this.turnFinished,
+      units: this.units.map(unit => unit.export()),
       templateID: this.templateID,
       color: this.color,
       textColor: this.textColor,
@@ -62,16 +75,19 @@ export class Civilization extends Domain {
     };
   }
 
-  static import(data: any): Civilization {
+  public static import(data: any): Civilization {
     const civ = new Civilization(data.id, data.templateID);
+    civ.turnActive = data.turnActive;
+    civ.turnFinished = data.turnFinished;
     civ.color = data.color;
     civ.textColor = data.textColor;
     civ.secondaryColor = data.secondaryColor;
     civ.name = data.name;
+    civ.units = data.units.map((unitData: any) => Unit.import(unitData));
     return civ;
   }
 
-  getData(): CivilizationData {
+  public getData(): CivilizationData {
     return {
       id: this.id,
       templateID: this.templateID,
@@ -79,7 +95,50 @@ export class Civilization extends Domain {
       textColor: this.textColor,
       secondaryColor: this.secondaryColor,
       name: this.name,
-      leaderID: this.leader?.id ?? null,
     };
+  }
+
+  newTurn() {
+    this.turnActive = true;
+    this.turnFinished = false;
+
+    for (const unit of this.units) {
+      unit.newTurn();
+    }
+  }
+
+  endTurn() {
+    this.turnActive = false;
+  }
+
+  controlsCiv(civID: number): boolean {
+    return this.substates.some(civ => civID === civ.id);
+  }
+  
+  public getUnits(): Unit[] {
+    return this.units;
+  }
+
+  public getUnitPositions(): Coords[] {
+    return this.units.map(unit => unit.coords);
+  }
+
+  public addUnit(unit: Unit): void {
+    this.units.push(unit);
+  }
+
+  public removeUnit(unit: Unit): void {
+    const unitIndex = this.units.indexOf(unit);
+    if (unitIndex > -1) {
+      this.units.splice(unitIndex, 1);
+    }
+  }
+
+  public ownsUnit(unit: Unit): boolean {
+    return unit.civID === this.id;
+  }
+
+  public controlsTile(tile: Tile): boolean {
+    return tile.owner?.civID === this.id;
   }
 }

@@ -178,30 +178,16 @@ const methods: {
 
     const username = getUsername(ws);
 
-    const leaderID = game?.newPlayerLeaderID(username);
-    const isRejoin = game.hasPlayer(username);
-
-    if (leaderID !== null) {
+    if (game.canJoinGame(username)) {
+      const isRejoin = game.hasPlayer(username);
       getConnData(ws).gameID = gameID;
       
       if (isRejoin) {
         const player = game.getPlayer(username) as Player; // Safe, since `isRejoin` is only true if the player exists.
         player.reset(ws);
       } else {
-        game.connectPlayer(username, new Player(leaderID, ws));
+        game.connectPlayer(username, new Player(username, null, ws));
       }
-
-      sendTo(ws, {
-        update: [
-          ['leaderID', [ leaderID ]],
-        ]
-      });
-
-      game.sendToAll({
-        update: [
-          ['leaderData', [ game.getLeadersData() ]],
-        ],
-      })
 
       if (isRejoin && game.canStart()) {
         game.startGame(game.getPlayer(username));
