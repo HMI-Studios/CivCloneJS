@@ -66,6 +66,10 @@ export default class WebSocketManager {
     clearTimeout(this.timeout);
   }
 
+  public onClose(callback: () => void): void {
+    this.socket.on('close', callback);
+  }
+
   public onMessage(callback: (message: string) => void): void {
     this.socket.on('message', (buf: Buffer) => {
       const message = buf.toString();

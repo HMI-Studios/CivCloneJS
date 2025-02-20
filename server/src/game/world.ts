@@ -1,11 +1,11 @@
 import { Map } from './map';
 import { Unit } from './map/tile/unit';
-import { Leader, CivDomainID, isCityDomain, isCivDomain, CityDomainID, DomainID, Domain } from './leader';
 import { Event } from '../utils';
 import { Random } from '../utils/random';
 import { Civilization, CivilizationData } from './civilization';
 import { NoStartLocation, ValueError } from '../utils/error';
 import { City } from './map/tile/city';
+import { Player } from './player';
 
 export interface Coords {
   x: number;
@@ -20,12 +20,12 @@ export class World {
   map: Map;
   civs: { [civID: number]: Civilization };
   civsCount: number;
-  updates: { (leader: Leader): Event }[];
+  updates: { (civID: number): Event }[];
   random: Random;
 
   public currentTurn: number;
 
-  constructor(args: [map: Map, civsCount: number, civTemplateLeaders: [number, Leader][]] | WorldImportArgs) {
+  constructor(args: [map: Map, civsCount: number, civTemplatePlayers: [number, Player][]] | WorldImportArgs) {
     this.updates = [];
 
     if (args.length === 4) {
@@ -38,7 +38,7 @@ export class World {
       return;
     }
 
-    const [ map, civsCount, civTemplateLeaders ] = args;
+    const [ map, civsCount, civTemplatePlayers ] = args;
 
     this.random = new Random(map.seed);
     this.map = map;
@@ -47,28 +47,27 @@ export class World {
     this.civs = {};
 
     for (let civID = 0; civID < this.civsCount; civID++) {
-      const [templateID, leader] = civTemplateLeaders[civID];
+      const [templateID, player] = civTemplatePlayers[civID];
       this.civs[civID] = new Civilization(civID, templateID);
-      const domainID = this.civs[civID].getDomainID();
+      player.civID = civID;
 
       this.getStartLocation(([settlerCoords, builderCoords, scoutCoords]) => {
-        this.addUnit(new Unit('settler', settlerCoords, domainID, this.civs[civID].startingKnowledge));
-        this.addUnit(new Unit('builder', builderCoords, domainID, this.civs[civID].startingKnowledge));
-        this.addUnit(new Unit('scout', scoutCoords, domainID, this.civs[civID].startingKnowledge));
+        this.addUnit(new Unit('settler', settlerCoords, civID, this.civs[civID].startingKnowledge));
+        this.addUnit(new Unit('builder', builderCoords, civID, this.civs[civID].startingKnowledge));
+        this.addUnit(new Unit('scout', scoutCoords, civID, this.civs[civID].startingKnowledge));
       });
 
-      this.setDomainLeader(domainID, leader)
-
-      this.updateLeaderTileVisibility(leader);
+      this.updateCivTileVisibility(civID);
     }
 
-    const barbarianTribes = Math.ceil(map.height * map.width / 1500);
-    for (let i = 0; i < barbarianTribes; i++) {
-      this.getStartLocation(([settlerCoords, _, scoutCoords]) => {
-        const domainID = this.map.newBarbarianCampAt(settlerCoords);
-        if (domainID !== null) this.addUnit(new Unit('scout', scoutCoords, domainID));
-      });
-    }
+    // TODO fix barbarians
+    // const barbarianTribes = Math.ceil(map.height * map.width / 1500);
+    // for (let i = 0; i < barbarianTribes; i++) {
+    //   this.getStartLocation(([settlerCoords, _, scoutCoords]) => {
+    //     const domainID = this.map.newBarbarianCampAt(settlerCoords);
+    //     if (domainID !== null) this.addUnit(new Unit('scout', scoutCoords, domainID));
+    //   });
+    // }
 
     this.currentTurn = 1;
 
@@ -84,16 +83,16 @@ export class World {
       const builderCoords = { x: x + 1, y: y + 1 };
       const   scoutCoords = { x: x - 1, y: y + 1 };
 
-      let legal_start_location = true;
+      let legalStartLocation = true;
       for (const coords of [settlerCoords, builderCoords, scoutCoords]) {
         const tile = this.map.getTile(coords);
         if (!tile || tile.unit || !this.map.canSettleOn(tile)) {
-          legal_start_location = false;
+          legalStartLocation = false;
           break;
         }
       }
 
-      if (legal_start_location) {
+      if (legalStartLocation) {
         callback([settlerCoords, builderCoords, scoutCoords]);
         return;
       }
@@ -117,7 +116,7 @@ export class World {
     };
   }
 
-  static import(data: any, leaders: { [id: number]: Leader }): World {
+  static import(data: any): World {
     const [map, callbacks] = Map.import(data.map);
     const civs = {};
     const civsCount = data.civsCount;
@@ -131,56 +130,25 @@ export class World {
       for (const unit of units) {
         world.addUnit(unit);
       }
-      if (civData.leader !== null) {
-        world.updateLeaderTileVisibility(leaders[civData.leader]);
-        world.setDomainLeader(civData.domainID, leaders[civData.leader]);
-      }
+      world.updateCivTileVisibility(Number(civID));
     }
 
-    for (const cb of callbacks) {
-      cb(world, leaders);
-    }
+    for (const cb of callbacks) cb(world);
 
     return world;
   }
 
-  getUpdates(): { (leader: Leader): Event }[] {
+  getUpdates(): { (civID: number): Event }[] {
     // TODO: more updates?
     return this.map.getUpdates().concat(this.updates.splice(0));
   }
 
-  /**
-   * Sets the leader of a domain if none already exists. *Cannot* transfer a domain from one leader to another.
-   * @param domainID 
-   * @param leader 
-   * @returns 
-   */
-  setDomainLeader(domainID: DomainID, leader: Leader): boolean {
-    const domain = this.getDomain(domainID);
-    if (!domain || domain.hasLeader()) {
-      return false;
-    }
-
-    domain.setLeader(leader);
-    leader.addDomain(domain);
-
-    this.updates.push((leader) => ['leaderUpdate', [leader.id, leader.getData()]]);
-
-    return true;
+  getCiv(civID: number): Civilization {
+    return this.civs[civID];
   }
 
-  getDomain(domainID: DomainID): Domain {
-    if (isCivDomain(domainID)) return this.getCiv(domainID);
-    else if (isCityDomain(domainID)) return this.getCity(domainID);
-    else throw new ValueError('Bad domain ID type: ' + domainID.type);
-  }
-
-  getCiv(civID: CivDomainID): Civilization {
-    return this.civs[civID.subID];
-  }
-
-  getCity(cityID: CityDomainID): City {
-    return this.map.cities[cityID.subID];
+  getCity(cityID: number): City {
+    return this.map.cities[cityID];
   }
 
   // civs
@@ -195,22 +163,10 @@ export class World {
     return data;
   }
 
-  // map, civs
-  updateLeaderTileVisibility(leader: Leader): void {
-    leader.forEachCityDomainID((domainID: CityDomainID) => {
-      this.updateCityTileVisibility(domainID);
-    });
-
-    leader.forEachCivDomainID((domainID: CivDomainID) => {
-      this.updateCivTileVisibility(domainID);
-    });
-  }
-
-  updateCityTileVisibility(domainID: CityDomainID): void {
-    const city = this.getCity(domainID);
+  private updateCityTileVisibility(city: City): void {
     const cityTiles: Coords[] = [];
     for (const coords of city.getTiles()) {
-      this.map.getTileOrThrow(coords).setVisibility(domainID, true);
+      this.map.getTileOrThrow(coords).setVisibility(city.civID, true);
       cityTiles.push(coords);
     }
     for (const coords of cityTiles) {
@@ -218,24 +174,22 @@ export class World {
         return tile.owner?.id !== city.id;
       } })) {
         const tile = this.map.getTileOrThrow(neighbor);
-        tile.setVisibility(domainID, true);
-      }
-    }
-
-    for (const unit of city.units) {
-      for (const coords of this.map.getVisibleTilesCoords(unit)) {
-        const tile = this.map.getTileOrThrow(coords);
-        tile.setVisibility(domainID, true);
+        tile.setVisibility(city.civID, true);
       }
     }
   }
 
-  updateCivTileVisibility(domainID: CivDomainID): void {
-    const civ = this.getCiv(domainID);
-    for (const unit of civ.units) {
+  public updateCivTileVisibility(civID: number): void {
+    const civ = this.getCiv(civID);
+
+    for (const city of this.map.cities.filter(city => city.civID === civID)) {
+      this.updateCityTileVisibility(city);
+    }
+
+    for (const unit of civ.getUnits()) {
       for (const coords of this.map.getVisibleTilesCoords(unit)) {
         const tile = this.map.getTileOrThrow(coords);
-        tile.setVisibility(domainID, true);
+        tile.setVisibility(civID, true);
       }
     }
   }
@@ -243,19 +197,19 @@ export class World {
   // map, civs
   addUnit(unit: Unit): void {
     if (this.map.isInBounds(unit.coords)) {
-      this.getDomain(unit.domainID).addUnit(unit);
+      this.getCiv(unit.civID).addUnit(unit);
       this.map.getTileOrThrow(unit.coords).setUnit(unit);
     }
   }
 
   // map, civs
   removeUnit(unit: Unit): void {
-    this.getDomain(unit.domainID).removeUnit(unit);
+    this.getCiv(unit.civID).removeUnit(unit);
     this.updates.push(() => ['unitKilled', [ unit.coords, unit ]]);
     this.map.getTileOrThrow(unit.coords).setUnit(undefined);
     // TODO: make this more intelligent
-    if (isCivDomain(unit.domainID)) this.updateCivTileVisibility(unit.domainID);
-    this.updates.push((leader) => ['setMap', [this.map.getLeaderMap(leader)]]);
+    this.updateCivTileVisibility(unit.civID);
+    this.updates.push((civID) => ['setMap', [this.map.getMapByCivID(civID)]]);
   }
 
   rangedCombat(attacker: Unit, defender: Unit): void {

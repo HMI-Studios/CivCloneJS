@@ -61,16 +61,6 @@ const getCoordsDial = ({ x, y }) => {
             { x: x - 1, y: y },
         ];
 };
-const makeCityID = (id) => ({
-    subID: id,
-    type: DomainType.CITY,
-});
-const makeCivID = (id) => ({
-    subID: id,
-    type: DomainType.CIVILIZATION,
-});
-const isCiv = (domain) => (domain.templateID !== undefined);
-const compareDomainIDs = (a, b) => a !== undefined && b !== undefined && a.type === b.type && a.subID === b.subID;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class World {
     constructor() {
@@ -89,10 +79,9 @@ class World {
         };
         this.listeners = {};
         this.civs = {};
-        this.leaders = {};
         this.player = {
             name: null,
-            leaderID: null,
+            civID: null,
         };
         this.tradeRoutes = [];
     }
@@ -153,26 +142,16 @@ class World {
             return x1 + 1;
         return x1;
     }
-    domainMatchesID(domain, domainID) {
-        if (isCiv(domain)) {
-            return domainID.type === DomainType.CIVILIZATION && domain.id === domainID.subID;
-        }
-        else {
-            return domainID.type === DomainType.CITY && domain.id === domainID.subID;
-        }
-    }
     playerControlsTile(tile) {
         const { owner } = tile;
-        if (this.player.leaderID === null || !owner)
+        if (this.player.civID === null || !owner)
             return false;
-        const leader = this.leaders[this.player.leaderID];
-        return leader.domains.some(domain => this.domainMatchesID(domain, makeCityID(owner.id)) || (owner.civID && this.domainMatchesID(domain, owner.civID)));
+        return owner.civID === this.player.civID;
     }
     playerControlsUnit(unit) {
-        if (this.player.leaderID === null)
+        if (this.player.civID === null)
             return false;
-        const leader = this.leaders[this.player.leaderID];
-        return leader.domains.some(domain => this.domainMatchesID(domain, unit.domainID));
+        return unit.civID === this.player.civID;
     }
     isOcean(tile) {
         return (tile.type === 'ocean' ||
@@ -454,6 +433,17 @@ class World {
                                 ui.showCivPicker(civPickerFn, this.player);
                             }
                         },
+                        spectateGame: (gameID) => {
+                            if (gameID !== null) {
+                                this.sendActions([
+                                    ['spectateGame', [gameID]],
+                                ]);
+                                ui.hideGameList();
+                                ui.setView('civPicker');
+                                ui.showReadyBtn(readyFn);
+                                ui.showCivPicker(civPickerFn, this.player);
+                            }
+                        },
                         return: () => {
                             ui.hideGameList();
                             ui.setView('mainMenu');
@@ -525,31 +515,25 @@ class World {
                     this.unitPositions.splice(index, 1);
                 camera.deselectUnit(this);
             };
+            const loadPlayers = (players) => {
+                for (const playerName in players) {
+                    const player = players[playerName];
+                    ui.players[playerName] = Object.assign(Object.assign({}, player), { name: playerName });
+                    if (playerName === this.player.name)
+                        this.player = Object.assign(Object.assign({}, player), { name: playerName });
+                }
+            };
             this.on.update.civPool = (civPool, civTemplates, players) => {
                 ui.civPool = civPool;
                 ui.civTemplates = civTemplates;
                 ui.players = {};
-                ui.leaders = {};
-                for (const playerName in players) {
-                    const player = players[playerName];
-                    ui.players[playerName] = Object.assign(Object.assign({}, player), { name: playerName });
-                    if (player.leaderID !== null)
-                        ui.leaders[player.leaderID] = Object.assign(Object.assign({}, player), { name: playerName });
-                }
+                loadPlayers(players);
                 ui.setView('civPicker');
                 ui.showCivPicker(civPickerFn, this.player);
             };
-            this.on.update.leaderData = (leaders) => {
-                this.leaders = leaders;
-            };
-            this.on.update.civData = (civs) => {
+            this.on.update.civData = (civs, players) => {
                 this.civs = civs;
-            };
-            this.on.update.leaderID = (leaderID) => {
-                this.player.leaderID = leaderID;
-            };
-            this.on.update.leaderUpdate = (leaderID, leaderData) => {
-                this.leaders[leaderID] = leaderData;
+                loadPlayers(players);
             };
             this.on.update.tradersList = (tradeRoutes) => {
                 this.tradeRoutes = tradeRoutes;

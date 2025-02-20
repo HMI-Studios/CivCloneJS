@@ -89,7 +89,6 @@ class UI {
         this.civPool = {};
         this.civTemplates = [];
         this.players = {};
-        this.leaders = {};
         this.turnActive = false;
         this.buttons = {
             mainBtn: new Button(this.createElement('button', { className: 'mainActionBtn' }), {
@@ -195,7 +194,7 @@ class UI {
         civItem.style.backgroundColor = civTemplate.color;
         civItem.style.color = civTemplate.textColor;
         const nameText = this.createElement('span');
-        nameText.innerHTML = `${civTemplate.name}` + (selectedBy !== null ? ` - ${translate('menu.civ.selected_by')} ${this.leaders[selectedBy.id].name}` : '');
+        nameText.innerHTML = `${civTemplate.name}` + (selectedBy !== null ? ` - ${translate('menu.civ.selected_by')} ${selectedBy.name}` : '');
         civItem.appendChild(nameText);
         return civItem;
     }
@@ -266,14 +265,14 @@ class UI {
     }
     showCivPicker(callback, self) {
         this.elements.civPicker.innerHTML = '';
-        const selectedLeaderSlot = this.createElement('div', { className: 'selectedLeader' });
-        this.elements.civPicker.appendChild(selectedLeaderSlot);
+        const selectedCivSlot = this.createElement('div', { className: 'selectedCiv' });
+        this.elements.civPicker.appendChild(selectedCivSlot);
         for (let civTemplateID = 0; civTemplateID < this.civTemplates.length; civTemplateID++) {
             const civTemplate = this.civTemplates[civTemplateID];
-            const leaderID = this.civPool[civTemplateID];
-            const leader = leaderID !== null ? world.leaders[leaderID] : null;
-            const civItem = this.createCivItem(civTemplate, leader);
-            if (leader) {
+            const playerName = this.civPool[civTemplateID];
+            const player = playerName !== null ? ui.players[playerName] : null;
+            const civItem = this.createCivItem(civTemplate, player);
+            if (player) {
                 civItem.onclick = () => {
                     alert(translate('error.civ_taken'));
                 };
@@ -283,8 +282,8 @@ class UI {
                     callback(civTemplateID);
                 };
             }
-            if (leader && leader.id === self.leaderID) {
-                selectedLeaderSlot.appendChild(civItem);
+            if (player && player.name === self.name) {
+                selectedCivSlot.appendChild(civItem);
             }
             else {
                 this.elements.civPicker.appendChild(civItem);
@@ -352,13 +351,25 @@ class UI {
         returnBtn.onclick = () => callbacks.return();
         returnBtn.innerText = `${translate('buttons.return')} ${translate('menu.main.title')}`;
         this.elements.gameList.appendChild(returnBtn);
-        for (const gameID in gameList) {
-            const { gameName, playersConnected, playerCount } = gameList[gameID];
-            const gameBtn = this.createElement('button');
-            gameBtn.innerText = `${gameName} - ${playersConnected} / ${playerCount} ${translate('menu.game.list.players')}`;
-            gameBtn.onclick = () => callbacks.joinGame(gameID);
-            this.elements.gameList.appendChild(gameBtn);
-        }
+        const gamesTable = this.createElement('table', { children: [
+                ...Object.keys(gameList).map((gameID) => {
+                    const { gameName, playersConnected, playerCount } = gameList[gameID];
+                    const joinBtn = this.createElement('button', { attrs: {
+                            innerText: translate('menu.game.list.join'),
+                            onclick: () => callbacks.joinGame(gameID),
+                        } });
+                    const specBtn = this.createElement('button', { attrs: {
+                            innerText: translate('menu.game.list.spectate'),
+                            onclick: () => callbacks.spectateGame(gameID),
+                        } });
+                    return this.createElement('tr', { children: [
+                            this.createElement('td', { attrs: { innerText: `${gameName} - ${playersConnected} / ${playerCount} ${translate('menu.game.list.players')}` } }),
+                            this.createElement('td', { children: [joinBtn] }),
+                            this.createElement('td', { children: [specBtn] }),
+                        ] });
+                }),
+            ] });
+        this.elements.gameList.appendChild(gamesTable);
         this.elements.centerModal.appendChild(this.elements.gameList);
         this.root.appendChild(this.elements.centerModal);
     }
@@ -470,10 +481,13 @@ class UI {
         unitMovement.innerText = `${translate('unit.info.movement')}: ${unit.movement}`;
         const unitKnowledge = this.createElement('span', { className: 'infoSpan' });
         unitKnowledge.innerText = JSON.stringify(unit.knowledge);
+        const unitOwner = this.createElement('span', { className: 'infoSpan' });
+        unitOwner.innerText = `${translate('tile.info.owner')}: ${world.civs[unit.civID].name}`;
         this.elements.unitInfoMenu.appendChild(unitName);
         this.elements.unitInfoMenu.appendChild(unitHP);
         this.elements.unitInfoMenu.appendChild(unitMovement);
         this.elements.unitInfoMenu.appendChild(unitKnowledge);
+        this.elements.tileInfoMenu.appendChild(unitOwner);
         this.root.appendChild(this.elements.unitInfoMenu);
     }
     hideUnitInfoMenu() {
@@ -481,7 +495,7 @@ class UI {
         this.elements.unitInfoMenu.innerHTML = '';
     }
     showTileInfoMenu(world, pos, tile) {
-        var _a, _b;
+        var _a;
         this.elements.tileInfoMenu.innerHTML = '';
         const tileType = this.createElement('span', { className: 'infoSpan' });
         tileType.innerText = `${translate('tile.info.type')}: ${translate(`tile.${tile.type}`)}`;
@@ -497,8 +511,7 @@ class UI {
         this.elements.tileInfoMenu.appendChild(tileKnowledge);
         if (tile.owner) {
             const tileOwner = this.createElement('span', { className: 'infoSpan' });
-            // TODO - add some sort of world.getCiv that can take an undefined ID to make this less ugly. Also, TODO make a translate string for 'Free City'.
-            tileOwner.innerText = `${translate('tile.info.owner')}: ${tile.owner.name} (${tile.owner.civID ? world.civs[(_b = tile.owner.civID) === null || _b === void 0 ? void 0 : _b.subID].name : 'Free City'})`;
+            tileOwner.innerText = `${translate('tile.info.owner')}: ${tile.owner.name} (${world.civs[tile.owner.civID].name})`;
             this.elements.tileInfoMenu.appendChild(tileOwner);
         }
         this.root.appendChild(this.elements.tileInfoMenu);

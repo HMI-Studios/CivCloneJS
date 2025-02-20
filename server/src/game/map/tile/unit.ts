@@ -1,5 +1,4 @@
 import { getAdjacentCoords } from '../../../utils';
-import { DomainID, compareDomainIDs } from '../../leader';
 import { Coords } from '../../world';
 import { KnowledgeBucket, KnowledgeMap } from './knowledge';
 import { Yield } from './yield';
@@ -13,7 +12,7 @@ export interface UnitData {
   type: string,
   hp: number,
   movement: number,
-  domainID: DomainID,
+  civID: number,
   promotionClass: PromotionClass,
   attackRange?: number,
   knowledge: KnowledgeMap,
@@ -132,7 +131,7 @@ export class Unit {
   combatStats: [number, number, number];
   attackRange?: number;
   visionRange: number;
-  domainID: DomainID;
+  civID: number;
   coords: Coords;
   alive: boolean;
   cloaked?: boolean;
@@ -147,7 +146,7 @@ export class Unit {
     ));
   }
 
-  constructor(type: string, coords: Coords, domainID: DomainID, knowledge?: KnowledgeMap) {
+  constructor(type: string, coords: Coords, civID: number, knowledge?: KnowledgeMap) {
     this.type = type;
     this.hp = 100;
     this.movement = 0;
@@ -158,7 +157,7 @@ export class Unit {
       this.attackRange = Unit.attackRangeTable[type];
     }
     this.visionRange = Unit.visionRangeTable[type] ?? Unit.visionRangeTable.default;
-    this.domainID = domainID;
+    this.civID = civID;
     this.coords = coords;
     this.alive = true;
     this.knowledge = knowledge ?? {};
@@ -173,7 +172,7 @@ export class Unit {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
-      domainID: this.domainID,
+      civID: this.civID,
       coords: this.coords,
       alive: this.alive,
       knowledge: this.knowledge,
@@ -182,7 +181,7 @@ export class Unit {
   }
 
   static import(data: any): Unit {
-    const unit = new Unit(data.type, data.coords, data.domainID, data.knowledge);
+    const unit = new Unit(data.type, data.coords, data.civID, data.knowledge);
     unit.hp = data.hp;
     unit.movement = data.movement;
     unit.promotionClass = Unit.promotionClassTable[unit.type];
@@ -199,12 +198,12 @@ export class Unit {
     return unit;
   }
 
-  getData(domainID: DomainID): UnitData | undefined {
-    return !this.cloaked || compareDomainIDs(domainID, this.domainID) ? {
+  getData(civID: number | null): UnitData | undefined {
+    return !this.cloaked || civID === null || civID === this.civID ? {
       type: this.type,
       hp: this.hp,
       movement: this.movement,
-      domainID: this.domainID,
+      civID: this.civID,
       promotionClass: this.promotionClass,
       attackRange: this.attackRange,
       knowledge: this.knowledge,

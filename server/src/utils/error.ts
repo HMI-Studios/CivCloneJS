@@ -11,6 +11,8 @@ class BaseError extends Error {
 export class InternalServerError extends BaseError {}
 export class BugFixError extends InternalServerError {}
 
+export class ImportError extends BaseError {}
+
 export class IllegalCmdError extends BaseError {}
 export class GameNotStartedError extends IllegalCmdError {}
 

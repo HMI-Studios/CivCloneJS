@@ -1,35 +1,39 @@
-import * as WebSocket from 'ws';
+import { AIPlayer } from '../ai';
 import WebSocketManager from './connection';
 
 export interface PlayerData {
-  leaderID: number;
+  civID: number | null;
 }
 
 export class Player {
-  leaderID: number;
-  ready: boolean;
+  public username: string;
+  public civID: number | null;
+  public ready: boolean;
+  public ai: AIPlayer | null;
   private connection: WebSocketManager | null;
 
-  constructor(leaderID: number, connection: WebSocketManager | null) {
-    this.leaderID = leaderID;
+  constructor(username: string, civID: number | null, connection: WebSocketManager | null) {
+    this.username = username;
+    this.civID = civID;
     this.ready = false;
+    this.ai = null;
     this.connection = connection;
   }
 
   export() {
-    return { leaderID: this.leaderID };
+    return { civID: this.civID };
   }
 
-  static import(data: any): Player {
-    return new Player(data.leaderID, null)
+  static import(username: string, data: any): Player {
+    return new Player(username, data.civID, null)
   }
 
-  isAI(): boolean {
+  isAbsent(): boolean {
     return this.connection === null;
   }
 
   getData(): PlayerData {
-    return { leaderID: this.leaderID };
+    return { civID: this.civID };
   }
   
   reset(connection: WebSocketManager | null): void {
@@ -39,7 +43,6 @@ export class Player {
 
   send(msg: string): void {
     if (!this.connection) {
-      // TODO - do AI things
       return;
     } else {
       this.connection.send(msg);

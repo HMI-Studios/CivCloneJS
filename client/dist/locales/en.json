@@ -27,7 +27,9 @@
     "game": {
       "list": {
         "active": "Active Games",
-        "players": "players connected"
+        "players": "players connected",
+        "join": "Join",
+        "spectate": "Spectate"
       },
       "new": {
         "query": "New Game:",
@@ -69,7 +71,7 @@
   "error": {
     "generic": "Error",
     "fatal": "A fatal error has occured. Please reload to correct the problem.",
-    "civ_taken": "That leader is already selected!"
+    "civ_taken": "That civilization is already selected!"
   },
   "unit": {
     "settler": "Settler",

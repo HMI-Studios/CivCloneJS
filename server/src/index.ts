@@ -39,6 +39,10 @@ wss.on('connection', async (sock: WebSocket, req: IncomingMessage) => {
     gameID: null,
   });
 
+  ws.onClose(() => {
+    executeAction(ws, 'leaveGame');
+  });
+
   ws.onMessage((message: string) => {
     let data: EventMsg;
 

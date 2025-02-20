@@ -205,7 +205,7 @@ class Camera {
     if (unit.cloaked) ctx.globalAlpha = 0.5;
 
     // Unit Color Background
-    ctx.fillStyle = unit.domainID.type === DomainType.CIVILIZATION ? (civs[unit.domainID.subID]?.color ?? DEFAULT_COLOR) : DEFAULT_COLOR;
+    ctx.fillStyle = civs[unit.civID].color;
     ctx.beginPath();
     ctx.rect(
       (-camX + ((x - (width / 2)) * X_TILE_SPACING) + 6.5) * zoom,
@@ -378,12 +378,12 @@ class Camera {
             ctx.beginPath();
             ctx.lineWidth = margin * 2;
             ctx.lineCap='square';
-            ctx.strokeStyle = tile.owner.civID ? world.civs[tile.owner.civID.subID].color : DEFAULT_COLOR;
+            ctx.strokeStyle = world.civs[tile.owner.civID].color;
             ctx.moveTo(leftX + leftCapXOffset + margin, topY + margin);
             for (let i = 0; i < neighbors.length; i++) {
               const neighbor = world.getTile(neighbors[i]);
               if (!neighbor) ctx.moveTo(...positions[i]);
-              else if (compareDomainIDs(neighbor.owner?.civID, tile.owner.civID) || neighbor.owner?.id === tile.owner.id) ctx.moveTo(...positions[i]);
+              else if (neighbor.owner?.civID === tile.owner.civID || neighbor.owner?.id === tile.owner.id) ctx.moveTo(...positions[i]);
               else ctx.lineTo(...positions[i]);
             }
             if (world.playerControlsTile(tile)) ctx.setLineDash([5 * zoom, 5 * zoom]);
